@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct IngredientsView: View {
-    @ObservedObject private var viewModel: IngredientInputViewModel
+    @State private var viewModel: IngredientInputViewModel
     
     init(viewModel: IngredientInputViewModel) {
         self.viewModel = viewModel
