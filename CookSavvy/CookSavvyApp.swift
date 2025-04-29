@@ -11,7 +11,7 @@ import SwiftUI
 struct CookSavvyApp: App {
     var body: some Scene {
         WindowGroup {
-            IngridientsView()
+            IngredientsView(viewModel: IngredientInputViewModel())
         }
     }
 }

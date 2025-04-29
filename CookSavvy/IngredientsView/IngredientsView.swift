@@ -1,5 +1,5 @@
 //
-//  IngridientsView.swift
+//  IngredientsView.swift
 //  CookSavvy
 //
 //  Created by Igor Pivnyk on 29/04/2025.
@@ -7,8 +7,13 @@
 
 import SwiftUI
 
-struct IngridientsView: View {
-    @State private var ingredients: String = ""
+struct IngredientsView: View {
+    @ObservedObject private var viewModel: IngredientInputViewModel
+    
+    init(viewModel: IngredientInputViewModel) {
+        self.viewModel = viewModel
+    }
+    
     
     var body: some View {
         NavigationView {
@@ -19,7 +24,7 @@ struct IngridientsView: View {
                     .foregroundColor(.black)
                 
                 // Text Field
-                TextField("Type ingredients (e.g., chicken, rice)", text: $ingredients)
+                TextField("Type ingredients (e.g., chicken, rice)", text: $viewModel.ingredients)
                     .font(.system(size: 18))
                     .padding()
                     .background(Color.white)
@@ -33,17 +38,17 @@ struct IngridientsView: View {
                 Spacer()
                 
                 // Find Recipes Button
-                NavigationLink(destination: RecipeView()) {
+                NavigationLink(destination: RecipeView(), isActive: $viewModel.navigateToRecipes) {
                     Text("Find Recipes")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(ingredients.isEmpty ? Color.gray : Color.terracotta)
+                        .background(viewModel.ingredients.isEmpty ? Color.gray : Color.terracotta)
                         .cornerRadius(16)
                 }
-                .disabled(ingredients.isEmpty)
-                .opacity(ingredients.isEmpty ? 0.5 : 1.0)
+                .disabled(viewModel.ingredients.isEmpty)
+                .opacity(viewModel.ingredients.isEmpty ? 0.5 : 1.0)
             }
             .padding()
             .background(Color.cream)
@@ -61,7 +66,7 @@ struct IngridientsView: View {
 
 
 #Preview {
-    IngridientsView()
+    IngredientsView(viewModel: IngredientInputViewModel())
 }
 
 
