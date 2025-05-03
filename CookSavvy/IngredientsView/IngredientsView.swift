@@ -8,11 +8,7 @@
 import SwiftUI
 
 struct IngredientsView: View {
-    @State private var viewModel: IngredientInputViewModel
-    
-    init(viewModel: IngredientInputViewModel) {
-        self.viewModel = viewModel
-    }
+    @Bindable var viewModel: IngredientInputViewModel
     
     
     var body: some View {

@@ -6,6 +6,7 @@
 //
 
 import Observation
+import Foundation
 
 @Observable class IngredientInputViewModel {
     var ingredients: String = ""
