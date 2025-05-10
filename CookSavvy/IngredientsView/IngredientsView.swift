@@ -20,7 +20,7 @@ struct IngredientsView: View {
                     .foregroundColor(.black)
                 
                 // Text Field
-                TextField("Type ingredients (e.g., chicken, rice)", text: $viewModel.ingredients)
+                TextField("Type ingredients (e.g., chicken, rice)", text: $viewModel.ingredientsString)
                     .font(.system(size: 18))
                     .padding()
                     .background(Color.white)
@@ -31,6 +31,8 @@ struct IngredientsView: View {
                     )
                     .textFieldStyle(PlainTextFieldStyle())
                 
+                FastIngredientsGrid(viewModel: viewModel)
+                
                 Spacer()
                 
                 // Find Recipes Button
@@ -40,11 +42,11 @@ struct IngredientsView: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(viewModel.ingredients.isEmpty ? Color.gray : Color.terracotta)
+                        .background(viewModel.ingredientsString.isEmpty ? Color.gray : Color.terracotta)
                         .cornerRadius(16)
                 }
-                .disabled(viewModel.ingredients.isEmpty)
-                .opacity(viewModel.ingredients.isEmpty ? 0.5 : 1.0)
+                .disabled(viewModel.ingredientsString.isEmpty)
+                .opacity(viewModel.ingredientsString.isEmpty ? 0.5 : 1.0)
             }
             .padding()
             .background(Color.cream)
@@ -59,6 +61,50 @@ struct IngredientsView: View {
     }
 }
 
+
+struct FastIngredientsGrid: View {
+    @Bindable var viewModel: IngredientInputViewModel
+    
+    var body: some View {
+        Grid(horizontalSpacing: 10, verticalSpacing: 10) {
+            ForEach(0..<viewModel.fastIngredientsRows, id: \.self) { row in
+                GridRow {
+                    ForEach(0..<viewModel.fastIngredientsCols, id: \.self) { col in
+                        let index = row * 3 + col
+                        let ingredient = viewModel.fastIngredients[index]
+                        Button(action: {
+                            viewModel.ingredientTapped(ingredient)
+                        }) {
+                            HStack {
+                                Text(ingredient.1) // Emoji
+                                Text(ingredient.0) // Name
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.black)
+                            }
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 12)
+                            .frame(maxWidth: .infinity, minHeight: 30)
+                            .background(
+                                viewModel.ingredientsString.contains(ingredient.0.lowercased())
+                                    ? Color.terracotta
+                                    : Color.white
+                            )
+                            .cornerRadius(10)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.sageGreen, lineWidth: 1)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#Preview {
+    FastIngredientsGrid(viewModel: IngredientInputViewModel())
+}
 
 
 #Preview {
