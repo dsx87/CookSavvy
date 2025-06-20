@@ -12,7 +12,8 @@ import Observation
 // MARK: - ViewModel
 @Observable
 class RecipeResultsViewModel  {
-    var recipes: [RecipeViewRecipe] = []
+    var recipes: [Recipe] = []
+    var areRecipesLoading = false
     var navigateToDetail: Bool = false
     
     private let ingredients: String
@@ -23,16 +24,41 @@ class RecipeResultsViewModel  {
     }
     
     private func loadRecipes() {
-        // Mock recipe data based on ingredients (replace with real matching logic later)
-        let ingredientList = ingredients.lowercased().split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-        recipes = [
-            RecipeViewRecipe(title: "Chicken Stir-Fry", match: ingredientList.contains("chicken") ? "Chicken, Rice" : "Rice", missing: "Soy Sauce, Bell Peppers"),
-            RecipeViewRecipe(title: "Pasta Primavera", match: ingredientList.contains("pasta") ? "Pasta, Cheese" : "Cheese", missing: "Broccoli, Cream"),
-            RecipeViewRecipe(title: "Tomato Soup", match: ingredientList.contains("tomato") ? "Tomato, Onion" : "Onion", missing: "Basil, Cream")
-        ]
+        Task {
+            areRecipesLoading = true
+            let csvConv = CSVToJSONReader()
+            let zip = Bundle.main.url(forResource: "food-ingredients-and-recipe-dataset-with-images", withExtension: "zip")!
+            await Task.yield()
+            let parsedRecipes:[Recipe] = try! csvConv.parseCSVFromZip(withURL: zip,
+                                                                      usingFilename: "Food Ingredients and Recipe Dataset with Image Name Mapping.csv")
+            let userIngredients = ingredients.lowercased().split(separator: " ").map(String.init)
+            
+            guard !userIngredients.isEmpty else {
+                recipes = parsedRecipes
+                return
+            }
+            
+            let res = parsedRecipes.filter ( { parsedRecipe in
+                let parsedRecipeIngredients = parsedRecipe.cleanedIngredients.map { $0.lowercased() }
+                
+                for userIngredient in userIngredients {
+                    if !parsedRecipeIngredients.contains(where: { $0.contains(userIngredient) }) {
+                        return false
+                    }
+                }
+                return true
+            })
+            recipes = res
+            areRecipesLoading = false
+            
+        }
+    }
+    func ingredientsString(from recipe: Recipe) -> String {
+        " • " + recipe.ingredients.prefix(4).joined(separator: "\n • ") + "\n..."
     }
     
     func viewRecipeTapped() {
         navigateToDetail = true
     }
 }
+
