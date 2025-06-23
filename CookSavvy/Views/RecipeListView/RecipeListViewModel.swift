@@ -1,5 +1,5 @@
 //
-//  RecipeResultsViewModel.swift
+//  RecipeListViewModel.swift
 //  CookSavvy
 //
 //  Created by Igor Pivnyk on 10/05/2025.
@@ -11,7 +11,7 @@ import Observation
 
 // MARK: - ViewModel
 @Observable
-class RecipeResultsViewModel  {
+class RecipeListViewModel  {
     var recipes: [Recipe] = []
     var areRecipesLoading = false
     var navigateToDetail: Bool = false

@@ -36,7 +36,7 @@ struct IngredientsView: View {
                 Spacer()
                 
                 // Find Recipes Button
-                NavigationLink(destination: RecipeResultsView(viewModel: .init(ingredients: viewModel.ingredientsString)), isActive: $viewModel.navigateToRecipes) {
+                NavigationLink(destination: RecipeListView(viewModel: .init(ingredients: viewModel.ingredientsString)), isActive: $viewModel.navigateToRecipes) {
                     Text("Find Recipes")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.white)
