@@ -31,7 +31,7 @@ class CSVToJSONReader {
         
         let jsonData: Data
         if !fm.fileExists(atPath: jsonURL.path) || !useCache {
-            guard let csvStr = extractCSV(from: url.path, with: filename) else {
+            guard let csvStr = extractCSV(from: url, with: filename) else {
                 throw ParserError.fileNotFound
             }
             let csvAsDic = csvToJSON(csvString: csvStr)
@@ -70,23 +70,11 @@ class CSVToJSONReader {
         
     }
     
-    private func extractCSV(from zipFile: String, with name: String) -> String? {
-        let fm = FileManager.default
-        guard fm.fileExists(atPath: zipFile) else { return nil }
-        
-        let tmpDir = fm.temporaryDirectory
-        
+    private func extractCSV(from zipFile: URL, with name: String) -> String? {
         do {
-            let arch = try Archive(url: .init(filePath: zipFile), accessMode: .read)
-            guard let entry = arch[name] else { return nil }
+            let unarch = Unarchiver()
+            let csvData = try unarch.extract(file: name, fromZipFileUrl: zipFile)
             
-            let dest = tmpDir.appendingPathComponent("tmp")
-            if fm.fileExists(atPath: dest.path) {try  fm.removeItem(at: dest) }
-            
-            _ = try arch.extract(entry, to: dest)
-            
-            guard fm.fileExists(atPath: dest.path) else { return nil }
-            let csvData = try Data(contentsOf: dest)
             return String(data: csvData, encoding: .utf8)
         } catch {
             print(error)
