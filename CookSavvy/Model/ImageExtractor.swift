@@ -8,21 +8,12 @@
 import Foundation
 import ZIPFoundation
 
-final class ImageExtractor {
-    private let prefix: String?
-    
-    init(prefix: String? = nil) {
-        self.prefix = prefix
-    }
+actor ImageExtractor {
     
     func extractImage(withName imageFileName: String, fromZipFile zipFileURL: URL, useCache: Bool = true) async throws -> Data {
         try await Task {
             let fm = FileManager.default
             let imagesDir = fm.urls(for: .documentDirectory, in: .userDomainMask).first!
-            var imageFileName = imageFileName + ".jpg"
-            if let prefix {
-                imageFileName = prefix + imageFileName
-            }
             let imageURL = imagesDir.appendingPathComponent(imageFileName)
             
             if useCache, fm.fileExists(atPath: imageURL.path) {
