@@ -38,7 +38,6 @@ struct AsyncImageDisk<Placeholder: View>: View {
         self.placeholder = placeholder()
         self.zipFileURL = Bundle.main.url(forResource: "food-ingredients-and-recipe-dataset-with-images", withExtension: "zip")!
         self.imageNameBuilder = ({ prefix, imageFileName in
-            let fm = FileManager.default
             var imageFileName = imageFileName + ".jpg"
             if let prefix {
                 imageFileName = prefix + imageFileName
