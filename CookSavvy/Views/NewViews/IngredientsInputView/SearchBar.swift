@@ -8,7 +8,9 @@
 import SwiftUI
 
 struct SearchBar: View {
-    @Binding var text: String
+    @Binding var selectedIngredients: Set<String>
+    
+    @State private var text: String = ""
     var body: some View {
         HStack {
             TextField("Type an ingredient",
@@ -21,10 +23,13 @@ struct SearchBar: View {
             RoundedRectangle(cornerRadius: 6)
                 .stroke(Color.borderOrange, lineWidth: 3)
         }
+        .background {
+            Color.white
+        }
             
     }
 }
 
 #Preview("Search Bar") {
-    SearchBar(text: .constant(""))
+    SearchBar(selectedIngredients: .constant([]))
 }

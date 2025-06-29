@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct SelectedIngredientsView: View {
-    @Binding var ingredientsNames: [String]
+    @Binding var ingredientsNames: Set<String>
     var body: some View {
         ScrollView(.horizontal) {
             HStack {
-                ForEach(ingredientsNames, id: \.self) { ingredient in
+                ForEach(Array(ingredientsNames), id: \.self) { ingredient in
                     SelectedIngredientCell(name: ingredient) {
-                        print(ingredient)
+                        ingredientsNames.remove(ingredient)
                     }
                 }
             }
@@ -23,5 +23,5 @@ struct SelectedIngredientsView: View {
 }
 
 #Preview("SelectedIngredientsView") {
-    SelectedIngredientsView(ingredientsNames: .constant((0..<10).map { "Ingredient \($0)" }))
+    SelectedIngredientsView(ingredientsNames: .constant(Set((0..<10).map { "Ingredient \($0)" })))
 }

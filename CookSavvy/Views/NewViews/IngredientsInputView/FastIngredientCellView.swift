@@ -9,9 +9,10 @@ import SwiftUI
 
 struct FastIngredientCellView: View {
     let text: String
+    let onFastIngredintTap: (String) -> Void
     var body: some View {
         Button {
-            
+            onFastIngredintTap(text)
         } label: {
             ZStack {
                 RoundedRectangle(cornerRadius: 6)
@@ -25,5 +26,5 @@ struct FastIngredientCellView: View {
 }
 
 #Preview("FastIngredientCellView") {
-    FastIngredientCellView(text: "Ingredient Name")
+    FastIngredientCellView(text: "Ingredient Name", onFastIngredintTap: {_ in})
 }
