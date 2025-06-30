@@ -8,14 +8,16 @@
 import SwiftUI
 
 struct FindRecipesButton: View {
+    var disabled: Bool
     let action: () -> Void
+    
     var body: some View {
         Button {
             action()
         } label: {
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(disabled ? .gray : .buttonOrange)
                     .frame(width: .infinity, height: 40)
                 Text("Find Recipes (2 ingredients)")
                     .font(.title3)
@@ -23,9 +25,10 @@ struct FindRecipesButton: View {
                     .padding()
             }
         }
+        .disabled(disabled)
     }
 }
 
 #Preview {
-    FindRecipesButton(action: {})
+    FindRecipesButton(disabled: true, action: {})
 }

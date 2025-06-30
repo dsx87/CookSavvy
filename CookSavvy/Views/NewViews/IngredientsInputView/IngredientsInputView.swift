@@ -17,12 +17,10 @@ struct IngredientsInputView: View {
                 SearchBar(selectedIngredients: $selectedIngredients)
                 SelectedIngredientsView(ingredientsNames: $selectedIngredients)
                 FastIngredientSelectorView(selectedIngredients: $selectedIngredients)
-                Spacer()
-                FindRecipesButton {
+                Spacer(minLength: 150)
+                FindRecipesButton(disabled: selectedIngredients.isEmpty) {
                     
                 }
-                .disabled(selectedIngredients.isEmpty)
-
             }
             .padding()
             .background(content: {
