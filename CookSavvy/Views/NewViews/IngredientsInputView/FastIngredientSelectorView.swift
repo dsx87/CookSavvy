@@ -7,7 +7,7 @@
 import SwiftUI
 
 struct FastIngredientSelectorView: View {
-    private static let defaultFastIngredients: [String] = [
+    private static let defaultFastIngredients: [Ingredient] = [
         ("Chicken", "🍗"),
         ("Rice", "🍚"),
         ("Pasta", "🍝"),
@@ -17,16 +17,16 @@ struct FastIngredientSelectorView: View {
         ("Egg", "🥚"),
         ("Milk", "🥛"),
         ("Cheese", "🧀")
-    ].map { $0.1 + "\n" + $0.0 }
+    ].map { .init(name: $0.0, emoji: $0.1) }
     
-    let fastIngredients: [String]
+    let fastIngredients: [Ingredient]
     let size: Int
-    @Binding var selectedIngredients: Set<String>
+    @Binding var selectedIngredients: Set<Ingredient>
     
     init(
-        fastIngredients: [String] = Self.defaultFastIngredients,
+        fastIngredients: [Ingredient] = Self.defaultFastIngredients,
         size: Int = 3,
-        selectedIngredients: Binding<Set<String>>
+        selectedIngredients: Binding<Set<Ingredient>>
     ) {
         var fastIngredients = fastIngredients
         let ingredientsCount = fastIngredients.count
@@ -36,7 +36,7 @@ struct FastIngredientSelectorView: View {
         }
         if ingredientsCount < expectedCount {
             let diff = expectedCount - ingredientsCount
-            let emptyIngredients = (0..<diff).map { _ in ""}
+            let emptyIngredients: [Ingredient] = (0..<diff).map { _ in .empty}
             fastIngredients.append(contentsOf: emptyIngredients)
         }
         self.fastIngredients = fastIngredients
@@ -49,11 +49,11 @@ struct FastIngredientSelectorView: View {
             ForEach(0..<size, id: \.self) { row in
                 GridRow {
                     ForEach(0..<size, id: \.self) { col in
-                        FastIngredientCellView(text: fastIngredients[3*row + col]) { str in
-                            if selectedIngredients.contains(str) {
-                                selectedIngredients.remove(str)
+                        FastIngredientCellView(ingredient: fastIngredients[3*row + col]) { ingredient in
+                            if selectedIngredients.contains(ingredient) {
+                                selectedIngredients.remove(ingredient)
                             } else {
-                                selectedIngredients.insert(str)
+                                selectedIngredients.insert(ingredient)
                             }
                         }
                     }

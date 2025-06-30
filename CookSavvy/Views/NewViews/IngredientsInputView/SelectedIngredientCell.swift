@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct SelectedIngredientCell: View {
-    let name: String
+    let ingredient: Ingredient
     let action: () -> Void
     var body: some View {
         HStack(spacing: 0) {
-            Text(name)
+            Text(ingredient.name)
                 .font(.caption2)
             Button {
                 action()
@@ -32,7 +32,7 @@ struct SelectedIngredientCell: View {
 }
 
 #Preview("SelectedIngredientCell") {
-    SelectedIngredientCell(name: "Ingredient") {
+    SelectedIngredientCell(ingredient: "Ingredient") {
         print("close tapped")
     }
 }

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SearchBar: View {
-    @Binding var selectedIngredients: Set<String>
+    @Binding var selectedIngredients: Set<Ingredient>
     
     @State private var text: String = ""
     var body: some View {

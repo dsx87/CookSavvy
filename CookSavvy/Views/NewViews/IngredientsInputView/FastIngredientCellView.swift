@@ -8,23 +8,28 @@
 import SwiftUI
 
 struct FastIngredientCellView: View {
-    let text: String
-    let onFastIngredintTap: (String) -> Void
+    let ingredient: Ingredient
+    let onFastIngredintTap: (Ingredient) -> Void
     var body: some View {
         Button {
-            onFastIngredintTap(text)
+            onFastIngredintTap(ingredient)
         } label: {
             ZStack {
                 RoundedRectangle(cornerRadius: 6)
                     .foregroundStyle(.white)
-                Text(text)
-                    .foregroundStyle(.black)
-                    .font(.footnote)
+                VStack {
+                    Text(ingredient.emoji)
+                        .foregroundStyle(.black)
+                        .font(.footnote)
+                    Text(ingredient.name)
+                        .foregroundStyle(.black)
+                        .font(.footnote)
+                }
             }
         }
     }
 }
 
 #Preview("FastIngredientCellView") {
-    FastIngredientCellView(text: "Ingredient Name", onFastIngredintTap: {_ in})
+    FastIngredientCellView(ingredient: "🍎Ingredient Name", onFastIngredintTap: {_ in})
 }

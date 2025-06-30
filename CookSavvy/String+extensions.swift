@@ -20,4 +20,12 @@ extension String {
         }
         return res
     }
+    
+    var firstCharAsEmoji: Character? {
+        guard first?.isEmoji == true else {
+            return nil
+        }
+        
+        return first
+    }
 }
