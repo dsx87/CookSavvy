@@ -18,7 +18,7 @@ struct IngredientsInputFindRecipesButton: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
                     .foregroundStyle(disabled ? .gray : .buttonOrange)
-                    .frame(width: .infinity, height: 40)
+                    .frame(maxWidth: .infinity, maxHeight: 40)
                 Text("Find Recipes (2 ingredients)")
                     .font(.title3)
                     .foregroundStyle(.white)

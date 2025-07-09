@@ -111,7 +111,7 @@ struct RecipeResultCellIngredientView: View {
         ZStack {
             RoundedRectangle(cornerRadius: .infinity)
                 .foregroundStyle(Color.backOrange)
-                .frame(width: .infinity, height: 20)
+                .frame(maxWidth: .infinity, maxHeight: 20)
             Text(name)
                 .font(.caption)
                 
