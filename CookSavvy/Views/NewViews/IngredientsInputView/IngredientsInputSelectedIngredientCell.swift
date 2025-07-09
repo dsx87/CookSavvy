@@ -1,5 +1,5 @@
 //
-//  SelectedIngredientCell.swift
+//  IngredientsInputSelectedIngredientCell.swift
 //  CookSavvy
 //
 //  Created by Igor Pivnyk on 28/06/2025.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct SelectedIngredientCell: View {
+struct IngredientsInputSelectedIngredientCell: View {
     let ingredient: Ingredient
     let action: () -> Void
     var body: some View {
@@ -31,8 +31,8 @@ struct SelectedIngredientCell: View {
     }
 }
 
-#Preview("SelectedIngredientCell") {
-    SelectedIngredientCell(ingredient: "Ingredient") {
+#Preview("IngredientsInputSelectedIngredientCell") {
+    IngredientsInputSelectedIngredientCell(ingredient: "Ingredient") {
         print("close tapped")
     }
 }

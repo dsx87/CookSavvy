@@ -1,5 +1,5 @@
 //
-//  FastIngredientCellView.swift
+//  IngredientsInputFastIngredientCell.swift
 //  CookSavvy
 //
 //  Created by Igor Pivnyk on 28/06/2025.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct FastIngredientCellView: View {
+struct IngredientsInputFastIngredientCell: View {
     let ingredient: Ingredient
     let onFastIngredintTap: (Ingredient) -> Void
     var body: some View {
@@ -31,5 +31,5 @@ struct FastIngredientCellView: View {
 }
 
 #Preview("FastIngredientCellView") {
-    FastIngredientCellView(ingredient: "🍎Ingredient Name", onFastIngredintTap: {_ in})
+    IngredientsInputFastIngredientCell(ingredient: "🍎Ingredient Name", onFastIngredintTap: {_ in})
 }

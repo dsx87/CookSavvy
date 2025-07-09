@@ -1,5 +1,5 @@
 //
-//  SearchBar.swift
+//  IngredientsInputSearchBar.swift
 //  CookSavvy
 //
 //  Created by Igor Pivnyk on 28/06/2025.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct SearchBar: View {
+struct IngredientsInputSearchBar: View {
     @Binding var selectedIngredients: Set<Ingredient>
     
     @State private var text: String = ""
@@ -31,5 +31,5 @@ struct SearchBar: View {
 }
 
 #Preview("Search Bar") {
-    SearchBar(selectedIngredients: .constant([]))
+    IngredientsInputSearchBar(selectedIngredients: .constant([]))
 }

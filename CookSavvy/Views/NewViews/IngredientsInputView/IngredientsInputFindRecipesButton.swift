@@ -1,5 +1,5 @@
 //
-//  FindRecipesButton.swift
+//  IngredientsInputFindRecipesButton.swift
 //  CookSavvy
 //
 //  Created by Igor Pivnyk on 28/06/2025.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct FindRecipesButton: View {
+struct IngredientsInputFindRecipesButton: View {
     var disabled: Bool
     let action: () -> Void
     
@@ -30,5 +30,5 @@ struct FindRecipesButton: View {
 }
 
 #Preview {
-    FindRecipesButton(disabled: true, action: {})
+    IngredientsInputFindRecipesButton(disabled: true, action: {})
 }

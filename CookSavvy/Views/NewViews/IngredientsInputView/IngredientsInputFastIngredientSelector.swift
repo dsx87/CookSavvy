@@ -1,12 +1,12 @@
 //
-//  FastIngredientSelectorView.swift
+//  IngredientsInputFastIngredientSelector.swift
 //  CookSavvy
 //
 //  Created by Igor Pivnyk on 28/06/2025.
 //
 import SwiftUI
 
-struct FastIngredientSelectorView: View {
+struct IngredientsInputFastIngredientSelector: View {
     private static let defaultFastIngredients: [Ingredient] = [
         ("Chicken", "🍗"),
         ("Rice", "🍚"),
@@ -49,7 +49,7 @@ struct FastIngredientSelectorView: View {
             ForEach(0..<size, id: \.self) { row in
                 GridRow {
                     ForEach(0..<size, id: \.self) { col in
-                        FastIngredientCellView(ingredient: fastIngredients[3*row + col]) { ingredient in
+                        IngredientsInputFastIngredientCell(ingredient: fastIngredients[3*row + col]) { ingredient in
                             if selectedIngredients.contains(ingredient) {
                                 selectedIngredients.remove(ingredient)
                             } else {
@@ -64,5 +64,5 @@ struct FastIngredientSelectorView: View {
 }
 
 #Preview("FastIngredientSelectorView") {
-    FastIngredientSelectorView(selectedIngredients: .constant([]))
+    IngredientsInputFastIngredientSelector(selectedIngredients: .constant([]))
 }

@@ -8,18 +8,18 @@
 import SwiftUI
 
 struct IngredientsInputView: View {
-    
+    @State var findRecipesTapped = false
     @State var selectedIngredients: Set<Ingredient> = Set((0..<3).map {  Ingredient(name: "Ingr\($0)", emoji: "🍔" )})
     
     var body: some View {
         NavigationStack {
             VStack(spacing: 16) {
-                SearchBar(selectedIngredients: $selectedIngredients)
-                SelectedIngredientsView(ingredientsNames: $selectedIngredients)
-                FastIngredientSelectorView(selectedIngredients: $selectedIngredients)
+                IngredientsInputSearchBar(selectedIngredients: $selectedIngredients)
+                IngredientsInputSelectedIngredients(ingredientsNames: $selectedIngredients)
+                IngredientsInputFastIngredientSelector(selectedIngredients: $selectedIngredients)
                 Spacer(minLength: 150)
-                FindRecipesButton(disabled: selectedIngredients.isEmpty) {
-                    
+                IngredientsInputFindRecipesButton(disabled: selectedIngredients.isEmpty) {
+                    findRecipesTapped = true
                 }
             }
             .padding()
@@ -30,7 +30,9 @@ struct IngredientsInputView: View {
             })
             
             .navigationTitle("Ingredients Input")
-
+            .navigationDestination(isPresented: $findRecipesTapped) {
+                RecipesResultView(selectedIngredients: selectedIngredients)
+            }
         }
         
     }
