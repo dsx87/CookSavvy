@@ -8,12 +8,21 @@
 import Foundation
 
 struct Recipe: Codable, Identifiable, Hashable {
+    
+    struct AdditionalInfo: Codable, Hashable {
+        static let empty = AdditionalInfo(time: nil, servings: nil, complexity: nil)
+        let time: String?
+        let servings: Int?
+        let complexity: String?
+    }
+    
     var id: String { title }
     let title: String
     let ingredients: [String]
     let instructions: [String]
     let image: String
     let cleanedIngredients: [String]
+    let additionalInfo: AdditionalInfo
     
     enum CodingKeys: String, CodingKey {
         case title = "Title"
@@ -21,6 +30,7 @@ struct Recipe: Codable, Identifiable, Hashable {
         case instructions = "Instructions"
         case image = "Image_Name"
         case cleanedIngredients = "Cleaned_Ingredients"
+        case additionalInfo = "additionalInfo"
     }
     
     init(from decoder: any Decoder) throws {
@@ -33,6 +43,7 @@ struct Recipe: Codable, Identifiable, Hashable {
         self.image = try container.decode(String.self, forKey: .image)
         let rawCleanedIngredients = try container.decode(String.self, forKey: .cleanedIngredients)
         self.cleanedIngredients = rawCleanedIngredients.separatedByQuotes
+        self.additionalInfo = try container.decodeIfPresent(AdditionalInfo.self, forKey: .additionalInfo) ?? .empty
     }
     
     // Mock init
@@ -55,7 +66,7 @@ struct Recipe: Codable, Identifiable, Hashable {
             "some instruction",
         ]
         self.cleanedIngredients = []
-        
+        self.additionalInfo = .init(time: "10 mins", servings: 3, complexity: "easy")
     }
 }
 
