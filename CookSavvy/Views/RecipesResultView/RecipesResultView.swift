@@ -9,12 +9,20 @@ import SwiftUI
 
 struct RecipesResultView: View {
     let selectedIngredients: Set<Ingredient>
+    @Binding var navigationPath: NavigationPath
+    
+    init(selectedIngredients: Set<Ingredient>, navigationPath: Binding<NavigationPath> = .constant(.init())) {
+        self.selectedIngredients = selectedIngredients
+        self._navigationPath = navigationPath
+    }
     
     var body: some View {
-        NavigationStack {
             
             List(0..<10, id: \.self) { recipe in
                 RecipeResultCellView(recipe: .init())
+                    .onTapGesture {
+                        print("tap \(recipe)")
+                    }
             }
             .listRowSpacing(18)
             .navigationTitle("Recipe search result")
@@ -30,18 +38,17 @@ struct RecipesResultView: View {
                 }
                 ToolbarItem(placement: .topBarLeading) {
                     Button(action: {
-                        
+                        navigationPath.removeLast()
                     }) {
                         Image(systemName: "chevron.left")
                     }
                 }
             }
-        }
     }
 }
 
 #Preview("RecipesResultView") {
-    RecipesResultView(selectedIngredients: ["Pasta, Basta, Something"])
+    RecipesResultView(selectedIngredients: ["Pasta, Basta, Something"], navigationPath: .constant(.init()))
 }
 
 
