@@ -17,6 +17,12 @@ final class Unarchiver {
     }
     
     func extract(file filename: String, fromZipFileUrl zipUrl: URL) throws -> Data {
+        let dest = try extractAndSave(file: filename, fromZipFileUrl: zipUrl)
+        let data = try Data(contentsOf: dest)
+        return data
+    }
+    
+    func extractAndSave(file filename: String, fromZipFileUrl zipUrl: URL) throws -> URL {
         let fm = FileManager.default
         guard fm.fileExists(atPath: zipUrl.path) else {
             throw UnarchiverError.zipFileNotFound
@@ -43,8 +49,7 @@ final class Unarchiver {
             throw UnarchiverError.fileNotExtracted
         }
         
-        let data = try Data(contentsOf: dest)
-        return data
+        return dest
     }
     
 }

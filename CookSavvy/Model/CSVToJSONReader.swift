@@ -22,16 +22,16 @@ class CSVToJSONReader {
         case fileNotFound
     }
     
-    func parseCSVFromZip<T: Decodable>(withURL url: URL, usingFilename filename: String, useCache: Bool = true) throws -> [T] {
+    func parseCSVFromZip<T: Decodable>(zipURL: URL, csvFilename: String, useCache: Bool = true) throws -> [T] {
         let fm = FileManager.default
         let docsDir = fm.urls(for: .documentDirectory, in: .userDomainMask).first!
         let jsonURL = docsDir
-            .appendingPathComponent(filename)
+            .appendingPathComponent(csvFilename)
             .replacingPathExtension(to: "json")
         
         let jsonData: Data
         if !fm.fileExists(atPath: jsonURL.path) || !useCache {
-            guard let csvStr = extractCSV(from: url, with: filename) else {
+            guard let csvStr = extractCSV(from: zipURL, with: csvFilename) else {
                 throw ParserError.fileNotFound
             }
             let csvAsDic = csvToJSON(csvString: csvStr)
