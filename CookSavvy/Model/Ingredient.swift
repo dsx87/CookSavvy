@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Ingredient: Hashable {
+struct Ingredient: Hashable, Codable {
     
     static let empty: Ingredient = ""
     

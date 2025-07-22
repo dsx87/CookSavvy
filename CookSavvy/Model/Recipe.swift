@@ -10,18 +10,70 @@ import Foundation
 struct Recipe: Codable, Identifiable, Hashable {
     
     struct AdditionalInfo: Codable, Hashable {
-        static let empty = AdditionalInfo(time: nil, servings: nil, complexity: nil)
-        let time: String?
-        let servings: Int?
-        let complexity: String?
+        
+        enum InfoType: Codable, Hashable {
+            case time(String)
+            case servings(Int)
+            case complexity(String)
+            case calories(Int)
+            case empty
+            
+            var title: String {
+                switch self {
+                case .time(_): "Time"
+                case .servings(_): "Servings"
+                case .complexity(_): "Complexity"
+                case .calories(_): "Calories"
+                case .empty: ""
+                }
+            }
+            
+            var asEmoji: String {
+                switch self {
+                case .time(_): "⏱️"
+                case .servings(_): "👥"
+                case .complexity(_): "📊"
+                case .calories(_): "⚡️"
+                case .empty: ""
+                }
+            }
+            
+            var stringValue: String {
+                switch self {
+                case .time(let string): string
+                case .servings(let int): String(int)
+                case .complexity(let string): string
+                case .calories(let int): String(int)
+                case .empty: ""
+                }
+            }
+        }
+        
+        static let empty = AdditionalInfo()
+        static let mock = AdditionalInfo(time: "10 Min", servings: 2, complexity: "Low", calories: 250)
+        let infos: [InfoType]
+        
+        init() {
+            self.infos = []
+        }
+        
+        init(time: String?, servings: Int?, complexity: String?, calories: Int?) {
+            var infos: [InfoType] = []
+            if let time { infos.append(.time(time)) }
+            if let servings { infos.append(.servings(servings)) }
+            if let complexity { infos.append(.complexity(complexity)) }
+            if let calories { infos.append(.calories(calories)) }
+            self.infos = infos
+        }
+        
     }
     
     var id: String { title }
     let title: String
-    let ingredients: [String]
+    let ingredients: [Ingredient]
     let instructions: [String]
     let image: String
-    let cleanedIngredients: [String]
+    let cleanedIngredients: [Ingredient]
     let additionalInfo: AdditionalInfo
     
     enum CodingKeys: String, CodingKey {
@@ -37,12 +89,12 @@ struct Recipe: Codable, Identifiable, Hashable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.title = try container.decode(String.self, forKey: .title)
         let rawIngredients = try container.decode(String.self, forKey: .ingredients)
-        self.ingredients = rawIngredients.separatedByQuotes
+        self.ingredients = rawIngredients.separatedByQuotes.map(Ingredient.init(stringLiteral:))
         let rawInstructions = try container.decode(String.self, forKey: .instructions)
         self.instructions = rawInstructions.components(separatedBy: "\n")
         self.image = try container.decode(String.self, forKey: .image)
         let rawCleanedIngredients = try container.decode(String.self, forKey: .cleanedIngredients)
-        self.cleanedIngredients = rawCleanedIngredients.separatedByQuotes
+        self.cleanedIngredients = rawCleanedIngredients.separatedByQuotes.map(Ingredient.init(stringLiteral:))
         self.additionalInfo = try container.decodeIfPresent(AdditionalInfo.self, forKey: .additionalInfo) ?? .empty
     }
     
@@ -66,7 +118,7 @@ struct Recipe: Codable, Identifiable, Hashable {
             "some instruction",
         ]
         self.cleanedIngredients = []
-        self.additionalInfo = .init(time: "10 mins", servings: 3, complexity: "easy")
+        self.additionalInfo = .init(time: "10 mins", servings: 3, complexity: "easy", calories: 250)
     }
 }
 

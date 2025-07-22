@@ -8,6 +8,23 @@
 import SwiftUI
 import UIKit
 
+struct DefaultPlaceholder: View {
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 6)
+                .foregroundStyle(Color.backOrange)
+//                .frame(width: 100, height: 100)
+            ProgressView()
+            
+        }
+    }
+}
+
+#Preview {
+    DefaultPlaceholder()
+}
+
+
 struct AsyncImageDisk<Placeholder: View>: View {
     
     let imageName: String

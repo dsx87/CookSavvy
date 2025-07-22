@@ -18,10 +18,10 @@ struct RecipesResultView: View {
     
     var body: some View {
             
-            List(0..<10, id: \.self) { recipe in
-                RecipeResultCellView(recipe: .init())
+        List((0..<10).map ({ _ in Recipe()}), id: \.self) { recipe in
+                RecipeResultCellView(recipe: recipe)
                     .onTapGesture {
-                        print("tap \(recipe)")
+                        navigationPath.append(recipe)
                     }
             }
             .listRowSpacing(18)
@@ -44,6 +44,9 @@ struct RecipesResultView: View {
                     }
                 }
             }
+            .navigationDestination(for: Recipe.self) { recipe in
+                RecipeDetailsView(recipe: recipe)
+            }
     }
 }
 
@@ -57,13 +60,7 @@ struct RecipeResultCellView: View {
     var body: some View {
         HStack {
             AsyncImageDisk(imageName: recipe.image) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 6)
-                        .foregroundStyle(Color.backOrange)
-                        .frame(width: 100, height: 100)
-                    ProgressView()
-                    
-                }
+                DefaultPlaceholder()
             }
             VStack(alignment:.leading) {
                 Text(recipe.title)
@@ -84,23 +81,10 @@ struct RecipeResultCellAdditionalInfoView: View {
     let info: Recipe.AdditionalInfo
     var body: some View {
         HStack {
-            if let time = info.time {
+            ForEach(info.infos, id: \.self) { info in
                 VStack {
-                    Text("⏱️")
-                    Text(time)
-                }
-                
-            }
-            if let servings = info.servings {
-                VStack {
-                    Text("👥")
-                    Text("\(servings)")
-                }
-            }
-            if let complexity = info.complexity {
-                VStack {
-                    Text("📊")
-                    Text("\(complexity)")
+                    Text(info.asEmoji)
+                    Text(info.stringValue)
                 }
             }
         }
@@ -131,11 +115,11 @@ struct RecipeResultCellIngredientView: View {
 }
 
 struct RecipeResultCellIngredientsView: View {
-    let ingredients: [String]
+    let ingredients: [Ingredient]
     var body: some View {
         HStack {
             ForEach(0..<(min(ingredients.count, 3)), id: \.self) { i in
-                RecipeResultCellIngredientView(name: ingredients[i])
+                RecipeResultCellIngredientView(name: ingredients[i].name)
             }
         }
     }
