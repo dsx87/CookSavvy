@@ -19,6 +19,7 @@ struct Ingredient: Hashable, Codable {
         self.emoji = emoji
     }
 }
+
 extension Ingredient: ExpressibleByStringLiteral {
     init(extendedGraphemeClusterLiteral value: String) {
         if let emoji = value.firstCharAsEmoji {

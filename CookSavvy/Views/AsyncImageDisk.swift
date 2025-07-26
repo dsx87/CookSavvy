@@ -13,7 +13,6 @@ struct DefaultPlaceholder: View {
         ZStack {
             RoundedRectangle(cornerRadius: 6)
                 .foregroundStyle(Color.backOrange)
-//                .frame(width: 100, height: 100)
             ProgressView()
             
         }
