@@ -8,12 +8,24 @@
 import SwiftUI
 
 struct IngredientsInputView: View {
+    let ingredients: [Ingredient] = (0..<3).map {  Ingredient(name: "Ingr\($0)", emoji: "🍔" )}
     @State var selectedIngredients: Set<Ingredient> = Set((0..<3).map {  Ingredient(name: "Ingr\($0)", emoji: "🍔" )})
+    @State var searchText: String = ""
+    @State var cameraTapped: Bool = false
     @State var navigationPath = NavigationPath()
     var body: some View {
         NavigationStack(path: $navigationPath) {
             VStack(spacing: 16) {
-                IngredientsInputSearchBar(selectedIngredients: $selectedIngredients)
+                IngredientsInputSearchBar(selectedIngredients: $selectedIngredients, cameraTapped: $cameraTapped, text: $searchText)
+                    .popover(isPresented: Binding<Bool>(
+                        get: { !searchText.isEmpty },
+                        set: {_ in } )
+                    ) {
+                        IngredientsInputAutocompletion(ingredients: ingredients,  selectedIngredients: $selectedIngredients)
+                            .frame(width: 400, height: 300)
+                            .padding()
+                            .presentationCompactAdaptation(.popover)
+                    }
                 IngredientsInputSelectedIngredients(ingredientsNames: $selectedIngredients)
                 IngredientsInputFastIngredientSelector(selectedIngredients: $selectedIngredients)
                 Spacer(minLength: 150)
@@ -35,6 +47,13 @@ struct IngredientsInputView: View {
                     navigationPath: $navigationPath
                 )
             }
+            .popover(isPresented: $cameraTapped, content: {
+                    Text("not implmemented yet, close")
+                        .presentationCompactAdaptation(.fullScreenCover)
+                        .onTapGesture {
+                            cameraTapped = false
+                        }
+            })
         }
         
     }

@@ -9,12 +9,20 @@ import SwiftUI
 
 struct IngredientsInputSearchBar: View {
     @Binding var selectedIngredients: Set<Ingredient>
-    
-    @State private var text: String = ""
+    @Binding var cameraTapped: Bool
+    @Binding var text: String
     var body: some View {
         HStack {
+
+
             TextField("Type an ingredient",
                       text: $text)
+            Button {
+                cameraTapped = true
+            } label: {
+                Image(systemName: "camera")
+                    .tint(.black)
+            }
             Image(systemName: "magnifyingglass")
         }
         .padding(.horizontal)
@@ -31,5 +39,5 @@ struct IngredientsInputSearchBar: View {
 }
 
 #Preview("Search Bar") {
-    IngredientsInputSearchBar(selectedIngredients: .constant([]))
+    IngredientsInputSearchBar(selectedIngredients: .constant([]), cameraTapped: .constant(false), text: .constant(""))
 }

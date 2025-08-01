@@ -7,10 +7,11 @@
 
 import Foundation
 
-struct Ingredient: Hashable, Codable {
+struct Ingredient: Hashable, Codable, Identifiable {
     
     static let empty: Ingredient = ""
     
+    var id: String { emoji + name }
     let name: String
     let emoji: String
     
