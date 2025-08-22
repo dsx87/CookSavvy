@@ -18,9 +18,9 @@ struct IngredientsInputFastIngredientCell: View {
                 RoundedRectangle(cornerRadius: 6)
                     .foregroundStyle(.white)
                 VStack {
-                    Text(ingredient.emoji)
-                        .foregroundStyle(.black)
-                        .font(.footnote)
+//                    Text(ingredient.emoji)
+//                        .foregroundStyle(.black)
+//                        .font(.footnote)
                     Text(ingredient.name)
                         .foregroundStyle(.black)
                         .font(.footnote)

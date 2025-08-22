@@ -22,7 +22,7 @@ struct RecipeDetailsView: View {
                 RecipeDetailsAdditionalInfo(info: recipe.additionalInfo)
                 RecipeDetailsList(
                     title: "🛒 Ingredients",
-                    items: recipe.ingredients.map { "• " + $0.emoji + " " + $0.name }
+                    items: recipe.ingredients.map { "• " + $0.name }
                 )
                 RecipeDetailsList(
                     title: "🧑‍🍳 Instructions",

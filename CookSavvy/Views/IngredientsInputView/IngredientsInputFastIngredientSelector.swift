@@ -17,7 +17,7 @@ struct IngredientsInputFastIngredientSelector: View {
         ("Egg", "🥚"),
         ("Milk", "🥛"),
         ("Cheese", "🧀")
-    ].map { .init(name: $0.0, emoji: $0.1) }
+    ].map { .init(name: $0.0) }
     
     let fastIngredients: [Ingredient]
     let size: Int

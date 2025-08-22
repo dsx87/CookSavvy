@@ -10,7 +10,7 @@ import SwiftUI
 struct TabContainerView: View {
     var body: some View {
         TabView {
-            IngredientsInputView()
+            IngredientsInputView(viewModel: .init())
                 .tabItem {
                     Image(systemName: "carrot")
                     Text("Ingredients")

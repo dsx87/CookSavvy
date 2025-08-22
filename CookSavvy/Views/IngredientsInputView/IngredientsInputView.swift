@@ -7,30 +7,85 @@
 
 import SwiftUI
 
+final class IngredientsProvider {
+    private let db = DBInterface()
+    
+    func getIngredientsByString(_ string: String) -> [Ingredient] {
+        db.getIngredients(byName: string)
+    }
+}
+
+
+final class IngredientsInputViewModel: ObservableObject {
+    @Published var ingredients: [Ingredient] = []
+
+    @Published var searchText: String = "" {
+        didSet {
+            getIngredientsByString(searchText)
+        }
+    }
+    @Published var selectedIngredients: Set<Ingredient> = []
+    @Published var cameraViewPresented: Bool = false
+    @Published var navigationPath: NavigationPath = NavigationPath()
+    
+    let navigationTitle = "Ingredients Input"
+    
+    let ingredientsProvider: IngredientsProvider = .init()
+    
+    private func getIngredientsByString(_ string: String) {
+        guard !string.isEmpty else {
+            self.ingredients = []
+            return
+        }
+        self.ingredients = ingredientsProvider.getIngredientsByString(string)
+    }
+    
+    private func clearText() {
+        searchText = ""
+    }
+    
+    func autocompletionDidHide() {
+        clearText()
+    }
+    
+    init() {
+        
+    }
+    
+}
+
 struct IngredientsInputView: View {
-    let ingredients: [Ingredient] = (0..<3).map {  Ingredient(name: "Ingr\($0)", emoji: "🍔" )}
-    @State var selectedIngredients: Set<Ingredient> = Set((0..<3).map {  Ingredient(name: "Ingr\($0)", emoji: "🍔" )})
-    @State var searchText: String = ""
-    @State var cameraTapped: Bool = false
-    @State var navigationPath = NavigationPath()
+    @StateObject var viewModel: IngredientsInputViewModel// = IngredientsInputViewModel()
+    
     var body: some View {
-        NavigationStack(path: $navigationPath) {
+        NavigationStack(path: $viewModel.navigationPath) {
             VStack(spacing: 16) {
-                IngredientsInputSearchBar(selectedIngredients: $selectedIngredients, cameraTapped: $cameraTapped, text: $searchText)
+                IngredientsInputSearchBar(
+                    selectedIngredients: $viewModel.selectedIngredients,
+                    cameraTapped: $viewModel.cameraViewPresented,
+                    text: $viewModel.searchText
+                )
                     .popover(isPresented: Binding<Bool>(
-                        get: { !searchText.isEmpty },
-                        set: {_ in } )
+                        get: { !viewModel.searchText.isEmpty },
+                        set: { isPresented in
+                            if !isPresented {
+                                viewModel.autocompletionDidHide()
+                            }
+                        } )
                     ) {
-                        IngredientsInputAutocompletion(ingredients: ingredients,  selectedIngredients: $selectedIngredients)
+                        IngredientsInputAutocompletion(
+                            ingredients: $viewModel.ingredients,
+                            selectedIngredients: $viewModel.selectedIngredients
+                        )
                             .frame(width: 400, height: 300)
                             .padding()
                             .presentationCompactAdaptation(.popover)
                     }
-                IngredientsInputSelectedIngredients(ingredientsNames: $selectedIngredients)
-                IngredientsInputFastIngredientSelector(selectedIngredients: $selectedIngredients)
+                IngredientsInputSelectedIngredients(ingredientsNames: $viewModel.selectedIngredients)
+                IngredientsInputFastIngredientSelector(selectedIngredients: $viewModel.selectedIngredients)
                 Spacer(minLength: 150)
-                IngredientsInputFindRecipesButton(disabled: selectedIngredients.isEmpty) {
-                    navigationPath.append("RecipesResultView")
+                IngredientsInputFindRecipesButton(disabled: viewModel.selectedIngredients.isEmpty) {
+                    viewModel.navigationPath.append("RecipesResultView")
                 }
             }
             .padding()
@@ -43,22 +98,27 @@ struct IngredientsInputView: View {
             .navigationTitle("Ingredients Input")
             .navigationDestination(for: String.self) { _ in
                 RecipesResultView(
-                    selectedIngredients: selectedIngredients,
-                    navigationPath: $navigationPath
+                    selectedIngredients: viewModel.selectedIngredients,
+                    navigationPath: $viewModel.navigationPath
                 )
             }
-            .popover(isPresented: $cameraTapped, content: {
+            .popover(isPresented: $viewModel.cameraViewPresented, content: {
                     Text("not implmemented yet, close")
                         .presentationCompactAdaptation(.fullScreenCover)
                         .onTapGesture {
-                            cameraTapped = false
+                            viewModel.cameraViewPresented = false
                         }
             })
+        }
+        .onAppear {
+            let db = DBInterface()
+            let rec = db.getIngredients(byName: "chicken")
+            print("hello")
         }
         
     }
 }
 
 #Preview("IngredientsInputView") {
-    IngredientsInputView()
+    IngredientsInputView(viewModel: .init())
 }

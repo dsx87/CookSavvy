@@ -7,39 +7,45 @@
 
 import Foundation
 
-struct Ingredient: Hashable, Codable, Identifiable {
+import Foundation
+
+struct Ingredient: Codable, Identifiable {
     
     static let empty: Ingredient = ""
     
-    var id: String { emoji + name }
+    var id: String { name }
     let name: String
-    let emoji: String
+    let description: String?
+    let pictureFileName: String?
+    let foodGroup: String?
+    let foodSubgroup: String?
     
-    init(name: String, emoji: String) {
+    enum CodingKeys: String, CodingKey {
+        case name
+        case description
+        case pictureFileName = "picture_file_name"
+        case foodGroup = "food_group"
+        case foodSubgroup = "food_subgroup"
+    }
+    
+    init(name: String) {
         self.name = name
-        self.emoji = emoji
+        self.foodGroup = ""
+        self.description = ""
+        self.pictureFileName = ""
+        self.foodSubgroup = ""
     }
 }
 
+extension Ingredient: Hashable {}
+
 extension Ingredient: ExpressibleByStringLiteral {
     init(extendedGraphemeClusterLiteral value: String) {
-        if let emoji = value.firstCharAsEmoji {
-            self.emoji = String(emoji)
-            self.name = String(value.dropFirst())
-        } else {
-            self.emoji = ""
-            self.name = value
-        }
+        self.init(name: value)
     }
     
     init(stringLiteral value: StringLiteralType) {
-        if let emoji = value.firstCharAsEmoji {
-            self.emoji = String(emoji)
-            self.name = String(value.dropFirst())
-        } else {
-            self.emoji = ""
-            self.name = value
-        }
+        self.init(name: value)
     }
 }
 

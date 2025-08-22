@@ -23,5 +23,5 @@ struct IngredientsInputSelectedIngredients: View {
 }
 
 #Preview("SelectedIngredientsView") {
-    IngredientsInputSelectedIngredients(ingredientsNames: .constant(Set((0..<10).map { .init(name: "Ingredient \($0)", emoji: "🍓")  })))
+    IngredientsInputSelectedIngredients(ingredientsNames: .constant(Set((0..<10).map { .init(name: "Ingredient \($0)")  })))
 }

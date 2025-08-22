@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct IngredientsInputAutocompletion: View {
-    let ingredients: [Ingredient]
+    @Binding var ingredients: [Ingredient]
     @Binding var selectedIngredients: Set<Ingredient>
     
     var body: some View {
@@ -21,7 +21,7 @@ struct IngredientsInputAutocompletion: View {
                         selectedIngredients.insert(ingr)
                     }
                 } label: {
-                    Text(ingr.emoji + " " + ingr.name)
+                    Text(ingr.name)
                 }
                 
                 Spacer()
@@ -34,5 +34,5 @@ struct IngredientsInputAutocompletion: View {
 }
 
 #Preview("IngredientsInputAutocompletion") {
-    IngredientsInputAutocompletion(ingredients: (0..<3).map {  Ingredient(name: "Ingr\($0)", emoji: "🍔" )}, selectedIngredients: .constant([Ingredient(name: "Ingr\(1)", emoji: "🍔" )]))
+    IngredientsInputAutocompletion(ingredients: .constant((0..<3).map {  Ingredient(name: "Ingr\($0)" )}), selectedIngredients: .constant([Ingredient(name: "Ingr\(1)")]))
 }
