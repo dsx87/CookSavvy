@@ -27,7 +27,7 @@ final class DBInterfaceTests: XCTestCase {
         let ingredients = mockRecipes.flatMap(\.ingredients)
         
         let result = try dbInterface.getRecipes(byIngredients: ingredients)
-        XCTAssertEqual(mockRecipes, result)
+        XCTAssertEqual(mockRecipes, result, "Not all recipes were extracted")
     }
 
     func testInsertionIngredients() throws {
@@ -36,10 +36,10 @@ final class DBInterfaceTests: XCTestCase {
         try dbInterface.insertIngredients(mockIngredients)
         let result = try names.map { name in
             let ingr = try dbInterface.getIngredients(byName: name)
-            XCTAssertEqual(ingr.count, 1)
-            return try XCTUnwrap(ingr.first)
+            XCTAssertEqual(ingr.count, 1, "Should be only one component")
+            return try XCTUnwrap(ingr.first, "Empty result")
         }
-        XCTAssertEqual(mockIngredients, result)
+        XCTAssertEqual(mockIngredients, result, "Not all ingredients were extracted")
     }
     
     func testGettingRecipes() throws {
@@ -55,11 +55,11 @@ final class DBInterfaceTests: XCTestCase {
             .randomElements(count: 5)
         
         let failResult = try dbInterface.getRecipes(byIngredients: failableIngredients)
-        XCTAssertTrue(failResult.isEmpty)
+        XCTAssertTrue(failResult.isEmpty, "Should not be results with failable ingredients")
         
         let success = try dbInterface.getRecipes(byIngredients: successfullIngredients)
-        XCTAssertFalse(success.isEmpty)
-        XCTAssertTrue(mockRecipes.contains(success))
+        XCTAssertFalse(success.isEmpty, "the result is empty")
+        XCTAssertTrue(mockRecipes.contains(success), "some different recipes were extracted")
     }
     
     func testPerformanceIngredientsInsertion() throws {

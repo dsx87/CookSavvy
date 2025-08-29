@@ -10,6 +10,7 @@
 		1D62F36B2DC17E2600F28780 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 1D62F36A2DC17E2600F28780 /* ZIPFoundation */; };
 		1D62F3762DC2EC4600F28780 /* CSV in Frameworks */ = {isa = PBXBuildFile; productRef = 1D62F3752DC2EC4600F28780 /* CSV */; };
 		1DE9DF112E623A250077DD75 /* DefaultTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 1DE9DF102E623A250077DD75 /* DefaultTestPlan.xctestplan */; };
+		1DE9DF212E624D220077DD75 /* GRDB-dynamic in Frameworks */ = {isa = PBXBuildFile; productRef = 1DE9DF202E624D220077DD75 /* GRDB-dynamic */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,6 +48,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1D62F36B2DC17E2600F28780 /* ZIPFoundation in Frameworks */,
+				1DE9DF212E624D220077DD75 /* GRDB-dynamic in Frameworks */,
 				1D62F3762DC2EC4600F28780 /* CSV in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -102,6 +104,7 @@
 			packageProductDependencies = (
 				1D62F36A2DC17E2600F28780 /* ZIPFoundation */,
 				1D62F3752DC2EC4600F28780 /* CSV */,
+				1DE9DF202E624D220077DD75 /* GRDB-dynamic */,
 			);
 			productName = CookSavvy;
 			productReference = 1D255FDB2DC135BB008C52B4 /* CookSavvy.app */;
@@ -161,6 +164,7 @@
 			packageReferences = (
 				1D62F3692DC17E2600F28780 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 				1D62F3742DC2EC4600F28780 /* XCRemoteSwiftPackageReference "CSV.swift" */,
+				1DE9DF1F2E624D220077DD75 /* XCRemoteSwiftPackageReference "GRDB" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1D255FDC2DC135BB008C52B4 /* Products */;
@@ -491,6 +495,14 @@
 				minimumVersion = 2.5.2;
 			};
 		};
+		1DE9DF1F2E624D220077DD75 /* XCRemoteSwiftPackageReference "GRDB" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -503,6 +515,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1D62F3742DC2EC4600F28780 /* XCRemoteSwiftPackageReference "CSV.swift" */;
 			productName = CSV;
+		};
+		1DE9DF202E624D220077DD75 /* GRDB-dynamic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1DE9DF1F2E624D220077DD75 /* XCRemoteSwiftPackageReference "GRDB" */;
+			productName = "GRDB-dynamic";
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

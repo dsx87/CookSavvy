@@ -12,7 +12,14 @@
     "testTimeoutsEnabled" : true
   },
   "testTargets" : [
-
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:CookSavvy.xcodeproj",
+        "identifier" : "1DE9DF152E623A380077DD75",
+        "name" : "CookSavvyTests"
+      }
+    }
   ],
   "version" : 1
 }
