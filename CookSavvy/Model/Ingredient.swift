@@ -49,3 +49,74 @@ extension Ingredient: ExpressibleByStringLiteral {
     }
 }
 
+
+// MARK: - Full initializer for richer mocks
+extension Ingredient {
+    init(name: String, description: String?, pictureFileName: String?, foodGroup: String?, foodSubgroup: String?) {
+        self.name = name
+        self.description = description
+        self.pictureFileName = pictureFileName
+        self.foodGroup = foodGroup
+        self.foodSubgroup = foodSubgroup
+    }
+}
+
+// MARK: - Mock Factories for Testing
+extension Ingredient {
+    struct Entry { let name: String; let group: String; let subgroup: String; let picture: String? }
+
+    /// Creates a single mock `Ingredient` with meaningful randomized values.
+    static func mockRandom<R: RandomNumberGenerator>(rng: inout R) -> Ingredient {
+        let entries: [Entry] = [
+            .init(name: "Garlic", group: "Vegetables", subgroup: "Alliums", picture: "garlic.png"),
+            .init(name: "Onion", group: "Vegetables", subgroup: "Alliums", picture: "onion.png"),
+            .init(name: "Chicken Breast", group: "Protein", subgroup: "Poultry", picture: "chicken_breast.png"),
+            .init(name: "Salmon Fillet", group: "Protein", subgroup: "Fish", picture: "salmon.png"),
+            .init(name: "Tofu", group: "Protein", subgroup: "Soy", picture: "tofu.png"),
+            .init(name: "Bell Pepper", group: "Vegetables", subgroup: "Peppers", picture: "bell_pepper.png"),
+            .init(name: "Spinach", group: "Vegetables", subgroup: "Leafy Greens", picture: "spinach.png"),
+            .init(name: "Tomato", group: "Vegetables", subgroup: "Fruit Vegetables", picture: "tomato.png"),
+            .init(name: "Pasta", group: "Grains", subgroup: "Wheat", picture: "pasta.png"),
+            .init(name: "Rice", group: "Grains", subgroup: "Cereal Grains", picture: "rice.png"),
+            .init(name: "Quinoa", group: "Grains", subgroup: "Pseudocereals", picture: "quinoa.png"),
+            .init(name: "Lemon", group: "Fruits", subgroup: "Citrus", picture: "lemon.png"),
+            .init(name: "Basil", group: "Herbs & Spices", subgroup: "Herbs", picture: "basil.png"),
+            .init(name: "Parsley", group: "Herbs & Spices", subgroup: "Herbs", picture: "parsley.png"),
+            .init(name: "Coconut Milk", group: "Dairy Alternatives", subgroup: "Coconut", picture: "coconut_milk.png")
+        ]
+
+        let picked = entries.randomElement(using: &rng)!
+
+        let descriptors = [
+            "fresh", "organic", "ripe", "finely chopped", "minced", "diced", "grated", "zested"
+        ]
+        let uses = [
+            "Perfect for sauces and marinades.",
+            "Great in soups, stews and stir-fries.",
+            "Adds brightness and aroma to dishes.",
+            "Staple pantry ingredient.",
+            "Complements pasta and grain bowls."
+        ]
+        let desc = "\(descriptors.randomElement(using: &rng)!) \(picked.name.lowercased()). \(uses.randomElement(using: &rng)!)"
+
+        return Ingredient(
+            name: picked.name,
+            description: desc,
+            pictureFileName: picked.picture,
+            foodGroup: picked.group,
+            foodSubgroup: picked.subgroup
+        )
+    }
+
+    /// Convenience overload that uses the system RNG.
+    static func mockRandom() -> Ingredient {
+        var rng = SystemRandomNumberGenerator()
+        return mockRandom(rng: &rng)
+    }
+
+    /// Creates multiple mock ingredients.
+    static func mocks(count: Int) -> [Ingredient] {
+        var rng = SystemRandomNumberGenerator()
+        return (0..<max(0, count)).map { _ in mockRandom(rng: &rng) }
+    }
+}

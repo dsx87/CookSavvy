@@ -1,0 +1,18 @@
+{
+  "configurations" : [
+    {
+      "id" : "DC2859A3-2A39-4B78-A003-425D7296FB27",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+
+  ],
+  "version" : 1
+}
