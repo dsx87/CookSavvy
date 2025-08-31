@@ -217,6 +217,15 @@ extension Recipe {
     /// Creates multiple mock recipes.
     static func mocks(count: Int) -> [Recipe] {
         var rng = SystemRandomNumberGenerator()
-        return (0..<max(0, count)).map { _ in mockRandom(rng: &rng) }
+        var res: Set<Recipe> = []
+        for _ in 0..<max(0, count) {
+            var mock = mockRandom(rng: &rng)
+            var insertionRes = res.insert(mock).inserted
+            while !insertionRes {
+                mock = mockRandom(rng: &rng)
+                insertionRes = res.insert(mock).inserted
+            }
+        }
+        return Array(res)
     }
 }
