@@ -10,10 +10,10 @@ import XCTest
 
 final class DBInterfaceTests: XCTestCase {
 
-    var dbInterface: DBInterfaceClass!
+    var dbInterface: DBInterface!
 //    var mockRecipes: [Recipe] = []
     override func setUpWithError() throws {
-        dbInterface = DBInterfaceClass()
+        dbInterface = DBInterface()
     }
 
     override func tearDownWithError() throws {

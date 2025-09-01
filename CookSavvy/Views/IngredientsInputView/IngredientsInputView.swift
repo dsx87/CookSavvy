@@ -8,11 +8,11 @@
 import SwiftUI
 
 final class IngredientsProvider {
-    private let db = DBInterface()
-    
-    func getIngredientsByString(_ string: String) -> [Ingredient] {
-        db.getIngredients(byName: string)
-    }
+//    private let db = DBInterface()
+//    
+//    func getIngredientsByString(_ string: String) -> [Ingredient] {
+//        db.getIngredients(byName: string)
+//    }
 }
 
 
@@ -37,7 +37,7 @@ final class IngredientsInputViewModel: ObservableObject {
             self.ingredients = []
             return
         }
-        self.ingredients = ingredientsProvider.getIngredientsByString(string)
+        self.ingredients = [] //ingredientsProvider.getIngredientsByString(string)
     }
     
     private func clearText() {
@@ -111,9 +111,9 @@ struct IngredientsInputView: View {
             })
         }
         .onAppear {
-            let db = DBInterface()
-            let rec = db.getIngredients(byName: "chicken")
-            print("hello")
+//            let db = DBInterface()
+//            let rec = db.getIngredients(byName: "chicken")
+//            print("hello")
         }
         
     }

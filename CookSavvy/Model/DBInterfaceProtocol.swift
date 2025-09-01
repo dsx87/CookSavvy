@@ -26,7 +26,7 @@ protocol DBInterfaceProtocol {
 
 /// SQLite-backed implementation optimized for bulk insert performance.
 /// Uses an in-memory database for test isolation and speed.
-final class DBInterfaceClass: DBInterfaceProtocol {
+final class DBInterface: DBInterfaceProtocol {
     // MARK: - SQLite handles
     private var db: OpaquePointer?
     private var insertIngredientStmt: OpaquePointer?
