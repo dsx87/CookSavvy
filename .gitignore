@@ -141,3 +141,7 @@ Pods/
 /fastlane/fastlane/Appfile
 /Gemfile.lock
 /TestResults
+/.tmp-tests/*
+!*.xcworkspace/xcshareddata/
+CookSavvy.xcodeproj/xcshareddata/
+CookSavvy.xcodeproj/project.xcworkspace/xcshareddata/
