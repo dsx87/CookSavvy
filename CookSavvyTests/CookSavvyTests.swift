@@ -288,6 +288,57 @@ final class DBInterfaceTests: XCTestCase {
         let resTomato = try dbInterface.getRecipes(byIngredients: [tomato])
         XCTAssertTrue(resTomato.contains { $0.title == r2.title })
     }
+
+    // MARK: - New searchIngredients API tests
+
+    func testSearchIngredientsReturnsSubstringMatchesCaseInsensitive() throws {
+        // Fresh DB from setUp
+        let items: [Ingredient] = [
+            "Chicken",
+            "Chicken Breast",
+            "chicken thigh",
+            "Pasta",
+            "Rice"
+        ]
+        try dbInterface.insertIngredients(items)
+
+        let res = try dbInterface.searchIngredients(matching: "CHICKEN", limit: 10)
+
+        let names = Set(res.map { $0.name })
+        XCTAssertTrue(names.contains("Chicken"))
+        XCTAssertTrue(names.contains("Chicken Breast"))
+        XCTAssertTrue(names.contains("chicken thigh"))
+        XCTAssertFalse(names.contains("Pasta"))
+        XCTAssertFalse(names.contains("Rice"))
+    }
+
+    func testSearchIngredientsRespectsLimit() throws {
+        let many = (1...10).map { Ingredient(name: "Chicken \($0)") }
+        try dbInterface.insertIngredients(many)
+
+        let res = try dbInterface.searchIngredients(matching: "chicken", limit: 3)
+        XCTAssertEqual(res.count, 3)
+        // Ensure all results contain the query (case-insensitive)
+        XCTAssertTrue(res.allSatisfy { $0.name.lowercased().contains("chicken") })
+    }
+
+    func testSearchIngredientsEmptyQueryReturnsEmpty() throws {
+        let res = try dbInterface.searchIngredients(matching: "", limit: 5)
+        XCTAssertTrue(res.isEmpty)
+    }
+
+    func testSearchIngredientsNoMatchesReturnsEmpty() throws {
+        try dbInterface.insertIngredients(["Pasta", "Rice"])
+        let res = try dbInterface.searchIngredients(matching: "chicken", limit: 10)
+        XCTAssertTrue(res.isEmpty)
+    }
+
+    func testGetIngredientsExactMatchIsCaseInsensitive() throws {
+        try dbInterface.insertIngredients(["Chicken"]) // capitalized insert
+        let resLower = try dbInterface.getIngredients(byName: "chicken")
+        XCTAssertEqual(resLower.count, 1)
+        XCTAssertEqual(resLower.first?.name, "Chicken")
+    }
 }
 
 
