@@ -20,66 +20,66 @@ import CSV
 class CSVToJSONReader {
     enum ParserError: Error {
         case fileNotFound
+        case csvParsingFailed(Error)
+        case zipExtractionFailed(Error)
+        case emptyCSV
     }
     
     func parseCSVFromZip<T: Decodable>(zipURL: URL, csvFilename: String, useCache: Bool = true) throws -> [T] {
-        let fm = FileManager.default
-        let docsDir = fm.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let jsonURL = docsDir
-            .appendingPathComponent(csvFilename)
-            .replacingPathExtension(to: "json")
-        
-        let jsonData: Data
-        if !fm.fileExists(atPath: jsonURL.path) || !useCache {
-            guard let csvStr = extractCSV(from: zipURL, with: csvFilename) else {
-                throw ParserError.fileNotFound
-            }
-            let csvAsDic = csvToJSON(csvString: csvStr)
-            let csvAsJson = try JSONSerialization.data(withJSONObject: csvAsDic)
-            jsonData = csvAsJson
-            try csvAsJson.write(to: jsonURL)
-        } else {
-            jsonData = try Data(contentsOf: jsonURL)
-        }
-        
-        let result = try JSONDecoder().decode([T].self, from: jsonData)
-        return result
+        let csvStr = try extractCSV(from: zipURL, with: csvFilename).data(using: .utf8)!
+        let res = try! CSVDecoder().decode([T].self, from: csvStr)
+        return res
+//        let fm = FileManager.default
+//        let docsDir = fm.urls(for: .documentDirectory, in: .userDomainMask).first!
+//        let jsonURL = docsDir
+//            .appendingPathComponent(csvFilename)
+//            .replacingPathExtension(to: "json")
+//        
+//        let jsonData: Data
+//        if !fm.fileExists(atPath: jsonURL.path) || !useCache {
+//            let csvStr = try extractCSV(from: zipURL, with: csvFilename)
+//            let csvAsDic = try csvToJSON(csvString: csvStr)
+//            let csvAsJson = try JSONSerialization.data(withJSONObject: csvAsDic)
+//            jsonData = csvAsJson
+//            try csvAsJson.write(to: jsonURL)
+//        } else {
+//            jsonData = try Data(contentsOf: jsonURL)
+//        }
+//        
+//        let result = try JSONDecoder().decode([T].self, from: jsonData)
+//        return result
     }
     
     
-    private func csvToJSON(csvString: String) -> [[String:String]] {
-        do {
-            let csv = try CSVReader(string: csvString, hasHeaderRow: true)
-            
-            var res: [[String:String]] = []
-            let firstLine = csv.headerRow ?? []
-            var dic: [String: String] = [:]
-            while let csv = csv.next() {
-                for (i, row) in csv.enumerated() {
-                    let key = firstLine[i]
-                    if key.isEmpty { continue }
-                    dic[key] = row
-                }
-                res.append(dic)
-            }
-            return res
-        } catch {
-            print(error)
-            return []
-        }
-        
-    }
+//    private func csvToJSON(csvString: String) throws -> [[String:String]] {
+//        let csv = try CSVReader(string: csvString, hasHeaderRow: true)
+//        
+//        guard let headers = csv.headerRow, !headers.isEmpty else {
+//            throw ParserError.emptyCSV
+//        }
+//        
+//        var res: [[String:String]] = []
+//        while let values = csv.next() {
+//            var dic: [String: String] = [:]
+//            for (i, value) in values.enumerated() {
+//                guard i < headers.count else { continue }
+//                let key = headers[i]
+//                if key.isEmpty { continue }
+//                dic[key] = value
+//            }
+//            res.append(dic)
+//        }
+//        return res
+//    }
     
-    private func extractCSV(from zipFile: URL, with name: String) -> String? {
-        do {
-            let unarch = Unarchiver()
-            let csvData = try unarch.extract(file: name, fromZipFileUrl: zipFile)
-            
-            return String(data: csvData, encoding: .utf8)
-        } catch {
-            print(error)
-            return nil
+    private func extractCSV(from zipFile: URL, with name: String) throws -> String {
+        let unarch = Unarchiver()
+        let csvData = try unarch.extract(file: name, fromZipFileUrl: zipFile)
+        
+        guard let csvString = String(data: csvData, encoding: .utf8) else {
+            throw ParserError.csvParsingFailed(NSError(domain: "CSVToJSONReader", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to decode CSV data as UTF-8"]))
         }
+        return csvString
     }
     
 }
@@ -139,12 +139,18 @@ public struct CSVDecoder {
     public func decode<T: Decodable>(_ type: T.Type, from string: String) throws -> T {
         // Parse the CSV into an array of dictionaries keyed by header names
         let reader = try CSVReader(string: string, hasHeaderRow: true)
-        let headers = reader.headerRow ?? []
+        guard let headers = reader.headerRow, !headers.isEmpty else {
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "CSV has no header row"))
+        }
+        
         var rows: [[String: String]] = []
         while let values = reader.next() {
             var dict: [String: String] = [:]
             for (i, value) in values.enumerated() {
-                if i < headers.count { dict[headers[i]] = value }
+                guard i < headers.count else { continue }
+                let key = headers[i]
+                if key.isEmpty { continue }
+                dict[key] = value
             }
             rows.append(dict)
         }

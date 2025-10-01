@@ -339,6 +339,114 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertEqual(resLower.count, 1)
         XCTAssertEqual(resLower.first?.name, "Chicken")
     }
+
+    // MARK: - Word-based recipe matching tests
+
+    func testGetRecipesMatchesSingleWordFromMultiWordIngredient() throws {
+        let chickenBreast: Ingredient = "Chicken Breast"
+        let r = Recipe(
+            title: "Grilled Chicken",
+            ingredients: [chickenBreast, "Salt"],
+            instructions: ["Grill"],
+            image: "img",
+            cleanedIngredients: [chickenBreast, "Salt"],
+            additionalInfo: .mock
+        )
+        try dbInterface.insertRecipes([r])
+        
+        // Query with just "chicken" should match "Chicken Breast"
+        let results = try dbInterface.getRecipes(byIngredients: ["chicken"])
+        XCTAssertEqual(results.count, 1)
+        XCTAssertEqual(results.first?.title, "Grilled Chicken")
+    }
+
+    func testGetRecipesMatchesSecondWordFromMultiWordIngredient() throws {
+        let chickenBreast: Ingredient = "Chicken Breast"
+        let r = Recipe(
+            title: "Stuffed Breast",
+            ingredients: [chickenBreast],
+            instructions: ["Cook"],
+            image: "img",
+            cleanedIngredients: [chickenBreast],
+            additionalInfo: .mock
+        )
+        try dbInterface.insertRecipes([r])
+        
+        // Query with just "breast" should match "Chicken Breast"
+        let results = try dbInterface.getRecipes(byIngredients: ["breast"])
+        XCTAssertEqual(results.count, 1)
+        XCTAssertEqual(results.first?.title, "Stuffed Breast")
+    }
+
+    func testGetRecipesWordMatchingIsCaseInsensitive() throws {
+        let ingredient: Ingredient = "CHICKEN BREAST"
+        let r = Recipe(
+            title: "Chicken Dish",
+            ingredients: [ingredient],
+            instructions: ["Cook"],
+            image: "img",
+            cleanedIngredients: [ingredient],
+            additionalInfo: .mock
+        )
+        try dbInterface.insertRecipes([r])
+        
+        let results = try dbInterface.getRecipes(byIngredients: ["chicken"])
+        XCTAssertEqual(results.count, 1)
+    }
+
+    func testGetRecipesMatchesMultipleWordsFromDifferentIngredients() throws {
+        let chicken: Ingredient = "Chicken Breast"
+        let tomato: Ingredient = "Tomato Sauce"
+        let r = Recipe(
+            title: "Chicken Tomato Pasta",
+            ingredients: [chicken, tomato, "Pasta"],
+            instructions: ["Cook"],
+            image: "img",
+            cleanedIngredients: [chicken, tomato, "Pasta"],
+            additionalInfo: .mock
+        )
+        try dbInterface.insertRecipes([r])
+        
+        // Query with "chicken" and "sauce" should match
+        let results = try dbInterface.getRecipes(byIngredients: ["chicken", "sauce"])
+        XCTAssertEqual(results.count, 1)
+        XCTAssertEqual(results.first?.title, "Chicken Tomato Pasta")
+    }
+
+    func testGetRecipesNoWordMatchReturnsEmpty() throws {
+        let chicken: Ingredient = "Chicken Breast"
+        let r = Recipe(
+            title: "Chicken Dish",
+            ingredients: [chicken],
+            instructions: ["Cook"],
+            image: "img",
+            cleanedIngredients: [chicken],
+            additionalInfo: .mock
+        )
+        try dbInterface.insertRecipes([r])
+        
+        // Query with "beef" should not match "Chicken Breast"
+        let results = try dbInterface.getRecipes(byIngredients: ["beef"])
+        XCTAssertTrue(results.isEmpty)
+    }
+
+    func testGetRecipesDistinctResultsNoDuplicates() throws {
+        let chicken: Ingredient = "Chicken Breast"
+        let r = Recipe(
+            title: "Chicken Pasta",
+            ingredients: [chicken, "Pasta"],
+            instructions: ["Cook"],
+            image: "img",
+            cleanedIngredients: [chicken, "Pasta"],
+            additionalInfo: .mock
+        )
+        try dbInterface.insertRecipes([r])
+        
+        // Query with both "chicken" and "breast" should return recipe only once
+        let results = try dbInterface.getRecipes(byIngredients: ["chicken", "breast"])
+        XCTAssertEqual(results.count, 1)
+        XCTAssertEqual(results.first?.title, "Chicken Pasta")
+    }
 }
 
 

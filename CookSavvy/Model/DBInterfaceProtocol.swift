@@ -141,21 +141,34 @@ final class DBInterface: DBInterfaceProtocol {
     func getRecipes(byIngredients ingredients: [Ingredient]) throws -> [Recipe] {
         let namesSet = Set(ingredients.map { $0.name })
         if namesSet.isEmpty { return [] }
-        let names = Array(namesSet)
-        let placeholders = Array(repeating: "?", count: names.count).joined(separator: ",")
-
+        
+        // Extract all words from all ingredient names for word-based matching
+        let allWords = namesSet.flatMap { name in
+            name.lowercased().split(separator: " ").map(String.init)
+        }
+        guard !allWords.isEmpty else { return [] }
+        
+        // Build SQL with LIKE conditions for word-based matching (OR condition)
+        let likeConditions = allWords.enumerated().map { index, _ in
+            "ri.ingredient_name LIKE :word\(index) COLLATE NOCASE"
+        }.joined(separator: " OR ")
+        
         let sql = """
-            SELECT id, title, image, instructions_json, ingredients_json, cleaned_ingredients_json, additional_info_json
+            SELECT DISTINCT r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.cleaned_ingredients_json, r.additional_info_json
             FROM recipes r
-            WHERE EXISTS (
-                SELECT 1 FROM recipe_ingredients ri
-                WHERE ri.recipe_id = r.id AND ri.ingredient_name IN (\(placeholders))
-            )
-            ORDER BY id ASC;
+            INNER JOIN recipe_ingredients ri ON ri.recipe_id = r.id
+            WHERE \(likeConditions)
+            ORDER BY r.id ASC;
         """
-
+        
+        // Build arguments dictionary with word patterns
+        var argsDict: [String: DatabaseValueConvertible] = [:]
+        for (index, word) in allWords.enumerated() {
+            argsDict["word\(index)"] = "%\(word)%"
+        }
+        
         let rows: [Row] = try dbQueue.read { db in
-            try Row.fetchAll(db, sql: sql, arguments: StatementArguments(names))
+            try Row.fetchAll(db, sql: sql, arguments: StatementArguments(argsDict))
         }
 
         var results: [Recipe] = []
@@ -173,9 +186,12 @@ final class DBInterface: DBInterfaceProtocol {
             let cleanedIngredients = try decoder.decode([Ingredient].self, from: Data(cleanedIngredientsJSON.utf8))
             let additionalInfo = try decoder.decode(Recipe.AdditionalInfo.self, from: Data(additionalJSON.utf8))
 
-            // Defensive filter: ensure intersection with query names
-            let recipeIngredientNames = Set(ingredients.map { $0.name })
-            if recipeIngredientNames.isDisjoint(with: namesSet) { continue }
+            // Defensive filter: ensure at least one word from query matches recipe ingredient words
+            let recipeWords = Set(ingredients.flatMap { ing in
+                ing.name.lowercased().split(separator: " ").map(String.init)
+            })
+            let queryWords = Set(allWords)
+            if recipeWords.isDisjoint(with: queryWords) { continue }
 
             results.append(Recipe(
                 title: title,

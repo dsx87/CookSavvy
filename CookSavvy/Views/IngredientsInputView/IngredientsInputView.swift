@@ -111,20 +111,21 @@ struct IngredientsInputView: View {
             })
         }
         .onAppear {
-            let db = DBInterface()
-            let ingrURL = Bundle.main.url(forResource: "Food", withExtension: "json")!
-            let data = try! Data(contentsOf: ingrURL)
-            let ingr = try! JSONDecoder().decode([Ingredient].self, from: data)
-            try! db.insertIngredients(ingr)
-            let csvConv = CSVToJSONReader()
-            let zip = Bundle.main.url(forResource: "food-ingredients-and-recipe-dataset-with-images", withExtension: "zip")!
-            let res:[Recipe] = try! csvConv.parseCSVFromZip(zipURL: zip, csvFilename: "Food Ingredients and Recipe Dataset with Image Name Mapping.csv", useCache: false)
-            try! db.insertRecipes(res)
-            
-            
-            let rec = try! db.searchIngredients(matching: "chicken")
-            let recip = try! db.getRecipes(byIngredients: rec)
-            print("hello")
+//            let db = DBInterface()
+//            let ingrURL = Bundle.main.url(forResource: "Food", withExtension: "json")!
+//            let data = try! Data(contentsOf: ingrURL)
+//            let ingr = try! JSONDecoder().decode([Ingredient].self, from: data)
+//            try! db.insertIngredients(ingr)
+//            let csvConv = CSVToJSONReader()
+//            let zip = Bundle.main.url(forResource: "food-ingredients-and-recipe-dataset-with-images", withExtension: "zip")!
+//            let res:[Recipe] = try! csvConv.parseCSVFromZip(zipURL: zip, csvFilename: "Food Ingredients and Recipe Dataset with Image Name Mapping.csv", useCache: false)
+//            try! db.insertRecipes(res)
+//            
+//            
+//            let rec = try! db.searchIngredients(matching: "chicken")
+//            let recip = try! db.getRecipes(byIngredients: rec)
+//
+//            print("hello")
         }
         
     }
