@@ -1,61 +1,135 @@
 //
 //  IngredientsInputView.swift
 //  CookSavvy
-//
 //  Created by Igor Pivnyk on 28/06/2025.
 //
 
 import SwiftUI
 
-final class IngredientsProvider {
-//    private let db = DBInterface()
-//    
-//    func getIngredientsByString(_ string: String) -> [Ingredient] {
-//        db.getIngredients(byName: string)
-//    }
-}
-
-
+@MainActor
 final class IngredientsInputViewModel: ObservableObject {
+    
+    // MARK: - Published Properties
+    
     @Published var ingredients: [Ingredient] = []
-
     @Published var searchText: String = "" {
         didSet {
-            getIngredientsByString(searchText)
+            handleSearchTextChange(searchText)
         }
     }
     @Published var selectedIngredients: Set<Ingredient> = []
     @Published var cameraViewPresented: Bool = false
     @Published var navigationPath: NavigationPath = NavigationPath()
+    @Published var isLoading: Bool = false
+    @Published var errorMessage: String?
+    
+    // MARK: - Properties
     
     let navigationTitle = "Ingredients Input"
     
-    let ingredientsProvider: IngredientsProvider = .init()
+    private let ingredientsService: IngredientsService
+    private var searchTask: Task<Void, Never>?
     
-    private func getIngredientsByString(_ string: String) {
-        guard !string.isEmpty else {
-            self.ingredients = []
+    // MARK: - Initialization
+    
+    init(ingredientsService: IngredientsService) {
+        self.ingredientsService = ingredientsService
+        
+        // Pre-load ingredients on initialization
+        Task {
+            try? await ingredientsService.ensureIngredientsLoaded()
+        }
+    }
+    
+    // MARK: - Public Methods
+    
+    func autocompletionDidHide() {
+        clearText()
+    }
+    
+    func selectIngredient(_ ingredient: Ingredient) {
+        // Prevent duplicates
+        guard !selectedIngredients.contains(ingredient) else {
             return
         }
-        self.ingredients = [] //ingredientsProvider.getIngredientsByString(string)
+        selectedIngredients.insert(ingredient)
+    }
+    
+    func deselectIngredient(_ ingredient: Ingredient) {
+        selectedIngredients.remove(ingredient)
+    }
+    
+    func toggleIngredient(_ ingredient: Ingredient) {
+        if selectedIngredients.contains(ingredient) {
+            deselectIngredient(ingredient)
+        } else {
+            selectIngredient(ingredient)
+        }
+    }
+    
+    // MARK: - Private Methods
+    
+    private func handleSearchTextChange(_ query: String) {
+        // Cancel previous search
+        searchTask?.cancel()
+        
+        guard !query.isEmpty else {
+            ingredients = []
+            isLoading = false
+            return
+        }
+        
+        searchTask = Task {
+            await searchIngredients(query)
+        }
+    }
+    
+    private func searchIngredients(_ query: String) async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            // Add small delay for debouncing
+            try await Task.sleep(nanoseconds: 300_000_000) // 300ms
+            
+            // Check if task was cancelled
+            guard !Task.isCancelled else {
+                isLoading = false
+                return
+            }
+            
+            let results = try await ingredientsService.searchFullIngredients(
+                matching: query,
+                limit: 20
+            )
+            
+            ingredients = results
+            isLoading = false
+        } catch is CancellationError {
+            // Task was cancelled - this is expected, don't show error
+            ingredients = []
+            isLoading = false
+        } catch {
+            // Actual error occurred
+            ingredients = []
+            isLoading = false
+            errorMessage = "Failed to search ingredients: \(error.localizedDescription)"
+        }
     }
     
     private func clearText() {
         searchText = ""
     }
     
-    func autocompletionDidHide() {
-        clearText()
-    }
+    // MARK: - Cleanup
     
-    init() {
-        
+    deinit {
+        searchTask?.cancel()
     }
-    
 }
 
 struct IngredientsInputView: View {
-    @StateObject var viewModel: IngredientsInputViewModel// = IngredientsInputViewModel()
+    @StateObject var viewModel: IngredientsInputViewModel
     
     var body: some View {
         NavigationStack(path: $viewModel.navigationPath) {
@@ -65,22 +139,34 @@ struct IngredientsInputView: View {
                     cameraTapped: $viewModel.cameraViewPresented,
                     text: $viewModel.searchText
                 )
-                    .popover(isPresented: Binding<Bool>(
-                        get: { !viewModel.searchText.isEmpty },
-                        set: { isPresented in
-                            if !isPresented {
-                                viewModel.autocompletionDidHide()
-                            }
-                        } )
-                    ) {
-                        IngredientsInputAutocompletion(
-                            ingredients: $viewModel.ingredients,
-                            selectedIngredients: $viewModel.selectedIngredients
-                        )
-                            .frame(width: 400, height: 300)
-                            .padding()
-                            .presentationCompactAdaptation(.popover)
+                .popover(isPresented: Binding<Bool>(
+                    get: { !viewModel.searchText.isEmpty },
+                    set: { isPresented in
+                        if !isPresented {
+                            viewModel.autocompletionDidHide()
+                        }
+                    })
+                ) {
+                    VStack {
+                        if viewModel.isLoading {
+                            ProgressView("Searching...")
+                                .padding()
+                        } else if let error = viewModel.errorMessage {
+                            Text(error)
+                                .foregroundColor(.red)
+                                .padding()
+                        } else {
+                            IngredientsInputAutocompletion(
+                                ingredients: $viewModel.ingredients,
+                                selectedIngredients: $viewModel.selectedIngredients
+                            )
+                        }
                     }
+                    .frame(width: 400, height: 300)
+                    .padding()
+                    .presentationCompactAdaptation(.popover)
+                }
+                
                 IngredientsInputSelectedIngredients(ingredientsNames: $viewModel.selectedIngredients)
                 IngredientsInputFastIngredientSelector(selectedIngredients: $viewModel.selectedIngredients)
                 Spacer(minLength: 150)
@@ -94,7 +180,6 @@ struct IngredientsInputView: View {
                     .foregroundStyle(Color.backOrange2)
                     .ignoresSafeArea()
             })
-            
             .navigationTitle("Ingredients Input")
             .navigationDestination(for: String.self) { _ in
                 RecipesResultView(
@@ -103,34 +188,20 @@ struct IngredientsInputView: View {
                 )
             }
             .popover(isPresented: $viewModel.cameraViewPresented, content: {
-                    Text("not implmemented yet, close")
-                        .presentationCompactAdaptation(.fullScreenCover)
-                        .onTapGesture {
-                            viewModel.cameraViewPresented = false
-                        }
+                Text("not implemented yet, close")
+                    .presentationCompactAdaptation(.fullScreenCover)
+                    .onTapGesture {
+                        viewModel.cameraViewPresented = false
+                    }
             })
         }
-        .onAppear {
-//            let db = DBInterface()
-//            let ingrURL = Bundle.main.url(forResource: "Food", withExtension: "json")!
-//            let data = try! Data(contentsOf: ingrURL)
-//            let ingr = try! JSONDecoder().decode([Ingredient].self, from: data)
-//            try! db.insertIngredients(ingr)
-//            let csvConv = CSVToJSONReader()
-//            let zip = Bundle.main.url(forResource: "food-ingredients-and-recipe-dataset-with-images", withExtension: "zip")!
-//            let res:[Recipe] = try! csvConv.parseCSVFromZip(zipURL: zip, csvFilename: "Food Ingredients and Recipe Dataset with Image Name Mapping.csv", useCache: false)
-//            try! db.insertRecipes(res)
-//            
-//            
-//            let rec = try! db.searchIngredients(matching: "chicken")
-//            let recip = try! db.getRecipes(byIngredients: rec)
-//
-//            print("hello")
-        }
-        
     }
 }
 
 #Preview("IngredientsInputView") {
-    IngredientsInputView(viewModel: .init())
+    IngredientsInputView(
+        viewModel: IngredientsInputViewModel(
+            ingredientsService: IngredientsService()
+        )
+    )
 }

@@ -8,19 +8,20 @@
 import SwiftUI
 
 struct TabContainerView: View {
+    var ingredientsService: IngredientsService = .init()
     var body: some View {
         TabView {
-            IngredientsInputView(viewModel: .init())
+            IngredientsInputView(viewModel: .init(ingredientsService: ingredientsService))
                 .tabItem {
                     Image(systemName: "carrot")
                     Text("Ingredients")
                 }
-            RecipesResultView(selectedIngredients: ["Pasta, Basta, Something"])
+            RecipesResultView(selectedIngredients: ["Pasta, Basta, Something"], navigationPath: .constant(.init()))
                 .tabItem {
                     Image(systemName: "clock")
                     Text("Recent Search")
                 }
-            RecipesResultView(selectedIngredients: ["Pasta, Basta, Something"])
+            RecipesResultView(selectedIngredients: ["Pasta, Basta, Something"], navigationPath: .constant(.init()))
                 .tabItem {
                     Image(systemName: "fork.knife.circle")
                     Text("Recent Dishes")

@@ -199,7 +199,7 @@ Memory Cache → Disk Cache → ImageExtractor (ZIP)
 - ✅ Service created
 - ✅ Tests written and passing
 - ✅ Documentation complete
-- ⬜ Integrate into RecipesResultView
+- ✅ **Integrated into RecipesResultView**
 - ⬜ Add UI for source selection
 
 ### Ingredients Service
@@ -207,16 +207,16 @@ Memory Cache → Disk Cache → ImageExtractor (ZIP)
 - ✅ Tests written and passing
 - ✅ Documentation complete
 - ✅ Integration example provided
-- ⬜ Integrate into IngredientsInputViewModel
-- ⬜ Update UI with loading states
+- ✅ **Integrated into IngredientsInputViewModel**
+- ✅ **UI updated with loading states**
 
 ### Image Service
 - ✅ Service created
 - ✅ Tests written and passing
 - ✅ Documentation complete
-- ⬜ Integrate into recipe views
-- ⬜ Add image prefetching to list views
-- ⬜ Handle loading states in UI
+- ✅ **Integrated into RecipesResultView**
+- ✅ **Batch image loading implemented**
+- ✅ **Loading states in UI**
 
 ---
 
