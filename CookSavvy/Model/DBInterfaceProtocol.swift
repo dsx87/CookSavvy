@@ -25,7 +25,7 @@ protocol DBInterfaceProtocol {
 // MARK: - GRDB-backed implementation
 final class DBInterface: DBInterfaceProtocol {
     // MARK: - DB
-    private let dbQueue: DatabaseQueue
+    private let dbWriter: DatabaseWriter
 
     // MARK: - JSON coders
     private let encoder = JSONEncoder()
@@ -37,26 +37,49 @@ final class DBInterface: DBInterfaceProtocol {
 
     // MARK: - Init
     init() {
-        var configuration = Configuration()
-        // Configure the database at opening time
-        configuration.prepareDatabase { db in
-            try db.execute(sql: "PRAGMA foreign_keys = ON;")
-            try db.execute(sql: "PRAGMA journal_mode = MEMORY;")
-            try db.execute(sql: "PRAGMA synchronous = OFF;")
-            try db.execute(sql: "PRAGMA temp_store = MEMORY;")
-            try db.execute(sql: "PRAGMA cache_size = -20000;") // ~20MB cache
-            try db.execute(sql: "PRAGMA mmap_size = 268435456;") // 256MB
-            try db.execute(sql: "PRAGMA locking_mode = EXCLUSIVE;")
-        }
+        let writer: DatabaseWriter
+        do {
+            // 1. Define database path in Application Support
+            let fileManager = FileManager.default
+            let appSupportURL = try fileManager.url(
+                for: .applicationSupportDirectory,
+                in: .userDomainMask,
+                appropriateFor: nil,
+                create: true
+            )
+            let directoryURL = appSupportURL.appendingPathComponent("CookSavvy", isDirectory: true)
+            try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+            let databaseURL = directoryURL.appendingPathComponent("db.sqlite")
 
-        // In-memory database for tests & performance
-        dbQueue = try! DatabaseQueue(path: ":memory:", configuration: configuration)
+            // 2. Configure database
+            var configuration = Configuration()
+            configuration.prepareDatabase { db in
+                try db.execute(sql: "PRAGMA foreign_keys = ON;")
+            }
+
+            // 3. Create DatabasePool
+            writer = try DatabasePool(path: databaseURL.path, configuration: configuration)
+        } catch {
+            print("Database creation failed: \(error). Falling back to in-memory.")
+            let configuration = Configuration()
+            writer = try! DatabaseQueue(path: ":memory:", configuration: configuration)
+        }
+        
+        self.dbWriter = writer
+        try! createSchema()
+    }
+    
+    /// Initializer for testing to force in-memory
+    init(inMemory: Bool) {
+        let configuration = Configuration()
+        self.dbWriter = try! DatabaseQueue(path: ":memory:", configuration: configuration)
         try! createSchema()
     }
 
     // MARK: - Schema
     private func createSchema() throws {
-        try dbQueue.write { db in
+        try dbWriter.write { db in
+            // 1. Ingredients
             try db.execute(sql: """
                 CREATE TABLE IF NOT EXISTS ingredients (
                     name TEXT PRIMARY KEY,
@@ -66,7 +89,32 @@ final class DBInterface: DBInterfaceProtocol {
                     food_subgroup TEXT
                 );
                 """)
+            
+            // FTS for Ingredients
+            // We use an external content FTS table to save space and keep 'ingredients' as the source of truth
+            try db.execute(sql: """
+                CREATE VIRTUAL TABLE IF NOT EXISTS ingredients_fts USING fts5(
+                    name,
+                    content='ingredients',
+                    content_rowid='rowid'
+                );
+                """)
+            
+            // Triggers to keep ingredients_fts in sync
+            try db.execute(sql: """
+                CREATE TRIGGER IF NOT EXISTS ingredients_ai AFTER INSERT ON ingredients BEGIN
+                    INSERT INTO ingredients_fts(rowid, name) VALUES (new.rowid, new.name);
+                END;
+                CREATE TRIGGER IF NOT EXISTS ingredients_ad AFTER DELETE ON ingredients BEGIN
+                    INSERT INTO ingredients_fts(ingredients_fts, rowid, name) VALUES('delete', old.rowid, old.name);
+                END;
+                CREATE TRIGGER IF NOT EXISTS ingredients_au AFTER UPDATE ON ingredients BEGIN
+                    INSERT INTO ingredients_fts(ingredients_fts, rowid, name) VALUES('delete', old.rowid, old.name);
+                    INSERT INTO ingredients_fts(rowid, name) VALUES (new.rowid, new.name);
+                END;
+                """)
 
+            // 2. Recipes
             try db.execute(sql: """
                 CREATE TABLE IF NOT EXISTS recipes (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,7 +126,31 @@ final class DBInterface: DBInterfaceProtocol {
                     additional_info_json TEXT NOT NULL
                 );
                 """)
+            
+            // FTS for Recipes (indexing title and maybe ingredients content if needed, but title is most important for now)
+            try db.execute(sql: """
+                CREATE VIRTUAL TABLE IF NOT EXISTS recipes_fts USING fts5(
+                    title,
+                    content='recipes',
+                    content_rowid='id'
+                );
+                """)
+            
+            // Triggers for recipes_fts
+            try db.execute(sql: """
+                CREATE TRIGGER IF NOT EXISTS recipes_ai AFTER INSERT ON recipes BEGIN
+                    INSERT INTO recipes_fts(rowid, title) VALUES (new.id, new.title);
+                END;
+                CREATE TRIGGER IF NOT EXISTS recipes_ad AFTER DELETE ON recipes BEGIN
+                    INSERT INTO recipes_fts(recipes_fts, rowid, title) VALUES('delete', old.id, old.title);
+                END;
+                CREATE TRIGGER IF NOT EXISTS recipes_au AFTER UPDATE ON recipes BEGIN
+                    INSERT INTO recipes_fts(recipes_fts, rowid, title) VALUES('delete', old.id, old.title);
+                    INSERT INTO recipes_fts(rowid, title) VALUES (new.id, new.title);
+                END;
+                """)
 
+            // 3. Recipe Ingredients Link
             try db.execute(sql: """
                 CREATE TABLE IF NOT EXISTS recipe_ingredients (
                     recipe_id INTEGER NOT NULL,
@@ -104,7 +176,7 @@ final class DBInterface: DBInterfaceProtocol {
         }
 
         // Fallback to DB lookup
-        return try dbQueue.read { db in
+        return try dbWriter.read { db in
             if let row = try Row.fetchOne(db, sql: "SELECT name, description, picture_file_name, food_group, food_subgroup FROM ingredients WHERE name = ? COLLATE NOCASE;", arguments: [name]) {
                 let ingredient = Ingredient(
                     name: row["name"],
@@ -122,11 +194,24 @@ final class DBInterface: DBInterfaceProtocol {
 
     func searchIngredients(matching query: String, limit: Int = 50) throws -> [Ingredient] {
         guard !query.isEmpty else { return [] }
-        let pattern = "%\(query)%"
-        return try dbQueue.read { db in
-            let sql = "SELECT name, description, picture_file_name, food_group, food_subgroup FROM ingredients WHERE name LIKE :pattern COLLATE NOCASE ORDER BY name ASC LIMIT :limit;"
-            let args: StatementArguments = ["pattern": pattern, "limit": limit]
-            return try Row.fetchAll(db, sql: sql, arguments: args).map { row in
+        
+        // Use FTS5 for efficient prefix search
+        // We want "chick*" to match "Chicken", "Chicken Breast", etc.
+        // Sanitize query to avoid FTS syntax errors if user types special chars
+        let sanitized = query.replacingOccurrences(of: "\"", with: "")
+        let pattern = "\"\(sanitized)\"*" // Prefix search
+        
+        return try dbWriter.read { db in
+            // Join with the main table to get full details
+            let sql = """
+                SELECT i.name, i.description, i.picture_file_name, i.food_group, i.food_subgroup
+                FROM ingredients i
+                JOIN ingredients_fts fts ON fts.rowid = i.rowid
+                WHERE ingredients_fts MATCH ?
+                ORDER BY rank
+                LIMIT ?;
+            """
+            return try Row.fetchAll(db, sql: sql, arguments: [pattern, limit]).map { row in
                 Ingredient(
                     name: row["name"],
                     description: row["description"],
@@ -149,6 +234,13 @@ final class DBInterface: DBInterfaceProtocol {
         guard !allWords.isEmpty else { return [] }
         
         // Build SQL with LIKE conditions for word-based matching (OR condition)
+        // Note: We could use FTS here too if we indexed recipe_ingredients, but the current logic
+        // is specific about matching ANY word in the ingredient list against the recipe ingredients.
+        // The existing logic seems to want to find recipes that contain *any* of the provided ingredients (or parts of them).
+        // Let's keep the logic but optimize if possible.
+        // Actually, the previous implementation did a LIKE query on `recipe_ingredients`.
+        // We can keep that for now to ensure behavior consistency, as FTS on joined tables is complex.
+        
         let likeConditions = allWords.enumerated().map { index, _ in
             "ri.ingredient_name LIKE :word\(index) COLLATE NOCASE"
         }.joined(separator: " OR ")
@@ -167,7 +259,7 @@ final class DBInterface: DBInterfaceProtocol {
             argsDict["word\(index)"] = "%\(word)%"
         }
         
-        let rows: [Row] = try dbQueue.read { db in
+        let rows: [Row] = try dbWriter.read { db in
             try Row.fetchAll(db, sql: sql, arguments: StatementArguments(argsDict))
         }
 
@@ -207,7 +299,7 @@ final class DBInterface: DBInterfaceProtocol {
 
     func insertIngredients(_ ingredients: [Ingredient]) throws {
         guard !ingredients.isEmpty else { return }
-        try dbQueue.write { db in
+        try dbWriter.write { db in
             for ing in ingredients {
                 // Track variant for deterministic retrieval under duplicate names
                 let key = ing.name.lowercased()
@@ -229,7 +321,7 @@ final class DBInterface: DBInterfaceProtocol {
 
     func insertRecipes(_ recipes: [Recipe]) throws {
         guard !recipes.isEmpty else { return }
-        try dbQueue.write { db in
+        try dbWriter.write { db in
             for r in recipes {
                 let instructionsJSON = try String(data: encoder.encode(r.instructions), encoding: .utf8) ?? "[]"
                 let ingredientsJSON = try String(data: encoder.encode(r.ingredients), encoding: .utf8) ?? "[]"
@@ -268,10 +360,13 @@ final class DBInterface: DBInterfaceProtocol {
     }
 
     func clearDatabase() throws {
-        try dbQueue.write { db in
+        try dbWriter.write { db in
             try db.execute(sql: "DELETE FROM recipe_ingredients;")
             try db.execute(sql: "DELETE FROM recipes;")
             try db.execute(sql: "DELETE FROM ingredients;")
+            // FTS tables are cleared automatically via triggers or we can explicitly clear them if needed,
+            // but DELETE FROM main_table triggers DELETE on FTS.
+            
             ingredientVariants.removeAll()
             ingredientFetchIndex.removeAll()
         }
@@ -285,7 +380,7 @@ final class DBInterface: DBInterfaceProtocol {
     func removeIngredients(_ names: [String]) throws {
         guard !names.isEmpty else { return }
         let placeholders = Array(repeating: "?", count: names.count).joined(separator: ",")
-        try dbQueue.write { db in
+        try dbWriter.write { db in
             try db.execute(sql: "DELETE FROM ingredients WHERE name IN (\(placeholders));", arguments: StatementArguments(names))
             // sync in-memory trackers
             for n in names {
@@ -297,7 +392,7 @@ final class DBInterface: DBInterfaceProtocol {
     }
 
     func removeAllIngredients() throws {
-        try dbQueue.write { db in
+        try dbWriter.write { db in
             try db.execute(sql: "DELETE FROM ingredients;")
             ingredientVariants.removeAll()
             ingredientFetchIndex.removeAll()
@@ -309,7 +404,7 @@ final class DBInterface: DBInterfaceProtocol {
     }
 
     func removeAllRecipes() throws {
-        try dbQueue.write { db in
+        try dbWriter.write { db in
             try db.execute(sql: "DELETE FROM recipes;")
             try db.execute(sql: "DELETE FROM recipe_ingredients;")
         }
@@ -329,7 +424,7 @@ final class DBInterface: DBInterfaceProtocol {
             )
         );
         """
-        try dbQueue.write { db in
+        try dbWriter.write { db in
             try db.execute(sql: sql, arguments: StatementArguments(Array(names)))
         }
     }
@@ -338,7 +433,7 @@ final class DBInterface: DBInterfaceProtocol {
     private func removeRecipes(withTitles titles: [String]) throws {
         guard !titles.isEmpty else { return }
         let placeholders = Array(repeating: "?", count: titles.count).joined(separator: ",")
-        try dbQueue.write { db in
+        try dbWriter.write { db in
             try db.execute(sql: "DELETE FROM recipes WHERE title IN (\(placeholders));", arguments: StatementArguments(titles))
         }
     }

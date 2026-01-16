@@ -52,7 +52,7 @@ final class RecipeServiceTests: XCTestCase {
     var recipeService: RecipeService!
     
     override func setUpWithError() throws {
-        dbInterface = DBInterface()
+        dbInterface = DBInterface(inMemory: true)
     }
     
     override func tearDownWithError() throws {

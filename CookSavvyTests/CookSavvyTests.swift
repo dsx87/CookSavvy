@@ -13,7 +13,7 @@ final class DBInterfaceTests: XCTestCase {
     var dbInterface: DBInterface!
 //    var mockRecipes: [Recipe] = []
     override func setUpWithError() throws {
-        dbInterface = DBInterface()
+        dbInterface = DBInterface(inMemory: true)
     }
 
     override func tearDownWithError() throws {
