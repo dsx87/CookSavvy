@@ -8,33 +8,52 @@
 import SwiftUI
 
 struct TabContainerView: View {
-    var ingredientsService: IngredientsService = .init()
+    @EnvironmentObject var container: AppContainer
+
     var body: some View {
         TabView {
-            IngredientsInputView(viewModel: .init(ingredientsService: ingredientsService))
-                .tabItem {
-                    Image(systemName: "carrot")
-                    Text("Ingredients")
-                }
-            RecipesResultView(selectedIngredients: ["Pasta, Basta, Something"], navigationPath: .constant(.init()))
-                .tabItem {
-                    Image(systemName: "clock")
-                    Text("Recent Search")
-                }
-            RecipesResultView(selectedIngredients: ["Pasta, Basta, Something"], navigationPath: .constant(.init()))
-                .tabItem {
-                    Image(systemName: "fork.knife.circle")
-                    Text("Recent Dishes")
-                }
-            SettingsView()
-                .tabItem {
-                    Image(systemName: "gear")
-                    Text("Settings")
-                }
+            IngredientsInputView(
+                viewModel: IngredientsInputViewModel(
+                    ingredientsService: container.ingredientsService,
+                    userDataService: container.userDataService
+                )
+            )
+            .tabItem {
+                Image(systemName: "carrot")
+                Text("Ingredients")
+            }
+
+            RecentRecipesView(
+                userDataService: container.userDataService,
+                imageService: container.imageService
+            )
+            .tabItem {
+                Image(systemName: "clock")
+                Text("Recent")
+            }
+
+            FavoritesView(
+                userDataService: container.userDataService,
+                imageService: container.imageService
+            )
+            .tabItem {
+                Image(systemName: "heart")
+                Text("Favorites")
+            }
+
+            SettingsView(
+                userDataService: container.userDataService,
+                dbInterface: container.dbInterface
+            )
+            .tabItem {
+                Image(systemName: "gear")
+                Text("Settings")
+            }
         }
     }
 }
 
 #Preview {
     TabContainerView()
+        .environmentObject(AppContainer())
 }

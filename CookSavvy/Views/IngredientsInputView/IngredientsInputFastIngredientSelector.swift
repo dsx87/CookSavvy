@@ -26,20 +26,22 @@ struct IngredientsInputFastIngredientSelector: View {
     init(
         fastIngredients: [Ingredient] = Self.defaultFastIngredients,
         size: Int = 3,
-        selectedIngredients: Binding<Set<Ingredient>>
+        selectedIngredients: Binding<Set<Ingredient>>,
+        recentIngredients: [Ingredient] = []
     ) {
-        var fastIngredients = fastIngredients
-        let ingredientsCount = fastIngredients.count
+        // Use recent ingredients if available, otherwise fall back to defaults
+        var ingredientsToUse = !recentIngredients.isEmpty ? recentIngredients : fastIngredients
+        let ingredientsCount = ingredientsToUse.count
         let expectedCount = size*size
         if ingredientsCount > expectedCount {
-            fastIngredients = Array(fastIngredients.prefix(expectedCount))
+            ingredientsToUse = Array(ingredientsToUse.prefix(expectedCount))
         }
         if ingredientsCount < expectedCount {
             let diff = expectedCount - ingredientsCount
             let emptyIngredients: [Ingredient] = (0..<diff).map { _ in .empty}
-            fastIngredients.append(contentsOf: emptyIngredients)
+            ingredientsToUse.append(contentsOf: emptyIngredients)
         }
-        self.fastIngredients = fastIngredients
+        self.fastIngredients = ingredientsToUse
         self.size = size
         self._selectedIngredients = Binding(projectedValue: selectedIngredients)
     }

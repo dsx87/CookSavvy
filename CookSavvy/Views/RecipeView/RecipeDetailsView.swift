@@ -8,30 +8,57 @@
 import SwiftUI
 
 struct RecipeDetailsView: View {
-    let recipe: Recipe
+    @StateObject private var viewModel: RecipeDetailsViewModel
+
+    init(recipe: Recipe, userDataService: UserDataService) {
+        _viewModel = StateObject(
+            wrappedValue: RecipeDetailsViewModel(
+                recipe: recipe,
+                userDataService: userDataService
+            )
+        )
+    }
+
+    /// Convenience init for testing
+    init(viewModel: RecipeDetailsViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
+
     var body: some View {
-        
         VStack(alignment: .leading) {
-            AsyncImageDisk(imageName: recipe.image) {
+            AsyncImageDisk(imageName: viewModel.recipe.image) {
                 DefaultPlaceholder()
             }
             .frame(maxHeight: 250)
             Group {
-                Text(recipe.title)
-                    .font(.title)
-                RecipeDetailsAdditionalInfo(info: recipe.additionalInfo)
+                HStack {
+                    Text(viewModel.recipe.title)
+                        .font(.title)
+                    Spacer()
+                    Button(action: {
+                        Task {
+                            await viewModel.toggleFavorite()
+                        }
+                    }) {
+                        Image(systemName: viewModel.isFavorite ? "heart.fill" : "heart")
+                            .font(.title2)
+                            .foregroundColor(viewModel.isFavorite ? .red : .gray)
+                    }
+                    .disabled(viewModel.isLoadingFavorite)
+                }
+                RecipeDetailsAdditionalInfo(info: viewModel.recipe.additionalInfo)
                 RecipeDetailsList(
                     title: "🛒 Ingredients",
-                    items: recipe.ingredients.map { "• " + $0.name }
+                    items: viewModel.recipe.ingredients.map { "• " + $0.name }
                 )
                 RecipeDetailsList(
                     title: "🧑‍🍳 Instructions",
-                    items: recipe.instructions.map { "• " + $0 }
+                    items: viewModel.recipe.instructions.map { "• " + $0 }
                 )
             }
             .padding(.horizontal)
         }
-        
+
         .background {
             Color.lightGrayBack
                 .ignoresSafeArea()
@@ -41,7 +68,11 @@ struct RecipeDetailsView: View {
 
 
 #Preview("RecipeDetailsView") {
-    RecipeDetailsView(recipe: .init())
+    let dbInterface = DBInterface()
+    return RecipeDetailsView(
+        recipe: .init(),
+        userDataService: UserDataService(dbInterface: dbInterface)
+    )
 }
 
 
