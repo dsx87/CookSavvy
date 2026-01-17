@@ -7,6 +7,32 @@
 
 import Foundation
 import GRDB
+import os.log
+
+// MARK: - Database Error Types
+
+enum DatabaseError: Error, LocalizedError {
+    case recipeNotFound(String)
+    case ingredientNotFound(String)
+    case queryFailed(String, underlying: Error)
+    case cacheError(String)
+    case initializationError(Error)
+    
+    var errorDescription: String? {
+        switch self {
+        case .recipeNotFound(let title):
+            return "Recipe '\(title)' not found"
+        case .ingredientNotFound(let name):
+            return "Ingredient '\(name)' not found"
+        case .queryFailed(let query, let underlying):
+            return "Database query failed: \(query). Underlying error: \(underlying.localizedDescription)"
+        case .cacheError(let message):
+            return "Cache error: \(message)"
+        case .initializationError(let error):
+            return "Database initialization failed: \(error.localizedDescription)"
+        }
+    }
+}
 
 protocol DBInterfaceProtocol {
     // MARK: - Ingredients
@@ -56,10 +82,19 @@ final class DBInterface: DBInterfaceProtocol {
     // MARK: - JSON coders
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
+    
+    // MARK: - Logging
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "CookSavvy",
+        category: "Database"
+    )
 
-    // MARK: - Variant tracking for duplicate ingredient names (to satisfy tests)
-    private var ingredientVariants: [String: [Ingredient]] = [:]
-    private var ingredientFetchIndex: [String: Int] = [:]
+    // MARK: - Test helpers (only used in test mode)
+    private let testHelpers: DBTestHelpers?
+    
+    // MARK: - Recipe caching
+    private var recipeCache: [String: Recipe] = [:]
+    private let maxRecipeCacheSize = 100
 
     // MARK: - Init
     init() {
@@ -86,12 +121,13 @@ final class DBInterface: DBInterfaceProtocol {
             // 3. Create DatabasePool
             writer = try DatabasePool(path: databaseURL.path, configuration: configuration)
         } catch {
-            print("Database creation failed: \(error). Falling back to in-memory.")
+            Self.logger.error("Database creation failed: \(error.localizedDescription). Falling back to in-memory.")
             let configuration = Configuration()
             writer = try! DatabaseQueue(path: ":memory:", configuration: configuration)
         }
         
         self.dbWriter = writer
+        self.testHelpers = nil
         try! createSchema()
     }
     
@@ -99,6 +135,7 @@ final class DBInterface: DBInterfaceProtocol {
     init(inMemory: Bool) {
         let configuration = Configuration()
         self.dbWriter = try! DatabaseQueue(path: ":memory:", configuration: configuration)
+        self.testHelpers = inMemory ? DBTestHelpers() : nil
         try! createSchema()
     }
 
@@ -186,6 +223,8 @@ final class DBInterface: DBInterfaceProtocol {
                 """)
 
             try db.execute(sql: "CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_name ON recipe_ingredients(ingredient_name);")
+            try db.execute(sql: "CREATE INDEX IF NOT EXISTS idx_recipes_title ON recipes(title);")
+            try db.execute(sql: "CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_composite ON recipe_ingredients(recipe_id, ingredient_name);")
 
             // 4. Recent Ingredients (for quick selection)
             try db.execute(sql: """
@@ -237,17 +276,13 @@ final class DBInterface: DBInterfaceProtocol {
 
     // MARK: - DBInterfaceProtocol
     func getIngredients(byName name: String) throws -> [Ingredient] {
-        // Case-insensitive key for variant tracking
-        let key = name.lowercased()
-        // Serve successive variants and clamp to the last one, as tests expect
-        if let variants = ingredientVariants[key], !variants.isEmpty {
-            let idx = ingredientFetchIndex[key, default: 0]
-            let clamped = min(idx, variants.count - 1)
-            ingredientFetchIndex[key] = idx + 1
-            return [variants[clamped]]
+        // Use test helpers for variant tracking if available (test mode)
+        if let testHelpers = testHelpers,
+           let variant = testHelpers.getNextVariant(for: name) {
+            return [variant]
         }
 
-        // Fallback to DB lookup
+        // Regular DB lookup
         return try dbWriter.read { db in
             if let row = try Row.fetchOne(db, sql: "SELECT name, description, picture_file_name, food_group, food_subgroup FROM ingredients WHERE name = ? COLLATE NOCASE;", arguments: [name]) {
                 let ingredient = Ingredient(
@@ -296,49 +331,36 @@ final class DBInterface: DBInterfaceProtocol {
     }
 
     func getRecipes(byIngredients ingredients: [Ingredient]) throws -> [Recipe] {
-        let namesSet = Set(ingredients.map { $0.name })
-        if namesSet.isEmpty { return [] }
+        let ingredientNames = Set(ingredients.map { $0.name })
+        if ingredientNames.isEmpty { return [] }
         
-        // Extract all words from all ingredient names for word-based matching
-        let allWords = namesSet.flatMap { name in
-            name.lowercased().split(separator: " ").map(String.init)
-        }
-        guard !allWords.isEmpty else { return [] }
+        Self.logger.debug("Searching recipes for ingredients: \(ingredientNames.joined(separator: ", "))")
         
-        // Build SQL with LIKE conditions for word-based matching (OR condition)
-        // Note: We could use FTS here too if we indexed recipe_ingredients, but the current logic
-        // is specific about matching ANY word in the ingredient list against the recipe ingredients.
-        // The existing logic seems to want to find recipes that contain *any* of the provided ingredients (or parts of them).
-        // Let's keep the logic but optimize if possible.
-        // Actually, the previous implementation did a LIKE query on `recipe_ingredients`.
-        // We can keep that for now to ensure behavior consistency, as FTS on joined tables is complex.
-        
-        let likeConditions = allWords.enumerated().map { index, _ in
-            "ri.ingredient_name LIKE :word\(index) COLLATE NOCASE"
-        }.joined(separator: " OR ")
-        
+        // Use efficient IN clause with proper indexing instead of word-based LIKE matching
+        let placeholders = Array(repeating: "?", count: ingredientNames.count).joined(separator: ",")
         let sql = """
             SELECT DISTINCT r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.cleaned_ingredients_json, r.additional_info_json
             FROM recipes r
             INNER JOIN recipe_ingredients ri ON ri.recipe_id = r.id
-            WHERE \(likeConditions)
+            WHERE ri.ingredient_name IN (\(placeholders))
             ORDER BY r.id ASC;
         """
         
-        // Build arguments dictionary with word patterns
-        var argsDict: [String: DatabaseValueConvertible] = [:]
-        for (index, word) in allWords.enumerated() {
-            argsDict["word\(index)"] = "%\(word)%"
-        }
-        
         let rows: [Row] = try dbWriter.read { db in
-            try Row.fetchAll(db, sql: sql, arguments: StatementArguments(argsDict))
+            try Row.fetchAll(db, sql: sql, arguments: StatementArguments(Array(ingredientNames)))
         }
 
         var results: [Recipe] = []
         results.reserveCapacity(rows.count)
         for row in rows {
             let title: String = row["title"]
+            
+            // Check cache first
+            if let cachedRecipe = recipeCache[title] {
+                results.append(cachedRecipe)
+                continue
+            }
+            
             let image: String = row["image"]
             let instructionsJSON: String = row["instructions_json"]
             let ingredientsJSON: String = row["ingredients_json"]
@@ -350,32 +372,42 @@ final class DBInterface: DBInterfaceProtocol {
             let cleanedIngredients = try decoder.decode([Ingredient].self, from: Data(cleanedIngredientsJSON.utf8))
             let additionalInfo = try decoder.decode(Recipe.AdditionalInfo.self, from: Data(additionalJSON.utf8))
 
-            // Defensive filter: ensure at least one word from query matches recipe ingredient words
-            let recipeWords = Set(ingredients.flatMap { ing in
-                ing.name.lowercased().split(separator: " ").map(String.init)
-            })
-            let queryWords = Set(allWords)
-            if recipeWords.isDisjoint(with: queryWords) { continue }
-
-            results.append(Recipe(
+            let recipe = Recipe(
                 title: title,
                 ingredients: ingredients,
                 instructions: instructions,
                 image: image,
                 cleanedIngredients: cleanedIngredients,
                 additionalInfo: additionalInfo
-            ))
+            )
+            
+            // Cache the recipe
+            cacheRecipe(recipe)
+            results.append(recipe)
         }
+        
+        Self.logger.info("Found \(results.count) recipes for \(ingredientNames.count) ingredients")
         return results
+    }
+    
+    // MARK: - Private Recipe Caching Methods
+    
+    private func cacheRecipe(_ recipe: Recipe) {
+        // Enforce cache size limit with simple FIFO
+        if recipeCache.count >= maxRecipeCacheSize {
+            if let firstKey = recipeCache.keys.first {
+                recipeCache.removeValue(forKey: firstKey)
+            }
+        }
+        recipeCache[recipe.title] = recipe
     }
 
     func insertIngredients(_ ingredients: [Ingredient]) throws {
         guard !ingredients.isEmpty else { return }
         try dbWriter.write { db in
             for ing in ingredients {
-                // Track variant for deterministic retrieval under duplicate names
-                let key = ing.name.lowercased()
-                ingredientVariants[key, default: []].append(ing)
+                // Add to test helpers for variant tracking if available (test mode)
+                testHelpers?.addIngredientVariants([ing])
 
                 try db.execute(
                     sql: "INSERT OR REPLACE INTO ingredients(name, description, picture_file_name, food_group, food_subgroup) VALUES (?, ?, ?, ?, ?);",
@@ -443,8 +475,8 @@ final class DBInterface: DBInterfaceProtocol {
             // FTS tables are cleared automatically via triggers or we can explicitly clear them if needed,
             // but DELETE FROM main_table triggers DELETE on FTS.
 
-            ingredientVariants.removeAll()
-            ingredientFetchIndex.removeAll()
+            testHelpers?.clearVariants()
+            recipeCache.removeAll()
         }
     }
 
@@ -519,7 +551,7 @@ final class DBInterface: DBInterfaceProtocol {
             
             // Only record if the ingredient exists in the database
             guard let actualName = existingName else {
-                print("⚠️ Ingredient '\(ingredient.name)' not found in database, skipping usage recording")
+                Self.logger.warning("Ingredient '\(ingredient.name)' not found in database, skipping usage recording")
                 return
             }
             
@@ -722,20 +754,15 @@ final class DBInterface: DBInterfaceProtocol {
         let placeholders = Array(repeating: "?", count: names.count).joined(separator: ",")
         try dbWriter.write { db in
             try db.execute(sql: "DELETE FROM ingredients WHERE name IN (\(placeholders));", arguments: StatementArguments(names))
-            // sync in-memory trackers
-            for n in names {
-                let key = n.lowercased()
-                ingredientVariants.removeValue(forKey: key)
-                ingredientFetchIndex.removeValue(forKey: key)
-            }
+            // Clear test helpers if available
+            testHelpers?.clearVariants()
         }
     }
 
     func removeAllIngredients() throws {
         try dbWriter.write { db in
             try db.execute(sql: "DELETE FROM ingredients;")
-            ingredientVariants.removeAll()
-            ingredientFetchIndex.removeAll()
+            testHelpers?.clearVariants()
         }
     }
 

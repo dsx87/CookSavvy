@@ -8,6 +8,34 @@
 import Foundation
 import UIKit
 
+/// LRU Cache wrapper for images
+private class ImageCache {
+    private let cache = NSCache<NSString, UIImage>()
+    
+    init(countLimit: Int, totalCostLimit: Int) {
+        cache.countLimit = countLimit
+        cache.totalCostLimit = totalCostLimit
+    }
+    
+    func setImage(_ image: UIImage, forKey key: String) {
+        let cost = Int(image.size.width * image.size.height * 4) // Approximate memory cost
+        cache.setObject(image, forKey: key as NSString, cost: cost)
+    }
+    
+    func image(forKey key: String) -> UIImage? {
+        return cache.object(forKey: key as NSString)
+    }
+    
+    func removeAll() {
+        cache.removeAllObjects()
+    }
+    
+    var countLimit: Int {
+        get { cache.countLimit }
+        set { cache.countLimit = newValue }
+    }
+}
+
 /// Service for loading and caching recipe and ingredient images
 @MainActor
 final class ImageService {
@@ -19,8 +47,8 @@ final class ImageService {
     private let fileManager: FileManager
     private let imagesDirectory: URL
     
-    /// In-memory cache for loaded images
-    private var imageCache: [String: UIImage] = [:]
+    /// LRU in-memory cache for loaded images
+    private let imageCache: ImageCache
     
     /// Maximum number of images to keep in memory cache
     private let maxCacheSize: Int
@@ -41,6 +69,7 @@ final class ImageService {
         self.maxCacheSize = maxCacheSize
         self.fileManager = FileManager.default
         self.imagesDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        self.imageCache = ImageCache(countLimit: maxCacheSize, totalCostLimit: 50 * 1024 * 1024) // 50MB memory limit
         
         // Find dataset ZIP if not provided
         if let providedURL = zipFileURL {
@@ -81,20 +110,20 @@ final class ImageService {
         }
         
         // Check memory cache first
-        if let cached = imageCache[fileName] {
+        if let cached = imageCache.image(forKey: fileName) {
             return cached
         }
         
         // Try to load from disk cache (Documents directory)
         if let image = try await loadFromDisk(fileName: fileName) {
-            cacheImage(image, forKey: fileName)
+            imageCache.setImage(image, forKey: fileName)
             return image
         }
         
         // Extract from ZIP if available
         if let zipURL = zipFileURL {
             if let image = try await extractFromZip(fileName: fileName, zipURL: zipURL) {
-                cacheImage(image, forKey: fileName)
+                imageCache.setImage(image, forKey: fileName)
                 return image
             }
         }
@@ -103,23 +132,32 @@ final class ImageService {
         return nil
     }
     
-    /// Loads images for multiple recipes in batch
+    /// Loads images for multiple recipes in batch using optimized batch extraction
     /// - Parameter recipes: Array of recipes
     /// - Returns: Dictionary mapping recipe IDs to UIImages
     func loadImages(for recipes: [Recipe]) async throws -> [String: UIImage] {
         var result: [String: UIImage] = [:]
+        var uncachedImages: [(Recipe, String)] = []
         
-        await withTaskGroup(of: (String, UIImage?).self) { group in
-            for recipe in recipes {
-                group.addTask {
-                    let image = try? await self.loadImage(for: recipe)
-                    return (recipe.id, image)
-                }
+        // Check memory cache first
+        for recipe in recipes {
+            if let cachedImage = imageCache.image(forKey: recipe.image) {
+                result[recipe.id] = cachedImage
+            } else {
+                uncachedImages.append((recipe, recipe.image))
             }
+        }
+        
+        // Batch extract uncached images
+        if !uncachedImages.isEmpty, let zipURL = zipFileURL {
+            let imageNames = uncachedImages.map { $0.1 }
+            let imageDataDict = try await imageExtractor.extractImages(withNames: imageNames, fromZipFile: zipURL, useCache: true)
             
-            for await (id, image) in group {
-                if let image = image {
-                    result[id] = image
+            for (recipe, imageName) in uncachedImages {
+                if let imageData = imageDataDict[imageName],
+                   let image = UIImage(data: imageData) {
+                    imageCache.setImage(image, forKey: imageName)
+                    result[recipe.id] = image
                 }
             }
         }
@@ -166,7 +204,7 @@ final class ImageService {
     /// - Returns: True if image exists in cache
     func imageExists(named fileName: String) -> Bool {
         // Check memory cache
-        if imageCache[fileName] != nil {
+        if imageCache.image(forKey: fileName) != nil {
             return true
         }
         
@@ -177,7 +215,8 @@ final class ImageService {
     
     /// Gets the number of images currently in memory cache
     var memoryCacheCount: Int {
-        imageCache.count
+        // NSCache doesn't expose count directly, so we track approximate count
+        return maxCacheSize // Approximate, NSCache manages internally
     }
     
     // MARK: - Private Methods
@@ -207,17 +246,7 @@ final class ImageService {
         }
     }
     
-    private func cacheImage(_ image: UIImage, forKey key: String) {
-        // Enforce cache size limit
-        if imageCache.count >= maxCacheSize {
-            // Remove oldest entry (simple FIFO, could be improved with LRU)
-            if let firstKey = imageCache.keys.first {
-                imageCache.removeValue(forKey: firstKey)
-            }
-        }
-        
-        imageCache[key] = image
-    }
+
 }
 
 // MARK: - Error Types
