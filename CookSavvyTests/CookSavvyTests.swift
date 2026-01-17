@@ -26,7 +26,7 @@ final class DBInterfaceTests: XCTestCase {
         try dbInterface.insertRecipes(mockRecipes)
         let ingredients = mockRecipes.flatMap(\.ingredients)
         
-        let result = try dbInterface.getRecipes(byIngredients: ingredients)
+        let result = try dbInterface.getRecipes(byIngredients: ingredients, offset: 0, limit: 20)
         XCTAssertEqual(mockRecipes, result, "Not all recipes were extracted")
     }
 
@@ -54,10 +54,10 @@ final class DBInterfaceTests: XCTestCase {
             .flatMap(\.ingredients)
             .randomElements(count: 5)
         
-        let failResult = try dbInterface.getRecipes(byIngredients: failableIngredients)
+        let failResult = try dbInterface.getRecipes(byIngredients: failableIngredients, offset: 0, limit: 20)
         XCTAssertTrue(failResult.isEmpty, "Should not be results with failable ingredients")
         
-        let success = try dbInterface.getRecipes(byIngredients: successfullIngredients)
+        let success = try dbInterface.getRecipes(byIngredients: successfullIngredients, offset: 0, limit: 20)
         XCTAssertFalse(success.isEmpty, "the result is empty")
         let allInMocks = Set(success).isSubset(of: Set(mockRecipes))
         XCTAssertTrue(allInMocks, "Some returned recipes were not among the inserted mocks")
@@ -80,7 +80,7 @@ final class DBInterfaceTests: XCTestCase {
     // MARK: - Additional robustness tests
 
     func testGetRecipesWithEmptyIngredientsReturnsEmpty() throws {
-        let result = try dbInterface.getRecipes(byIngredients: [])
+        let result = try dbInterface.getRecipes(byIngredients: [], offset: 0, limit: 20)
         XCTAssertTrue(result.isEmpty, "Expected empty result for empty ingredient query")
     }
 
@@ -131,12 +131,12 @@ final class DBInterfaceTests: XCTestCase {
         try dbInterface.insertRecipes([r1, r2])
 
         // Query by garlic -> only r1
-        let resGarlic = try dbInterface.getRecipes(byIngredients: [garlic])
+        let resGarlic = try dbInterface.getRecipes(byIngredients: [garlic], offset: 0, limit: 20)
         XCTAssertEqual(resGarlic.count, 1)
         XCTAssertEqual(resGarlic.first?.title, r1.title)
 
         // Query by onion -> only r2
-        let resOnion = try dbInterface.getRecipes(byIngredients: [onion])
+        let resOnion = try dbInterface.getRecipes(byIngredients: [onion], offset: 0, limit: 20)
         XCTAssertEqual(resOnion.count, 1)
         XCTAssertEqual(resOnion.first?.title, r2.title)
     }
@@ -154,7 +154,7 @@ final class DBInterfaceTests: XCTestCase {
         try dbInterface.insertRecipes([r])
 
         let unknown = Ingredient(name: "__does_not_exist__")
-        let res = try dbInterface.getRecipes(byIngredients: [unknown, known])
+        let res = try dbInterface.getRecipes(byIngredients: [unknown, known], offset: 0, limit: 20)
         XCTAssertFalse(res.isEmpty)
         XCTAssertTrue(res.contains { $0.title == r.title })
     }
@@ -173,7 +173,7 @@ final class DBInterfaceTests: XCTestCase {
         try dbInterface.insertRecipes([r])
 
         // Query by "Lemon" should find the recipe (and only once)
-        let res = try dbInterface.getRecipes(byIngredients: [lemon])
+        let res = try dbInterface.getRecipes(byIngredients: [lemon], offset: 0, limit: 20)
         XCTAssertEqual(res.count, 1)
         XCTAssertEqual(res.first?.title, r.title)
     }
@@ -241,10 +241,10 @@ final class DBInterfaceTests: XCTestCase {
 
         try dbInterface.removeRecipe(withTitle: r1.title)
 
-        let resGarlic = try dbInterface.getRecipes(byIngredients: [garlic])
+        let resGarlic = try dbInterface.getRecipes(byIngredients: [garlic], offset: 0, limit: 20)
         XCTAssertTrue(resGarlic.isEmpty)
 
-        let resBasil = try dbInterface.getRecipes(byIngredients: [basil])
+        let resBasil = try dbInterface.getRecipes(byIngredients: [basil], offset: 0, limit: 20)
         XCTAssertTrue(resBasil.contains { $0.title == r2.title })
     }
 
@@ -255,7 +255,7 @@ final class DBInterfaceTests: XCTestCase {
         try dbInterface.removeAllRecipes()
 
         let someIngredient = Ingredient(name: "Anything")
-        let res = try dbInterface.getRecipes(byIngredients: [someIngredient])
+        let res = try dbInterface.getRecipes(byIngredients: [someIngredient], offset: 0, limit: 20)
         XCTAssertTrue(res.isEmpty)
     }
 
@@ -282,10 +282,10 @@ final class DBInterfaceTests: XCTestCase {
 
         try dbInterface.removeRecipes(byIngredients: [garlic])
 
-        let resGarlic = try dbInterface.getRecipes(byIngredients: [garlic])
+        let resGarlic = try dbInterface.getRecipes(byIngredients: [garlic], offset: 0, limit: 20)
         XCTAssertTrue(resGarlic.isEmpty)
 
-        let resTomato = try dbInterface.getRecipes(byIngredients: [tomato])
+        let resTomato = try dbInterface.getRecipes(byIngredients: [tomato], offset: 0, limit: 20)
         XCTAssertTrue(resTomato.contains { $0.title == r2.title })
     }
 
@@ -355,7 +355,7 @@ final class DBInterfaceTests: XCTestCase {
         try dbInterface.insertRecipes([r])
         
         // Query with just "chicken" should match "Chicken Breast"
-        let results = try dbInterface.getRecipes(byIngredients: ["chicken"])
+        let results = try dbInterface.getRecipes(byIngredients: ["chicken"], offset: 0, limit: 20)
         XCTAssertEqual(results.count, 1)
         XCTAssertEqual(results.first?.title, "Grilled Chicken")
     }
@@ -373,7 +373,7 @@ final class DBInterfaceTests: XCTestCase {
         try dbInterface.insertRecipes([r])
         
         // Query with just "breast" should match "Chicken Breast"
-        let results = try dbInterface.getRecipes(byIngredients: ["breast"])
+        let results = try dbInterface.getRecipes(byIngredients: ["breast"], offset: 0, limit: 20)
         XCTAssertEqual(results.count, 1)
         XCTAssertEqual(results.first?.title, "Stuffed Breast")
     }
@@ -390,7 +390,7 @@ final class DBInterfaceTests: XCTestCase {
         )
         try dbInterface.insertRecipes([r])
         
-        let results = try dbInterface.getRecipes(byIngredients: ["chicken"])
+        let results = try dbInterface.getRecipes(byIngredients: ["chicken"], offset: 0, limit: 20)
         XCTAssertEqual(results.count, 1)
     }
 
@@ -408,7 +408,7 @@ final class DBInterfaceTests: XCTestCase {
         try dbInterface.insertRecipes([r])
         
         // Query with "chicken" and "sauce" should match
-        let results = try dbInterface.getRecipes(byIngredients: ["chicken", "sauce"])
+        let results = try dbInterface.getRecipes(byIngredients: ["chicken", "sauce"], offset: 0, limit: 20)
         XCTAssertEqual(results.count, 1)
         XCTAssertEqual(results.first?.title, "Chicken Tomato Pasta")
     }
@@ -426,7 +426,7 @@ final class DBInterfaceTests: XCTestCase {
         try dbInterface.insertRecipes([r])
         
         // Query with "beef" should not match "Chicken Breast"
-        let results = try dbInterface.getRecipes(byIngredients: ["beef"])
+        let results = try dbInterface.getRecipes(byIngredients: ["beef"], offset: 0, limit: 20)
         XCTAssertTrue(results.isEmpty)
     }
 
@@ -443,7 +443,7 @@ final class DBInterfaceTests: XCTestCase {
         try dbInterface.insertRecipes([r])
         
         // Query with both "chicken" and "breast" should return recipe only once
-        let results = try dbInterface.getRecipes(byIngredients: ["chicken", "breast"])
+        let results = try dbInterface.getRecipes(byIngredients: ["chicken", "breast"], offset: 0, limit: 20)
         XCTAssertEqual(results.count, 1)
         XCTAssertEqual(results.first?.title, "Chicken Pasta")
     }

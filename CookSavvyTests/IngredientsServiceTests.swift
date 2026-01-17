@@ -49,7 +49,7 @@ final class MockDBInterfaceForIngredients: DBInterfaceProtocol {
     }
     
     // Unused protocol methods
-    func getRecipes(byIngredients: [Ingredient]) throws -> [Recipe] { [] }
+    func getRecipes(byIngredients: [Ingredient], offset: Int, limit: Int) throws -> [Recipe] { [] }
     func insertRecipes(_ recipes: [Recipe]) throws {}
     func removeIngredients(_ ingredients: [Ingredient]) throws {}
     func removeRecipes(_ recipes: [Recipe]) throws {}
@@ -59,6 +59,20 @@ final class MockDBInterfaceForIngredients: DBInterfaceProtocol {
         searchCallCount = 0
         getCallCount = 0
     }
+    func getRecentIngredients(limit: Int) throws -> [Ingredient] { [] }
+    func getPopularIngredients(limit: Int) throws -> [Ingredient] { [] }
+    func recordIngredientUsage(_ ingredient: Ingredient) throws {}
+    func getRecentRecipes(limit: Int) throws -> [Recipe] { [] }
+    func recordRecipeView(_ recipeId: Int) throws {}
+    func getFavoriteRecipes() throws -> [Recipe] { [] }
+    func addFavorite(_ recipeId: Int) throws {}
+    func removeFavorite(_ recipeId: Int) throws {}
+    func isFavorite(_ recipeId: Int) throws -> Bool { false }
+    func getRecentSearches(limit: Int) throws -> [[Ingredient]] { [] }
+    func recordSearch(ingredients: [Ingredient]) throws {}
+    func clearRecentData() throws {}
+    func clearFavorites() throws {}
+    func getRecipeCount() throws -> Int { 0 }
 }
 
 // MARK: - IngredientsService Tests

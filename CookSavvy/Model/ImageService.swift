@@ -11,6 +11,8 @@ import UIKit
 /// LRU Cache wrapper for images
 private class ImageCache {
     private let cache = NSCache<NSString, UIImage>()
+    private var keys = Set<String>()
+    private let lock = NSLock()
     
     init(countLimit: Int, totalCostLimit: Int) {
         cache.countLimit = countLimit
@@ -19,7 +21,10 @@ private class ImageCache {
     
     func setImage(_ image: UIImage, forKey key: String) {
         let cost = Int(image.size.width * image.size.height * 4) // Approximate memory cost
+        lock.lock()
         cache.setObject(image, forKey: key as NSString, cost: cost)
+        keys.insert(key)
+        lock.unlock()
     }
     
     func image(forKey key: String) -> UIImage? {
@@ -27,12 +32,21 @@ private class ImageCache {
     }
     
     func removeAll() {
+        lock.lock()
         cache.removeAllObjects()
+        keys.removeAll()
+        lock.unlock()
     }
     
     var countLimit: Int {
         get { cache.countLimit }
         set { cache.countLimit = newValue }
+    }
+    
+    var count: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return keys.count
     }
 }
 
@@ -151,14 +165,18 @@ final class ImageService {
         // Batch extract uncached images
         if !uncachedImages.isEmpty, let zipURL = zipFileURL {
             let imageNames = uncachedImages.map { $0.1 }
-            let imageDataDict = try await imageExtractor.extractImages(withNames: imageNames, fromZipFile: zipURL, useCache: true)
-            
-            for (recipe, imageName) in uncachedImages {
-                if let imageData = imageDataDict[imageName],
-                   let image = UIImage(data: imageData) {
-                    imageCache.setImage(image, forKey: imageName)
-                    result[recipe.id] = image
+            do {
+                let imageDataDict = try await imageExtractor.extractImages(withNames: imageNames, fromZipFile: zipURL, useCache: true)
+                
+                for (recipe, imageName) in uncachedImages {
+                    if let imageData = imageDataDict[imageName],
+                       let image = UIImage(data: imageData) {
+                        imageCache.setImage(image, forKey: imageName)
+                        result[recipe.id] = image
+                    }
                 }
+            } catch {
+                // Images not found in ZIP - continue with empty/partial results
             }
         }
         
@@ -215,8 +233,7 @@ final class ImageService {
     
     /// Gets the number of images currently in memory cache
     var memoryCacheCount: Int {
-        // NSCache doesn't expose count directly, so we track approximate count
-        return maxCacheSize // Approximate, NSCache manages internally
+        return imageCache.count
     }
     
     // MARK: - Private Methods

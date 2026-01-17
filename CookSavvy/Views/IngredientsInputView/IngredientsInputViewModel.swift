@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import Combine
+
 @MainActor
 final class IngredientsInputViewModel: ObservableObject {
 
@@ -29,7 +29,9 @@ final class IngredientsInputViewModel: ObservableObject {
 
     let navigationTitle = "Ingredients Input"
 
-    @Published var isIngredientsReady: Bool = false
+    var isIngredientsReady: Bool {
+        databaseInitService.state.isIngredientsReady
+    }
 
     /// Returns ingredients for the fast selector - recent if available, otherwise popular
     var fastSelectorIngredients: [Ingredient] {
@@ -42,7 +44,7 @@ final class IngredientsInputViewModel: ObservableObject {
     private let databaseInitService: DatabaseInitializationService
     private weak var coordinator: IngredientsCoordinator?
     private var searchTask: Task<Void, Never>?
-    private var cancellables: Set<AnyCancellable> = []
+
     // MARK: - Initialization
 
     init(
@@ -55,9 +57,7 @@ final class IngredientsInputViewModel: ObservableObject {
         self.userDataService = userDataService
         self.databaseInitService = databaseInitService
         self.coordinator = coordinator
-        databaseInitService.$state.sink { state in
-            self.isIngredientsReady = state.isIngredientsReady
-        }.store(in: &cancellables)
+
         Task {
             await loadRecentIngredients()
             await loadPopularIngredients()
