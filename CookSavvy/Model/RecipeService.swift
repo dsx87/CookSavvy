@@ -174,7 +174,7 @@ final class RecipeService {
     /// - Throws: RecipeSourceError if retrieval fails
     func getStoredRecipes(for ingredients: [Ingredient]) throws -> [Recipe] {
         do {
-            return try dbInterface.getRecipes(byIngredients: ingredients)
+            return try dbInterface.getRecipes(byIngredients: ingredients, offset: 0, limit: 20)
         } catch {
             throw RecipeSourceError.databaseError(error)
         }

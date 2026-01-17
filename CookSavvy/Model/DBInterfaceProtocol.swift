@@ -42,7 +42,7 @@ protocol DBInterfaceProtocol {
     func removeIngredients(_ ingredients: [Ingredient]) throws
 
     // MARK: - Recipes
-    func getRecipes(byIngredients: [Ingredient]) throws -> [Recipe]
+    func getRecipes(byIngredients: [Ingredient], offset: Int, limit: Int) throws -> [Recipe]
     func insertRecipes(_ recipes: [Recipe]) throws
     func removeRecipes(_ recipes: [Recipe]) throws
 
@@ -330,11 +330,11 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
-    func getRecipes(byIngredients ingredients: [Ingredient]) throws -> [Recipe] {
+    func getRecipes(byIngredients ingredients: [Ingredient], offset: Int = 0, limit: Int = 20) throws -> [Recipe] {
         let ingredientNames = Set(ingredients.map { $0.name })
         if ingredientNames.isEmpty { return [] }
         
-        Self.logger.debug("Searching recipes for ingredients: \(ingredientNames.joined(separator: ", "))")
+        Self.logger.debug("Searching recipes for ingredients: \(ingredientNames.joined(separator: ", ")) [offset: \(offset), limit: \(limit)]")
         
         // Build LIKE conditions for partial matching to handle cases like "chicken" matching "chicken breast"
         let likeConditions = ingredientNames.map { _ in "LOWER(ri.ingredient_name) LIKE LOWER(?)" }.joined(separator: " OR ")
@@ -345,11 +345,16 @@ final class DBInterface: DBInterfaceProtocol {
             FROM recipes r
             INNER JOIN recipe_ingredients ri ON ri.recipe_id = r.id
             WHERE \(likeConditions)
-            ORDER BY r.id ASC;
+            ORDER BY r.id ASC
+            LIMIT ? OFFSET ?;
         """
         
+        var arguments: [DatabaseValueConvertible] = likeValues
+        arguments.append(limit)
+        arguments.append(offset)
+        
         let rows: [Row] = try dbWriter.read { db in
-            try Row.fetchAll(db, sql: sql, arguments: StatementArguments(Array(likeValues)))
+            try Row.fetchAll(db, sql: sql, arguments: StatementArguments(arguments))
         }
 
         var results: [Recipe] = []

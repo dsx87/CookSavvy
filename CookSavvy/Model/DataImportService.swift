@@ -34,7 +34,7 @@ final class DataImportService {
         print("🔍 Checking for existing recipes...")
 
         if !commonIngredients.isEmpty {
-            let existingRecipes = try dbInterface.getRecipes(byIngredients: commonIngredients)
+            let existingRecipes = try dbInterface.getRecipes(byIngredients: commonIngredients, offset: 0, limit: 20)
 
             if !existingRecipes.isEmpty {
                 print("✅ Recipes already imported (\(existingRecipes.count) found)")
