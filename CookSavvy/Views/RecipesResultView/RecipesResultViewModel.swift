@@ -70,7 +70,7 @@ final class RecipesResultViewModel: ObservableObject {
             let lowercaseIngredients = normalizedIngredients()
 
             recipes = try await recipeService.getRecipes(for: lowercaseIngredients)
-            images = [:]//try await imageService.loadImages(for: recipes)
+            images = try await imageService.loadImages(for: recipes)
         } catch {
             print("❌ Error loading recipes: \(error)")
             errorMessage = "Failed to load recipes: \(error.localizedDescription)"

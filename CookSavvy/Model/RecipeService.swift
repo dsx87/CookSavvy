@@ -100,7 +100,7 @@ final class RecipeService {
         
         // Store recipes in database if enabled
         if shouldStoreRecipes && !recipes.isEmpty {
-//            try storeRecipes(recipes)
+            try storeRecipes(recipes)
         }
         
         return recipes

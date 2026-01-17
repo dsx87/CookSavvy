@@ -336,18 +336,20 @@ final class DBInterface: DBInterfaceProtocol {
         
         Self.logger.debug("Searching recipes for ingredients: \(ingredientNames.joined(separator: ", "))")
         
-        // Use efficient IN clause with proper indexing instead of word-based LIKE matching
-        let placeholders = Array(repeating: "?", count: ingredientNames.count).joined(separator: ",")
+        // Build LIKE conditions for partial matching to handle cases like "chicken" matching "chicken breast"
+        let likeConditions = ingredientNames.map { _ in "LOWER(ri.ingredient_name) LIKE LOWER(?)" }.joined(separator: " OR ")
+        let likeValues = ingredientNames.map { "%\($0)%" } // Add wildcards for partial matching
+        
         let sql = """
             SELECT DISTINCT r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.cleaned_ingredients_json, r.additional_info_json
             FROM recipes r
             INNER JOIN recipe_ingredients ri ON ri.recipe_id = r.id
-            WHERE ri.ingredient_name IN (\(placeholders))
+            WHERE \(likeConditions)
             ORDER BY r.id ASC;
         """
         
         let rows: [Row] = try dbWriter.read { db in
-            try Row.fetchAll(db, sql: sql, arguments: StatementArguments(Array(ingredientNames)))
+            try Row.fetchAll(db, sql: sql, arguments: StatementArguments(Array(likeValues)))
         }
 
         var results: [Recipe] = []
