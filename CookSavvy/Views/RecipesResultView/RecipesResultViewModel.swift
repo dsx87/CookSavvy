@@ -23,6 +23,11 @@ final class RecipesResultViewModel: ObservableObject {
     private let userDataService: UserDataService
     private weak var coordinator: IngredientsCoordinator?
 
+    deinit {
+        // TODO: Fix the deinit of the view model
+        print("FUUUCKKK")
+    }
+    
     init(
         selectedIngredients: Set<Ingredient>,
         recipeService: RecipeService,
