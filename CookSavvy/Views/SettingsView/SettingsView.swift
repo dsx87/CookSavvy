@@ -8,24 +8,9 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @StateObject private var viewModel: SettingsViewModel
-
-    init(userDataService: UserDataService, dbInterface: DBInterfaceProtocol) {
-        _viewModel = StateObject(
-            wrappedValue: SettingsViewModel(
-                userDataService: userDataService,
-                dbInterface: dbInterface
-            )
-        )
-    }
-
-    /// Convenience init for testing
-    init(viewModel: SettingsViewModel) {
-        _viewModel = StateObject(wrappedValue: viewModel)
-    }
+    @ObservedObject var viewModel: SettingsViewModel
 
     var body: some View {
-        NavigationStack {
             List {
                 // Subscription Plan Section
                 Section {
@@ -158,14 +143,15 @@ struct SettingsView: View {
             } message: {
                 Text("This will remove all favorited recipes. This action cannot be undone.")
             }
-        }
     }
 }
 
 #Preview {
     let dbInterface = DBInterface()
     return SettingsView(
-        userDataService: UserDataService(dbInterface: dbInterface),
-        dbInterface: dbInterface
+        viewModel: SettingsViewModel(
+            userDataService: UserDataService(dbInterface: dbInterface),
+            dbInterface: dbInterface
+        )
     )
 }

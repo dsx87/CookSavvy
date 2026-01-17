@@ -21,26 +21,22 @@ final class RecipesResultViewModel: ObservableObject {
     private let imageService: ImageService
     private let databaseInitService: DatabaseInitializationService
     private let userDataService: UserDataService
-    private let navigationPath: Binding<NavigationPath>
-
-    var userDataServiceForNavigation: UserDataService {
-        userDataService
-    }
+    private weak var coordinator: IngredientsCoordinator?
 
     init(
         selectedIngredients: Set<Ingredient>,
-        navigationPath: Binding<NavigationPath>,
         recipeService: RecipeService,
         imageService: ImageService,
         databaseInitService: DatabaseInitializationService,
-        userDataService: UserDataService
+        userDataService: UserDataService,
+        coordinator: IngredientsCoordinator?
     ) {
         self.selectedIngredients = selectedIngredients
-        self.navigationPath = navigationPath
         self.recipeService = recipeService
         self.imageService = imageService
         self.databaseInitService = databaseInitService
         self.userDataService = userDataService
+        self.coordinator = coordinator
     }
 
     func loadRecipes() async {
@@ -84,12 +80,11 @@ final class RecipesResultViewModel: ObservableObject {
     }
 
     func handleRecipeSelection(_ recipe: Recipe) {
-        navigationPath.wrappedValue.append(recipe)
+        coordinator?.showRecipeDetails(recipe: recipe)
     }
 
     func handleBack() {
-        guard !navigationPath.wrappedValue.isEmpty else { return }
-        navigationPath.wrappedValue.removeLast()
+        coordinator?.goBack()
     }
 
     private func normalizedIngredients() -> [Ingredient] {

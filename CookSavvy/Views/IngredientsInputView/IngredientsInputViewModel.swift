@@ -22,13 +22,16 @@ final class IngredientsInputViewModel: ObservableObject {
     }
     @Published var selectedIngredients: Set<Ingredient> = []
     @Published var cameraViewPresented: Bool = false
-    @Published var navigationPath: NavigationPath = NavigationPath()
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
 
     // MARK: - Properties
 
     let navigationTitle = "Ingredients Input"
+
+    var isIngredientsReady: Bool {
+        databaseInitService.state.isIngredientsReady
+    }
 
     /// Returns ingredients for the fast selector - recent if available, otherwise popular
     var fastSelectorIngredients: [Ingredient] {
@@ -37,13 +40,22 @@ final class IngredientsInputViewModel: ObservableObject {
 
     private let ingredientsService: IngredientsService
     private let userDataService: UserDataService
+    private let databaseInitService: DatabaseInitializationService
+    private weak var coordinator: IngredientsCoordinator?
     private var searchTask: Task<Void, Never>?
 
     // MARK: - Initialization
 
-    init(ingredientsService: IngredientsService, userDataService: UserDataService) {
+    init(
+        ingredientsService: IngredientsService,
+        userDataService: UserDataService,
+        databaseInitService: DatabaseInitializationService,
+        coordinator: IngredientsCoordinator?
+    ) {
         self.ingredientsService = ingredientsService
         self.userDataService = userDataService
+        self.databaseInitService = databaseInitService
+        self.coordinator = coordinator
 
         Task {
             await loadRecentIngredients()
@@ -105,6 +117,10 @@ final class IngredientsInputViewModel: ObservableObject {
         } catch {
             print("❌ Failed to record ingredient usage: \(error)")
         }
+    }
+
+    func navigateToRecipesResult() {
+        coordinator?.showRecipesResult()
     }
 
     // MARK: - Private Methods

@@ -8,24 +8,9 @@
 import SwiftUI
 
 struct FavoritesView: View {
-    @StateObject private var viewModel: FavoritesViewModel
-
-    init(userDataService: UserDataService, imageService: ImageService) {
-        _viewModel = StateObject(
-            wrappedValue: FavoritesViewModel(
-                userDataService: userDataService,
-                imageService: imageService
-            )
-        )
-    }
-
-    /// Convenience init for testing
-    init(viewModel: FavoritesViewModel) {
-        _viewModel = StateObject(wrappedValue: viewModel)
-    }
+    @ObservedObject var viewModel: FavoritesViewModel
 
     var body: some View {
-        NavigationStack {
             Group {
                 if viewModel.isLoading {
                     ProgressView("Loading favorites...")
@@ -54,11 +39,12 @@ struct FavoritesView: View {
                 } else {
                     List {
                         ForEach(viewModel.recipes) { recipe in
-                            NavigationLink(value: recipe) {
-                                RecipeResultCellView(
-                                    recipe: recipe,
-                                    image: viewModel.getImage(for: recipe)
-                                )
+                            RecipeResultCellView(
+                                recipe: recipe,
+                                image: viewModel.getImage(for: recipe)
+                            )
+                            .onTapGesture {
+                                viewModel.handleRecipeSelection(recipe)
                             }
                             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                 Button(role: .destructive) {
@@ -74,26 +60,22 @@ struct FavoritesView: View {
                 }
             }
             .navigationTitle("Favorites")
-            .navigationDestination(for: Recipe.self) { recipe in
-                RecipeDetailsView(
-                    recipe: recipe,
-                    userDataService: viewModel.userDataServiceForNavigation
-                )
-            }
             .task {
                 await viewModel.loadFavorites()
             }
             .refreshable {
                 await viewModel.loadFavorites()
             }
-        }
     }
 }
 
 #Preview("FavoritesView") {
     let dbInterface = DBInterface()
     return FavoritesView(
-        userDataService: UserDataService(dbInterface: dbInterface),
-        imageService: ImageService()
+        viewModel: FavoritesViewModel(
+            userDataService: UserDataService(dbInterface: dbInterface),
+            imageService: ImageService(),
+            coordinator: nil
+        )
     )
 }

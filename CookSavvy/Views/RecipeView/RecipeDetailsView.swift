@@ -8,21 +8,7 @@
 import SwiftUI
 
 struct RecipeDetailsView: View {
-    @StateObject private var viewModel: RecipeDetailsViewModel
-
-    init(recipe: Recipe, userDataService: UserDataService) {
-        _viewModel = StateObject(
-            wrappedValue: RecipeDetailsViewModel(
-                recipe: recipe,
-                userDataService: userDataService
-            )
-        )
-    }
-
-    /// Convenience init for testing
-    init(viewModel: RecipeDetailsViewModel) {
-        _viewModel = StateObject(wrappedValue: viewModel)
-    }
+    @ObservedObject var viewModel: RecipeDetailsViewModel
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -70,8 +56,10 @@ struct RecipeDetailsView: View {
 #Preview("RecipeDetailsView") {
     let dbInterface = DBInterface()
     return RecipeDetailsView(
-        recipe: .init(),
-        userDataService: UserDataService(dbInterface: dbInterface)
+        viewModel: RecipeDetailsViewModel(
+            recipe: .init(),
+            userDataService: UserDataService(dbInterface: dbInterface)
+        )
     )
 }
 

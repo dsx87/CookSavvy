@@ -7,37 +7,24 @@
 import SwiftUI
 
 struct IngredientsInputView: View {
-    @EnvironmentObject var container: AppContainer
-    @StateObject var viewModel: IngredientsInputViewModel
+    @ObservedObject var viewModel: IngredientsInputViewModel
 
     var body: some View {
-        NavigationStack(path: $viewModel.navigationPath) {
-            Group {
-                if !container.databaseInitService.state.isIngredientsReady {
-                    loadingView
-                } else {
-                    mainContent
-                }
+        Group {
+            if !viewModel.isIngredientsReady {
+                loadingView
+            } else {
+                mainContent
             }
-            .navigationTitle("Ingredients Input")
-            .navigationDestination(for: String.self) { _ in
-                RecipesResultView(
-                    selectedIngredients: viewModel.selectedIngredients,
-                    navigationPath: $viewModel.navigationPath,
-                    recipeService: container.recipeService,
-                    imageService: container.imageService,
-                    databaseInitService: container.databaseInitService,
-                    userDataService: container.userDataService
-                )
-            }
-            .popover(isPresented: $viewModel.cameraViewPresented, content: {
-                Text("not implemented yet, close")
-                    .presentationCompactAdaptation(.fullScreenCover)
-                    .onTapGesture {
-                        viewModel.cameraViewPresented = false
-                    }
-            })
         }
+        .navigationTitle("Ingredients Input")
+        .popover(isPresented: $viewModel.cameraViewPresented, content: {
+            Text("not implemented yet, close")
+                .presentationCompactAdaptation(.fullScreenCover)
+                .onTapGesture {
+                    viewModel.cameraViewPresented = false
+                }
+        })
     }
     
     private var loadingView: some View {
@@ -101,7 +88,7 @@ struct IngredientsInputView: View {
                 Task {
                     await viewModel.onFindRecipes()
                 }
-                viewModel.navigationPath.append("RecipesResultView")
+                viewModel.navigateToRecipesResult()
             }
         }
         .padding()
@@ -118,8 +105,9 @@ struct IngredientsInputView: View {
     return IngredientsInputView(
         viewModel: IngredientsInputViewModel(
             ingredientsService: container.ingredientsService,
-            userDataService: container.userDataService
+            userDataService: container.userDataService,
+            databaseInitService: container.databaseInitService,
+            coordinator: nil
         )
     )
-    .environmentObject(container)
 }

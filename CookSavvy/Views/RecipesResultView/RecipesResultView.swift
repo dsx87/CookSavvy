@@ -8,32 +8,7 @@
 import SwiftUI
 
 struct RecipesResultView: View {
-    @StateObject private var viewModel: RecipesResultViewModel
-
-    init(
-        selectedIngredients: Set<Ingredient>,
-        navigationPath: Binding<NavigationPath>,
-        recipeService: RecipeService,
-        imageService: ImageService,
-        databaseInitService: DatabaseInitializationService,
-        userDataService: UserDataService
-    ) {
-        _viewModel = StateObject(
-            wrappedValue: RecipesResultViewModel(
-                selectedIngredients: selectedIngredients,
-                navigationPath: navigationPath,
-                recipeService: recipeService,
-                imageService: imageService,
-                databaseInitService: databaseInitService,
-                userDataService: userDataService
-            )
-        )
-    }
-
-    /// Convenience init for testing
-    init(viewModel: RecipesResultViewModel) {
-        _viewModel = StateObject(wrappedValue: viewModel)
-    }
+    @ObservedObject var viewModel: RecipesResultViewModel
     
     var body: some View {
         Group {
@@ -97,12 +72,6 @@ struct RecipesResultView: View {
                 }
             }
         }
-        .navigationDestination(for: Recipe.self) { recipe in
-            RecipeDetailsView(
-                recipe: recipe,
-                userDataService: viewModel.userDataServiceForNavigation
-            )
-        }
         .task {
             await viewModel.loadRecipes()
         }
@@ -114,16 +83,18 @@ struct RecipesResultView: View {
     let ingredientsService = IngredientsService(dbInterface: dbInterface)
     let dataImportService = DataImportService(dbInterface: dbInterface)
     return RecipesResultView(
-        selectedIngredients: [Ingredient(name: "Pasta"), Ingredient(name: "Tomato")],
-        navigationPath: .constant(.init()),
-        recipeService: RecipeService(dbInterface: dbInterface),
-        imageService: ImageService(),
-        databaseInitService: DatabaseInitializationService(
-            dbInterface: dbInterface,
-            ingredientsService: ingredientsService,
-            dataImportService: dataImportService
-        ),
-        userDataService: UserDataService(dbInterface: dbInterface)
+        viewModel: RecipesResultViewModel(
+            selectedIngredients: [Ingredient(name: "Pasta"), Ingredient(name: "Tomato")],
+            recipeService: RecipeService(dbInterface: dbInterface),
+            imageService: ImageService(),
+            databaseInitService: DatabaseInitializationService(
+                dbInterface: dbInterface,
+                ingredientsService: ingredientsService,
+                dataImportService: dataImportService
+            ),
+            userDataService: UserDataService(dbInterface: dbInterface),
+            coordinator: nil
+        )
     )
 }
 

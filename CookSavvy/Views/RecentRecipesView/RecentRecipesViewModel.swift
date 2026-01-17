@@ -21,16 +21,18 @@ final class RecentRecipesViewModel: ObservableObject {
 
     private let userDataService: UserDataService
     private let imageService: ImageService
-
-    var userDataServiceForNavigation: UserDataService {
-        userDataService
-    }
+    private weak var coordinator: RecentRecipesCoordinator?
 
     // MARK: - Initialization
 
-    init(userDataService: UserDataService, imageService: ImageService) {
+    init(
+        userDataService: UserDataService,
+        imageService: ImageService,
+        coordinator: RecentRecipesCoordinator?
+    ) {
         self.userDataService = userDataService
         self.imageService = imageService
+        self.coordinator = coordinator
     }
 
     // MARK: - Public Methods
@@ -55,5 +57,9 @@ final class RecentRecipesViewModel: ObservableObject {
 
     func getImage(for recipe: Recipe) -> UIImage? {
         images[recipe.id]
+    }
+
+    func handleRecipeSelection(_ recipe: Recipe) {
+        coordinator?.showRecipeDetails(recipe: recipe)
     }
 }

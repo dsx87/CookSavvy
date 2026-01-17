@@ -8,24 +8,9 @@
 import SwiftUI
 
 struct RecentRecipesView: View {
-    @StateObject private var viewModel: RecentRecipesViewModel
-
-    init(userDataService: UserDataService, imageService: ImageService) {
-        _viewModel = StateObject(
-            wrappedValue: RecentRecipesViewModel(
-                userDataService: userDataService,
-                imageService: imageService
-            )
-        )
-    }
-
-    /// Convenience init for testing
-    init(viewModel: RecentRecipesViewModel) {
-        _viewModel = StateObject(wrappedValue: viewModel)
-    }
+    @ObservedObject var viewModel: RecentRecipesViewModel
 
     var body: some View {
-        NavigationStack {
             Group {
                 if viewModel.isLoading {
                     ProgressView("Loading recent recipes...")
@@ -51,33 +36,33 @@ struct RecentRecipesView: View {
                     }
                 } else {
                     List(viewModel.recipes) { recipe in
-                        NavigationLink(value: recipe) {
-                            RecipeResultCellView(
-                                recipe: recipe,
-                                image: viewModel.getImage(for: recipe)
-                            )
+                        RecipeResultCellView(
+                            recipe: recipe,
+                            image: viewModel.getImage(for: recipe)
+                        )
+                        .onTapGesture {
+                            viewModel.handleRecipeSelection(recipe)
                         }
                     }
                 }
             }
             .navigationTitle("Recent Recipes")
-            .navigationDestination(for: Recipe.self) { recipe in
-                RecipeDetailsView(
-                    recipe: recipe,
-                    userDataService: viewModel.userDataServiceForNavigation
-                )
-            }
             .task {
                 await viewModel.loadRecentRecipes()
             }
-        }
+            .refreshable {
+                await viewModel.loadRecentRecipes()
+            }
     }
 }
 
 #Preview("RecentRecipesView") {
     let dbInterface = DBInterface()
     return RecentRecipesView(
-        userDataService: UserDataService(dbInterface: dbInterface),
-        imageService: ImageService()
+        viewModel: RecentRecipesViewModel(
+            userDataService: UserDataService(dbInterface: dbInterface),
+            imageService: ImageService(),
+            coordinator: nil
+        )
     )
 }

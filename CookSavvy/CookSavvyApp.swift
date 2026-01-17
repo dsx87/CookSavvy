@@ -9,12 +9,11 @@ import SwiftUI
 
 @main
 struct CookSavvyApp: App {
-    @StateObject private var container = AppContainer()
+    @StateObject private var coordinator = AppCoordinator()
 
     var body: some Scene {
         WindowGroup {
-            TabContainerView()
-                .environmentObject(container)
+            TabContainerView(coordinator: coordinator)
         }
     }
 }
