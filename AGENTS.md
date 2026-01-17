@@ -1,0 +1,1 @@
+- Look for instructions in CLAUDE.md file
