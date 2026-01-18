@@ -45,8 +45,8 @@ struct RecipesResultView: View {
             } else {
                 List(viewModel.recipes, id: \.id) { recipe in
                     RecipeResultCellView(
-                        recipe: recipe,
-                        image: viewModel.getImage(for: recipe)
+                        recipe: recipe
+//                        image: viewModel.getImage(for: recipe)
                     )
                     .onTapGesture {
                         viewModel.handleRecipeSelection(recipe)
@@ -101,22 +101,25 @@ struct RecipesResultView: View {
 
 struct RecipeResultCellView: View {
     let recipe: Recipe
-    let image: UIImage?
+//    let image: UIImage?
+//    let imageString: String
+    
+    init(recipe: Recipe) {
+        self.recipe = recipe
+
+    }
     
     var body: some View {
         HStack {
-            if let image = image {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 60, height: 60)
-                    .cornerRadius(8)
-                    .clipped()
-            } else {
+            AsyncImageDisk(imageName: recipe.image) {
                 DefaultPlaceholder()
                     .frame(width: 60, height: 60)
                     .cornerRadius(8)
             }
+            .aspectRatio(contentMode: .fill)
+            .frame(width: 60, height: 60)
+            .cornerRadius(8)
+            .clipped()
             
             VStack(alignment: .leading) {
                 Text(recipe.title)
@@ -128,7 +131,7 @@ struct RecipeResultCellView: View {
 }
 
 #Preview("RecipeResultCellView") {
-    RecipeResultCellView(recipe: .init(), image: nil)
+    RecipeResultCellView(recipe: .init())
 }
 
 

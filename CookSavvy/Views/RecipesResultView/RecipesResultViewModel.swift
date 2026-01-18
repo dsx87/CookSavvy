@@ -50,6 +50,10 @@ final class RecipesResultViewModel: ObservableObject {
             images = [:]
             return
         }
+        
+        guard recipes.isEmpty else {
+            return
+        }
 
         if !databaseInitService.state.isRecipesReady {
             isWaitingForDatabase = true
@@ -71,7 +75,6 @@ final class RecipesResultViewModel: ObservableObject {
             let lowercaseIngredients = normalizedIngredients()
 
             recipes = try await recipeService.getRecipes(for: lowercaseIngredients)
-            images = try await imageService.loadImages(for: recipes)
         } catch {
             print("❌ Error loading recipes: \(error)")
             errorMessage = "Failed to load recipes: \(error.localizedDescription)"
@@ -79,11 +82,7 @@ final class RecipesResultViewModel: ObservableObject {
             images = [:]
         }
     }
-
-    func getImage(for recipe: Recipe) -> UIImage? {
-        images[recipe.id]
-    }
-
+    
     func handleRecipeSelection(_ recipe: Recipe) {
         coordinator?.showRecipeDetails(recipe: recipe)
     }

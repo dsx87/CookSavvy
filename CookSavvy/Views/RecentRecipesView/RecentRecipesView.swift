@@ -37,8 +37,7 @@ struct RecentRecipesView: View {
                 } else {
                     List(viewModel.recipes) { recipe in
                         RecipeResultCellView(
-                            recipe: recipe,
-                            image: viewModel.getImage(for: recipe)
+                            recipe: recipe
                         )
                         .onTapGesture {
                             viewModel.handleRecipeSelection(recipe)

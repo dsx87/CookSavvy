@@ -39,7 +39,6 @@ actor ImageExtractor {
             if !filesToExtract.isEmpty {
                 let unarc = Unarchiver()
                 for fileName in filesToExtract {
-                    let fileName = "Food Images/Food Images/\(fileName).jpg"
                     let imageData = try unarc.extract(file: fileName, fromZipFileUrl: zipFileURL)
                     results[fileName] = imageData
                     
