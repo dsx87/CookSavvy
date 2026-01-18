@@ -36,7 +36,13 @@ final class IngredientsInputViewModel: ObservableObject {
     /// Returns ingredients for the fast selector - recent if available, otherwise popular
     var fastSelectorIngredients: [Ingredient] {
         // TODO: Fix popular vs recent ingredients
-        recentIngredients.count <= 9 ? popularIngredients : recentIngredients
+        
+        let recentCount = recentIngredients.count
+        if recentCount <= 9 {
+            return recentIngredients + popularIngredients.dropFirst(recentCount)
+        } else {
+            return recentIngredients
+        }
     }
 
     private let ingredientsService: IngredientsService

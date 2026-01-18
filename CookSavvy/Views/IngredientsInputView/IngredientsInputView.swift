@@ -80,8 +80,8 @@ struct IngredientsInputView: View {
             
             IngredientsInputSelectedIngredients(ingredientsNames: $viewModel.selectedIngredients)
             IngredientsInputFastIngredientSelector(
-                selectedIngredients: $viewModel.selectedIngredients,
-                recentIngredients: viewModel.fastSelectorIngredients
+                fastIngredients: viewModel.fastSelectorIngredients,
+                selectedIngredients: $viewModel.selectedIngredients
             )
             Spacer(minLength: 150)
             IngredientsInputFindRecipesButton(disabled: viewModel.selectedIngredients.isEmpty) {

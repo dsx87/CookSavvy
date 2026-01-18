@@ -7,30 +7,18 @@
 import SwiftUI
 
 struct IngredientsInputFastIngredientSelector: View {
-    private static let defaultFastIngredients: [Ingredient] = [
-        ("Chicken", "🍗"),
-        ("Rice", "🍚"),
-        ("Pasta", "🍝"),
-        ("Tomato", "🍅"),
-        ("Onion", "🧅"),
-        ("Garlic", "🧄"),
-        ("Egg", "🥚"),
-        ("Milk", "🥛"),
-        ("Cheese", "🧀")
-    ].map { .init(name: $0.0) }
     
     let fastIngredients: [Ingredient]
     let size: Int
     @Binding var selectedIngredients: Set<Ingredient>
     
     init(
-        fastIngredients: [Ingredient] = Self.defaultFastIngredients,
+        fastIngredients: [Ingredient],
         size: Int = 3,
         selectedIngredients: Binding<Set<Ingredient>>,
-        recentIngredients: [Ingredient] = []
     ) {
         // Use recent ingredients if available, otherwise fall back to defaults
-        var ingredientsToUse = !recentIngredients.isEmpty ? recentIngredients : fastIngredients
+        var ingredientsToUse = fastIngredients
         let ingredientsCount = ingredientsToUse.count
         let expectedCount = size*size
         if ingredientsCount > expectedCount {
@@ -66,5 +54,5 @@ struct IngredientsInputFastIngredientSelector: View {
 }
 
 #Preview("FastIngredientSelectorView") {
-    IngredientsInputFastIngredientSelector(selectedIngredients: .constant([]))
+    IngredientsInputFastIngredientSelector(fastIngredients: [], selectedIngredients: .constant([]))
 }

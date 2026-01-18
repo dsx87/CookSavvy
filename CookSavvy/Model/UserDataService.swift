@@ -30,11 +30,24 @@ final class UserDataService {
         return try dbInterface.getRecentIngredients(limit: limit)
     }
 
+    // TODO: do some cleanup for this flow
     /// Gets the most popular ingredients based on usage count
     /// - Parameter limit: Maximum number of ingredients to return (default: 10)
     /// - Returns: Array of popular ingredients ordered by usage count
     func getPopularIngredients(limit: Int = 10) async throws -> [Ingredient] {
-        return try dbInterface.getPopularIngredients(limit: limit)
+//        return try dbInterface.getPopularIngredients(limit: limit)
+        let defaultFastIngredients: [Ingredient] = [
+            ("Chicken", "🍗"),
+            ("Rice", "🍚"),
+            ("Pasta", "🍝"),
+            ("Tomato", "🍅"),
+            ("Onion", "🧅"),
+            ("Garlic", "🧄"),
+            ("Egg", "🥚"),
+            ("Milk", "🥛"),
+            ("Cheese", "🧀")
+        ].map { .init(name: $0.0) }
+        return defaultFastIngredients
     }
 
     /// Records usage of multiple ingredients
