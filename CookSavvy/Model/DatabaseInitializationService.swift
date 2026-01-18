@@ -29,7 +29,6 @@ enum DatabaseInitializationState: Equatable {
     }
 }
 
-@MainActor
 final class DatabaseInitializationService: ObservableObject {
     
     private static let logger = Logger(

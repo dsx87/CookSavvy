@@ -9,28 +9,29 @@ import SwiftUI
 
 struct TabContainerView: View {
     @ObservedObject var coordinator: AppCoordinator
+    @Environment(\.appContainer) private var container
 
     var body: some View {
         TabView {
-            coordinator.ingredientsCoordinator.start()
+            coordinator.ingredientsCoordinator(container: container).start()
                 .tabItem {
                     Image(systemName: "carrot")
                     Text("Ingredients")
                 }
 
-            coordinator.recentRecipesCoordinator.start()
+            coordinator.recentRecipesCoordinator(container: container).start()
                 .tabItem {
                     Image(systemName: "clock")
                     Text("Recent")
                 }
 
-            coordinator.favoritesCoordinator.start()
+            coordinator.favoritesCoordinator(container: container).start()
                 .tabItem {
                     Image(systemName: "heart")
                     Text("Favorites")
                 }
 
-            coordinator.settingsCoordinator.start()
+            coordinator.settingsCoordinator(container: container).start()
                 .tabItem {
                     Image(systemName: "gear")
                     Text("Settings")

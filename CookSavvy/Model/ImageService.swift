@@ -51,7 +51,6 @@ private class ImageCache {
 }
 
 /// Service for loading and caching recipe and ingredient images
-@MainActor
 final class ImageService {
     
     // MARK: - Properties

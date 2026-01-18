@@ -26,10 +26,10 @@ struct DefaultPlaceholder: View {
 
 struct AsyncImageDisk<Placeholder: View>: View {
     
+    @Environment(\.appContainer.imageService) private var imageService
+    
     let imageName: String
     private var imageNamePrefix: String?
-    private let zipFileURL: URL
-    private let imageExtractor: ImageExtractor = ImageExtractor()
     private let imageNameBuilder: ((String?, String) -> String)
     @State private var image: UIImage? = nil
     @ViewBuilder private let placeholder: Placeholder
@@ -37,14 +37,12 @@ struct AsyncImageDisk<Placeholder: View>: View {
     init(
         imageName: String,
         imageNamePrefix: String?,
-        zipFileURL: URL,
         imageNameBuilder: @escaping ((String?, String) -> String),
         @ViewBuilder placeholder: @escaping () -> Placeholder
     ) {
         self.imageNamePrefix = imageNamePrefix
         self.imageName = imageName
         self.placeholder = placeholder()
-        self.zipFileURL = zipFileURL
         self.imageNameBuilder = imageNameBuilder
     }
     
@@ -52,7 +50,6 @@ struct AsyncImageDisk<Placeholder: View>: View {
         self.imageNamePrefix = "Food Images/Food Images/"
         self.imageName = imageName
         self.placeholder = placeholder()
-        self.zipFileURL = Bundle.main.url(forResource: "food-ingredients-and-recipe-dataset-with-images", withExtension: "zip")!
         self.imageNameBuilder = ({ prefix, imageFileName in
             var imageFileName = imageFileName + ".jpg"
             if let prefix {
@@ -73,12 +70,9 @@ struct AsyncImageDisk<Placeholder: View>: View {
             
         }
         .task {
+            let fullImageName = imageNameBuilder(self.imageNamePrefix, self.imageName)
             do {
-                let image = try await imageExtractor.extractImage(
-                    withName: imageNameBuilder(self.imageNamePrefix, self.imageName),
-                    
-                    fromZipFile: zipFileURL)
-                self.image = UIImage(data: image)
+                self.image = try await imageService.loadImage(named: fullImageName)
             } catch {
                 print(error)
             }
@@ -90,7 +84,6 @@ struct AsyncImageDisk<Placeholder: View>: View {
     AsyncImageDisk(
         imageName: "-bloody-mary-tomato-toast-with-celery-and-horseradish-56389813",
         imageNamePrefix: "Food Images/Food Images/",
-        zipFileURL: Bundle.main.url(forResource: "food-ingredients-and-recipe-dataset-with-images", withExtension: "zip")!,
         imageNameBuilder: ({ prefix, imageFileName in
             var imageFileName = imageFileName + ".jpg"
             if let prefix {

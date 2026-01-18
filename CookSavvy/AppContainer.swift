@@ -8,7 +8,7 @@
 import Foundation
 
 /// Dependency injection container holding shared service instances
-@MainActor
+
 final class AppContainer: ObservableObject {
 
     // MARK: - Services
