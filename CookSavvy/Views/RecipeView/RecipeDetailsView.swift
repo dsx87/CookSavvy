@@ -11,43 +11,45 @@ struct RecipeDetailsView: View {
     @ObservedObject var viewModel: RecipeDetailsViewModel
 
     var body: some View {
-        VStack(alignment: .leading) {
-            AsyncImageDisk(imageName: viewModel.recipe.image) {
-                DefaultPlaceholder()
-            }
-            .frame(maxHeight: 250)
-            Group {
-                HStack {
-                    Text(viewModel.recipe.title)
-                        .font(.title)
-                    Spacer()
-                    Button(action: {
-                        Task {
-                            await viewModel.toggleFavorite()
-                        }
-                    }) {
-                        Image(systemName: viewModel.isFavorite ? "heart.fill" : "heart")
-                            .font(.title2)
-                            .foregroundColor(viewModel.isFavorite ? .red : .gray)
-                    }
-                    .disabled(viewModel.isLoadingFavorite)
+        ScrollView {
+            VStack(alignment: .leading) {
+                AsyncImageDisk(imageName: viewModel.recipe.image) {
+                    DefaultPlaceholder()
                 }
-                RecipeDetailsAdditionalInfo(info: viewModel.recipe.additionalInfo)
-                RecipeDetailsList(
-                    title: "🛒 Ingredients",
-                    items: viewModel.recipe.ingredients.map { "• " + $0.name }
-                )
-                RecipeDetailsList(
-                    title: "🧑‍🍳 Instructions",
-                    items: viewModel.recipe.instructions.map { "• " + $0 }
-                )
+                .frame(height: 250)
+                Group {
+                    HStack {
+                        Text(viewModel.recipe.title)
+                            .font(.title)
+                        Spacer()
+                        Button(action: {
+                            Task {
+                                await viewModel.toggleFavorite()
+                            }
+                        }) {
+                            Image(systemName: viewModel.isFavorite ? "heart.fill" : "heart")
+                                .font(.title2)
+                                .foregroundColor(viewModel.isFavorite ? .red : .gray)
+                        }
+                        .disabled(viewModel.isLoadingFavorite)
+                    }
+                    RecipeDetailsAdditionalInfo(info: viewModel.recipe.additionalInfo)
+                    RecipeDetailsList(
+                        title: "🛒 Ingredients",
+                        items: viewModel.recipe.ingredients.map { "• " + $0.name }
+                    )
+                    RecipeDetailsList(
+                        title: "🧑‍🍳 Instructions",
+                        items: viewModel.recipe.instructions.map { "• " + $0 }
+                    )
+                }
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
-        }
-
-        .background {
-            Color.lightGrayBack
-                .ignoresSafeArea()
+            
+            .background {
+                Color.lightGrayBack
+                    .ignoresSafeArea()
+            }
         }
     }
 }

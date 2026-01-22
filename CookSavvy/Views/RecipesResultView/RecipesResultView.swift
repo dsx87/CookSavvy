@@ -46,7 +46,6 @@ struct RecipesResultView: View {
                 List(viewModel.recipes, id: \.id) { recipe in
                     RecipeResultCellView(
                         recipe: recipe
-//                        image: viewModel.getImage(for: recipe)
                     )
                     .onTapGesture {
                         viewModel.handleRecipeSelection(recipe)

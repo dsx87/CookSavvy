@@ -64,6 +64,8 @@ struct AsyncImageDisk<Placeholder: View>: View {
         Group {
             if let image {
                 Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
             } else {
                 placeholder
             }
@@ -83,15 +85,15 @@ struct AsyncImageDisk<Placeholder: View>: View {
 #Preview {
     AsyncImageDisk(
         imageName: "-bloody-mary-tomato-toast-with-celery-and-horseradish-56389813",
-        imageNamePrefix: "Food Images/Food Images/",
-        imageNameBuilder: ({ prefix, imageFileName in
-            var imageFileName = imageFileName + ".jpg"
-            if let prefix {
-                imageFileName = prefix + imageFileName
-            }
-            return imageFileName
-            
-        }),
+//        imageNamePrefix: "Food Images/Food Images/",
+//        imageNameBuilder: ({ prefix, imageFileName in
+//            var imageFileName = imageFileName + ".jpg"
+//            if let prefix {
+//                imageFileName = prefix + imageFileName
+//            }
+//            return imageFileName
+//            
+//        }),
         placeholder: ({
             Color.gray
         })
