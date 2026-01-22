@@ -101,32 +101,35 @@ struct RecipesResultView: View {
 
 struct RecipeResultCellView: View {
     let recipe: Recipe
-//    let image: UIImage?
-//    let imageString: String
     
     init(recipe: Recipe) {
         self.recipe = recipe
-
     }
     
     var body: some View {
-        HStack {
+        HStack(alignment: .top, spacing: 12) {
             AsyncImageDisk(imageName: recipe.image) {
                 DefaultPlaceholder()
-                    .frame(width: 60, height: 60)
-                    .cornerRadius(8)
+                    .frame(width: 70, height: 70)
+                    .cornerRadius(10)
             }
             .aspectRatio(contentMode: .fill)
-            .frame(width: 60, height: 60)
-            .cornerRadius(8)
+            .frame(width: 70, height: 70)
+            .cornerRadius(10)
             .clipped()
             
-            VStack(alignment: .leading) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text(recipe.title)
-                RecipeResultCellAdditionalInfoView(info: recipe.additionalInfo)
+                    .font(.headline)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                
                 RecipeResultCellIngredientsView(ingredients: recipe.ingredients)
             }
+            
+            Spacer(minLength: 0)
         }
+        .padding(.vertical, 4)
     }
 }
 
@@ -156,15 +159,18 @@ struct RecipeResultCellAdditionalInfoView: View {
 
 struct RecipeResultCellIngredientView: View {
     let name: String
+    
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: .infinity)
-                .foregroundStyle(Color.backOrange)
-                .frame(maxWidth: .infinity, maxHeight: 20)
-            Text(name)
-                .font(.caption)
-                
-        }
+        Text(name)
+            .font(.caption)
+            .lineLimit(1)
+            .truncationMode(.tail)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(
+                Capsule()
+                    .fill(Color.backOrange)
+            )
     }
 }
 
@@ -174,10 +180,19 @@ struct RecipeResultCellIngredientView: View {
 
 struct RecipeResultCellIngredientsView: View {
     let ingredients: [Ingredient]
+    private let maxVisibleIngredients = 3
+    private let maxChipWidth: CGFloat = 100
+    
     var body: some View {
-        HStack {
-            ForEach(0..<(min(ingredients.count, 3)), id: \.self) { i in
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(0..<min(ingredients.count, maxVisibleIngredients), id: \.self) { i in
                 RecipeResultCellIngredientView(name: ingredients[i].name)
+            }
+            
+            if ingredients.count > maxVisibleIngredients {
+                Text("+\(ingredients.count - maxVisibleIngredients)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
     }
