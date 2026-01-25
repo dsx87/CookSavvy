@@ -8,7 +8,9 @@
 import SwiftUI
 
 struct IngredientsInputFindRecipesButton: View {
-    var disabled: Bool
+    var ingredientsNumber: Int
+    
+    private var disabled: Bool { ingredientsNumber == 0 }
     let action: () -> Void
     
     var body: some View {
@@ -30,5 +32,5 @@ struct IngredientsInputFindRecipesButton: View {
 }
 
 #Preview {
-    IngredientsInputFindRecipesButton(disabled: true, action: {})
+    IngredientsInputFindRecipesButton(ingredientsNumber: 0, action: {})
 }

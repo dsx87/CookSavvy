@@ -84,7 +84,7 @@ struct IngredientsInputView: View {
                 selectedIngredients: $viewModel.selectedIngredients
             )
             Spacer(minLength: 150)
-            IngredientsInputFindRecipesButton(disabled: viewModel.selectedIngredients.isEmpty) {
+            IngredientsInputFindRecipesButton(ingredientsNumber: viewModel.selectedIngredients.count) {
                 Task {
                     await viewModel.onFindRecipes()
                 }
