@@ -26,8 +26,6 @@ struct DefaultPlaceholder: View {
 
 struct AsyncImageDisk<Placeholder: View>: View {
     
-    @Environment(\.appContainer.imageService) private var imageService
-    
     let imageName: String
     private var imageNamePrefix: String?
     private let imageNameBuilder: ((String?, String) -> String)
@@ -74,7 +72,7 @@ struct AsyncImageDisk<Placeholder: View>: View {
         .task {
             let fullImageName = imageNameBuilder(self.imageNamePrefix, self.imageName)
             do {
-                self.image = try await imageService.loadImage(named: fullImageName)
+                self.image = try await AppContainer.shared.imageService.loadImage(named: fullImageName)
             } catch {
                 print(error)
             }

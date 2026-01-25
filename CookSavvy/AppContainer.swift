@@ -9,10 +9,12 @@ import Foundation
 
 /// Dependency injection container holding shared service instances
 
-final class AppContainer: ObservableObject {
+final class AppContainer {
 
+    // TODO: redo this in non singleton way
+    static let shared: AppContainer = AppContainer()
+    
     // MARK: - Services
-
     let dbInterface: DBInterfaceProtocol
     let ingredientsService: IngredientsService
     let recipeService: RecipeService
@@ -23,7 +25,7 @@ final class AppContainer: ObservableObject {
 
     // MARK: - Initialization
 
-    init() {
+    private init() {
         // Initialize database
         let db = DBInterface()
         self.dbInterface = db
@@ -47,31 +49,4 @@ final class AppContainer: ObservableObject {
         databaseInitService.startInitialization()
     }
 
-    /// Convenience initializer for testing with custom dependencies
-    init(
-        dbInterface: DBInterfaceProtocol,
-        ingredientsService: IngredientsService? = nil,
-        recipeService: RecipeService? = nil,
-        imageService: ImageService? = nil,
-        dataImportService: DataImportService? = nil,
-        userDataService: UserDataService? = nil,
-        databaseInitService: DatabaseInitializationService? = nil
-    ) {
-        self.dbInterface = dbInterface
-        
-        let ingredients = ingredientsService ?? IngredientsService(dbInterface: dbInterface)
-        let dataImport = dataImportService ?? DataImportService(dbInterface: dbInterface)
-        
-        self.ingredientsService = ingredients
-        self.recipeService = recipeService ?? RecipeService(dbInterface: dbInterface)
-        self.imageService = imageService ?? ImageService()
-        self.dataImportService = dataImport
-        self.userDataService = userDataService ?? UserDataService(dbInterface: dbInterface)
-        
-        self.databaseInitService = databaseInitService ?? DatabaseInitializationService(
-            dbInterface: dbInterface,
-            ingredientsService: ingredients,
-            dataImportService: dataImport
-        )
-    }
 }

@@ -9,8 +9,8 @@ import SwiftUI
 
 struct TabContainerView: View {
     @ObservedObject var coordinator: AppCoordinator
-    @Environment(\.appContainer) private var container
-
+    var container: AppContainer { AppContainer.shared }
+    
     var body: some View {
         TabView {
             coordinator.ingredientsCoordinator(container: container).start()
