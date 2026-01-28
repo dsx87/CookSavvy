@@ -12,9 +12,9 @@ struct RecipeDetailsList: View {
     let items: [String]
     var body: some View {
         ZStack(alignment: .leading) {
-            RoundedRectangle(cornerRadius: 10)
+            RoundedRectangle(cornerRadius: UIConstants.recipeDetailsCardCornerRadius)
                 .foregroundStyle(Color.white)
-                .shadow(radius: 0.2, x: 0.2, y: 0.2)
+                .shadow(radius: UIConstants.recipeDetailsCardShadowRadius, x: UIConstants.recipeDetailsCardShadowOffset, y: UIConstants.recipeDetailsCardShadowOffset)
                 .frame(maxWidth: .infinity)
             VStack(alignment: .leading) {
                 Text(title)

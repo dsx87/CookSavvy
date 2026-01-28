@@ -15,12 +15,9 @@ struct IngredientsInputFastIngredientCell: View {
             onFastIngredintTap(ingredient)
         } label: {
             ZStack {
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: UIConstants.ingredientsFastCellCornerRadius)
                     .foregroundStyle(.white)
                 VStack {
-//                    Text(ingredient.emoji)
-//                        .foregroundStyle(.black)
-//                        .font(.footnote)
                     Text(ingredient.name)
                         .foregroundStyle(.black)
                         .font(.footnote)

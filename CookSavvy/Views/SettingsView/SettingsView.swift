@@ -15,7 +15,7 @@ struct SettingsView: View {
                 // Subscription Plan Section
                 Section {
                     HStack {
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: UIConstants.settingsPlanInfoSpacing) {
                             Text(viewModel.currentPlan.displayName)
                                 .font(.headline)
                             Text(viewModel.currentPlan.description)
@@ -24,18 +24,18 @@ struct SettingsView: View {
                         }
                         Spacer()
                         if viewModel.currentPlan == .free {
-                            Image(systemName: "checkmark.circle.fill")
+                            Image(systemName: UIConstants.settingsPlanCheckmarkIconName)
                                 .foregroundColor(.green)
                         }
                     }
                 } header: {
-                    Text("Subscription Plan")
+                    Text(UIConstants.settingsSubscriptionHeaderTitle)
                 }
 
                 // Database Statistics Section
                 Section {
                     HStack {
-                        Text("Total Recipes")
+                        Text(UIConstants.settingsTotalRecipesLabel)
                         Spacer()
                         if viewModel.isLoading {
                             ProgressView()
@@ -46,7 +46,7 @@ struct SettingsView: View {
                     }
 
                     HStack {
-                        Text("Favorite Recipes")
+                        Text(UIConstants.settingsFavoriteRecipesLabel)
                         Spacer()
                         if viewModel.isLoading {
                             ProgressView()
@@ -57,7 +57,7 @@ struct SettingsView: View {
                     }
 
                     HStack {
-                        Text("Recent Recipes")
+                        Text(UIConstants.settingsRecentRecipesLabel)
                         Spacer()
                         if viewModel.isLoading {
                             ProgressView()
@@ -67,7 +67,7 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Text("Statistics")
+                    Text(UIConstants.settingsStatisticsHeaderTitle)
                 }
 
                 // Data Management Section
@@ -76,8 +76,8 @@ struct SettingsView: View {
                         viewModel.showClearRecentAlert = true
                     } label: {
                         HStack {
-                            Image(systemName: "trash")
-                            Text("Clear Recent Data")
+                            Image(systemName: UIConstants.settingsTrashIconName)
+                            Text(UIConstants.settingsClearRecentButtonTitle)
                         }
                     }
                     .disabled(viewModel.isLoading || viewModel.recentRecipeCount == 0)
@@ -86,62 +86,62 @@ struct SettingsView: View {
                         viewModel.showClearFavoritesAlert = true
                     } label: {
                         HStack {
-                            Image(systemName: "trash")
-                            Text("Clear Favorites")
+                            Image(systemName: UIConstants.settingsTrashIconName)
+                            Text(UIConstants.settingsClearFavoritesButtonTitle)
                         }
                     }
                     .disabled(viewModel.isLoading || viewModel.favoriteCount == 0)
                 } header: {
-                    Text("Data Management")
+                    Text(UIConstants.settingsDataManagementHeaderTitle)
                 } footer: {
-                    Text("Clearing data cannot be undone")
+                    Text(UIConstants.settingsDataManagementFooterText)
                 }
 
                 // App Info Section
                 Section {
                     HStack {
-                        Text("Version")
+                        Text(UIConstants.settingsVersionLabel)
                         Spacer()
                         Text(viewModel.appVersion)
                             .foregroundColor(.secondary)
                     }
 
                     HStack {
-                        Text("Build")
+                        Text(UIConstants.settingsBuildLabel)
                         Spacer()
                         Text(viewModel.buildNumber)
                             .foregroundColor(.secondary)
                     }
                 } header: {
-                    Text("App Information")
+                    Text(UIConstants.settingsAppInfoHeaderTitle)
                 }
             }
-            .navigationTitle("Settings")
+            .navigationTitle(UIConstants.settingsNavigationTitle)
             .task {
                 await viewModel.loadSettings()
             }
             .refreshable {
                 await viewModel.loadSettings()
             }
-            .alert("Clear Recent Data?", isPresented: $viewModel.showClearRecentAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("Clear", role: .destructive) {
+            .alert(UIConstants.settingsClearRecentAlertTitle, isPresented: $viewModel.showClearRecentAlert) {
+                Button(UIConstants.settingsAlertCancelTitle, role: .cancel) { }
+                Button(UIConstants.settingsAlertClearTitle, role: .destructive) {
                     Task {
                         await viewModel.clearRecentData()
                     }
                 }
             } message: {
-                Text("This will clear all recent ingredients, recipes, and searches. This action cannot be undone.")
+                Text(UIConstants.settingsClearRecentAlertMessage)
             }
-            .alert("Clear Favorites?", isPresented: $viewModel.showClearFavoritesAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("Clear", role: .destructive) {
+            .alert(UIConstants.settingsClearFavoritesAlertTitle, isPresented: $viewModel.showClearFavoritesAlert) {
+                Button(UIConstants.settingsAlertCancelTitle, role: .cancel) { }
+                Button(UIConstants.settingsAlertClearTitle, role: .destructive) {
                     Task {
                         await viewModel.clearFavorites()
                     }
                 }
             } message: {
-                Text("This will remove all favorited recipes. This action cannot be undone.")
+                Text(UIConstants.settingsClearFavoritesAlertMessage)
             }
     }
 }

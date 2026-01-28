@@ -18,10 +18,10 @@ struct IngredientsInputFindRecipesButton: View {
             action()
         } label: {
             ZStack {
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: UIConstants.findRecipesButtonCornerRadius)
                     .foregroundStyle(disabled ? .gray : .buttonOrange)
-                    .frame(maxWidth: .infinity, maxHeight: 40)
-                Text("Find Recipes (2 ingredients)")
+                    .frame(maxWidth: .infinity, maxHeight: UIConstants.findRecipesButtonHeight)
+                Text(UIConstants.findRecipesButtonTitle)
                     .font(.title3)
                     .foregroundStyle(.white)
                     .padding()

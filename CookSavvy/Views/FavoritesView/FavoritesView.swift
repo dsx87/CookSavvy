@@ -13,10 +13,10 @@ struct FavoritesView: View {
     var body: some View {
             Group {
                 if viewModel.isLoading {
-                    ProgressView("Loading favorites...")
+                    ProgressView(UIConstants.favoritesLoadingText)
                 } else if let error = viewModel.errorMessage {
-                    VStack(spacing: 16) {
-                        Image(systemName: "exclamationmark.triangle")
+                    VStack(spacing: UIConstants.statusStackSpacing) {
+                        Image(systemName: UIConstants.errorIconName)
                             .font(.largeTitle)
                             .foregroundColor(.orange)
                         Text(error)
@@ -25,13 +25,13 @@ struct FavoritesView: View {
                     }
                     .padding()
                 } else if viewModel.recipes.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "heart")
+                    VStack(spacing: UIConstants.statusStackSpacing) {
+                        Image(systemName: UIConstants.favoritesEmptyIconName)
                             .font(.largeTitle)
                             .foregroundColor(.secondary)
-                        Text("No favorite recipes")
+                        Text(UIConstants.favoritesEmptyTitle)
                             .font(.headline)
-                        Text("Tap the heart icon on recipes to save them here")
+                        Text(UIConstants.favoritesEmptySubtitle)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                     }
@@ -51,14 +51,14 @@ struct FavoritesView: View {
                                         await viewModel.removeFavorite(recipe)
                                     }
                                 } label: {
-                                    Label("Remove", systemImage: "heart.slash")
+                                    Label(UIConstants.favoritesRemoveLabelTitle, systemImage: UIConstants.favoritesRemoveIconName)
                                 }
                             }
                         }
                     }
                 }
             }
-            .navigationTitle("Favorites")
+            .navigationTitle(UIConstants.favoritesNavigationTitle)
             .task {
                 await viewModel.loadFavorites()
             }

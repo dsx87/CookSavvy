@@ -13,18 +13,18 @@ struct RecipesResultView: View {
     var body: some View {
         Group {
             if viewModel.isWaitingForDatabase {
-                VStack(spacing: 16) {
+                VStack(spacing: UIConstants.statusStackSpacing) {
                     ProgressView()
-                        .scaleEffect(1.5)
-                    Text("Preparing recipes database...")
+                        .scaleEffect(UIConstants.statusProgressScale)
+                    Text(UIConstants.recipesPreparingDatabaseText)
                         .font(.headline)
                         .foregroundColor(.secondary)
                 }
             } else if viewModel.isLoading {
-                ProgressView("Loading recipes...")
+                ProgressView(UIConstants.recipesLoadingText)
             } else if let error = viewModel.errorMessage {
-                VStack(spacing: 16) {
-                    Image(systemName: "exclamationmark.triangle")
+                VStack(spacing: UIConstants.statusStackSpacing) {
+                    Image(systemName: UIConstants.errorIconName)
                         .font(.largeTitle)
                         .foregroundColor(.orange)
                     Text(error)
@@ -33,13 +33,13 @@ struct RecipesResultView: View {
                 }
                 .padding()
             } else if viewModel.recipes.isEmpty {
-                VStack(spacing: 16) {
-                    Image(systemName: "magnifyingglass")
+                VStack(spacing: UIConstants.statusStackSpacing) {
+                    Image(systemName: UIConstants.recipesNoResultsIconName)
                         .font(.largeTitle)
                         .foregroundColor(.secondary)
-                    Text("No recipes found")
+                    Text(UIConstants.recipesNoResultsTitle)
                         .font(.headline)
-                    Text("Try different ingredients")
+                    Text(UIConstants.recipesNoResultsSubtitle)
                         .foregroundColor(.secondary)
                 }
             } else {
@@ -51,7 +51,7 @@ struct RecipesResultView: View {
                         viewModel.handleRecipeSelection(recipe)
                     }
                 }
-                .listRowSpacing(18)
+                .listRowSpacing(UIConstants.recipeResultListRowSpacing)
             }
         }
         .navigationBarTitleDisplayMode(.inline)
@@ -59,7 +59,7 @@ struct RecipesResultView: View {
         .toolbar {
             ToolbarItem(placement: .principal) {
                 VStack(alignment: .leading) {
-                    Text("Recipe search result")
+                    Text(UIConstants.recipesNavigationTitle)
                     SearchResultsHeader(count: viewModel.recipes.count, ingredients: viewModel.selectedIngredients)
                 }
             }
@@ -67,7 +67,7 @@ struct RecipesResultView: View {
                 Button(action: {
                     viewModel.handleBack()
                 }) {
-                    Image(systemName: "chevron.left")
+                    Image(systemName: UIConstants.backButtonIconName)
                 }
             }
         }
@@ -106,29 +106,29 @@ struct RecipeResultCellView: View {
     }
     
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: UIConstants.recipeCellHorizontalSpacing) {
             AsyncImageDisk(imageName: recipe.image) {
                 DefaultPlaceholder()
-                    .frame(width: 70, height: 70)
-                    .cornerRadius(10)
+                    .frame(width: UIConstants.recipeCellImageSize, height: UIConstants.recipeCellImageSize)
+                    .cornerRadius(UIConstants.recipeCellImageCornerRadius)
             }
             .aspectRatio(contentMode: .fill)
-            .frame(width: 70, height: 70)
-            .cornerRadius(10)
+            .frame(width: UIConstants.recipeCellImageSize, height: UIConstants.recipeCellImageSize)
+            .cornerRadius(UIConstants.recipeCellImageCornerRadius)
             .clipped()
             
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: UIConstants.recipeCellContentSpacing) {
                 Text(recipe.title)
                     .font(.headline)
-                    .lineLimit(2)
+                    .lineLimit(UIConstants.recipeTitleLineLimit)
                     .fixedSize(horizontal: false, vertical: true)
                 
                 RecipeResultCellIngredientsView(ingredients: recipe.ingredients)
             }
             
-            Spacer(minLength: 0)
+            Spacer(minLength: UIConstants.recipeCellSpacerMinLength)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, UIConstants.recipeCellVerticalPadding)
     }
 }
 
@@ -162,10 +162,10 @@ struct RecipeResultCellIngredientView: View {
     var body: some View {
         Text(name)
             .font(.caption)
-            .lineLimit(1)
+            .lineLimit(UIConstants.ingredientChipLineLimit)
             .truncationMode(.tail)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
+            .padding(.horizontal, UIConstants.ingredientChipHorizontalPadding)
+            .padding(.vertical, UIConstants.ingredientChipVerticalPadding)
             .background(
                 Capsule()
                     .fill(Color.backOrange)
@@ -179,17 +179,17 @@ struct RecipeResultCellIngredientView: View {
 
 struct RecipeResultCellIngredientsView: View {
     let ingredients: [Ingredient]
-    private let maxVisibleIngredients = 3
-    private let maxChipWidth: CGFloat = 100
+    private let maxVisibleIngredients = UIConstants.recipeCellMaxVisibleIngredients
+    private let maxChipWidth: CGFloat = UIConstants.recipeCellMaxChipWidth
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: UIConstants.recipeCellIngredientsSpacing) {
             ForEach(0..<min(ingredients.count, maxVisibleIngredients), id: \.self) { i in
                 RecipeResultCellIngredientView(name: ingredients[i].name)
             }
             
             if ingredients.count > maxVisibleIngredients {
-                Text("+\(ingredients.count - maxVisibleIngredients)")
+                Text("\(UIConstants.recipeCellExtraIngredientsPrefix)\(ingredients.count - maxVisibleIngredients)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

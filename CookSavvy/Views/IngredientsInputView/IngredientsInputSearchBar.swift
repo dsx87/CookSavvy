@@ -15,21 +15,21 @@ struct IngredientsInputSearchBar: View {
         HStack {
 
 
-            TextField("Type an ingredient",
+            TextField(UIConstants.ingredientsSearchPlaceholderText,
                       text: $text)
             Button {
                 cameraTapped = true
             } label: {
-                Image(systemName: "camera")
+                Image(systemName: UIConstants.ingredientsSearchCameraIconName)
                     .tint(.black)
             }
-            Image(systemName: "magnifyingglass")
+            Image(systemName: UIConstants.ingredientsSearchMagnifyingIconName)
         }
         .padding(.horizontal)
-        .padding(.vertical, 9)
+        .padding(.vertical, UIConstants.searchBarVerticalPadding)
         .overlay {
-            RoundedRectangle(cornerRadius: 6)
-                .stroke(Color.borderOrange, lineWidth: 3)
+            RoundedRectangle(cornerRadius: UIConstants.searchBarCornerRadius)
+                .stroke(Color.borderOrange, lineWidth: UIConstants.searchBarBorderWidth)
         }
         .background {
             Color.white

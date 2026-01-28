@@ -17,9 +17,9 @@ struct IngredientsInputView: View {
                 mainContent
             }
         }
-        .navigationTitle("Ingredients Input")
+        .navigationTitle(UIConstants.ingredientsInputNavigationTitle)
         .popover(isPresented: $viewModel.cameraViewPresented, content: {
-            Text("not implemented yet, close")
+            Text(UIConstants.ingredientsInputCameraPlaceholderText)
                 .presentationCompactAdaptation(.fullScreenCover)
                 .onTapGesture {
                     viewModel.cameraViewPresented = false
@@ -28,23 +28,23 @@ struct IngredientsInputView: View {
     }
     
     private var loadingView: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: UIConstants.statusStackSpacing) {
             ProgressView()
-                .scaleEffect(1.5)
-            Text("Loading ingredients...")
+                .scaleEffect(UIConstants.statusProgressScale)
+            Text(UIConstants.ingredientsInputLoadingText)
                 .font(.headline)
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(content: {
-            RoundedRectangle(cornerRadius: 10)
+            RoundedRectangle(cornerRadius: UIConstants.ingredientsInputBackgroundCornerRadius)
                 .foregroundStyle(Color.backOrange2)
                 .ignoresSafeArea()
         })
     }
     
     private var mainContent: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: UIConstants.mainContentStackSpacing) {
             IngredientsInputSearchBar(
                 selectedIngredients: $viewModel.selectedIngredients,
                 cameraTapped: $viewModel.cameraViewPresented,
@@ -60,7 +60,7 @@ struct IngredientsInputView: View {
             ) {
                 VStack {
                     if viewModel.isLoading {
-                        ProgressView("Searching...")
+                        ProgressView(UIConstants.ingredientsInputSearchLoadingText)
                             .padding()
                     } else if let error = viewModel.errorMessage {
                         Text(error)
@@ -73,7 +73,7 @@ struct IngredientsInputView: View {
                         )
                     }
                 }
-                .frame(width: 400, height: 300)
+                .frame(width: UIConstants.ingredientsPopoverWidth, height: UIConstants.ingredientsPopoverHeight)
                 .padding()
                 .presentationCompactAdaptation(.popover)
             }
@@ -83,7 +83,7 @@ struct IngredientsInputView: View {
                 fastIngredients: viewModel.fastSelectorIngredients,
                 selectedIngredients: $viewModel.selectedIngredients
             )
-            Spacer(minLength: 150)
+            Spacer(minLength: UIConstants.ingredientsFindButtonSpacerMinLength)
             IngredientsInputFindRecipesButton(ingredientsNumber: viewModel.selectedIngredients.count) {
                 Task {
                     await viewModel.onFindRecipes()
@@ -93,7 +93,7 @@ struct IngredientsInputView: View {
         }
         .padding()
         .background(content: {
-            RoundedRectangle(cornerRadius: 10)
+            RoundedRectangle(cornerRadius: UIConstants.ingredientsInputBackgroundCornerRadius)
                 .foregroundStyle(Color.backOrange2)
                 .ignoresSafeArea()
         })

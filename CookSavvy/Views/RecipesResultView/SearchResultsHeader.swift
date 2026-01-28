@@ -21,8 +21,8 @@ struct SearchResultsHeader: View {
 
 extension Set where Element == Ingredient {
     var asSmallString: String {
-        if count > 3 {
-            prefix(3).map(\.name).joined(separator: ",") + "..."
+        if count > UIConstants.searchResultsIngredientLimit {
+            prefix(UIConstants.searchResultsIngredientLimit).map(\.name).joined(separator: UIConstants.searchResultsIngredientSeparator) + UIConstants.searchResultsEllipsis
         } else {
             map(\.name).joined(separator: ",")
         }

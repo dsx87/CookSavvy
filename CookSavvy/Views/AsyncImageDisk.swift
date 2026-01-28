@@ -11,7 +11,7 @@ import UIKit
 struct DefaultPlaceholder: View {
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 6)
+            RoundedRectangle(cornerRadius: UIConstants.placeholderCornerRadius)
                 .foregroundStyle(Color.backOrange)
             ProgressView()
             
@@ -45,11 +45,11 @@ struct AsyncImageDisk<Placeholder: View>: View {
     }
     
     init(imageName: String, @ViewBuilder placeholder: @escaping () -> Placeholder) {
-        self.imageNamePrefix = "Food Images/Food Images/"
+        self.imageNamePrefix = UIConstants.asyncImageDefaultPrefix
         self.imageName = imageName
         self.placeholder = placeholder()
         self.imageNameBuilder = ({ prefix, imageFileName in
-            var imageFileName = imageFileName + ".jpg"
+            var imageFileName = imageFileName + UIConstants.asyncImageDefaultExtension
             if let prefix {
                 imageFileName = prefix + imageFileName
             }

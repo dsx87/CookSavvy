@@ -11,18 +11,18 @@ struct IngredientsInputSelectedIngredientCell: View {
     let ingredient: Ingredient
     let action: () -> Void
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: UIConstants.selectedIngredientCellSpacing) {
             Text(ingredient.name)
                 .font(.caption2)
             Button {
                 action()
             } label: {
-                Image(systemName: "xmark")
-                    .scaleEffect(0.5)
+                Image(systemName: UIConstants.selectedIngredientRemoveIconName)
+                    .scaleEffect(UIConstants.selectedIngredientRemoveIconScale)
                     .tint(.black)
             }
         }
-        .padding(7)
+        .padding(UIConstants.selectedIngredientCellPadding)
         .background {
             RoundedRectangle(cornerRadius: .infinity)
                 .foregroundStyle(Color.backOrange)

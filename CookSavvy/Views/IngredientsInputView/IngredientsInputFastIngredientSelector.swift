@@ -14,7 +14,7 @@ struct IngredientsInputFastIngredientSelector: View {
     
     init(
         fastIngredients: [Ingredient],
-        size: Int = 3,
+        size: Int = UIConstants.ingredientsFastGridSize,
         selectedIngredients: Binding<Set<Ingredient>>,
     ) {
         // Use recent ingredients if available, otherwise fall back to defaults
@@ -39,7 +39,7 @@ struct IngredientsInputFastIngredientSelector: View {
             ForEach(0..<size, id: \.self) { row in
                 GridRow {
                     ForEach(0..<size, id: \.self) { col in
-                        IngredientsInputFastIngredientCell(ingredient: fastIngredients[3*row + col]) { ingredient in
+                        IngredientsInputFastIngredientCell(ingredient: fastIngredients[size * row + col]) { ingredient in
                             if selectedIngredients.contains(ingredient) {
                                 selectedIngredients.remove(ingredient)
                             } else {

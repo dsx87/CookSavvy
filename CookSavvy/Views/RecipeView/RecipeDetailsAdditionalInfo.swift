@@ -10,11 +10,11 @@ import SwiftUI
 struct RecipeDetailsAdditionalInfo: View {
     let info: Recipe.AdditionalInfo
     private var fixedInfos: [Recipe.AdditionalInfo.InfoType] {
-        guard info.infos.count < 4 else {
+        guard info.infos.count < UIConstants.recipeAdditionalInfoSlotsCount else {
             return info.infos
         }
         
-        let numberOfMissingInfos = 4 - info.infos.count
+        let numberOfMissingInfos = UIConstants.recipeAdditionalInfoSlotsCount - info.infos.count
         let missingInfos = (0..<numberOfMissingInfos).map { _ in Recipe.AdditionalInfo.InfoType.empty
         }
         
@@ -47,10 +47,10 @@ struct RecipeDetailsAdditionalInfoCell: View {
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 10)
+            RoundedRectangle(cornerRadius: UIConstants.recipeDetailsCardCornerRadius)
                 .foregroundStyle(Color.white)
-                .shadow(radius: 0.2, x: 0.2, y: 0.2)
-                .frame(maxWidth: .infinity, maxHeight: 50)
+                .shadow(radius: UIConstants.recipeDetailsCardShadowRadius, x: UIConstants.recipeDetailsCardShadowOffset, y: UIConstants.recipeDetailsCardShadowOffset)
+                .frame(maxWidth: .infinity, maxHeight: UIConstants.recipeDetailsAdditionalInfoCellHeight)
             VStack {
                 Text(info.title)
                     .font(.caption)

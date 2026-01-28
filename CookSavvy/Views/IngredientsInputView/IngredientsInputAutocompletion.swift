@@ -26,7 +26,7 @@ struct IngredientsInputAutocompletion: View {
                 
                 Spacer()
                 if selectedIngredients.contains(ingr) {
-                    Image(systemName: "checkmark.circle")
+                    Image(systemName: UIConstants.ingredientsAutocompleteSelectedIconName)
                 }
             }
         }
