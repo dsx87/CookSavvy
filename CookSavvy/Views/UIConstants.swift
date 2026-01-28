@@ -18,7 +18,6 @@ struct UIConstants {
     static let recipeCellMaxVisibleIngredients: Int = 3
     static let recipeCellMaxChipWidth: CGFloat = 100
     static let recipeCellExtraIngredientsPrefix = "+"
-    static let emptyCountThreshold: Int = 0
     static let recipeCellSpacerMinLength: CGFloat = 0
     static let ingredientsInputBackgroundCornerRadius: CGFloat = 10
     static let ingredientsPopoverWidth: CGFloat = 400
@@ -43,10 +42,6 @@ struct UIConstants {
     static let recipeDetailsCardShadowOffset: CGFloat = 0.2
     static let recipeDetailsAdditionalInfoCellHeight: CGFloat = 50
     static let recipeAdditionalInfoSlotsCount: Int = 4
-    static let recipeAdditionalInfoFirstIndex: Int = 0
-    static let recipeAdditionalInfoSecondIndex: Int = 1
-    static let recipeAdditionalInfoThirdIndex: Int = 2
-    static let recipeAdditionalInfoFourthIndex: Int = 3
     static let recipeDetailsInfoTitleSeparator = " "
     static let ingredientChipPreviewCount: Int = 10
 
@@ -79,10 +74,7 @@ struct UIConstants {
     static let recipesNoResultsIconName = "magnifyingglass"
     static let backButtonIconName = "chevron.left"
 
-    static let searchResultsFoundPrefix = "Found "
-    static let searchResultsFoundInfix = " recipes using "
-    static let searchResultsIngredientSeparator = ","
-    static let searchResultsEllipsis = "..."
+    static let searchResultsFoundStringFormat = "Found %i recipes using %@"
 
     static let favoritesLoadingText = "Loading favorites..."
     static let favoritesEmptyTitle = "No favorite recipes"
