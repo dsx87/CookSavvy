@@ -24,6 +24,7 @@ final class IngredientsCoordinator: ObservableObject {
             ingredientsService: container.ingredientsService,
             userDataService: container.userDataService,
             databaseInitService: container.databaseInitService,
+            ingredientDetectionService: container.ingredientDetectionService,
             coordinator: self
         )
     }
@@ -43,6 +44,17 @@ final class IngredientsCoordinator: ObservableObject {
         RecipeDetailsViewModel(
             recipe: recipe,
             userDataService: container.userDataService
+        )
+    }
+    
+    func makeCameraViewModel(
+        onDismiss: @escaping () -> Void,
+        onIngredientsDetected: @escaping ([Ingredient]) -> Void
+    ) -> CameraViewModel {
+        CameraViewModel(
+            detectionService: container.ingredientDetectionService,
+            onDismiss: onDismiss,
+            onIngredientsDetected: onIngredientsDetected
         )
     }
     

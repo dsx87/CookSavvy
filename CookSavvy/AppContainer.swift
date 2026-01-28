@@ -22,6 +22,7 @@ final class AppContainer {
     let dataImportService: DataImportService
     let userDataService: UserDataService
     let databaseInitService: DatabaseInitializationService
+    let ingredientDetectionService: IngredientDetectionServiceProtocol
 
     // MARK: - Initialization
 
@@ -45,6 +46,7 @@ final class AppContainer {
             ingredientsService: ingredients,
             dataImportService: dataImport
         )
+        self.ingredientDetectionService = MockIngredientDetectionService()
         
         databaseInitService.startInitialization()
     }

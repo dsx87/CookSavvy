@@ -9,7 +9,7 @@ import SwiftUI
 
 struct IngredientsInputSearchBar: View {
     @Binding var selectedIngredients: Set<Ingredient>
-    @Binding var cameraTapped: Bool
+    let onCameraTapped: () -> Void
     @Binding var text: String
     var body: some View {
         HStack {
@@ -18,7 +18,7 @@ struct IngredientsInputSearchBar: View {
             TextField(UIConstants.ingredientsSearchPlaceholderText,
                       text: $text)
             Button {
-                cameraTapped = true
+                onCameraTapped()
             } label: {
                 Image(systemName: UIConstants.ingredientsSearchCameraIconName)
                     .tint(.black)
@@ -39,5 +39,5 @@ struct IngredientsInputSearchBar: View {
 }
 
 #Preview("Search Bar") {
-    IngredientsInputSearchBar(selectedIngredients: .constant([]), cameraTapped: .constant(false), text: .constant(""))
+    IngredientsInputSearchBar(selectedIngredients: .constant([]), onCameraTapped: {}, text: .constant(""))
 }

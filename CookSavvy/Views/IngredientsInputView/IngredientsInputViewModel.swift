@@ -48,7 +48,8 @@ final class IngredientsInputViewModel: ObservableObject {
     private let ingredientsService: IngredientsService
     private let userDataService: UserDataService
     private let databaseInitService: DatabaseInitializationService
-    private weak var coordinator: IngredientsCoordinator?
+    private let ingredientDetectionService: IngredientDetectionServiceProtocol
+    private(set) weak var coordinator: IngredientsCoordinator?
     private var searchTask: Task<Void, Never>?
 
     // MARK: - Initialization
@@ -57,11 +58,13 @@ final class IngredientsInputViewModel: ObservableObject {
         ingredientsService: IngredientsService,
         userDataService: UserDataService,
         databaseInitService: DatabaseInitializationService,
+        ingredientDetectionService: IngredientDetectionServiceProtocol,
         coordinator: IngredientsCoordinator?
     ) {
         self.ingredientsService = ingredientsService
         self.userDataService = userDataService
         self.databaseInitService = databaseInitService
+        self.ingredientDetectionService = ingredientDetectionService
         self.coordinator = coordinator
 
         Task {
@@ -128,6 +131,20 @@ final class IngredientsInputViewModel: ObservableObject {
 
     func navigateToRecipesResult() {
         coordinator?.showRecipesResult()
+    }
+    
+    func addDetectedIngredients(_ ingredients: [Ingredient]) {
+        for ingredient in ingredients {
+            selectedIngredients.insert(ingredient)
+        }
+    }
+    
+    func dismissCamera() {
+        cameraViewPresented = false
+    }
+    
+    func handleCameraTap() {
+        cameraViewPresented = true
     }
 
     // MARK: - Private Methods

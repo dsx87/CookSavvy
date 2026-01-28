@@ -18,13 +18,16 @@ struct IngredientsInputView: View {
             }
         }
         .navigationTitle(UIConstants.ingredientsInputNavigationTitle)
-        .popover(isPresented: $viewModel.cameraViewPresented, content: {
-            Text(UIConstants.ingredientsInputCameraPlaceholderText)
-                .presentationCompactAdaptation(.fullScreenCover)
-                .onTapGesture {
-                    viewModel.cameraViewPresented = false
-                }
-        })
+        .fullScreenCover(isPresented: $viewModel.cameraViewPresented) {
+            if let coordinator = viewModel.coordinator {
+                CameraView(
+                    viewModel: coordinator.makeCameraViewModel(
+                        onDismiss: { viewModel.dismissCamera() },
+                        onIngredientsDetected: { viewModel.addDetectedIngredients($0) }
+                    )
+                )
+            }
+        }
     }
     
     private var loadingView: some View {
@@ -47,7 +50,7 @@ struct IngredientsInputView: View {
         VStack(spacing: UIConstants.mainContentStackSpacing) {
             IngredientsInputSearchBar(
                 selectedIngredients: $viewModel.selectedIngredients,
-                cameraTapped: $viewModel.cameraViewPresented,
+                onCameraTapped: { viewModel.handleCameraTap() },
                 text: $viewModel.searchText
             )
             .popover(isPresented: Binding<Bool>(
@@ -107,6 +110,7 @@ struct IngredientsInputView: View {
             ingredientsService: container.ingredientsService,
             userDataService: container.userDataService,
             databaseInitService: container.databaseInitService,
+            ingredientDetectionService: container.ingredientDetectionService,
             coordinator: nil
         )
     )
