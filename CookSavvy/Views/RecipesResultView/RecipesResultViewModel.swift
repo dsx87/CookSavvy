@@ -21,6 +21,7 @@ final class RecipesResultViewModel: ObservableObject {
     private let imageService: ImageService
     private let databaseInitService: DatabaseInitializationService
     private let userDataService: UserDataService
+    private let subscriptionService: SubscriptionServiceProtocol
     private weak var coordinator: IngredientsCoordinator?
 
     deinit {
@@ -34,6 +35,7 @@ final class RecipesResultViewModel: ObservableObject {
         imageService: ImageService,
         databaseInitService: DatabaseInitializationService,
         userDataService: UserDataService,
+        subscriptionService: SubscriptionServiceProtocol,
         coordinator: IngredientsCoordinator?
     ) {
         self.selectedIngredients = selectedIngredients
@@ -41,6 +43,7 @@ final class RecipesResultViewModel: ObservableObject {
         self.imageService = imageService
         self.databaseInitService = databaseInitService
         self.userDataService = userDataService
+        self.subscriptionService = subscriptionService
         self.coordinator = coordinator
     }
 
@@ -73,8 +76,9 @@ final class RecipesResultViewModel: ObservableObject {
             defer { isLoading = false }
 
             let lowercaseIngredients = normalizedIngredients()
-
-            recipes = try await recipeService.getRecipes(for: lowercaseIngredients)
+            let enabledSources = getAccessibleEnabledSources()
+            
+            recipes = try await recipeService.getRecipes(for: lowercaseIngredients, from: enabledSources)
         } catch {
             print("❌ Error loading recipes: \(error)")
             errorMessage = "Failed to load recipes: \(error.localizedDescription)"
@@ -101,5 +105,18 @@ final class RecipesResultViewModel: ObservableObject {
                 foodSubgroup: ingredient.foodSubgroup
             )
         }
+    }
+    
+    private func getAccessibleEnabledSources() -> Set<RecipeSourceType> {
+        var sources = userDataService.getEnabledSources()
+        
+        if sources.contains(.ai) && !subscriptionService.canAccessFeature(.aiRecipes) {
+            sources.remove(.ai)
+        }
+        if sources.contains(.online) && !subscriptionService.canAccessFeature(.onlineRecipes) {
+            sources.remove(.online)
+        }
+        
+        return sources.isEmpty ? [.offline] : sources
     }
 }

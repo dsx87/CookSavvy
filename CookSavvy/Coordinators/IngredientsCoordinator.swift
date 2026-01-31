@@ -10,6 +10,7 @@ final class IngredientsCoordinator: ObservableObject {
     
     private let container: AppContainer
     @Published var navigationPath = NavigationPath()
+    @Published var presentedSheet: SheetDestination?
     
     init(container: AppContainer) {
         self.container = container
@@ -25,6 +26,7 @@ final class IngredientsCoordinator: ObservableObject {
             userDataService: container.userDataService,
             databaseInitService: container.databaseInitService,
             ingredientDetectionService: container.ingredientDetectionService,
+            subscriptionService: container.subscriptionService,
             coordinator: self
         )
     }
@@ -36,6 +38,7 @@ final class IngredientsCoordinator: ObservableObject {
             imageService: container.imageService,
             databaseInitService: container.databaseInitService,
             userDataService: container.userDataService,
+            subscriptionService: container.subscriptionService,
             coordinator: self
         )
     }
@@ -71,12 +74,45 @@ final class IngredientsCoordinator: ObservableObject {
             navigationPath.removeLast()
         }
     }
+    
+    func showUpgrade() {
+        presentedSheet = .upgrade
+    }
+    
+    func makeUpgradeViewModel() -> UpgradeViewModel {
+        UpgradeViewModel(
+            subscriptionService: container.subscriptionService,
+            onDismiss: { [weak self] in
+                self?.dismissSheet()
+            }
+        )
+    }
+    
+    func showCamera() {
+        presentedSheet = .camera
+    }
+    
+    func dismissSheet() {
+        presentedSheet = nil
+    }
 }
 
 extension IngredientsCoordinator {
     enum NavigationDestination: Hashable {
         case recipesResult
         case recipeDetails(Recipe)
+    }
+    
+    enum SheetDestination: Identifiable {
+        case camera
+        case upgrade
+        
+        var id: String {
+            switch self {
+            case .camera: return "camera"
+            case .upgrade: return "upgrade"
+            }
+        }
     }
 }
 
@@ -106,6 +142,23 @@ struct IngredientsCoordinatorView: View {
                         )
                     }
                 }
+        }
+        .fullScreenCover(item: Binding(
+            get: { coordinator.presentedSheet == .camera ? coordinator.presentedSheet : nil },
+            set: { if $0 == nil { coordinator.dismissSheet() } }
+        )) { _ in
+            CameraView(
+                viewModel: coordinator.makeCameraViewModel(
+                    onDismiss: { coordinator.dismissSheet() },
+                    onIngredientsDetected: { viewModel.addDetectedIngredients($0) }
+                )
+            )
+        }
+        .sheet(item: Binding(
+            get: { coordinator.presentedSheet == .upgrade ? coordinator.presentedSheet : nil },
+            set: { if $0 == nil { coordinator.dismissSheet() } }
+        )) { _ in
+            UpgradeView(viewModel: coordinator.makeUpgradeViewModel())
         }
     }
 }

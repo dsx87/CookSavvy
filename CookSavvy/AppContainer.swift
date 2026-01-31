@@ -9,6 +9,7 @@ import Foundation
 
 /// Dependency injection container holding shared service instances
 
+@MainActor
 final class AppContainer {
 
     // TODO: redo this in non singleton way
@@ -23,6 +24,7 @@ final class AppContainer {
     let userDataService: UserDataService
     let databaseInitService: DatabaseInitializationService
     let ingredientDetectionService: IngredientDetectionServiceProtocol
+    let subscriptionService: SubscriptionServiceProtocol
 
     // MARK: - Initialization
 
@@ -47,6 +49,12 @@ final class AppContainer {
             dataImportService: dataImport
         )
         self.ingredientDetectionService = MockIngredientDetectionService()
+        
+        #if DEBUG
+        self.subscriptionService = MockSubscriptionService(initialPlan: .free)
+        #else
+        self.subscriptionService = StoreKitSubscriptionService()
+        #endif
         
         databaseInitService.startInitialization()
     }

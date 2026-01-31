@@ -21,7 +21,6 @@ final class IngredientsInputViewModel: ObservableObject {
         }
     }
     @Published var selectedIngredients: Set<Ingredient> = []
-    @Published var cameraViewPresented: Bool = false
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
 
@@ -49,6 +48,7 @@ final class IngredientsInputViewModel: ObservableObject {
     private let userDataService: UserDataService
     private let databaseInitService: DatabaseInitializationService
     private let ingredientDetectionService: IngredientDetectionServiceProtocol
+    private let subscriptionService: SubscriptionServiceProtocol
     private(set) weak var coordinator: IngredientsCoordinator?
     private var searchTask: Task<Void, Never>?
 
@@ -59,12 +59,14 @@ final class IngredientsInputViewModel: ObservableObject {
         userDataService: UserDataService,
         databaseInitService: DatabaseInitializationService,
         ingredientDetectionService: IngredientDetectionServiceProtocol,
+        subscriptionService: SubscriptionServiceProtocol,
         coordinator: IngredientsCoordinator?
     ) {
         self.ingredientsService = ingredientsService
         self.userDataService = userDataService
         self.databaseInitService = databaseInitService
         self.ingredientDetectionService = ingredientDetectionService
+        self.subscriptionService = subscriptionService
         self.coordinator = coordinator
 
         Task {
@@ -140,11 +142,19 @@ final class IngredientsInputViewModel: ObservableObject {
     }
     
     func dismissCamera() {
-        cameraViewPresented = false
+        coordinator?.dismissSheet()
     }
     
     func handleCameraTap() {
-        cameraViewPresented = true
+        guard subscriptionService.canAccessFeature(.cameraIngredientDetection) else {
+            coordinator?.showUpgrade()
+            return
+        }
+        coordinator?.showCamera()
+    }
+    
+    func canAccessCamera() -> Bool {
+        subscriptionService.canAccessFeature(.cameraIngredientDetection)
     }
 
     // MARK: - Private Methods

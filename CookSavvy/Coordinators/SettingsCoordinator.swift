@@ -10,6 +10,7 @@ final class SettingsCoordinator: ObservableObject {
     
     private let container: AppContainer
     @Published var navigationPath = NavigationPath()
+    @Published var presentedSheet: SheetDestination?
     
     init(container: AppContainer) {
         self.container = container
@@ -22,8 +23,39 @@ final class SettingsCoordinator: ObservableObject {
     func makeSettingsViewModel() -> SettingsViewModel {
         SettingsViewModel(
             userDataService: container.userDataService,
-            dbInterface: container.dbInterface
+            dbInterface: container.dbInterface,
+            subscriptionService: container.subscriptionService,
+            coordinator: self
         )
+    }
+    
+    func showUpgrade() {
+        presentedSheet = .upgrade
+    }
+    
+    func dismissSheet() {
+        presentedSheet = nil
+    }
+    
+    func makeUpgradeViewModel() -> UpgradeViewModel {
+        UpgradeViewModel(
+            subscriptionService: container.subscriptionService,
+            onDismiss: { [weak self] in
+                self?.dismissSheet()
+            }
+        )
+    }
+}
+
+extension SettingsCoordinator {
+    enum SheetDestination: Identifiable {
+        case upgrade
+        
+        var id: String {
+            switch self {
+            case .upgrade: return "upgrade"
+            }
+        }
     }
 }
 
@@ -39,6 +71,12 @@ struct SettingsCoordinatorView: View {
     var body: some View {
         NavigationStack(path: $coordinator.navigationPath) {
             SettingsView(viewModel: viewModel)
+        }
+        .sheet(item: $coordinator.presentedSheet) { sheet in
+            switch sheet {
+            case .upgrade:
+                UpgradeView(viewModel: coordinator.makeUpgradeViewModel())
+            }
         }
     }
 }

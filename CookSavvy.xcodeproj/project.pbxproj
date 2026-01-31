@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1D62F36B2DC17E2600F28780 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 1D62F36A2DC17E2600F28780 /* ZIPFoundation */; };
 		1D62F3762DC2EC4600F28780 /* CSV in Frameworks */ = {isa = PBXBuildFile; productRef = 1D62F3752DC2EC4600F28780 /* CSV */; };
+		1DDFE9B12F2CE64E000E8058 /* Configuration.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 1DDFE9B02F2CE64E000E8058 /* Configuration.storekit */; };
 		1DE9DF112E623A250077DD75 /* DefaultTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 1DE9DF102E623A250077DD75 /* DefaultTestPlan.xctestplan */; };
 		1DE9DF212E624D220077DD75 /* GRDB-dynamic in Frameworks */ = {isa = PBXBuildFile; productRef = 1DE9DF202E624D220077DD75 /* GRDB-dynamic */; };
 /* End PBXBuildFile section */
@@ -25,6 +26,7 @@
 
 /* Begin PBXFileReference section */
 		1D255FDB2DC135BB008C52B4 /* CookSavvy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CookSavvy.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1DDFE9B02F2CE64E000E8058 /* Configuration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Configuration.storekit; sourceTree = "<group>"; };
 		1DE9DF102E623A250077DD75 /* DefaultTestPlan.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = DefaultTestPlan.xctestplan; sourceTree = "<group>"; };
 		1DE9DF162E623A380077DD75 /* CookSavvyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CookSavvyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -66,6 +68,7 @@
 		1D255FD22DC135BB008C52B4 = {
 			isa = PBXGroup;
 			children = (
+				1DDFE9B02F2CE64E000E8058 /* Configuration.storekit */,
 				1DE9DF102E623A250077DD75 /* DefaultTestPlan.xctestplan */,
 				1D255FDD2DC135BB008C52B4 /* CookSavvy */,
 				1DE9DF172E623A380077DD75 /* CookSavvyTests */,
@@ -182,6 +185,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1DDFE9B12F2CE64E000E8058 /* Configuration.storekit in Resources */,
 				1DE9DF112E623A250077DD75 /* DefaultTestPlan.xctestplan in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

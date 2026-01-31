@@ -81,7 +81,7 @@ struct RecipesResultView: View {
     let dbInterface = DBInterface()
     let ingredientsService = IngredientsService(dbInterface: dbInterface)
     let dataImportService = DataImportService(dbInterface: dbInterface)
-    return RecipesResultView(
+    RecipesResultView(
         viewModel: RecipesResultViewModel(
             selectedIngredients: [Ingredient(name: "Pasta"), Ingredient(name: "Tomato")],
             recipeService: RecipeService(dbInterface: dbInterface),
@@ -92,6 +92,7 @@ struct RecipesResultView: View {
                 dataImportService: dataImportService
             ),
             userDataService: UserDataService(dbInterface: dbInterface),
+            subscriptionService: MockSubscriptionService(),
             coordinator: nil
         )
     )

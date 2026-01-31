@@ -23,13 +23,96 @@ struct SettingsView: View {
                                 .foregroundColor(.secondary)
                         }
                         Spacer()
-                        if viewModel.currentPlan == .free {
-                            Image(systemName: UIConstants.settingsPlanCheckmarkIconName)
-                                .foregroundColor(.green)
+                        Image(systemName: UIConstants.settingsPlanCheckmarkIconName)
+                            .foregroundColor(.green)
+                    }
+                    
+                    if viewModel.currentPlan != .ai {
+                        Button {
+                            viewModel.showUpgrade()
+                        } label: {
+                            HStack {
+                                Image(systemName: "crown.fill")
+                                    .foregroundColor(.yellow)
+                                Text("Upgrade Plan")
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    
+                    Button {
+                        Task {
+                            await viewModel.restorePurchases()
+                        }
+                    } label: {
+                        HStack {
+                            Text("Restore Purchases")
+                            Spacer()
+                            if viewModel.isRestoringPurchases {
+                                ProgressView()
+                            }
+                        }
+                    }
+                    .disabled(viewModel.isRestoringPurchases)
+                    
+                    Button {
+                        viewModel.openManageSubscriptions()
+                    } label: {
+                        HStack {
+                            Text("Manage Subscription")
+                            Spacer()
+                            Image(systemName: "arrow.up.forward.app")
+                                .foregroundColor(.secondary)
                         }
                     }
                 } header: {
                     Text(UIConstants.settingsSubscriptionHeaderTitle)
+                }
+                
+                Section {
+                    Toggle(isOn: Binding(
+                        get: { viewModel.localSourceEnabled },
+                        set: { _ in viewModel.toggleLocalSource() }
+                    )) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Local Recipes")
+                            Text("Offline database")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    Toggle(isOn: Binding(
+                        get: { viewModel.apiSourceEnabled },
+                        set: { _ in viewModel.toggleApiSource() }
+                    )) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Online Recipes")
+                            Text("API source")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .disabled(!viewModel.canAccessSource(.online))
+                    
+                    Toggle(isOn: Binding(
+                        get: { viewModel.aiSourceEnabled },
+                        set: { _ in viewModel.toggleAiSource() }
+                    )) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("AI Recipes")
+                            Text("AI-generated recipes")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .disabled(!viewModel.canAccessSource(.ai))
+                } header: {
+                    Text("Recipe Sources")
+                } footer: {
+                    Text("Select which sources to use when searching for recipes. At least one source must be enabled.")
                 }
 
                 // Database Statistics Section
@@ -143,6 +226,14 @@ struct SettingsView: View {
             } message: {
                 Text(UIConstants.settingsClearFavoritesAlertMessage)
             }
+            .alert("Restore Failed", isPresented: .init(
+                get: { viewModel.restoreError != nil },
+                set: { if !$0 { viewModel.restoreError = nil } }
+            )) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(viewModel.restoreError ?? "")
+            }
     }
 }
 
@@ -151,7 +242,9 @@ struct SettingsView: View {
     return SettingsView(
         viewModel: SettingsViewModel(
             userDataService: UserDataService(dbInterface: dbInterface),
-            dbInterface: dbInterface
+            dbInterface: dbInterface,
+            subscriptionService: MockSubscriptionService(),
+            coordinator: nil
         )
     )
 }

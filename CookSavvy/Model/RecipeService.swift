@@ -179,4 +179,39 @@ final class RecipeService {
             throw RecipeSourceError.databaseError(error)
         }
     }
+    
+    /// Fetches recipes from multiple sources and merges results
+    /// - Parameters:
+    ///   - ingredients: List of ingredients to search for
+    ///   - sourceTypes: Set of sources to query
+    /// - Returns: Array of merged recipes from all sources
+    func getRecipes(for ingredients: [Ingredient], from sourceTypes: Set<RecipeSourceType>) async throws -> [Recipe] {
+        var allRecipes: [Recipe] = []
+        var seenTitles: Set<String> = []
+        
+        for sourceType in sourceTypes.sorted(by: { $0.rawValue < $1.rawValue }) {
+            guard let source = sources[sourceType],
+                  await source.isAvailable() else {
+                continue
+            }
+            
+            do {
+                let recipes = try await source.fetchRecipes(for: ingredients)
+                for recipe in recipes {
+                    if !seenTitles.contains(recipe.title) {
+                        seenTitles.insert(recipe.title)
+                        allRecipes.append(recipe)
+                    }
+                }
+            } catch {
+                print("⚠️ Source \(sourceType) failed: \(error)")
+            }
+        }
+        
+        if shouldStoreRecipes && !allRecipes.isEmpty {
+            try storeRecipes(allRecipes)
+        }
+        
+        return allRecipes
+    }
 }

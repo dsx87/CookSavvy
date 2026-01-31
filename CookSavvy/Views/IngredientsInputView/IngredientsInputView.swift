@@ -18,16 +18,6 @@ struct IngredientsInputView: View {
             }
         }
         .navigationTitle(UIConstants.ingredientsInputNavigationTitle)
-        .fullScreenCover(isPresented: $viewModel.cameraViewPresented) {
-            if let coordinator = viewModel.coordinator {
-                CameraView(
-                    viewModel: coordinator.makeCameraViewModel(
-                        onDismiss: { viewModel.dismissCamera() },
-                        onIngredientsDetected: { viewModel.addDetectedIngredients($0) }
-                    )
-                )
-            }
-        }
     }
     
     private var loadingView: some View {
@@ -111,6 +101,7 @@ struct IngredientsInputView: View {
             userDataService: container.userDataService,
             databaseInitService: container.databaseInitService,
             ingredientDetectionService: container.ingredientDetectionService,
+            subscriptionService: container.subscriptionService,
             coordinator: nil
         )
     )
