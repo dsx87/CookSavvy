@@ -10,7 +10,10 @@
 ## Must Follow
 
 ### Architecture
-- **MVVM pattern** — Views hold only `viewModel`, all state lives in ViewModel
+- **MVVM + Coordinator** — Views hold only `viewModel`, ViewModels hold weak coordinator refs
+- **Coordinators** — handle navigation and ViewModel creation (AppCoordinator → feature coordinators)
+- **Dependency Injection** — AppContainer singleton provides all services
+- **Service Layer** — data services, infrastructure services, feature services, network layer
 - **Single Responsibility Principle** — create services as needed
 - **SwiftUI first** — UIKit only when unavoidable
 - **Apple frameworks preferred**

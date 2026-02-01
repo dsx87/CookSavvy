@@ -31,10 +31,33 @@ A hobby iOS recipe app that suggests recipes based on user-provided ingredients.
 
 ## Architecture Rules
 
-### MVVM Pattern
-- Views contain **only** a `viewModel` property
-- All state/variables live inside the ViewModel
-- Strict separation of concerns
+### MVVM + Coordinator Pattern
+- **Views** contain **only** a `viewModel` property
+- All state/variables live inside the **ViewModel**
+- **Coordinators** handle navigation and ViewModel creation
+- Strict separation of concerns:
+  - Views: UI presentation only
+  - ViewModels: Business logic and state
+  - Coordinators: Navigation flow
+  - Services: Data operations
+
+### Coordinator Hierarchy
+- `AppCoordinator`: Root coordinator managing tab-level coordinators
+- Feature coordinators: `IngredientsCoordinator`, `FavoritesCoordinator`, `RecentRecipesCoordinator`, `SettingsCoordinator`
+- Each coordinator owns its navigation stack and sheet presentations
+- ViewModels hold weak references to coordinators for navigation
+
+### Dependency Injection
+- `AppContainer`: Singleton holding all shared service instances
+- Services initialized once and injected into ViewModels via coordinators
+- Maintains single source of truth for app-wide dependencies
+
+### Service Layer
+- **Data Services**: `RecipeService`, `IngredientsService`, `UserDataService`
+- **Infrastructure**: `ImageService`, `DatabaseInitializationService`, `DataImportService`
+- **Feature Services**: `IngredientDetectionService`, `SubscriptionService`
+- **Network Layer**: `NetworkService`, `URLBuilder`, `NetworkRequest`, `NetworkResponse`, `NetworkError`
+- All services conform to protocols for testability
 
 ### Code Organization
 - Create services as needed
