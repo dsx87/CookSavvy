@@ -145,3 +145,6 @@ Pods/
 !*.xcworkspace/xcshareddata/
 CookSavvy.xcodeproj/xcshareddata/
 CookSavvy.xcodeproj/project.xcworkspace/xcshareddata/
+
+# API Keys
+APIKeys.plist

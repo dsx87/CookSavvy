@@ -95,7 +95,7 @@ struct IngredientsInputView: View {
 
 #Preview("IngredientsInputView") {
     let container = AppContainer.shared
-    return IngredientsInputView(
+    IngredientsInputView(
         viewModel: IngredientsInputViewModel(
             ingredientsService: container.ingredientsService,
             userDataService: container.userDataService,

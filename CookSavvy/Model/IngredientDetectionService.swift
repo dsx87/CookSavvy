@@ -26,35 +26,3 @@ enum IngredientDetectionError: Error, LocalizedError {
     }
 }
 
-final class MockIngredientDetectionService: IngredientDetectionServiceProtocol {
-    
-    private let simulatedDelay: TimeInterval
-    private let shouldSucceed: Bool
-    private let mockIngredients: [Ingredient]
-    
-    init(
-        simulatedDelay: TimeInterval = 2.0,
-        shouldSucceed: Bool = true,
-        mockIngredients: [Ingredient]? = nil
-    ) {
-        self.simulatedDelay = simulatedDelay
-        self.shouldSucceed = shouldSucceed
-        self.mockIngredients = mockIngredients ?? [
-            Ingredient(name: "Tomato"),
-            Ingredient(name: "Onion"),
-            Ingredient(name: "Garlic")
-        ]
-    }
-    
-    func detectIngredients(in image: UIImage) async throws -> [Ingredient] {
-        try await Task.sleep(nanoseconds: UInt64(simulatedDelay * TimeInterval(NSEC_PER_SEC)))
-        
-        guard shouldSucceed else {
-            throw IngredientDetectionError.processingFailed(
-                NSError(domain: "MockError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Simulated failure"])
-            )
-        }
-        
-        return mockIngredients
-    }
-}

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 
 /// Dependency injection container holding shared service instances
 
@@ -23,6 +24,8 @@ final class AppContainer {
     let dataImportService: DataImportService
     let userDataService: UserDataService
     let databaseInitService: DatabaseInitializationService
+    let networkService: NetworkServiceProtocol
+    let aiService: AIServiceProtocol
     let ingredientDetectionService: IngredientDetectionServiceProtocol
     let subscriptionService: SubscriptionServiceProtocol
 
@@ -48,7 +51,17 @@ final class AppContainer {
             ingredientsService: ingredients,
             dataImportService: dataImport
         )
-        self.ingredientDetectionService = MockIngredientDetectionService()
+        let network = NetworkService()
+        self.networkService = network
+        let llmProvider: LLMProviderProtocol
+        #if DEBUG
+        llmProvider = MockLLMProvider()
+        #else
+        llmProvider = Self.createProductionProvider(networkService: network)
+        #endif
+        let ai = AIService(provider: llmProvider)
+        self.aiService = ai
+        self.ingredientDetectionService = AIIngredientDetectionAdapter(aiService: ai)
         
         #if DEBUG
         self.subscriptionService = MockSubscriptionService(initialPlan: .free)
@@ -58,5 +71,45 @@ final class AppContainer {
         
         databaseInitService.startInitialization()
     }
+    
+    private static func createProductionProvider(networkService: NetworkServiceProtocol) -> LLMProviderProtocol {
+        if let openAIKey = APIKeyConfiguration.openAIKey, !openAIKey.isEmpty {
+            return OpenAIProvider(apiKey: openAIKey, networkService: networkService)
+        } else if let geminiKey = APIKeyConfiguration.geminiKey, !geminiKey.isEmpty {
+            return GeminiProvider(apiKey: geminiKey, networkService: networkService)
+        }
+        
+        return MockLLMProvider()
+    }
+}
 
+enum APIKeyConfiguration {
+    private static let plistName = "APIKeys"
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "CookSavvy",
+        category: "APIKeyConfiguration"
+    )
+    
+    static var openAIKey: String? {
+        getValue(for: "OPENAI_API_KEY")
+    }
+    
+    static var geminiKey: String? {
+        getValue(for: "GEMINI_API_KEY")
+    }
+    
+    private static func getValue(for key: String) -> String? {
+        guard let path = Bundle.main.path(forResource: plistName, ofType: "plist") else {
+            logger.warning("APIKeys.plist not found in app bundle. AI provider keys unavailable.")
+            return nil
+        }
+        guard let dict = NSDictionary(contentsOfFile: path) else {
+            logger.warning("APIKeys.plist could not be read. AI provider keys unavailable.")
+            return nil
+        }
+        guard let value = dict[key] as? String, !value.isEmpty else {
+            return nil
+        }
+        return value
+    }
 }
