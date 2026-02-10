@@ -12,16 +12,17 @@ struct IngredientsInputFindRecipesButton: View {
     
     private var disabled: Bool { ingredientsNumber == 0 }
     let action: () -> Void
-    
+    @Environment(\.appTheme) private var theme
+
     var body: some View {
         Button {
             action()
         } label: {
             ZStack {
-                RoundedRectangle(cornerRadius: UIConstants.findRecipesButtonCornerRadius)
-                    .foregroundStyle(disabled ? .gray : .buttonOrange)
-                    .frame(maxWidth: .infinity, maxHeight: UIConstants.findRecipesButtonHeight)
-                Text(UIConstants.findRecipesButtonTitle)
+                RoundedRectangle(cornerRadius: UI.FindButton.cornerRadius)
+                    .foregroundStyle(disabled ? .gray : theme.buttonPrimary)
+                    .frame(maxWidth: .infinity, maxHeight: UI.FindButton.height)
+                Text(UI.FindButton.title)
                     .font(.title3)
                     .foregroundStyle(.white)
                     .padding()

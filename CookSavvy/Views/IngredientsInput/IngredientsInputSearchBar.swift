@@ -11,25 +11,27 @@ struct IngredientsInputSearchBar: View {
     @Binding var selectedIngredients: Set<Ingredient>
     let onCameraTapped: () -> Void
     @Binding var text: String
+    @Environment(\.appTheme) private var theme
+
     var body: some View {
         HStack {
 
 
-            TextField(UIConstants.ingredientsSearchPlaceholderText,
+            TextField(UI.SearchBar.placeholderText,
                       text: $text)
             Button {
                 onCameraTapped()
             } label: {
-                Image(systemName: UIConstants.ingredientsSearchCameraIconName)
+                Image(systemName: UI.SearchBar.cameraIcon)
                     .tint(.black)
             }
-            Image(systemName: UIConstants.ingredientsSearchMagnifyingIconName)
+            Image(systemName: UI.SearchBar.magnifyingIcon)
         }
         .padding(.horizontal)
-        .padding(.vertical, UIConstants.searchBarVerticalPadding)
+        .padding(.vertical, UI.SearchBar.verticalPadding)
         .overlay {
-            RoundedRectangle(cornerRadius: UIConstants.searchBarCornerRadius)
-                .stroke(Color.borderOrange, lineWidth: UIConstants.searchBarBorderWidth)
+            RoundedRectangle(cornerRadius: UI.SearchBar.cornerRadius)
+                .stroke(theme.borderAccent, lineWidth: UI.SearchBar.borderWidth)
         }
         .background {
             Color.white

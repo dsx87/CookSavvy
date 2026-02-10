@@ -13,10 +13,10 @@ struct RecentRecipesView: View {
     var body: some View {
             Group {
                 if viewModel.isLoading {
-                    ProgressView(UIConstants.recentLoadingText)
+                    ProgressView(UI.Recent.loadingText)
                 } else if let error = viewModel.errorMessage {
-                    VStack(spacing: UIConstants.statusStackSpacing) {
-                        Image(systemName: UIConstants.errorIconName)
+                    VStack(spacing: UI.Common.stackSpacing) {
+                        Image(systemName: UI.Common.errorIcon)
                             .font(.largeTitle)
                             .foregroundColor(.orange)
                         Text(error)
@@ -25,13 +25,13 @@ struct RecentRecipesView: View {
                     }
                     .padding()
                 } else if viewModel.recipes.isEmpty {
-                    VStack(spacing: UIConstants.statusStackSpacing) {
-                        Image(systemName: UIConstants.recentEmptyIconName)
+                    VStack(spacing: UI.Common.stackSpacing) {
+                        Image(systemName: UI.Recent.emptyIcon)
                             .font(.largeTitle)
                             .foregroundColor(.secondary)
-                        Text(UIConstants.recentEmptyTitle)
+                        Text(UI.Recent.emptyTitle)
                             .font(.headline)
-                        Text(UIConstants.recentEmptySubtitle)
+                        Text(UI.Recent.emptySubtitle)
                             .foregroundColor(.secondary)
                     }
                 } else {
@@ -45,7 +45,7 @@ struct RecentRecipesView: View {
                     }
                 }
             }
-            .navigationTitle(UIConstants.recentNavigationTitle)
+            .navigationTitle(UI.Recent.navigationTitle)
             .task {
                 await viewModel.loadRecentRecipes()
             }

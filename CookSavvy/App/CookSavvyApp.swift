@@ -14,6 +14,7 @@ struct CookSavvyApp: App {
     var body: some Scene {
         WindowGroup {
             TabContainerView(coordinator: coordinator)
+                .environment(\.appTheme, DefaultTheme())
         }
     }
 }

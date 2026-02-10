@@ -13,10 +13,10 @@ struct FavoritesView: View {
     var body: some View {
             Group {
                 if viewModel.isLoading {
-                    ProgressView(UIConstants.favoritesLoadingText)
+                    ProgressView(UI.Favorites.loadingText)
                 } else if let error = viewModel.errorMessage {
-                    VStack(spacing: UIConstants.statusStackSpacing) {
-                        Image(systemName: UIConstants.errorIconName)
+                    VStack(spacing: UI.Common.stackSpacing) {
+                        Image(systemName: UI.Common.errorIcon)
                             .font(.largeTitle)
                             .foregroundColor(.orange)
                         Text(error)
@@ -25,13 +25,13 @@ struct FavoritesView: View {
                     }
                     .padding()
                 } else if viewModel.recipes.isEmpty {
-                    VStack(spacing: UIConstants.statusStackSpacing) {
-                        Image(systemName: UIConstants.favoritesEmptyIconName)
+                    VStack(spacing: UI.Common.stackSpacing) {
+                        Image(systemName: UI.Favorites.emptyIcon)
                             .font(.largeTitle)
                             .foregroundColor(.secondary)
-                        Text(UIConstants.favoritesEmptyTitle)
+                        Text(UI.Favorites.emptyTitle)
                             .font(.headline)
-                        Text(UIConstants.favoritesEmptySubtitle)
+                        Text(UI.Favorites.emptySubtitle)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                     }
@@ -51,14 +51,14 @@ struct FavoritesView: View {
                                         await viewModel.removeFavorite(recipe)
                                     }
                                 } label: {
-                                    Label(UIConstants.favoritesRemoveLabelTitle, systemImage: UIConstants.favoritesRemoveIconName)
+                                    Label(UI.Favorites.removeLabelTitle, systemImage: UI.Favorites.removeIcon)
                                 }
                             }
                         }
                     }
                 }
             }
-            .navigationTitle(UIConstants.favoritesNavigationTitle)
+            .navigationTitle(UI.Favorites.navigationTitle)
             .task {
                 await viewModel.loadFavorites()
             }

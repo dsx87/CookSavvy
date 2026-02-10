@@ -8,6 +8,7 @@ import SwiftUI
 
 struct IngredientsInputView: View {
     @ObservedObject var viewModel: IngredientsInputViewModel
+    @Environment(\.appTheme) private var theme
 
     var body: some View {
         Group {
@@ -17,27 +18,27 @@ struct IngredientsInputView: View {
                 mainContent
             }
         }
-        .navigationTitle(UIConstants.ingredientsInputNavigationTitle)
+        .navigationTitle(UI.IngredientsInput.navigationTitle)
     }
     
     private var loadingView: some View {
-        VStack(spacing: UIConstants.statusStackSpacing) {
+        VStack(spacing: UI.Common.stackSpacing) {
             ProgressView()
-                .scaleEffect(UIConstants.statusProgressScale)
-            Text(UIConstants.ingredientsInputLoadingText)
+                .scaleEffect(UI.Common.progressScale)
+            Text(UI.IngredientsInput.loadingText)
                 .font(.headline)
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(content: {
-            RoundedRectangle(cornerRadius: UIConstants.ingredientsInputBackgroundCornerRadius)
-                .foregroundStyle(Color.backOrange2)
+            RoundedRectangle(cornerRadius: UI.IngredientsInput.backgroundCornerRadius)
+                .foregroundStyle(theme.backgroundSecondary)
                 .ignoresSafeArea()
         })
     }
     
     private var mainContent: some View {
-        VStack(spacing: UIConstants.mainContentStackSpacing) {
+        VStack(spacing: UI.Common.contentSpacing) {
             IngredientsInputSearchBar(
                 selectedIngredients: $viewModel.selectedIngredients,
                 onCameraTapped: { viewModel.handleCameraTap() },
@@ -53,7 +54,7 @@ struct IngredientsInputView: View {
             ) {
                 VStack {
                     if viewModel.isLoading {
-                        ProgressView(UIConstants.ingredientsInputSearchLoadingText)
+                        ProgressView(UI.IngredientsInput.searchLoadingText)
                             .padding()
                     } else if let error = viewModel.errorMessage {
                         Text(error)
@@ -66,7 +67,7 @@ struct IngredientsInputView: View {
                         )
                     }
                 }
-                .frame(width: UIConstants.ingredientsPopoverWidth, height: UIConstants.ingredientsPopoverHeight)
+                .frame(width: UI.IngredientsInput.popoverWidth, height: UI.IngredientsInput.popoverHeight)
                 .padding()
                 .presentationCompactAdaptation(.popover)
             }
@@ -76,7 +77,7 @@ struct IngredientsInputView: View {
                 fastIngredients: viewModel.fastSelectorIngredients,
                 selectedIngredients: $viewModel.selectedIngredients
             )
-            Spacer(minLength: UIConstants.ingredientsFindButtonSpacerMinLength)
+            Spacer(minLength: UI.IngredientsInput.findButtonSpacerMinLength)
             IngredientsInputFindRecipesButton(ingredientsNumber: viewModel.selectedIngredients.count) {
                 Task {
                     await viewModel.onFindRecipes()
@@ -86,8 +87,8 @@ struct IngredientsInputView: View {
         }
         .padding()
         .background(content: {
-            RoundedRectangle(cornerRadius: UIConstants.ingredientsInputBackgroundCornerRadius)
-                .foregroundStyle(Color.backOrange2)
+            RoundedRectangle(cornerRadius: UI.IngredientsInput.backgroundCornerRadius)
+                .foregroundStyle(theme.backgroundSecondary)
                 .ignoresSafeArea()
         })
     }

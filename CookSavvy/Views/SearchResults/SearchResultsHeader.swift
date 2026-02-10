@@ -13,7 +13,7 @@ struct SearchResultsHeader: View {
     
     var body: some View {
         VStack(alignment:.leading) {
-            Text(String(format: UIConstants.searchResultsFoundStringFormat, count, ingredients.asSmallString))
+            Text(String(format: UI.SearchResults.foundStringFormat, count, ingredients.asSmallString))
                 .font(.caption)
         }
     }
@@ -21,8 +21,8 @@ struct SearchResultsHeader: View {
 
 extension Set where Element == Ingredient {
     var asSmallString: String {
-        if count > UIConstants.searchResultsIngredientLimit {
-            prefix(UIConstants.searchResultsIngredientLimit).map(\.name).joined(separator: ",") + "..."
+        if count > UI.SearchResults.ingredientLimit {
+            prefix(UI.SearchResults.ingredientLimit).map(\.name).joined(separator: ",") + "..."
         } else {
             map(\.name).joined(separator: ",")
         }

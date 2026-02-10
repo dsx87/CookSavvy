@@ -9,10 +9,12 @@ import SwiftUI
 import UIKit
 
 struct DefaultPlaceholder: View {
+    @Environment(\.appTheme) private var theme
+
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: UIConstants.placeholderCornerRadius)
-                .foregroundStyle(Color.backOrange)
+            RoundedRectangle(cornerRadius: UI.Common.placeholderCornerRadius)
+                .foregroundStyle(theme.backgroundPrimary)
             ProgressView()
             
         }
@@ -45,11 +47,11 @@ struct AsyncImageDisk<Placeholder: View>: View {
     }
     
     init(imageName: String, @ViewBuilder placeholder: @escaping () -> Placeholder) {
-        self.imageNamePrefix = UIConstants.asyncImageDefaultPrefix
+        self.imageNamePrefix = UI.DiskImage.defaultPrefix
         self.imageName = imageName
         self.placeholder = placeholder()
         self.imageNameBuilder = ({ prefix, imageFileName in
-            var imageFileName = imageFileName + UIConstants.asyncImageDefaultExtension
+            var imageFileName = imageFileName + UI.DiskImage.defaultExtension
             if let prefix {
                 imageFileName = prefix + imageFileName
             }

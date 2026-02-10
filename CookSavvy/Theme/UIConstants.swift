@@ -1,125 +1,156 @@
 import SwiftUI
 
-struct UIConstants {
-    static let statusStackSpacing: CGFloat = 16
-    static let mainContentStackSpacing: CGFloat = 16
-    static let statusProgressScale: CGFloat = 1.5
-    static let recipeResultListRowSpacing: CGFloat = 18
-    static let recipeCellHorizontalSpacing: CGFloat = 12
-    static let recipeCellImageSize: CGFloat = 70
-    static let recipeCellImageCornerRadius: CGFloat = 10
-    static let recipeCellContentSpacing: CGFloat = 8
-    static let recipeCellVerticalPadding: CGFloat = 4
-    static let recipeTitleLineLimit: Int = 2
-    static let ingredientChipLineLimit: Int = 1
-    static let ingredientChipHorizontalPadding: CGFloat = 10
-    static let ingredientChipVerticalPadding: CGFloat = 5
-    static let recipeCellIngredientsSpacing: CGFloat = 6
-    static let recipeCellMaxVisibleIngredients: Int = 3
-    static let recipeCellMaxChipWidth: CGFloat = 100
-    static let recipeCellExtraIngredientsPrefix = "+"
-    static let recipeCellSpacerMinLength: CGFloat = 0
-    static let ingredientsInputBackgroundCornerRadius: CGFloat = 10
-    static let ingredientsPopoverWidth: CGFloat = 400
-    static let ingredientsPopoverHeight: CGFloat = 300
-    static let ingredientsFindButtonSpacerMinLength: CGFloat = 150
-    static let ingredientsFastGridSize: Int = 3
-    static let ingredientsFastCellCornerRadius: CGFloat = 6
-    static let searchBarVerticalPadding: CGFloat = 9
-    static let searchBarCornerRadius: CGFloat = 6
-    static let searchBarBorderWidth: CGFloat = 3
-    static let selectedIngredientCellSpacing: CGFloat = 0
-    static let selectedIngredientRemoveIconScale: CGFloat = 0.5
-    static let selectedIngredientCellPadding: CGFloat = 7
-    static let findRecipesButtonCornerRadius: CGFloat = 8
-    static let findRecipesButtonHeight: CGFloat = 40
-    static let placeholderCornerRadius: CGFloat = 6
-    static let searchResultsIngredientLimit: Int = 3
-    static let settingsPlanInfoSpacing: CGFloat = 4
-    static let recipeDetailsImageHeight: CGFloat = 250
-    static let recipeDetailsCardCornerRadius: CGFloat = 10
-    static let recipeDetailsCardShadowRadius: CGFloat = 0.2
-    static let recipeDetailsCardShadowOffset: CGFloat = 0.2
-    static let recipeDetailsAdditionalInfoCellHeight: CGFloat = 50
-    static let recipeAdditionalInfoSlotsCount: Int = 4
-    static let recipeDetailsInfoTitleSeparator = " "
-    static let ingredientChipPreviewCount: Int = 10
+struct UI {
 
-    static let tabIngredientsTitle = "Ingredients"
-    static let tabRecentTitle = "Recent"
-    static let tabFavoritesTitle = "Favorites"
-    static let tabSettingsTitle = "Settings"
-    static let tabIngredientsIconName = "carrot"
-    static let tabRecentIconName = "clock"
-    static let tabFavoritesIconName = "heart"
-    static let tabSettingsIconName = "gear"
+    struct Common {
+        static let stackSpacing: CGFloat = 16
+        static let contentSpacing: CGFloat = 16
+        static let progressScale: CGFloat = 1.5
+        static let placeholderCornerRadius: CGFloat = 6
+        static let errorIcon = "exclamationmark.triangle"
+        static let backButtonIcon = "chevron.left"
+    }
 
-    static let ingredientsInputNavigationTitle = "Ingredients Input"
-    static let ingredientsInputCameraPlaceholderText = "not implemented yet, close"
-    static let ingredientsInputLoadingText = "Loading ingredients..."
-    static let ingredientsInputSearchLoadingText = "Searching..."
-    static let ingredientsSearchPlaceholderText = "Type an ingredient"
-    static let ingredientsSearchCameraIconName = "camera"
-    static let ingredientsSearchMagnifyingIconName = "magnifyingglass"
-    static let ingredientsAutocompleteSelectedIconName = "checkmark.circle"
-    static let selectedIngredientRemoveIconName = "xmark"
-    static let findRecipesButtonTitle = "Find Recipes (2 ingredients)"
+    struct Tab {
+        static let ingredientsTitle = "Ingredients"
+        static let recentTitle = "Recent"
+        static let favoritesTitle = "Favorites"
+        static let settingsTitle = "Settings"
+        static let ingredientsIcon = "carrot"
+        static let recentIcon = "clock"
+        static let favoritesIcon = "heart"
+        static let settingsIcon = "gear"
+    }
 
-    static let recipesPreparingDatabaseText = "Preparing recipes database..."
-    static let recipesLoadingText = "Loading recipes..."
-    static let recipesNoResultsTitle = "No recipes found"
-    static let recipesNoResultsSubtitle = "Try different ingredients"
-    static let recipesNavigationTitle = "Recipe search result"
-    static let errorIconName = "exclamationmark.triangle"
-    static let recipesNoResultsIconName = "magnifyingglass"
-    static let backButtonIconName = "chevron.left"
+    struct RecipeCell {
+        static let listRowSpacing: CGFloat = 18
+        static let horizontalSpacing: CGFloat = 12
+        static let imageSize: CGFloat = 70
+        static let imageCornerRadius: CGFloat = 10
+        static let contentSpacing: CGFloat = 8
+        static let verticalPadding: CGFloat = 4
+        static let titleLineLimit: Int = 2
+        static let ingredientsSpacing: CGFloat = 6
+        static let maxVisibleIngredients: Int = 3
+        static let maxChipWidth: CGFloat = 100
+        static let extraIngredientsPrefix = "+"
+        static let spacerMinLength: CGFloat = 0
+    }
 
-    static let searchResultsFoundStringFormat = "Found %i recipes using %@"
+    struct IngredientChip {
+        static let lineLimit: Int = 1
+        static let horizontalPadding: CGFloat = 10
+        static let verticalPadding: CGFloat = 5
+        static let previewCount: Int = 10
+    }
 
-    static let favoritesLoadingText = "Loading favorites..."
-    static let favoritesEmptyTitle = "No favorite recipes"
-    static let favoritesEmptySubtitle = "Tap the heart icon on recipes to save them here"
-    static let favoritesNavigationTitle = "Favorites"
-    static let favoritesEmptyIconName = "heart"
-    static let favoritesRemoveLabelTitle = "Remove"
-    static let favoritesRemoveIconName = "heart.slash"
+    struct IngredientsInput {
+        static let backgroundCornerRadius: CGFloat = 10
+        static let popoverWidth: CGFloat = 400
+        static let popoverHeight: CGFloat = 300
+        static let findButtonSpacerMinLength: CGFloat = 150
+        static let fastGridSize: Int = 3
+        static let fastCellCornerRadius: CGFloat = 6
+        static let navigationTitle = "Ingredients Input"
+        static let cameraPlaceholderText = "not implemented yet, close"
+        static let loadingText = "Loading ingredients..."
+        static let searchLoadingText = "Searching..."
+        static let autocompleteSelectedIcon = "checkmark.circle"
+    }
 
-    static let recentLoadingText = "Loading recent recipes..."
-    static let recentEmptyTitle = "No recent recipes"
-    static let recentEmptySubtitle = "Recipes you view will appear here"
-    static let recentNavigationTitle = "Recent Recipes"
-    static let recentEmptyIconName = "clock"
+    struct SearchBar {
+        static let verticalPadding: CGFloat = 9
+        static let cornerRadius: CGFloat = 6
+        static let borderWidth: CGFloat = 3
+        static let placeholderText = "Type an ingredient"
+        static let cameraIcon = "camera"
+        static let magnifyingIcon = "magnifyingglass"
+    }
 
-    static let settingsNavigationTitle = "Settings"
-    static let settingsSubscriptionHeaderTitle = "Subscription Plan"
-    static let settingsStatisticsHeaderTitle = "Statistics"
-    static let settingsTotalRecipesLabel = "Total Recipes"
-    static let settingsFavoriteRecipesLabel = "Favorite Recipes"
-    static let settingsRecentRecipesLabel = "Recent Recipes"
-    static let settingsDataManagementHeaderTitle = "Data Management"
-    static let settingsClearRecentButtonTitle = "Clear Recent Data"
-    static let settingsClearFavoritesButtonTitle = "Clear Favorites"
-    static let settingsDataManagementFooterText = "Clearing data cannot be undone"
-    static let settingsAppInfoHeaderTitle = "App Information"
-    static let settingsVersionLabel = "Version"
-    static let settingsBuildLabel = "Build"
-    static let settingsPlanCheckmarkIconName = "checkmark.circle.fill"
-    static let settingsTrashIconName = "trash"
-    static let settingsClearRecentAlertTitle = "Clear Recent Data?"
-    static let settingsClearFavoritesAlertTitle = "Clear Favorites?"
-    static let settingsAlertCancelTitle = "Cancel"
-    static let settingsAlertClearTitle = "Clear"
-    static let settingsClearRecentAlertMessage = "This will clear all recent ingredients, recipes, and searches. This action cannot be undone."
-    static let settingsClearFavoritesAlertMessage = "This will remove all favorited recipes. This action cannot be undone."
+    struct SelectedIngredient {
+        static let cellSpacing: CGFloat = 0
+        static let removeIconScale: CGFloat = 0.5
+        static let cellPadding: CGFloat = 7
+        static let removeIcon = "xmark"
+    }
 
-    static let recipeDetailsIngredientsTitle = "🛒 Ingredients"
-    static let recipeDetailsInstructionsTitle = "🧑‍🍳 Instructions"
-    static let recipeDetailsBulletPrefix = "• "
-    static let recipeDetailsFavoriteFilledIconName = "heart.fill"
-    static let recipeDetailsFavoriteOutlineIconName = "heart"
+    struct FindButton {
+        static let cornerRadius: CGFloat = 8
+        static let height: CGFloat = 40
+        static let title = "Find Recipes (2 ingredients)"
+    }
 
-    static let asyncImageDefaultPrefix = "Food Images/Food Images/"
-    static let asyncImageDefaultExtension = ".jpg"
+    struct SearchResults {
+        static let ingredientLimit: Int = 3
+        static let preparingDatabaseText = "Preparing recipes database..."
+        static let loadingText = "Loading recipes..."
+        static let noResultsTitle = "No recipes found"
+        static let noResultsSubtitle = "Try different ingredients"
+        static let navigationTitle = "Recipe search result"
+        static let noResultsIcon = "magnifyingglass"
+        static let foundStringFormat = "Found %i recipes using %@"
+    }
 
-    
+    struct RecipeDetails {
+        static let imageHeight: CGFloat = 250
+        static let cardCornerRadius: CGFloat = 10
+        static let cardShadowRadius: CGFloat = 0.2
+        static let cardShadowOffset: CGFloat = 0.2
+        static let additionalInfoCellHeight: CGFloat = 50
+        static let additionalInfoSlotsCount: Int = 4
+        static let infoTitleSeparator = " "
+        static let ingredientsTitle = "🛒 Ingredients"
+        static let instructionsTitle = "🧑‍🍳 Instructions"
+        static let bulletPrefix = "• "
+        static let favoriteFilledIcon = "heart.fill"
+        static let favoriteOutlineIcon = "heart"
+    }
+
+    struct Favorites {
+        static let loadingText = "Loading favorites..."
+        static let emptyTitle = "No favorite recipes"
+        static let emptySubtitle = "Tap the heart icon on recipes to save them here"
+        static let navigationTitle = "Favorites"
+        static let emptyIcon = "heart"
+        static let removeLabelTitle = "Remove"
+        static let removeIcon = "heart.slash"
+    }
+
+    struct Recent {
+        static let loadingText = "Loading recent recipes..."
+        static let emptyTitle = "No recent recipes"
+        static let emptySubtitle = "Recipes you view will appear here"
+        static let navigationTitle = "Recent Recipes"
+        static let emptyIcon = "clock"
+    }
+
+    struct Settings {
+        static let planInfoSpacing: CGFloat = 4
+        static let navigationTitle = "Settings"
+        static let subscriptionHeaderTitle = "Subscription Plan"
+        static let statisticsHeaderTitle = "Statistics"
+        static let totalRecipesLabel = "Total Recipes"
+        static let favoriteRecipesLabel = "Favorite Recipes"
+        static let recentRecipesLabel = "Recent Recipes"
+        static let dataManagementHeaderTitle = "Data Management"
+        static let clearRecentButtonTitle = "Clear Recent Data"
+        static let clearFavoritesButtonTitle = "Clear Favorites"
+        static let dataManagementFooterText = "Clearing data cannot be undone"
+        static let appInfoHeaderTitle = "App Information"
+        static let versionLabel = "Version"
+        static let buildLabel = "Build"
+        static let planCheckmarkIcon = "checkmark.circle.fill"
+        static let trashIcon = "trash"
+        static let clearRecentAlertTitle = "Clear Recent Data?"
+        static let clearFavoritesAlertTitle = "Clear Favorites?"
+        static let alertCancelTitle = "Cancel"
+        static let alertClearTitle = "Clear"
+        static let clearRecentAlertMessage = "This will clear all recent ingredients, recipes, and searches. This action cannot be undone."
+        static let clearFavoritesAlertMessage = "This will remove all favorited recipes. This action cannot be undone."
+    }
+
+    struct DiskImage {
+        static let defaultPrefix = "Food Images/Food Images/"
+        static let defaultExtension = ".jpg"
+    }
 }

@@ -14,7 +14,7 @@ struct IngredientsInputFastIngredientSelector: View {
     
     init(
         fastIngredients: [Ingredient],
-        size: Int = UIConstants.ingredientsFastGridSize,
+        size: Int = UI.IngredientsInput.fastGridSize,
         selectedIngredients: Binding<Set<Ingredient>>,
     ) {
         // Use recent ingredients if available, otherwise fall back to defaults

@@ -15,26 +15,26 @@ struct TabContainerView: View {
         TabView {
             coordinator.ingredientsCoordinator(container: container).start()
                 .tabItem {
-                    Image(systemName: UIConstants.tabIngredientsIconName)
-                    Text(UIConstants.tabIngredientsTitle)
+                    Image(systemName: UI.Tab.ingredientsIcon)
+                    Text(UI.Tab.ingredientsTitle)
                 }
 
             coordinator.recentRecipesCoordinator(container: container).start()
                 .tabItem {
-                    Image(systemName: UIConstants.tabRecentIconName)
-                    Text(UIConstants.tabRecentTitle)
+                    Image(systemName: UI.Tab.recentIcon)
+                    Text(UI.Tab.recentTitle)
                 }
 
             coordinator.favoritesCoordinator(container: container).start()
                 .tabItem {
-                    Image(systemName: UIConstants.tabFavoritesIconName)
-                    Text(UIConstants.tabFavoritesTitle)
+                    Image(systemName: UI.Tab.favoritesIcon)
+                    Text(UI.Tab.favoritesTitle)
                 }
 
             coordinator.settingsCoordinator(container: container).start()
                 .tabItem {
-                    Image(systemName: UIConstants.tabSettingsIconName)
-                    Text(UIConstants.tabSettingsTitle)
+                    Image(systemName: UI.Tab.settingsIcon)
+                    Text(UI.Tab.settingsTitle)
                 }
         }
     }

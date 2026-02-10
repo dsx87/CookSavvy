@@ -15,7 +15,7 @@ struct SettingsView: View {
                 // Subscription Plan Section
                 Section {
                     HStack {
-                        VStack(alignment: .leading, spacing: UIConstants.settingsPlanInfoSpacing) {
+                        VStack(alignment: .leading, spacing: UI.Settings.planInfoSpacing) {
                             Text(viewModel.currentPlan.displayName)
                                 .font(.headline)
                             Text(viewModel.currentPlan.description)
@@ -23,7 +23,7 @@ struct SettingsView: View {
                                 .foregroundColor(.secondary)
                         }
                         Spacer()
-                        Image(systemName: UIConstants.settingsPlanCheckmarkIconName)
+                        Image(systemName: UI.Settings.planCheckmarkIcon)
                             .foregroundColor(.green)
                     }
                     
@@ -68,7 +68,7 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Text(UIConstants.settingsSubscriptionHeaderTitle)
+                    Text(UI.Settings.subscriptionHeaderTitle)
                 }
                 
                 Section {
@@ -118,7 +118,7 @@ struct SettingsView: View {
                 // Database Statistics Section
                 Section {
                     HStack {
-                        Text(UIConstants.settingsTotalRecipesLabel)
+                        Text(UI.Settings.totalRecipesLabel)
                         Spacer()
                         if viewModel.isLoading {
                             ProgressView()
@@ -129,7 +129,7 @@ struct SettingsView: View {
                     }
 
                     HStack {
-                        Text(UIConstants.settingsFavoriteRecipesLabel)
+                        Text(UI.Settings.favoriteRecipesLabel)
                         Spacer()
                         if viewModel.isLoading {
                             ProgressView()
@@ -140,7 +140,7 @@ struct SettingsView: View {
                     }
 
                     HStack {
-                        Text(UIConstants.settingsRecentRecipesLabel)
+                        Text(UI.Settings.recentRecipesLabel)
                         Spacer()
                         if viewModel.isLoading {
                             ProgressView()
@@ -150,7 +150,7 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Text(UIConstants.settingsStatisticsHeaderTitle)
+                    Text(UI.Settings.statisticsHeaderTitle)
                 }
 
                 // Data Management Section
@@ -159,8 +159,8 @@ struct SettingsView: View {
                         viewModel.showClearRecentAlert = true
                     } label: {
                         HStack {
-                            Image(systemName: UIConstants.settingsTrashIconName)
-                            Text(UIConstants.settingsClearRecentButtonTitle)
+                            Image(systemName: UI.Settings.trashIcon)
+                            Text(UI.Settings.clearRecentButtonTitle)
                         }
                     }
                     .disabled(viewModel.isLoading || viewModel.recentRecipeCount == 0)
@@ -169,62 +169,62 @@ struct SettingsView: View {
                         viewModel.showClearFavoritesAlert = true
                     } label: {
                         HStack {
-                            Image(systemName: UIConstants.settingsTrashIconName)
-                            Text(UIConstants.settingsClearFavoritesButtonTitle)
+                            Image(systemName: UI.Settings.trashIcon)
+                            Text(UI.Settings.clearFavoritesButtonTitle)
                         }
                     }
                     .disabled(viewModel.isLoading || viewModel.favoriteCount == 0)
                 } header: {
-                    Text(UIConstants.settingsDataManagementHeaderTitle)
+                    Text(UI.Settings.dataManagementHeaderTitle)
                 } footer: {
-                    Text(UIConstants.settingsDataManagementFooterText)
+                    Text(UI.Settings.dataManagementFooterText)
                 }
 
                 // App Info Section
                 Section {
                     HStack {
-                        Text(UIConstants.settingsVersionLabel)
+                        Text(UI.Settings.versionLabel)
                         Spacer()
                         Text(viewModel.appVersion)
                             .foregroundColor(.secondary)
                     }
 
                     HStack {
-                        Text(UIConstants.settingsBuildLabel)
+                        Text(UI.Settings.buildLabel)
                         Spacer()
                         Text(viewModel.buildNumber)
                             .foregroundColor(.secondary)
                     }
                 } header: {
-                    Text(UIConstants.settingsAppInfoHeaderTitle)
+                    Text(UI.Settings.appInfoHeaderTitle)
                 }
             }
-            .navigationTitle(UIConstants.settingsNavigationTitle)
+            .navigationTitle(UI.Settings.navigationTitle)
             .task {
                 await viewModel.loadSettings()
             }
             .refreshable {
                 await viewModel.loadSettings()
             }
-            .alert(UIConstants.settingsClearRecentAlertTitle, isPresented: $viewModel.showClearRecentAlert) {
-                Button(UIConstants.settingsAlertCancelTitle, role: .cancel) { }
-                Button(UIConstants.settingsAlertClearTitle, role: .destructive) {
+            .alert(UI.Settings.clearRecentAlertTitle, isPresented: $viewModel.showClearRecentAlert) {
+                Button(UI.Settings.alertCancelTitle, role: .cancel) { }
+                Button(UI.Settings.alertClearTitle, role: .destructive) {
                     Task {
                         await viewModel.clearRecentData()
                     }
                 }
             } message: {
-                Text(UIConstants.settingsClearRecentAlertMessage)
+                Text(UI.Settings.clearRecentAlertMessage)
             }
-            .alert(UIConstants.settingsClearFavoritesAlertTitle, isPresented: $viewModel.showClearFavoritesAlert) {
-                Button(UIConstants.settingsAlertCancelTitle, role: .cancel) { }
-                Button(UIConstants.settingsAlertClearTitle, role: .destructive) {
+            .alert(UI.Settings.clearFavoritesAlertTitle, isPresented: $viewModel.showClearFavoritesAlert) {
+                Button(UI.Settings.alertCancelTitle, role: .cancel) { }
+                Button(UI.Settings.alertClearTitle, role: .destructive) {
                     Task {
                         await viewModel.clearFavorites()
                     }
                 }
             } message: {
-                Text(UIConstants.settingsClearFavoritesAlertMessage)
+                Text(UI.Settings.clearFavoritesAlertMessage)
             }
             .alert("Restore Failed", isPresented: .init(
                 get: { viewModel.restoreError != nil },

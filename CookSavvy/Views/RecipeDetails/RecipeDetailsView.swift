@@ -9,6 +9,7 @@ import SwiftUI
 
 struct RecipeDetailsView: View {
     @ObservedObject var viewModel: RecipeDetailsViewModel
+    @Environment(\.appTheme) private var theme
 
     var body: some View {
         ScrollView {
@@ -16,7 +17,7 @@ struct RecipeDetailsView: View {
                 AsyncImageDisk(imageName: viewModel.recipe.image) {
                     DefaultPlaceholder()
                 }
-                .frame(height: UIConstants.recipeDetailsImageHeight)
+                .frame(height: UI.RecipeDetails.imageHeight)
                 Group {
                     HStack {
                         Text(viewModel.recipe.title)
@@ -27,7 +28,7 @@ struct RecipeDetailsView: View {
                                 await viewModel.toggleFavorite()
                             }
                         }) {
-                            Image(systemName: viewModel.isFavorite ? UIConstants.recipeDetailsFavoriteFilledIconName : UIConstants.recipeDetailsFavoriteOutlineIconName)
+                            Image(systemName: viewModel.isFavorite ? UI.RecipeDetails.favoriteFilledIcon : UI.RecipeDetails.favoriteOutlineIcon)
                                 .font(.title2)
                                 .foregroundColor(viewModel.isFavorite ? .red : .gray)
                         }
@@ -35,19 +36,19 @@ struct RecipeDetailsView: View {
                     }
                     RecipeDetailsAdditionalInfo(info: viewModel.recipe.additionalInfo)
                     RecipeDetailsList(
-                        title: UIConstants.recipeDetailsIngredientsTitle,
-                        items: viewModel.recipe.ingredients.map { UIConstants.recipeDetailsBulletPrefix + $0.name }
+                        title: UI.RecipeDetails.ingredientsTitle,
+                        items: viewModel.recipe.ingredients.map { UI.RecipeDetails.bulletPrefix + $0.name }
                     )
                     RecipeDetailsList(
-                        title: UIConstants.recipeDetailsInstructionsTitle,
-                        items: viewModel.recipe.instructions.map { UIConstants.recipeDetailsBulletPrefix + $0 }
+                        title: UI.RecipeDetails.instructionsTitle,
+                        items: viewModel.recipe.instructions.map { UI.RecipeDetails.bulletPrefix + $0 }
                     )
                 }
                 .padding(.horizontal)
             }
             
             .background {
-                Color.lightGrayBack
+                theme.backgroundSubtle
                     .ignoresSafeArea()
             }
         }
@@ -69,7 +70,7 @@ struct RecipeDetailsView: View {
 
 extension Recipe.AdditionalInfo.InfoType {
     var asTuple:(title: String, value: String) {
-        (title:self.asEmoji + UIConstants.recipeDetailsInfoTitleSeparator + self.title, value: stringValue)
+        (title:self.asEmoji + UI.RecipeDetails.infoTitleSeparator + self.title, value: stringValue)
     }
     
     var isNotEmpty: Bool {
