@@ -24,9 +24,15 @@ final class OnlineRecipeSourceTests: XCTestCase {
         XCTAssertEqual(onlineSource.sourceType, .online)
     }
     
-    func testIsAvailableReturnsFalse() async {
+    func testIsAvailableReturnsFalseWithoutProvider() async {
         let available = await onlineSource.isAvailable()
-        XCTAssertFalse(available, "Online source should be unavailable until implemented")
+        XCTAssertFalse(available, "Online source should be unavailable without a provider")
+    }
+    
+    func testIsAvailableReturnsTrueWithProvider() async {
+        let source = OnlineRecipeSource(provider: MockRecipeAPIProvider())
+        let available = await source.isAvailable()
+        XCTAssertTrue(available, "Online source should be available with a provider")
     }
     
     func testFetchRecipesThrowsUnavailableError() async {
@@ -46,13 +52,18 @@ final class OnlineRecipeSourceTests: XCTestCase {
         }
     }
     
-    func testCustomInitialization() {
-        let customSource = OnlineRecipeSource(
-            apiEndpoint: "https://custom.api.com/recipes",
-            apiKey: "test-key"
-        )
-        XCTAssertEqual(customSource.sourceType, .online)
+    func testInitWithProvider() {
+        let source = OnlineRecipeSource(provider: MockRecipeAPIProvider(), resultCount: 10)
+        XCTAssertEqual(source.sourceType, .online)
     }
+}
+
+private final class MockRecipeAPIProvider: RecipeAPIProviderProtocol {
+    var name: String { "Mock" }
+    func fetchRecipes(for ingredients: [Ingredient], count: Int) async throws -> [Recipe] {
+        return Recipe.mocks(count: count)
+    }
+    func isAvailable() async -> Bool { true }
 }
 
 final class AIRecipeSourceTests: XCTestCase {

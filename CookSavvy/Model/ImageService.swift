@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import CryptoKit
 
 /// LRU Cache wrapper for images
 private class ImageCache {
@@ -120,6 +121,11 @@ final class ImageService {
     func loadImage(named fileName: String) async throws -> UIImage? {
         guard !fileName.isEmpty else {
             return nil
+        }
+        
+        // TODO: think about separate method to handle online images
+        if fileName.hasPrefix("http://") || fileName.hasPrefix("https://") {
+            return try await loadRemoteImage(urlString: fileName)
         }
         
         // Check memory cache first
@@ -246,6 +252,42 @@ final class ImageService {
         
         let data = try Data(contentsOf: fileURL)
         return UIImage(data: data)
+    }
+    
+    private func loadRemoteImage(urlString: String) async throws -> UIImage? {
+        let cacheKey = Self.diskCacheKey(for: urlString)
+        
+        if let cached = imageCache.image(forKey: cacheKey) {
+            return cached
+        }
+        
+        if let diskImage = try await loadFromDisk(fileName: cacheKey) {
+            imageCache.setImage(diskImage, forKey: cacheKey)
+            return diskImage
+        }
+        
+        guard let url = URL(string: urlString) else { return nil }
+        
+        let (data, response) = try await URLSession.shared.data(from: url)
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200..<300).contains(httpResponse.statusCode),
+              let image = UIImage(data: data) else {
+            return nil
+        }
+        
+        let diskURL = imagesDirectory.appendingPathComponent(cacheKey)
+        try? data.write(to: diskURL)
+        imageCache.setImage(image, forKey: cacheKey)
+        return image
+    }
+    
+    private static func diskCacheKey(for urlString: String) -> String {
+        let hash = SHA256.hash(data: Data(urlString.utf8))
+        let hex = hash.compactMap { String(format: "%02x", $0) }.joined()
+        let ext = URL(string: urlString)?.pathExtension.isEmpty == false
+            ? "." + URL(string: urlString)!.pathExtension
+            : ".jpg"
+        return hex + ext
     }
     
     private func extractFromZip(fileName: String, zipURL: URL) async throws -> UIImage? {

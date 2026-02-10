@@ -68,7 +68,13 @@ A hobby iOS recipe app that suggests recipes based on user-provided ingredients.
 - **Infrastructure**: `ImageService`, `DatabaseInitializationService`, `DataImportService`, `CSVToJSONReader`
 - **Feature Services**: `IngredientDetectionServiceProtocol` (impl: `AIIngredientDetectionAdapter`), `SubscriptionServiceProtocol` (impl: `StoreKitSubscriptionService` / `MockSubscriptionService`)
 - **Network Layer**: `NetworkServiceProtocol` / `NetworkService`, `NetworkConfiguration`, `URLBuilder`, `NetworkRequest`, `NetworkResponse`, `NetworkError`, `HTTPMethod`
-- **Recipe Sources**: `RecipeSourceProtocol` with implementations — `OfflineRecipeSource`, `OnlineRecipeSource`, `AIRecipeSource`
+- **Recipe Sources** — `RecipeSourceProtocol` → `OfflineRecipeSource`, `OnlineRecipeSource` (via `RecipeAPIProviderProtocol`), `AIRecipeSource`
+- **Recipe API Providers** (`Model/Network/RecipeAPIProvider/`):
+  - `RecipeAPIProviderProtocol` — common interface for online recipe APIs
+  - `SpoonacularProvider` — Spoonacular API integration (complexSearch endpoint)
+  - `SpoonacularModels` — DTOs + mapper to convert API responses to `Recipe`
+  - `RecipeAPIProviderError` — shared error types
+- `OnlineRecipeSource` delegates to a pluggable `RecipeAPIProviderProtocol` (nil = unavailable)
 - All services conform to protocols for testability
 
 ### AI Service Layer
@@ -84,7 +90,7 @@ A hobby iOS recipe app that suggests recipes based on user-provided ingredients.
   - DEBUG → `MockLLMProvider`
   - RELEASE → OpenAI (preferred) → Gemini → MockLLMProvider fallback
 - **API keys** stored in `Support/APIKeys.plist` (gitignored), read via `APIKeyConfiguration` enum
-  - Keys: `OPENAI_API_KEY`, `GEMINI_API_KEY`
+  - Keys: `OPENAI_API_KEY`, `GEMINI_API_KEY`, `SPOONACULAR_API_KEY`
 
 ### Subscription Layer
 - `SubscriptionServiceProtocol` — common interface (plan access, purchases, restore)
@@ -130,7 +136,7 @@ CookSavvy/
 │   ├── OfflineRecipeSource.swift, OnlineRecipeSource.swift, AIRecipeSource.swift
 │   ├── IngredientDetectionService.swift — Protocol + errors
 │   ├── AI/                          — AI service + LLM providers
-│   ├── Network/                     — Network layer
+│   ├── Network/                     — Network layer + RecipeAPIProvider/
 │   └── Subscription/                — Subscription service layer
 ├── Views/
 │   ├── TabContainerView.swift       — Root tab bar

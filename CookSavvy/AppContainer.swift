@@ -32,27 +32,37 @@ final class AppContainer {
     // MARK: - Initialization
 
     private init() {
-        // Initialize database
         let db = DBInterface()
         self.dbInterface = db
 
-        // Initialize services with dependencies
         let ingredients = IngredientsService(dbInterface: db)
         let dataImport = DataImportService(dbInterface: db)
         
         self.ingredientsService = ingredients
-        self.recipeService = RecipeService(dbInterface: db)
         self.imageService = ImageService()
         self.dataImportService = dataImport
         self.userDataService = UserDataService(dbInterface: db)
+        
+        let network = NetworkService()
+        self.networkService = network
+        
+        let recipeAPIProvider = Self.createRecipeAPIProvider(networkService: network)
+        let onlineSource = OnlineRecipeSource(provider: recipeAPIProvider)
+        self.recipeService = RecipeService(
+            dbInterface: db,
+            sources: [
+                .offline: OfflineRecipeSource(dbInterface: db),
+                .online: onlineSource,
+                .ai: AIRecipeSource()
+            ]
+        )
         
         self.databaseInitService = DatabaseInitializationService(
             dbInterface: db,
             ingredientsService: ingredients,
             dataImportService: dataImport
         )
-        let network = NetworkService()
-        self.networkService = network
+
         let llmProvider: LLMProviderProtocol
         #if DEBUG
         llmProvider = MockLLMProvider()
@@ -70,6 +80,13 @@ final class AppContainer {
         #endif
         
         databaseInitService.startInitialization()
+    }
+    
+    private static func createRecipeAPIProvider(networkService: NetworkServiceProtocol) -> RecipeAPIProviderProtocol? {
+        guard let key = APIKeyConfiguration.spoonacularKey, !key.isEmpty else {
+            return nil
+        }
+        return SpoonacularProvider(apiKey: key, networkService: networkService)
     }
     
     private static func createProductionProvider(networkService: NetworkServiceProtocol) -> LLMProviderProtocol {
@@ -96,6 +113,10 @@ enum APIKeyConfiguration {
     
     static var geminiKey: String? {
         getValue(for: "GEMINI_API_KEY")
+    }
+    
+    static var spoonacularKey: String? {
+        getValue(for: "SPOONACULAR_API_KEY")
     }
     
     private static func getValue(for key: String) -> String? {

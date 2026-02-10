@@ -16,7 +16,8 @@
 - **Coordinators** — handle navigation and ViewModel creation (AppCoordinator → feature coordinators)
 - **Dependency Injection** — `AppContainer` `@MainActor` singleton provides all services
 - **Service Layer** — data services, infrastructure services, feature services, network layer
-- **Recipe Sources** — `RecipeSourceProtocol` → `OfflineRecipeSource`, `OnlineRecipeSource`, `AIRecipeSource`
+- **Recipe Sources** — `RecipeSourceProtocol` → `OfflineRecipeSource`, `OnlineRecipeSource` (via `RecipeAPIProviderProtocol`), `AIRecipeSource`
+- **Recipe API Providers** — `RecipeAPIProviderProtocol` → `SpoonacularProvider`; available if API key present (both DEBUG and RELEASE)
 - **AI Layer** — `AIService` with pluggable LLM providers (`OpenAI`, `Gemini`, `Mock`); DEBUG uses mock, RELEASE uses real with fallback chain
 - **Subscription Layer** — `SubscriptionServiceProtocol` → `StoreKitSubscriptionService` (RELEASE) / `MockSubscriptionService` (DEBUG)
 - **Single Responsibility Principle** — create services as needed
@@ -50,7 +51,8 @@
 - **AI:** `AIService` → `LLMProviderProtocol` (`OpenAIProvider`, `GeminiProvider`, `MockLLMProvider`)
 - **Detection:** `IngredientDetectionServiceProtocol` → `AIIngredientDetectionAdapter`
 - **Subscriptions:** `SubscriptionServiceProtocol` → `StoreKitSubscriptionService` / `MockSubscriptionService`
-- **API Keys:** `APIKeys.plist` (gitignored) via `APIKeyConfiguration` — `OPENAI_API_KEY`, `GEMINI_API_KEY`
+- **Recipe API:** `RecipeAPIProviderProtocol` → `SpoonacularProvider` (complexSearch endpoint), `SpoonacularModels` (DTOs + mapper)
+- **API Keys:** `APIKeys.plist` (gitignored) via `APIKeyConfiguration` — `OPENAI_API_KEY`, `GEMINI_API_KEY`, `SPOONACULAR_API_KEY`
 
 ## Screens
 
