@@ -1,5 +1,5 @@
 //
-//  RecipesResultView.swift
+//  SearchResultsView.swift
 //  CookSavvy
 //
 //  Created by Igor Pivnyk on 03/07/2025.
@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct RecipesResultView: View {
-    @StateObject var viewModel: RecipesResultViewModel
+struct SearchResultsView: View {
+    @StateObject var viewModel: SearchResultsViewModel
     
     var body: some View {
         Group {
@@ -77,12 +77,12 @@ struct RecipesResultView: View {
     }
 }
 
-#Preview("RecipesResultView") {
+#Preview("SearchResultsView") {
     let dbInterface = DBInterface()
     let ingredientsService = IngredientsService(dbInterface: dbInterface)
     let dataImportService = DataImportService(dbInterface: dbInterface)
-    RecipesResultView(
-        viewModel: RecipesResultViewModel(
+    SearchResultsView(
+        viewModel: SearchResultsViewModel(
             selectedIngredients: [Ingredient(name: "Pasta"), Ingredient(name: "Tomato")],
             recipeService: RecipeService(dbInterface: dbInterface),
             imageService: ImageService(),

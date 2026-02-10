@@ -31,8 +31,8 @@ final class IngredientsCoordinator: ObservableObject {
         )
     }
     
-    func makeRecipesResultViewModel(selectedIngredients: Set<Ingredient>) -> RecipesResultViewModel {
-        RecipesResultViewModel(
+    func makeSearchResultsViewModel(selectedIngredients: Set<Ingredient>) -> SearchResultsViewModel {
+        SearchResultsViewModel(
             selectedIngredients: selectedIngredients,
             recipeService: container.recipeService,
             imageService: container.imageService,
@@ -131,8 +131,8 @@ struct IngredientsCoordinatorView: View {
                 .navigationDestination(for: IngredientsCoordinator.NavigationDestination.self) { destination in
                     switch destination {
                     case .recipesResult:
-                        RecipesResultView(
-                            viewModel: coordinator.makeRecipesResultViewModel(
+                        SearchResultsView(
+                            viewModel: coordinator.makeSearchResultsViewModel(
                                 selectedIngredients: viewModel.selectedIngredients
                             )
                         )

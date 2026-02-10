@@ -1,5 +1,5 @@
 //
-//  RecipesResultViewModel.swift
+//  SearchResultsViewModel.swift
 //  CookSavvy
 //
 //  Created by Igor Pivnyk on 03/07/2025.
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @MainActor
-final class RecipesResultViewModel: ObservableObject {
+final class SearchResultsViewModel: ObservableObject {
     @Published private(set) var recipes: [Recipe] = []
     @Published private(set) var images: [String: UIImage] = [:]
     @Published var isLoading: Bool = false

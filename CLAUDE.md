@@ -65,11 +65,11 @@ A hobby iOS recipe app that suggests recipes based on user-provided ingredients.
 
 ### Service Layer
 - **Data Services**: `RecipeService`, `IngredientsService`, `UserDataService`
-- **Infrastructure**: `ImageService`, `DatabaseInitializationService`, `DataImportService`, `CSVToJSONReader`
+- **Infrastructure**: `ImageService`, `DatabaseInitializationService`, `DataImportService`, `CSVParser`
 - **Feature Services**: `IngredientDetectionServiceProtocol` (impl: `AIIngredientDetectionAdapter`), `SubscriptionServiceProtocol` (impl: `StoreKitSubscriptionService` / `MockSubscriptionService`)
 - **Network Layer**: `NetworkServiceProtocol` / `NetworkService`, `NetworkConfiguration`, `URLBuilder`, `NetworkRequest`, `NetworkResponse`, `NetworkError`, `HTTPMethod`
 - **Recipe Sources** — `RecipeSourceProtocol` → `OfflineRecipeSource`, `OnlineRecipeSource` (via `RecipeAPIProviderProtocol`), `AIRecipeSource`
-- **Recipe API Providers** (`Model/Network/RecipeAPIProvider/`):
+- **Recipe API Providers** (`Network/RecipeAPIProvider/`):
   - `RecipeAPIProviderProtocol` — common interface for online recipe APIs
   - `SpoonacularProvider` — Spoonacular API integration (complexSearch endpoint)
   - `SpoonacularModels` — DTOs + mapper to convert API responses to `Recipe`
@@ -80,7 +80,7 @@ A hobby iOS recipe app that suggests recipes based on user-provided ingredients.
 ### AI Service Layer
 - `AIServiceProtocol` / `AIService` — main AI interface for ingredient detection and recipe generation
 - `AIIngredientDetectionAdapter` — bridges `AIServiceProtocol` to `IngredientDetectionServiceProtocol`
-- **LLM Provider layer** (`Model/AI/LLMProvider/`):
+- **LLM Provider layer** (`Services/AI/LLMProvider/`):
   - `LLMProviderProtocol` — common interface
   - `OpenAIProvider` — OpenAI API integration
   - `GeminiProvider` — Google Gemini API integration
@@ -89,7 +89,7 @@ A hobby iOS recipe app that suggests recipes based on user-provided ingredients.
 - **Provider selection** (in `AppContainer`):
   - DEBUG → `MockLLMProvider`
   - RELEASE → OpenAI (preferred) → Gemini → MockLLMProvider fallback
-- **API keys** stored in `Support/APIKeys.plist` (gitignored), read via `APIKeyConfiguration` enum
+- **API keys** stored in `Support/APIKeys.plist` (gitignored), read via `APIKeyConfiguration` enum (`App/APIKeyConfiguration.swift`)
   - Keys: `OPENAI_API_KEY`, `GEMINI_API_KEY`, `SPOONACULAR_API_KEY`
 
 ### Subscription Layer
@@ -117,51 +117,102 @@ A hobby iOS recipe app that suggests recipes based on user-provided ingredients.
 
 ```
 CookSavvy/
-├── CookSavvyApp.swift              — App entry point
-├── AppContainer.swift               — DI container (singleton)
-├── IngredientsProvider.swift        — Ingredients data provider
-├── Coordinators/                    — Navigation coordinators
-│   ├── Coordinator.swift            — Base protocol
-│   ├── AppCoordinator.swift         — Root coordinator
+├── App/
+│   ├── CookSavvyApp.swift           — App entry point
+│   ├── AppContainer.swift            — DI container (singleton)
+│   └── APIKeyConfiguration.swift     — API key reading from plist
+├── Models/
+│   ├── Recipe.swift
+│   ├── Ingredient.swift
+│   └── SubscriptionPlan.swift
+├── Services/
+│   ├── Recipe/
+│   │   ├── RecipeService.swift
+│   │   ├── RecipeSourceProtocol.swift — Protocol + RecipeSourceType + errors
+│   │   ├── OfflineRecipeSource.swift
+│   │   ├── OnlineRecipeSource.swift
+│   │   └── AIRecipeSource.swift
+│   ├── Ingredient/
+│   │   ├── IngredientsService.swift
+│   │   └── IngredientDetectionProtocol.swift — Protocol + errors
+│   ├── Image/
+│   │   ├── ImageService.swift
+│   │   └── ImageExtractor.swift
+│   ├── UserData/
+│   │   └── UserDataService.swift
+│   ├── Subscription/
+│   │   ├── SubscriptionServiceProtocol.swift
+│   │   ├── StoreKitSubscriptionService.swift
+│   │   └── MockSubscriptionService.swift
+│   ├── AI/
+│   │   ├── AIServiceProtocol.swift
+│   │   ├── AIService.swift
+│   │   ├── AIServiceError.swift
+│   │   ├── AIIngredientDetectionAdapter.swift
+│   │   └── LLMProvider/
+│   │       ├── LLMProviderProtocol.swift
+│   │       ├── LLMProviderError.swift
+│   │       ├── LLMModels.swift
+│   │       ├── OpenAIProvider.swift
+│   │       ├── GeminiProvider.swift
+│   │       └── MockLLMProvider.swift
+│   └── Database/
+│       ├── DBInterfaceProtocol.swift  — Protocol + errors
+│       ├── DBInterface.swift          — GRDB implementation
+│       ├── DBTestHelpers.swift        — Test helper (used by DBInterface in test mode)
+│       └── DatabaseInitializationService.swift
+├── Network/
+│   ├── NetworkServiceProtocol.swift
+│   ├── NetworkService.swift
+│   ├── NetworkConfiguration.swift
+│   ├── NetworkRequest.swift
+│   ├── NetworkResponse.swift
+│   ├── NetworkError.swift
+│   ├── HTTPMethod.swift
+│   ├── URLBuilder.swift
+│   └── RecipeAPIProvider/
+│       ├── RecipeAPIProviderProtocol.swift
+│       ├── SpoonacularProvider.swift
+│       └── SpoonacularModels.swift
+├── DataImport/
+│   ├── DataImportService.swift
+│   ├── CSVParser.swift
+│   ├── DatasetImporting.swift
+│   └── Unarchiver.swift
+├── Coordinators/
+│   ├── Coordinator.swift              — Base protocol
+│   ├── AppCoordinator.swift           — Root coordinator
 │   ├── IngredientsCoordinator.swift
 │   ├── FavoritesCoordinator.swift
 │   ├── RecentRecipesCoordinator.swift
 │   └── SettingsCoordinator.swift
-├── Model/
-│   ├── Ingredient.swift, Recipe.swift — Core models
-│   ├── DBInterfaceProtocol.swift    — Database layer (GRDB)
-│   ├── RecipeService.swift, IngredientsService.swift, UserDataService.swift
-│   ├── ImageService.swift, DataImportService.swift, DatabaseInitializationService.swift
-│   ├── RecipeSource.swift           — RecipeSourceProtocol + RecipeSourceType
-│   ├── OfflineRecipeSource.swift, OnlineRecipeSource.swift, AIRecipeSource.swift
-│   ├── IngredientDetectionService.swift — Protocol + errors
-│   ├── AI/                          — AI service + LLM providers
-│   ├── Network/                     — Network layer + RecipeAPIProvider/
-│   └── Subscription/                — Subscription service layer
 ├── Views/
-│   ├── TabContainerView.swift       — Root tab bar
-│   ├── IngredientsInputView/        — Ingredients input screen + subviews
-│   ├── RecipesResultView/           — Search results screen
-│   ├── RecipeView/                  — Recipe details screen
-│   ├── FavoritesView/               — Favorites screen
-│   ├── RecentRecipesView/           — Recent recipes screen
-│   ├── SettingsView/                — Settings screen
-│   ├── CameraView/                  — Camera capture screen
-│   ├── UpgradeView/                 — Subscription upgrade screen
-│   ├── AsyncImageDisk.swift         — Async image with disk caching
-│   ├── Colors.swift                 — Color definitions
-│   └── UIConstants.swift            — Shared UI constants
+│   ├── Shared/
+│   │   ├── AsyncImageDisk.swift
+│   │   └── TabContainerView.swift
+│   ├── IngredientsInput/              — Ingredients input screen + subviews
+│   ├── SearchResults/                 — Search results screen
+│   ├── RecipeDetails/                 — Recipe details screen
+│   ├── Camera/                        — Camera capture screen
+│   ├── Favorites/                     — Favorites screen
+│   ├── RecentRecipes/                 — Recent recipes screen
+│   ├── Settings/                      — Settings screen
+│   └── Upgrade/                       — Subscription upgrade screen
+├── Extensions/
+│   ├── Character+Extensions.swift
+│   └── String+Extensions.swift
+├── Theme/
+│   ├── UIConstants.swift
+│   └── Color+Theme.swift
 ├── Utilities/
 │   └── DeviceUtility.swift
-├── Support/
-│   ├── APIKeys.plist                — API keys (gitignored)
-│   ├── Assets/                      — Asset catalogs
-│   └── Preview Content/
-├── String+extensions.swift
-└── Character+extensions.swift
+└── Support/
+    ├── APIKeys.plist                  — API keys (gitignored)
+    ├── Assets/                        — Asset catalogs
+    └── Preview Content/
 
-CookSavvyTests/                      — Unit tests
-├── CookSavvyTests.swift             — Core integration tests
+CookSavvyTests/                        — Unit tests
+├── CookSavvyTests.swift
 ├── IngredientsServiceTests.swift
 ├── RecipeServiceTests.swift
 ├── ImageServiceTests.swift

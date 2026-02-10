@@ -1,5 +1,5 @@
 //
-//  CSVToJSONReader.swift
+//  CSVParser.swift
 //  CookSavvy
 //
 //  Created by Igor Pivnyk on 30/04/2025.
@@ -11,13 +11,13 @@ import CSV
 
 /*
  Common usage:
- let csvConv = CSVToJSONReader()
+ let csvConv = CSVParser()
  let zip = Bundle.main.url(forResource: "food-ingredients-and-recipe-dataset-with-images", withExtension: "zip")!
  let res:[Recipe] = try! csvConv.parseCSVFromZip(withURL: zip,
                                                  usingFilename: "Food Ingredients and Recipe Dataset with Image Name Mapping.csv")
  */
 
-class CSVToJSONReader {
+class CSVParser {
     enum ParserError: Error {
         case fileNotFound
         case csvParsingFailed(Error)
@@ -77,7 +77,7 @@ class CSVToJSONReader {
         let csvData = try unarch.extract(file: name, fromZipFileUrl: zipFile)
         
         guard let csvString = String(data: csvData, encoding: .utf8) else {
-            throw ParserError.csvParsingFailed(NSError(domain: "CSVToJSONReader", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to decode CSV data as UTF-8"]))
+            throw ParserError.csvParsingFailed(NSError(domain: "CSVParser", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to decode CSV data as UTF-8"]))
         }
         return csvString
     }

@@ -45,7 +45,7 @@
 ## Key Services
 
 - **Data:** `RecipeService`, `IngredientsService`, `UserDataService`
-- **Infrastructure:** `ImageService`, `DatabaseInitializationService`, `DataImportService`, `CSVToJSONReader`
+- **Infrastructure:** `ImageService`, `DatabaseInitializationService`, `DataImportService`, `CSVParser`
 - **Database:** `DBInterfaceProtocol` / `DBInterface` (GRDB)
 - **Network:** `NetworkService`, `URLBuilder`, `NetworkRequest`, `NetworkResponse`, `NetworkError`, `HTTPMethod`
 - **AI:** `AIService` → `LLMProviderProtocol` (`OpenAIProvider`, `GeminiProvider`, `MockLLMProvider`)

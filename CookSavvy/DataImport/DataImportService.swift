@@ -12,13 +12,13 @@ final class DataImportService {
     // MARK: - Properties
 
     private let dbInterface: DBInterfaceProtocol
-    private let csvReader: CSVToJSONReader
+    private let csvReader: CSVParser
 
     private var isRecipesImported: Bool = false
 
     // MARK: - Initialization
 
-    init(dbInterface: DBInterfaceProtocol, csvReader: CSVToJSONReader = CSVToJSONReader()) {
+    init(dbInterface: DBInterfaceProtocol, csvReader: CSVParser = CSVParser()) {
         self.dbInterface = dbInterface
         self.csvReader = csvReader
     }
