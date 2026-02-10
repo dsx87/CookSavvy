@@ -20,6 +20,10 @@
 - **Recipe API Providers** — `RecipeAPIProviderProtocol` → `SpoonacularProvider`; available if API key present (both DEBUG and RELEASE)
 - **AI Layer** — `AIService` with pluggable LLM providers (`OpenAI`, `Gemini`, `Mock`); DEBUG uses mock, RELEASE uses real with fallback chain
 - **Subscription Layer** — `SubscriptionServiceProtocol` → `StoreKitSubscriptionService` (RELEASE) / `MockSubscriptionService` (DEBUG)
+- **Theme** — `AppTheme` protocol + `DefaultTheme`, injected via `@Environment(\.appTheme)`; colors accessed as `theme.borderAccent`
+- **UI Constants** — `UI` struct with nested domain structs for layout values only (`UI.RecipeCell.imageSize`)
+- **Strings** — `Strings` enum with `String(localized:)` per screen; `Icons` enum for SF Symbol names
+- **Localization** — `Localizable.xcstrings` String Catalog (Xcode 15+)
 - **Single Responsibility Principle** — create services as needed
 - **SwiftUI first** — UIKit only when unavoidable
 - **Apple frameworks preferred**

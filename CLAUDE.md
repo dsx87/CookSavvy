@@ -100,6 +100,15 @@ A hobby iOS recipe app that suggests recipes based on user-provided ingredients.
 - `PaidFeature` — feature gating
 - `Configuration.storekit` — StoreKit testing configuration
 
+### Theme & Localization
+- **Layout constants** — `UI` struct with nested domain structs (`UI.RecipeCell.imageSize`, `UI.SearchBar.cornerRadius`)
+- **Theme system** — `AppTheme` protocol + `DefaultTheme`, injected via `@Environment(\.appTheme)`; views access colors as `theme.borderAccent`, `theme.backgroundPrimary`, etc.
+- **Strings** — `Strings` enum with nested screen enums, using `String(localized:defaultValue:)` for localization; accessed as `Strings.Settings.navigationTitle`
+- **Icons** — `Icons` enum with nested screen enums for SF Symbol names; accessed as `Icons.Settings.trash`
+- **String Catalog** — `Localizable.xcstrings` (Xcode 15+), auto-populated from `String(localized:)` calls
+- Adding a new theme: create a struct conforming to `AppTheme` and inject at app root
+- Adding a new language: add translations in the String Catalog via Xcode
+
 ### Code Organization
 - Create services as needed
 - Follow **Single Responsibility Principle**
@@ -202,8 +211,11 @@ CookSavvy/
 │   ├── Character+Extensions.swift
 │   └── String+Extensions.swift
 ├── Theme/
-│   ├── UIConstants.swift
-│   └── Color+Theme.swift
+│   ├── UIConstants.swift              — Layout constants only (nested `UI` struct)
+│   ├── AppTheme.swift                 — Theme protocol + DefaultTheme + @Environment key
+│   ├── Strings.swift                  — Localized strings (`String(localized:)`) by screen
+│   └── Icons.swift                    — SF Symbol names by screen
+├── Localizable.xcstrings              — String Catalog (Xcode 15+)
 ├── Utilities/
 │   └── DeviceUtility.swift
 └── Support/
