@@ -41,16 +41,16 @@ struct CameraView: View {
     
     private var permissionDeniedView: some View {
         VStack(spacing: 24) {
-            Image(systemName: "camera.fill")
+            Image(systemName: Icons.Camera.camera)
                 .font(.system(size: 60))
                 .foregroundColor(.white.opacity(0.6))
             
-            Text("Camera Access Required")
+            Text(Strings.Camera.accessRequired)
                 .font(.title2)
                 .fontWeight(.semibold)
                 .foregroundColor(.white)
             
-            Text("Please allow camera access in Settings to scan ingredients")
+            Text(Strings.Camera.accessDescription)
                 .font(.body)
                 .foregroundColor(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
@@ -60,7 +60,7 @@ struct CameraView: View {
                 Button {
                     viewModel.openSettings()
                 } label: {
-                    Text("Open Settings")
+                    Text(Strings.Camera.openSettings)
                         .fontWeight(.semibold)
                         .foregroundColor(.black)
                         .frame(maxWidth: .infinity)
@@ -72,7 +72,7 @@ struct CameraView: View {
                 Button {
                     viewModel.dismiss()
                 } label: {
-                    Text("Cancel")
+                    Text(Strings.Common.cancel)
                         .fontWeight(.medium)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -101,7 +101,7 @@ struct CameraView: View {
                     .scaleEffect(1.5)
                     .tint(.white)
                 
-                Text("Detecting ingredients...")
+                Text(Strings.Camera.detecting)
                     .font(.headline)
                     .foregroundColor(.white)
             }
@@ -115,16 +115,16 @@ struct CameraView: View {
             Color.black.ignoresSafeArea()
             
             VStack(spacing: 24) {
-                Image(systemName: "exclamationmark.triangle")
+                Image(systemName: Icons.Camera.warning)
                     .font(.system(size: 60))
                     .foregroundColor(.orange)
                 
-                Text("No Ingredients Found")
+                Text(Strings.Camera.noIngredientsTitle)
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
                 
-                Text("Try taking another photo with ingredients clearly visible")
+                Text(Strings.Camera.noIngredientsSubtitle)
                     .font(.body)
                     .foregroundColor(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
@@ -134,7 +134,7 @@ struct CameraView: View {
                     Button {
                         viewModel.retryCapture()
                     } label: {
-                        Text("Try Again")
+                        Text(Strings.Camera.tryAgain)
                             .fontWeight(.semibold)
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity)
@@ -146,7 +146,7 @@ struct CameraView: View {
                     Button {
                         viewModel.dismiss()
                     } label: {
-                        Text("Cancel")
+                        Text(Strings.Common.cancel)
                             .fontWeight(.medium)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -169,7 +169,7 @@ struct CameraView: View {
                 Spacer()
                 
                 HStack(spacing: 12) {
-                    Image(systemName: "xmark.circle.fill")
+                    Image(systemName: Icons.Camera.errorCircle)
                         .foregroundColor(.red)
                     
                     Text(message)

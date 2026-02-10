@@ -28,7 +28,7 @@ struct RecipeDetailsView: View {
                                 await viewModel.toggleFavorite()
                             }
                         }) {
-                            Image(systemName: viewModel.isFavorite ? UI.RecipeDetails.favoriteFilledIcon : UI.RecipeDetails.favoriteOutlineIcon)
+                            Image(systemName: viewModel.isFavorite ? Icons.RecipeDetails.favoriteFilled : Icons.RecipeDetails.favoriteOutline)
                                 .font(.title2)
                                 .foregroundColor(viewModel.isFavorite ? .red : .gray)
                         }
@@ -36,11 +36,11 @@ struct RecipeDetailsView: View {
                     }
                     RecipeDetailsAdditionalInfo(info: viewModel.recipe.additionalInfo)
                     RecipeDetailsList(
-                        title: UI.RecipeDetails.ingredientsTitle,
+                        title: Strings.RecipeDetails.ingredientsTitle,
                         items: viewModel.recipe.ingredients.map { UI.RecipeDetails.bulletPrefix + $0.name }
                     )
                     RecipeDetailsList(
-                        title: UI.RecipeDetails.instructionsTitle,
+                        title: Strings.RecipeDetails.instructionsTitle,
                         items: viewModel.recipe.instructions.map { UI.RecipeDetails.bulletPrefix + $0 }
                     )
                 }

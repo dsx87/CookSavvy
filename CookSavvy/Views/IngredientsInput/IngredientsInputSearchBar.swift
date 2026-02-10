@@ -17,15 +17,15 @@ struct IngredientsInputSearchBar: View {
         HStack {
 
 
-            TextField(UI.SearchBar.placeholderText,
+            TextField(Strings.SearchBar.placeholder,
                       text: $text)
             Button {
                 onCameraTapped()
             } label: {
-                Image(systemName: UI.SearchBar.cameraIcon)
+                Image(systemName: Icons.SearchBar.camera)
                     .tint(.black)
             }
-            Image(systemName: UI.SearchBar.magnifyingIcon)
+            Image(systemName: Icons.SearchBar.magnifying)
         }
         .padding(.horizontal)
         .padding(.vertical, UI.SearchBar.verticalPadding)

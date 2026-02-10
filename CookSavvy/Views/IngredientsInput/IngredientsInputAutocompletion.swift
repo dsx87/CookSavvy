@@ -26,7 +26,7 @@ struct IngredientsInputAutocompletion: View {
                 
                 Spacer()
                 if selectedIngredients.contains(ingr) {
-                    Image(systemName: UI.IngredientsInput.autocompleteSelectedIcon)
+                    Image(systemName: Icons.IngredientsInput.autocompleteSelected)
                 }
             }
         }

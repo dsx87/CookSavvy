@@ -16,15 +16,15 @@ struct SearchResultsView: View {
                 VStack(spacing: UI.Common.stackSpacing) {
                     ProgressView()
                         .scaleEffect(UI.Common.progressScale)
-                    Text(UI.SearchResults.preparingDatabaseText)
+                    Text(Strings.SearchResults.preparingDatabase)
                         .font(.headline)
                         .foregroundColor(.secondary)
                 }
             } else if viewModel.isLoading {
-                ProgressView(UI.SearchResults.loadingText)
+                ProgressView(Strings.SearchResults.loading)
             } else if let error = viewModel.errorMessage {
                 VStack(spacing: UI.Common.stackSpacing) {
-                    Image(systemName: UI.Common.errorIcon)
+                    Image(systemName: Icons.Common.error)
                         .font(.largeTitle)
                         .foregroundColor(.orange)
                     Text(error)
@@ -34,12 +34,12 @@ struct SearchResultsView: View {
                 .padding()
             } else if viewModel.recipes.isEmpty {
                 VStack(spacing: UI.Common.stackSpacing) {
-                    Image(systemName: UI.SearchResults.noResultsIcon)
+                    Image(systemName: Icons.SearchResults.noResults)
                         .font(.largeTitle)
                         .foregroundColor(.secondary)
-                    Text(UI.SearchResults.noResultsTitle)
+                    Text(Strings.SearchResults.noResultsTitle)
                         .font(.headline)
-                    Text(UI.SearchResults.noResultsSubtitle)
+                    Text(Strings.SearchResults.noResultsSubtitle)
                         .foregroundColor(.secondary)
                 }
             } else {
@@ -59,7 +59,7 @@ struct SearchResultsView: View {
         .toolbar {
             ToolbarItem(placement: .principal) {
                 VStack(alignment: .leading) {
-                    Text(UI.SearchResults.navigationTitle)
+                    Text(Strings.SearchResults.navigationTitle)
                     SearchResultsHeader(count: viewModel.recipes.count, ingredients: viewModel.selectedIngredients)
                 }
             }
@@ -67,7 +67,7 @@ struct SearchResultsView: View {
                 Button(action: {
                     viewModel.handleBack()
                 }) {
-                    Image(systemName: UI.Common.backButtonIcon)
+                    Image(systemName: Icons.Common.backButton)
                 }
             }
         }

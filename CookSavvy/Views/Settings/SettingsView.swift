@@ -23,7 +23,7 @@ struct SettingsView: View {
                                 .foregroundColor(.secondary)
                         }
                         Spacer()
-                        Image(systemName: UI.Settings.planCheckmarkIcon)
+                        Image(systemName: Icons.Settings.planCheckmark)
                             .foregroundColor(.green)
                     }
                     
@@ -32,11 +32,11 @@ struct SettingsView: View {
                             viewModel.showUpgrade()
                         } label: {
                             HStack {
-                                Image(systemName: "crown.fill")
+                                Image(systemName: Icons.Settings.crown)
                                     .foregroundColor(.yellow)
-                                Text("Upgrade Plan")
+                                Text(Strings.Settings.upgradePlan)
                                 Spacer()
-                                Image(systemName: "chevron.right")
+                                Image(systemName: Icons.Settings.chevronRight)
                                     .foregroundColor(.secondary)
                             }
                         }
@@ -48,7 +48,7 @@ struct SettingsView: View {
                         }
                     } label: {
                         HStack {
-                            Text("Restore Purchases")
+                            Text(Strings.Settings.restorePurchases)
                             Spacer()
                             if viewModel.isRestoringPurchases {
                                 ProgressView()
@@ -61,14 +61,14 @@ struct SettingsView: View {
                         viewModel.openManageSubscriptions()
                     } label: {
                         HStack {
-                            Text("Manage Subscription")
+                            Text(Strings.Settings.manageSubscription)
                             Spacer()
-                            Image(systemName: "arrow.up.forward.app")
+                            Image(systemName: Icons.Settings.manageSubscription)
                                 .foregroundColor(.secondary)
                         }
                     }
                 } header: {
-                    Text(UI.Settings.subscriptionHeaderTitle)
+                    Text(Strings.Settings.subscriptionHeader)
                 }
                 
                 Section {
@@ -77,8 +77,8 @@ struct SettingsView: View {
                         set: { _ in viewModel.toggleLocalSource() }
                     )) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Local Recipes")
-                            Text("Offline database")
+                            Text(Strings.Settings.localRecipes)
+                            Text(Strings.Settings.offlineDatabase)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -89,8 +89,8 @@ struct SettingsView: View {
                         set: { _ in viewModel.toggleApiSource() }
                     )) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Online Recipes")
-                            Text("API source")
+                            Text(Strings.Settings.onlineRecipes)
+                            Text(Strings.Settings.apiSource)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -102,23 +102,23 @@ struct SettingsView: View {
                         set: { _ in viewModel.toggleAiSource() }
                     )) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("AI Recipes")
-                            Text("AI-generated recipes")
+                            Text(Strings.Settings.aiRecipes)
+                            Text(Strings.Settings.aiGeneratedRecipes)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
                     }
                     .disabled(!viewModel.canAccessSource(.ai))
                 } header: {
-                    Text("Recipe Sources")
+                    Text(Strings.Settings.recipeSourcesHeader)
                 } footer: {
-                    Text("Select which sources to use when searching for recipes. At least one source must be enabled.")
+                    Text(Strings.Settings.recipeSourcesFooter)
                 }
 
                 // Database Statistics Section
                 Section {
                     HStack {
-                        Text(UI.Settings.totalRecipesLabel)
+                        Text(Strings.Settings.totalRecipes)
                         Spacer()
                         if viewModel.isLoading {
                             ProgressView()
@@ -129,7 +129,7 @@ struct SettingsView: View {
                     }
 
                     HStack {
-                        Text(UI.Settings.favoriteRecipesLabel)
+                        Text(Strings.Settings.favoriteRecipes)
                         Spacer()
                         if viewModel.isLoading {
                             ProgressView()
@@ -140,7 +140,7 @@ struct SettingsView: View {
                     }
 
                     HStack {
-                        Text(UI.Settings.recentRecipesLabel)
+                        Text(Strings.Settings.recentRecipes)
                         Spacer()
                         if viewModel.isLoading {
                             ProgressView()
@@ -150,7 +150,7 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Text(UI.Settings.statisticsHeaderTitle)
+                    Text(Strings.Settings.statisticsHeader)
                 }
 
                 // Data Management Section
@@ -159,8 +159,8 @@ struct SettingsView: View {
                         viewModel.showClearRecentAlert = true
                     } label: {
                         HStack {
-                            Image(systemName: UI.Settings.trashIcon)
-                            Text(UI.Settings.clearRecentButtonTitle)
+                            Image(systemName: Icons.Settings.trash)
+                            Text(Strings.Settings.clearRecentButton)
                         }
                     }
                     .disabled(viewModel.isLoading || viewModel.recentRecipeCount == 0)
@@ -169,68 +169,68 @@ struct SettingsView: View {
                         viewModel.showClearFavoritesAlert = true
                     } label: {
                         HStack {
-                            Image(systemName: UI.Settings.trashIcon)
-                            Text(UI.Settings.clearFavoritesButtonTitle)
+                            Image(systemName: Icons.Settings.trash)
+                            Text(Strings.Settings.clearFavoritesButton)
                         }
                     }
                     .disabled(viewModel.isLoading || viewModel.favoriteCount == 0)
                 } header: {
-                    Text(UI.Settings.dataManagementHeaderTitle)
+                    Text(Strings.Settings.dataManagementHeader)
                 } footer: {
-                    Text(UI.Settings.dataManagementFooterText)
+                    Text(Strings.Settings.dataManagementFooter)
                 }
 
                 // App Info Section
                 Section {
                     HStack {
-                        Text(UI.Settings.versionLabel)
+                        Text(Strings.Settings.versionLabel)
                         Spacer()
                         Text(viewModel.appVersion)
                             .foregroundColor(.secondary)
                     }
 
                     HStack {
-                        Text(UI.Settings.buildLabel)
+                        Text(Strings.Settings.buildLabel)
                         Spacer()
                         Text(viewModel.buildNumber)
                             .foregroundColor(.secondary)
                     }
                 } header: {
-                    Text(UI.Settings.appInfoHeaderTitle)
+                    Text(Strings.Settings.appInfoHeader)
                 }
             }
-            .navigationTitle(UI.Settings.navigationTitle)
+            .navigationTitle(Strings.Settings.navigationTitle)
             .task {
                 await viewModel.loadSettings()
             }
             .refreshable {
                 await viewModel.loadSettings()
             }
-            .alert(UI.Settings.clearRecentAlertTitle, isPresented: $viewModel.showClearRecentAlert) {
-                Button(UI.Settings.alertCancelTitle, role: .cancel) { }
-                Button(UI.Settings.alertClearTitle, role: .destructive) {
+            .alert(Strings.Settings.clearRecentAlertTitle, isPresented: $viewModel.showClearRecentAlert) {
+                Button(Strings.Common.cancel, role: .cancel) { }
+                Button(Strings.Settings.alertClear, role: .destructive) {
                     Task {
                         await viewModel.clearRecentData()
                     }
                 }
             } message: {
-                Text(UI.Settings.clearRecentAlertMessage)
+                Text(Strings.Settings.clearRecentAlertMessage)
             }
-            .alert(UI.Settings.clearFavoritesAlertTitle, isPresented: $viewModel.showClearFavoritesAlert) {
-                Button(UI.Settings.alertCancelTitle, role: .cancel) { }
-                Button(UI.Settings.alertClearTitle, role: .destructive) {
+            .alert(Strings.Settings.clearFavoritesAlertTitle, isPresented: $viewModel.showClearFavoritesAlert) {
+                Button(Strings.Common.cancel, role: .cancel) { }
+                Button(Strings.Settings.alertClear, role: .destructive) {
                     Task {
                         await viewModel.clearFavorites()
                     }
                 }
             } message: {
-                Text(UI.Settings.clearFavoritesAlertMessage)
+                Text(Strings.Settings.clearFavoritesAlertMessage)
             }
-            .alert("Restore Failed", isPresented: .init(
+            .alert(Strings.Settings.restoreFailed, isPresented: .init(
                 get: { viewModel.restoreError != nil },
                 set: { if !$0 { viewModel.restoreError = nil } }
             )) {
-                Button("OK", role: .cancel) { }
+                Button(Strings.Common.ok, role: .cancel) { }
             } message: {
                 Text(viewModel.restoreError ?? "")
             }

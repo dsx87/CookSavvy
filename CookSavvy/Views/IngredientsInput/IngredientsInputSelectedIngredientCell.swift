@@ -19,7 +19,7 @@ struct IngredientsInputSelectedIngredientCell: View {
             Button {
                 action()
             } label: {
-                Image(systemName: UI.SelectedIngredient.removeIcon)
+                Image(systemName: Icons.SelectedIngredient.remove)
                     .scaleEffect(UI.SelectedIngredient.removeIconScale)
                     .tint(.black)
             }

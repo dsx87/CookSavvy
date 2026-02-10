@@ -13,10 +13,10 @@ struct FavoritesView: View {
     var body: some View {
             Group {
                 if viewModel.isLoading {
-                    ProgressView(UI.Favorites.loadingText)
+                    ProgressView(Strings.Favorites.loading)
                 } else if let error = viewModel.errorMessage {
                     VStack(spacing: UI.Common.stackSpacing) {
-                        Image(systemName: UI.Common.errorIcon)
+                        Image(systemName: Icons.Common.error)
                             .font(.largeTitle)
                             .foregroundColor(.orange)
                         Text(error)
@@ -26,12 +26,12 @@ struct FavoritesView: View {
                     .padding()
                 } else if viewModel.recipes.isEmpty {
                     VStack(spacing: UI.Common.stackSpacing) {
-                        Image(systemName: UI.Favorites.emptyIcon)
+                        Image(systemName: Icons.Favorites.empty)
                             .font(.largeTitle)
                             .foregroundColor(.secondary)
-                        Text(UI.Favorites.emptyTitle)
+                        Text(Strings.Favorites.emptyTitle)
                             .font(.headline)
-                        Text(UI.Favorites.emptySubtitle)
+                        Text(Strings.Favorites.emptySubtitle)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                     }
@@ -51,14 +51,14 @@ struct FavoritesView: View {
                                         await viewModel.removeFavorite(recipe)
                                     }
                                 } label: {
-                                    Label(UI.Favorites.removeLabelTitle, systemImage: UI.Favorites.removeIcon)
+                                    Label(Strings.Favorites.removeLabel, systemImage: Icons.Favorites.remove)
                                 }
                             }
                         }
                     }
                 }
             }
-            .navigationTitle(UI.Favorites.navigationTitle)
+            .navigationTitle(Strings.Favorites.navigationTitle)
             .task {
                 await viewModel.loadFavorites()
             }

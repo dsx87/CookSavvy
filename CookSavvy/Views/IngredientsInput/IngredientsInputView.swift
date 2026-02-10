@@ -18,14 +18,14 @@ struct IngredientsInputView: View {
                 mainContent
             }
         }
-        .navigationTitle(UI.IngredientsInput.navigationTitle)
+        .navigationTitle(Strings.IngredientsInput.navigationTitle)
     }
     
     private var loadingView: some View {
         VStack(spacing: UI.Common.stackSpacing) {
             ProgressView()
                 .scaleEffect(UI.Common.progressScale)
-            Text(UI.IngredientsInput.loadingText)
+            Text(Strings.IngredientsInput.loading)
                 .font(.headline)
                 .foregroundColor(.secondary)
         }
@@ -54,7 +54,7 @@ struct IngredientsInputView: View {
             ) {
                 VStack {
                     if viewModel.isLoading {
-                        ProgressView(UI.IngredientsInput.searchLoadingText)
+                        ProgressView(Strings.IngredientsInput.searchLoading)
                             .padding()
                     } else if let error = viewModel.errorMessage {
                         Text(error)

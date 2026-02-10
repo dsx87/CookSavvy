@@ -13,7 +13,7 @@ struct SearchResultsHeader: View {
     
     var body: some View {
         VStack(alignment:.leading) {
-            Text(String(format: UI.SearchResults.foundStringFormat, count, ingredients.asSmallString))
+            Text(String(format: Strings.SearchResults.foundFormat, count, ingredients.asSmallString))
                 .font(.caption)
         }
     }

@@ -22,7 +22,7 @@ struct IngredientsInputFindRecipesButton: View {
                 RoundedRectangle(cornerRadius: UI.FindButton.cornerRadius)
                     .foregroundStyle(disabled ? .gray : theme.buttonPrimary)
                     .frame(maxWidth: .infinity, maxHeight: UI.FindButton.height)
-                Text(UI.FindButton.title)
+                Text(Strings.FindButton.title)
                     .font(.title3)
                     .foregroundStyle(.white)
                     .padding()

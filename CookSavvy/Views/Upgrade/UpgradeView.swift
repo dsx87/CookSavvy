@@ -28,7 +28,7 @@ struct UpgradeView: View {
                     )
                 }
                 
-                Text("Subscriptions auto-renew monthly until cancelled.")
+                Text(Strings.Upgrade.autoRenew)
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -36,11 +36,11 @@ struct UpgradeView: View {
             }
             .padding()
         }
-        .navigationTitle("Upgrade")
+        .navigationTitle(Strings.Upgrade.navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Done") {
+                Button(Strings.Upgrade.done) {
                     viewModel.dismiss()
                 }
             }
@@ -48,24 +48,24 @@ struct UpgradeView: View {
         .task {
             await viewModel.loadPrices()
         }
-        .alert("Purchase Failed", isPresented: $viewModel.showErrorAlert) {
-            Button("OK", role: .cancel) { }
+        .alert(Strings.Upgrade.purchaseFailed, isPresented: $viewModel.showErrorAlert) {
+            Button(Strings.Common.ok, role: .cancel) { }
         } message: {
-            Text(viewModel.purchaseError ?? "An unknown error occurred")
+            Text(viewModel.purchaseError ?? Strings.Upgrade.unknownError)
         }
     }
     
     private var headerView: some View {
         VStack(spacing: 12) {
-            Image(systemName: "crown.fill")
+            Image(systemName: Icons.Upgrade.crown)
                 .font(.system(size: 50))
                 .foregroundStyle(.yellow.gradient)
             
-            Text("Unlock Premium Features")
+            Text(Strings.Upgrade.unlockTitle)
                 .font(.title2)
                 .fontWeight(.bold)
             
-            Text("Get access to more recipes and AI-powered features")
+            Text(Strings.Upgrade.unlockSubtitle)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -98,7 +98,7 @@ struct PlanCard: View {
                 Spacer()
                 
                 if isCurrentPlan {
-                    Text("Current")
+                    Text(Strings.Upgrade.current)
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundColor(.green)
@@ -114,7 +114,7 @@ struct PlanCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(features, id: \.self) { feature in
                     HStack(spacing: 8) {
-                        Image(systemName: "checkmark.circle.fill")
+                        Image(systemName: Icons.Upgrade.checkmark)
                             .foregroundColor(.green)
                             .font(.subheadline)
                         Text(feature)
@@ -132,7 +132,7 @@ struct PlanCard: View {
                             ProgressView()
                                 .tint(.white)
                         } else {
-                            Text("Subscribe")
+                            Text(Strings.Upgrade.subscribe)
                                 .fontWeight(.semibold)
                         }
                     }
