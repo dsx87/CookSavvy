@@ -64,4 +64,10 @@ enum Icons {
         static let crown = "crown.fill"
         static let checkmark = "checkmark.circle.fill"
     }
+
+    enum RecipeSource {
+        static let offline = "internaldrive"
+        static let online = "globe"
+        static let ai = "sparkles"
+    }
 }

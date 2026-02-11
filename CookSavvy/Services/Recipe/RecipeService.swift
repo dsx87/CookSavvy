@@ -12,9 +12,6 @@ final class RecipeService {
     
     // MARK: - Properties
     
-    /// Currently selected recipe source type
-    private(set) var currentSourceType: RecipeSourceType
-    
     /// Available recipe sources
     private var sources: [RecipeSourceType: RecipeSourceProtocol]
     
@@ -30,17 +27,14 @@ final class RecipeService {
     /// - Parameters:
     ///   - dbInterface: Database interface for storing recipes
     ///   - sources: Dictionary of available recipe sources
-    ///   - defaultSource: The default source type to use
     ///   - shouldStoreRecipes: Whether to automatically store fetched recipes in DB (default: true)
     init(
         dbInterface: DBInterfaceProtocol,
         sources: [RecipeSourceType: RecipeSourceProtocol],
-        defaultSource: RecipeSourceType = .offline,
         shouldStoreRecipes: Bool = true
     ) {
         self.dbInterface = dbInterface
         self.sources = sources
-        self.currentSourceType = defaultSource
         self.shouldStoreRecipes = shouldStoreRecipes
     }
     
@@ -65,48 +59,13 @@ final class RecipeService {
         self.init(
             dbInterface: dbInterface,
             sources: sources,
-            defaultSource: .offline,
             shouldStoreRecipes: shouldStoreRecipes
         )
     }
     
     // MARK: - Public Methods
     
-    /// Sets the active recipe source
-    /// - Parameter sourceType: The source type to switch to
-    /// - Throws: RecipeSourceError if source is not available
-    func setSource(_ sourceType: RecipeSourceType) async throws {
-        guard let source = sources[sourceType] else {
-            throw RecipeSourceError.sourceUnavailable(sourceType)
-        }
-        
-        guard await source.isAvailable() else {
-            throw RecipeSourceError.sourceUnavailable(sourceType)
-        }
-        
-        currentSourceType = sourceType
-    }
-    
-    /// Fetches recipes for the given ingredients using the current source
-    /// - Parameter ingredients: List of ingredients to search for
-    /// - Returns: Array of matching recipes
-    /// - Throws: RecipeSourceError if fetching fails
-    func getRecipes(for ingredients: [Ingredient]) async throws -> [Recipe] {
-        guard let source = sources[currentSourceType] else {
-            throw RecipeSourceError.sourceUnavailable(currentSourceType)
-        }
-        
-        let recipes = try await source.fetchRecipes(for: ingredients)
-        
-        // Store recipes in database if enabled
-        if shouldStoreRecipes && !recipes.isEmpty {
-            try storeRecipes(recipes)
-        }
-        
-        return recipes
-    }
-    
-    /// Fetches recipes from a specific source, regardless of current selection
+    /// Fetches recipes from a specific source
     /// - Parameters:
     ///   - ingredients: List of ingredients to search for
     ///   - sourceType: The specific source to use
@@ -121,10 +80,11 @@ final class RecipeService {
             throw RecipeSourceError.sourceUnavailable(sourceType)
         }
         
-        let recipes = try await source.fetchRecipes(for: ingredients)
+        var recipes = try await source.fetchRecipes(for: ingredients)
+        for i in recipes.indices { recipes[i].source = sourceType }
         
-        // Store recipes in database if enabled
-        if shouldStoreRecipes && !recipes.isEmpty {
+        // Store recipes in database if enabled (skip offline — already in DB)
+        if shouldStoreRecipes && sourceType != .offline && !recipes.isEmpty {
             try storeRecipes(recipes)
         }
         
@@ -197,9 +157,10 @@ final class RecipeService {
             
             do {
                 let recipes = try await source.fetchRecipes(for: ingredients)
-                for recipe in recipes {
+                for var recipe in recipes {
                     if !seenTitles.contains(recipe.title) {
                         seenTitles.insert(recipe.title)
+                        recipe.source = sourceType
                         allRecipes.append(recipe)
                     }
                 }
@@ -208,8 +169,11 @@ final class RecipeService {
             }
         }
         
-        if shouldStoreRecipes && !allRecipes.isEmpty {
-            try storeRecipes(allRecipes)
+        if shouldStoreRecipes {
+            let nonOfflineRecipes = allRecipes.filter { $0.source != .offline }
+            if !nonOfflineRecipes.isEmpty {
+                try storeRecipes(nonOfflineRecipes)
+            }
         }
         
         return allRecipes

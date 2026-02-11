@@ -52,11 +52,12 @@ final class DataImportService {
             throw DataImportError.datasetNotFound
         }
 
-        let importedRecipes: [Recipe] = try csvReader.parseCSVFromZip(
+        var importedRecipes: [Recipe] = try csvReader.parseCSVFromZip(
             zipURL: zipURL,
             csvFilename: "Food Ingredients and Recipe Dataset with Image Name Mapping.csv",
             useCache: true
         )
+        for i in importedRecipes.indices { importedRecipes[i].source = .offline }
 
         print("📊 Parsed \(importedRecipes.count) recipes from CSV")
 

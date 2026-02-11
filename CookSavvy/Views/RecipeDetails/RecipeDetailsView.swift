@@ -23,6 +23,9 @@ struct RecipeDetailsView: View {
                         Text(viewModel.recipe.title)
                             .font(.title)
                         Spacer()
+                        if let source = viewModel.recipe.source {
+                            RecipeSourceBadge(source: source)
+                        }
                         Button(action: {
                             Task {
                                 await viewModel.toggleFavorite()

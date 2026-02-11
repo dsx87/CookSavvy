@@ -6,6 +6,9 @@ protocol AppTheme {
     var backgroundSecondary: Color { get }
     var buttonPrimary: Color { get }
     var backgroundSubtle: Color { get }
+    var sourceBadgeOffline: Color { get }
+    var sourceBadgeOnline: Color { get }
+    var sourceBadgeAI: Color { get }
 }
 
 struct DefaultTheme: AppTheme {
@@ -28,6 +31,10 @@ struct DefaultTheme: AppTheme {
     var backgroundSubtle: Color {
         Color(red: 249.0/255.0, green: 250.0/255.0, blue: 251.0/255.0)
     }
+
+    var sourceBadgeOffline: Color { .gray }
+    var sourceBadgeOnline: Color { .blue }
+    var sourceBadgeAI: Color { .purple }
 }
 
 private struct AppThemeKey: EnvironmentKey {

@@ -65,7 +65,7 @@ final class RecipeServiceTests: XCTestCase {
     
     func testDefaultInitialization() {
         recipeService = RecipeService()
-        XCTAssertEqual(recipeService.currentSourceType, .offline)
+        XCTAssertNotNil(recipeService)
     }
     
     func testCustomInitialization() {
@@ -75,108 +75,13 @@ final class RecipeServiceTests: XCTestCase {
         recipeService = RecipeService(
             dbInterface: dbInterface,
             sources: sources,
-            defaultSource: .offline,
             shouldStoreRecipes: false
         )
         
-        XCTAssertEqual(recipeService.currentSourceType, .offline)
-    }
-    
-    // MARK: - Source Selection Tests
-    
-    func testSetSourceToAvailableSource() async throws {
-        let mockOnline = MockRecipeSource(sourceType: .online, isAvailable: true)
-        let sources: [RecipeSourceType: RecipeSourceProtocol] = [
-            .offline: OfflineRecipeSource(dbInterface: dbInterface),
-            .online: mockOnline
-        ]
-        
-        recipeService = RecipeService(
-            dbInterface: dbInterface,
-            sources: sources,
-            defaultSource: .offline
-        )
-        
-        try await recipeService.setSource(.online)
-        XCTAssertEqual(recipeService.currentSourceType, .online)
-    }
-    
-    func testSetSourceToUnavailableSourceThrowsError() async {
-        let mockOnline = MockRecipeSource(sourceType: .online, isAvailable: false)
-        let sources: [RecipeSourceType: RecipeSourceProtocol] = [
-            .offline: OfflineRecipeSource(dbInterface: dbInterface),
-            .online: mockOnline
-        ]
-        
-        recipeService = RecipeService(
-            dbInterface: dbInterface,
-            sources: sources,
-            defaultSource: .offline
-        )
-        
-        do {
-            try await recipeService.setSource(.online)
-            XCTFail("Should throw error for unavailable source")
-        } catch let error as RecipeSourceError {
-            if case .sourceUnavailable(let type) = error {
-                XCTAssertEqual(type, .online)
-            } else {
-                XCTFail("Wrong error type")
-            }
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
-    }
-    
-    func testSetSourceToNonExistentSourceThrowsError() async {
-        let sources: [RecipeSourceType: RecipeSourceProtocol] = [
-            .offline: OfflineRecipeSource(dbInterface: dbInterface)
-        ]
-        
-        recipeService = RecipeService(
-            dbInterface: dbInterface,
-            sources: sources,
-            defaultSource: .offline
-        )
-        
-        do {
-            try await recipeService.setSource(.online)
-            XCTFail("Should throw error for non-existent source")
-        } catch let error as RecipeSourceError {
-            if case .sourceUnavailable = error {
-                // Expected
-            } else {
-                XCTFail("Wrong error type")
-            }
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
+        XCTAssertNotNil(recipeService)
     }
     
     // MARK: - Get Recipes Tests
-    
-    func testGetRecipesFromCurrentSource() async throws {
-        // Setup: Insert recipes in DB
-        let chicken: Ingredient = "Chicken"
-        let recipe = Recipe(
-            title: "Chicken Dish",
-            ingredients: [chicken],
-            instructions: ["Cook"],
-            image: "img",
-            cleanedIngredients: [chicken],
-            additionalInfo: .mock
-        )
-        try dbInterface.insertRecipes([recipe])
-        
-        recipeService = RecipeService(dbInterface: dbInterface, shouldStoreRecipes: false)
-        
-        // Test
-        let results = try await recipeService.getRecipes(for: [chicken])
-        
-        // Verify
-        XCTAssertEqual(results.count, 1)
-        XCTAssertEqual(results.first?.title, "Chicken Dish")
-    }
     
     func testGetRecipesFromSpecificSource() async throws {
         let mockRecipes = Recipe.mocks(count: 3)
@@ -194,7 +99,6 @@ final class RecipeServiceTests: XCTestCase {
         recipeService = RecipeService(
             dbInterface: dbInterface,
             sources: sources,
-            defaultSource: .offline,
             shouldStoreRecipes: false
         )
         
@@ -214,8 +118,7 @@ final class RecipeServiceTests: XCTestCase {
         
         recipeService = RecipeService(
             dbInterface: dbInterface,
-            sources: sources,
-            defaultSource: .offline
+            sources: sources
         )
         
         do {
@@ -248,8 +151,7 @@ final class RecipeServiceTests: XCTestCase {
         recipeService = RecipeService(
             dbInterface: dbInterface,
             sources: sources,
-            defaultSource: .offline,
-            shouldStoreRecipes: true  // Enable storage
+            shouldStoreRecipes: true
         )
         
         let ingredients: [Ingredient] = ["Chicken"]
@@ -276,8 +178,7 @@ final class RecipeServiceTests: XCTestCase {
         recipeService = RecipeService(
             dbInterface: dbInterface,
             sources: sources,
-            defaultSource: .offline,
-            shouldStoreRecipes: false  // Disable storage
+            shouldStoreRecipes: false
         )
         
         let ingredients: [Ingredient] = ["Chicken"]
@@ -306,8 +207,7 @@ final class RecipeServiceTests: XCTestCase {
         
         recipeService = RecipeService(
             dbInterface: dbInterface,
-            sources: sources,
-            defaultSource: .offline
+            sources: sources
         )
         
         let available = await recipeService.isSourceAvailable(.online)
@@ -321,8 +221,7 @@ final class RecipeServiceTests: XCTestCase {
         
         recipeService = RecipeService(
             dbInterface: dbInterface,
-            sources: sources,
-            defaultSource: .offline
+            sources: sources
         )
         
         let available = await recipeService.isSourceAvailable(.ai)
@@ -341,8 +240,7 @@ final class RecipeServiceTests: XCTestCase {
         
         recipeService = RecipeService(
             dbInterface: dbInterface,
-            sources: sources,
-            defaultSource: .offline
+            sources: sources
         )
         
         let available = await recipeService.getAvailableSources()
@@ -417,14 +315,14 @@ final class RecipeServiceTests: XCTestCase {
         try recipeService.storeRecipes([recipe])
         
         // 2. Fetch from offline source
-        let results = try await recipeService.getRecipes(for: [chicken])
+        let results = try await recipeService.getRecipes(for: [chicken], from: .offline)
         
         // 3. Verify
         XCTAssertEqual(results.count, 1)
         XCTAssertEqual(results.first?.title, "Chicken Pasta")
     }
     
-    func testSwitchBetweenSources() async throws {
+    func testFetchFromMultipleSources() async throws {
         let mockOnlineRecipes = [
             Recipe(
                 title: "Online Recipe",
@@ -450,20 +348,12 @@ final class RecipeServiceTests: XCTestCase {
         recipeService = RecipeService(
             dbInterface: dbInterface,
             sources: sources,
-            defaultSource: .offline,
             shouldStoreRecipes: false
         )
         
-        // Start with offline
-        XCTAssertEqual(recipeService.currentSourceType, .offline)
-        
-        // Switch to online
-        try await recipeService.setSource(.online)
-        XCTAssertEqual(recipeService.currentSourceType, .online)
-        
-        // Fetch from online
-        let results = try await recipeService.getRecipes(for: ["Chicken"])
+        let results = try await recipeService.getRecipes(for: ["Chicken"], from: .online)
         XCTAssertEqual(results.first?.title, "Online Recipe")
+        XCTAssertEqual(results.first?.source, .online)
     }
     
     // MARK: - Error Handling Tests
@@ -481,12 +371,11 @@ final class RecipeServiceTests: XCTestCase {
         
         recipeService = RecipeService(
             dbInterface: dbInterface,
-            sources: sources,
-            defaultSource: .online
+            sources: sources
         )
         
         do {
-            _ = try await recipeService.getRecipes(for: ["Chicken"])
+            _ = try await recipeService.getRecipes(for: ["Chicken"], from: .online)
             XCTFail("Should propagate source error")
         } catch let error as RecipeSourceError {
             if case .noRecipesFound = error {

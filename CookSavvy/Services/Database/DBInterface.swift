@@ -121,7 +121,8 @@ final class DBInterface: DBInterfaceProtocol {
                     instructions_json TEXT NOT NULL,
                     ingredients_json TEXT NOT NULL,
                     cleaned_ingredients_json TEXT NOT NULL,
-                    additional_info_json TEXT NOT NULL
+                    additional_info_json TEXT NOT NULL,
+                    source TEXT
                 );
                 """)
             
@@ -206,6 +207,16 @@ final class DBInterface: DBInterfaceProtocol {
                 """)
 
             try db.execute(sql: "CREATE INDEX IF NOT EXISTS idx_recent_searches_date ON recent_searches(search_date DESC);")
+
+            // Migration: add source column if missing (existing DBs)
+            let columns = try Row.fetchAll(db, sql: "PRAGMA table_info(recipes);")
+            let columnNames = columns.map { row -> String in row["name"] }
+            if !columnNames.contains("source") {
+                try db.execute(sql: "ALTER TABLE recipes ADD COLUMN source TEXT;")
+            }
+            
+            // Migration: backfill NULL sources as Offline (CSV-imported recipes)
+            try db.execute(sql: "UPDATE recipes SET source = 'Offline' WHERE source IS NULL;")
         }
     }
 
@@ -276,7 +287,7 @@ final class DBInterface: DBInterfaceProtocol {
         let likeValues = ingredientNames.map { "%\($0)%" } // Add wildcards for partial matching
         
         let sql = """
-            SELECT DISTINCT r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.cleaned_ingredients_json, r.additional_info_json
+            SELECT DISTINCT r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.cleaned_ingredients_json, r.additional_info_json, r.source
             FROM recipes r
             INNER JOIN recipe_ingredients ri ON ri.recipe_id = r.id
             WHERE \(likeConditions)
@@ -314,13 +325,17 @@ final class DBInterface: DBInterfaceProtocol {
             let cleanedIngredients = try decoder.decode([Ingredient].self, from: Data(cleanedIngredientsJSON.utf8))
             let additionalInfo = try decoder.decode(Recipe.AdditionalInfo.self, from: Data(additionalJSON.utf8))
 
+            let sourceRaw: String? = row["source"]
+            let source = sourceRaw.flatMap { RecipeSourceType(rawValue: $0) }
+
             let recipe = Recipe(
                 title: title,
                 ingredients: ingredients,
                 instructions: instructions,
                 image: image,
                 cleanedIngredients: cleanedIngredients,
-                additionalInfo: additionalInfo
+                additionalInfo: additionalInfo,
+                source: source
             )
             
             // Cache the recipe
@@ -375,8 +390,8 @@ final class DBInterface: DBInterfaceProtocol {
                 let additionalJSON = try String(data: encoder.encode(r.additionalInfo), encoding: .utf8) ?? "{}"
 
                 try db.execute(
-                    sql: "INSERT INTO recipes(title, image, instructions_json, ingredients_json, cleaned_ingredients_json, additional_info_json) VALUES (?, ?, ?, ?, ?, ?);",
-                    arguments: [r.title, r.image, instructionsJSON, ingredientsJSON, cleanedIngredientsJSON, additionalJSON]
+                    sql: "INSERT INTO recipes(title, image, instructions_json, ingredients_json, cleaned_ingredients_json, additional_info_json, source) VALUES (?, ?, ?, ?, ?, ?, ?);",
+                    arguments: [r.title, r.image, instructionsJSON, ingredientsJSON, cleanedIngredientsJSON, additionalJSON, r.source?.rawValue]
                 )
 
                 let recipeId = db.lastInsertedRowID
@@ -514,7 +529,7 @@ final class DBInterface: DBInterfaceProtocol {
     func getRecentRecipes(limit: Int) throws -> [Recipe] {
         return try dbWriter.read { db in
             let sql = """
-                SELECT r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.cleaned_ingredients_json, r.additional_info_json
+                SELECT r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.cleaned_ingredients_json, r.additional_info_json, r.source
                 FROM recent_recipes rr
                 INNER JOIN recipes r ON r.id = rr.recipe_id
                 ORDER BY rr.last_viewed_at DESC
@@ -545,7 +560,7 @@ final class DBInterface: DBInterfaceProtocol {
     func getFavoriteRecipes() throws -> [Recipe] {
         return try dbWriter.read { db in
             let sql = """
-                SELECT r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.cleaned_ingredients_json, r.additional_info_json
+                SELECT r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.cleaned_ingredients_json, r.additional_info_json, r.source
                 FROM favorite_recipes fr
                 INNER JOIN recipes r ON r.id = fr.recipe_id
                 ORDER BY fr.added_at DESC;
@@ -670,6 +685,8 @@ final class DBInterface: DBInterfaceProtocol {
         let ingredientsJSON: String = row["ingredients_json"]
         let cleanedIngredientsJSON: String = row["cleaned_ingredients_json"]
         let additionalJSON: String = row["additional_info_json"]
+        let sourceRaw: String? = row["source"]
+        let source = sourceRaw.flatMap { RecipeSourceType(rawValue: $0) }
 
         let instructions = try decoder.decode([String].self, from: Data(instructionsJSON.utf8))
         let ingredients = try decoder.decode([Ingredient].self, from: Data(ingredientsJSON.utf8))
@@ -682,7 +699,8 @@ final class DBInterface: DBInterfaceProtocol {
             instructions: instructions,
             image: image,
             cleanedIngredients: cleanedIngredients,
-            additionalInfo: additionalInfo
+            additionalInfo: additionalInfo,
+            source: source
         )
     }
 

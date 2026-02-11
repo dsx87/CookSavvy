@@ -76,6 +76,15 @@ struct UI {
         static let planInfoSpacing: CGFloat = 4
     }
 
+    struct SourceBadge {
+        static let iconSize: CGFloat = 10
+        static let padding: CGFloat = 4
+        static let cornerRadius: CGFloat = 6
+        static let fontSize: CGFloat = 9
+        static let spacing: CGFloat = 2
+        static let backgroundOpacity: Double = 0.85
+    }
+
     struct DiskImage {
         static let defaultPrefix = "Food Images/Food Images/"
         static let defaultExtension = ".jpg"

@@ -77,15 +77,17 @@ struct Recipe {
     let image: String
     let cleanedIngredients: [Ingredient]
     let additionalInfo: AdditionalInfo
+    var source: RecipeSourceType?
     
     
-    init(title: String, ingredients: [Ingredient], instructions: [String], image: String, cleanedIngredients: [Ingredient], additionalInfo: AdditionalInfo) {
+    init(title: String, ingredients: [Ingredient], instructions: [String], image: String, cleanedIngredients: [Ingredient], additionalInfo: AdditionalInfo, source: RecipeSourceType? = nil) {
         self.title = title
         self.ingredients = ingredients
         self.instructions = instructions
         self.image = image
         self.cleanedIngredients = cleanedIngredients
         self.additionalInfo = additionalInfo
+        self.source = source
     }
     
     // Mock init
@@ -141,6 +143,7 @@ extension Recipe: Codable {
         let rawCleanedIngredients = try container.decode(String.self, forKey: .cleanedIngredients)
         self.cleanedIngredients = rawCleanedIngredients.separatedByQuotes.map(Ingredient.init(stringLiteral:))
         self.additionalInfo = try container.decodeIfPresent(AdditionalInfo.self, forKey: .additionalInfo) ?? .empty
+        self.source = nil
     }
     
 }

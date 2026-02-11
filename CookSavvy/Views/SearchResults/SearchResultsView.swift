@@ -128,8 +128,40 @@ struct RecipeResultCellView: View {
             }
             
             Spacer(minLength: UI.RecipeCell.spacerMinLength)
+            
+            if let source = recipe.source {
+                RecipeSourceBadge(source: source)
+            }
         }
         .padding(.vertical, UI.RecipeCell.verticalPadding)
+    }
+}
+
+struct RecipeSourceBadge: View {
+    let source: RecipeSourceType
+    @Environment(\.appTheme) private var theme
+    
+    private var badgeColor: Color {
+        switch source {
+        case .offline: theme.sourceBadgeOffline
+        case .online: theme.sourceBadgeOnline
+        case .ai: theme.sourceBadgeAI
+        }
+    }
+    
+    var body: some View {
+        HStack(spacing: UI.SourceBadge.spacing) {
+            Image(systemName: source.iconName)
+                .font(.system(size: UI.SourceBadge.iconSize, weight: .semibold))
+            Text(source.displayName)
+                .font(.system(size: UI.SourceBadge.fontSize, weight: .medium))
+        }
+        .foregroundColor(.white)
+        .padding(UI.SourceBadge.padding)
+        .background(
+            RoundedRectangle(cornerRadius: UI.SourceBadge.cornerRadius)
+                .fill(badgeColor.opacity(UI.SourceBadge.backgroundOpacity))
+        )
     }
 }
 
