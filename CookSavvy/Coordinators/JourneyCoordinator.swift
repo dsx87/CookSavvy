@@ -1,0 +1,157 @@
+//
+//  JourneyCoordinator.swift
+//  CookSavvy
+//
+
+import SwiftUI
+
+@MainActor
+final class JourneyCoordinator: ObservableObject {
+    
+    private let container: AppContainer
+    let settingsCoordinator: SettingsCoordinator
+    @Published var navigationPath = NavigationPath()
+    @Published var presentedSheet: SheetDestination?
+    
+    init(container: AppContainer, settingsCoordinator: SettingsCoordinator) {
+        self.container = container
+        self.settingsCoordinator = settingsCoordinator
+    }
+    
+    func start() -> some View {
+        JourneyCoordinatorView(coordinator: self)
+    }
+    
+    // MARK: - Factory Methods
+    
+    func makeRecipeDetailsViewModel(recipe: Recipe) -> RecipeDetailsViewModel {
+        RecipeDetailsViewModel(
+            recipe: recipe,
+            userDataService: container.userDataService
+        )
+    }
+    
+    func makeUpgradeViewModel() -> UpgradeViewModel {
+        UpgradeViewModel(
+            subscriptionService: container.subscriptionService,
+            onDismiss: { [weak self] in
+                self?.dismissSheet()
+            }
+        )
+    }
+    
+    // TODO: makeJourneyViewModel() — add when JourneyViewModel is created
+    // TODO: makeCreateRecipeViewModel() — add when CreateRecipeViewModel is created
+    // TODO: makeRecipeListViewModel(title:recipes:) — add when RecipeListViewModel is created
+    
+    // MARK: - Navigation
+    
+    func showRecipeDetail(recipe: Recipe) {
+        navigationPath.append(NavigationDestination.recipeDetail(recipe))
+    }
+    
+    func showRecipeList(title: String, recipes: [Recipe]) {
+        navigationPath.append(NavigationDestination.recipeList(title: title, recipes: recipes))
+    }
+    
+    func showSettings() {
+        navigationPath.append(NavigationDestination.settings)
+    }
+    
+    func showCreateRecipe() {
+        presentedSheet = .createRecipe
+    }
+    
+    func showUpgrade() {
+        presentedSheet = .upgrade
+    }
+    
+    func goBack() {
+        if !navigationPath.isEmpty {
+            navigationPath.removeLast()
+        }
+    }
+    
+    func dismissSheet() {
+        presentedSheet = nil
+    }
+}
+
+// MARK: - Destinations
+
+extension JourneyCoordinator {
+    enum NavigationDestination: Hashable {
+        case recipeDetail(Recipe)
+        case recipeList(title: String, recipes: [Recipe])
+        case settings
+    }
+    
+    enum SheetDestination: Identifiable {
+        case createRecipe
+        case upgrade
+        
+        var id: String {
+            switch self {
+            case .createRecipe: return "createRecipe"
+            case .upgrade: return "upgrade"
+            }
+        }
+    }
+}
+
+// MARK: - Coordinator View
+
+struct JourneyCoordinatorView: View {
+    @ObservedObject var coordinator: JourneyCoordinator
+    
+    var body: some View {
+        NavigationStack(path: $coordinator.navigationPath) {
+            // TODO: Replace with JourneyView when available
+            Text("Journey")
+                .navigationDestination(for: JourneyCoordinator.NavigationDestination.self) { destination in
+                    switch destination {
+                    case .recipeDetail(let recipe):
+                        RecipeDetailsView(
+                            viewModel: coordinator.makeRecipeDetailsViewModel(recipe: recipe)
+                        )
+                    case .recipeList:
+                        // TODO: Replace with RecipeListView when available
+                        Text("Recipe List")
+                    case .settings:
+                        JourneySettingsDestination(settingsCoordinator: coordinator.settingsCoordinator)
+                    }
+                }
+        }
+        .sheet(item: $coordinator.presentedSheet) { sheet in
+            switch sheet {
+            case .upgrade:
+                UpgradeView(viewModel: coordinator.makeUpgradeViewModel())
+            case .createRecipe:
+                // TODO: Replace with CreateRecipeView when available
+                Text("Create Recipe")
+            }
+        }
+    }
+}
+
+// MARK: - Settings Destination Wrapper
+
+struct JourneySettingsDestination: View {
+    @ObservedObject var settingsCoordinator: SettingsCoordinator
+    @StateObject private var viewModel: SettingsViewModel
+    
+    init(settingsCoordinator: SettingsCoordinator) {
+        self.settingsCoordinator = settingsCoordinator
+        _viewModel = StateObject(wrappedValue: settingsCoordinator.makeSettingsViewModel())
+    }
+    
+    var body: some View {
+        SettingsView(viewModel: viewModel)
+            .sheet(item: $settingsCoordinator.presentedSheet) { sheet in
+                switch sheet {
+                case .upgrade:
+                    UpgradeView(viewModel: settingsCoordinator.makeUpgradeViewModel())
+                }
+            }
+    }
+}

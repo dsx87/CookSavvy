@@ -9,34 +9,24 @@ import SwiftUI
 
 struct TabContainerView: View {
     @ObservedObject var coordinator: AppCoordinator
+    @Environment(\.appTheme) var theme
     var container: AppContainer { AppContainer.shared }
     
     var body: some View {
         TabView {
-            coordinator.ingredientsCoordinator(container: container).start()
+            coordinator.discoverCoordinator(container: container).start()
                 .tabItem {
-                    Image(systemName: Icons.Tab.ingredients)
-                    Text(Strings.Tab.ingredients)
+                    Image(systemName: Icons.Tab.discover)
+                    Text(Strings.Tab.discover)
                 }
 
-            coordinator.recentRecipesCoordinator(container: container).start()
+            coordinator.journeyCoordinator(container: container).start()
                 .tabItem {
-                    Image(systemName: Icons.Tab.recent)
-                    Text(Strings.Tab.recent)
-                }
-
-            coordinator.favoritesCoordinator(container: container).start()
-                .tabItem {
-                    Image(systemName: Icons.Tab.favorites)
-                    Text(Strings.Tab.favorites)
-                }
-
-            coordinator.settingsCoordinator(container: container).start()
-                .tabItem {
-                    Image(systemName: Icons.Tab.settings)
-                    Text(Strings.Tab.settings)
+                    Image(systemName: Icons.Tab.journey)
+                    Text(Strings.Tab.journey)
                 }
         }
+        .tint(theme.accent)
     }
 }
 

@@ -49,7 +49,7 @@ final class IngredientsInputViewModel: ObservableObject {
     private let databaseInitService: DatabaseInitializationService
     private let ingredientDetectionService: IngredientDetectionServiceProtocol
     private let subscriptionService: SubscriptionServiceProtocol
-    private(set) weak var coordinator: IngredientsCoordinator?
+    private(set) weak var coordinator: DiscoverCoordinator?
     private var searchTask: Task<Void, Never>?
 
     // MARK: - Initialization
@@ -60,7 +60,7 @@ final class IngredientsInputViewModel: ObservableObject {
         databaseInitService: DatabaseInitializationService,
         ingredientDetectionService: IngredientDetectionServiceProtocol,
         subscriptionService: SubscriptionServiceProtocol,
-        coordinator: IngredientsCoordinator?
+        coordinator: DiscoverCoordinator?
     ) {
         self.ingredientsService = ingredientsService
         self.userDataService = userDataService

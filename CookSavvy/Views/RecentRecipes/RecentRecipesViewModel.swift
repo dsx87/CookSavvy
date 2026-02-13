@@ -21,14 +21,14 @@ final class RecentRecipesViewModel: ObservableObject {
 
     private let userDataService: UserDataService
     private let imageService: ImageService
-    private weak var coordinator: RecentRecipesCoordinator?
+    private weak var coordinator: DiscoverCoordinator?
 
     // MARK: - Initialization
 
     init(
         userDataService: UserDataService,
         imageService: ImageService,
-        coordinator: RecentRecipesCoordinator?
+        coordinator: DiscoverCoordinator?
     ) {
         self.userDataService = userDataService
         self.imageService = imageService

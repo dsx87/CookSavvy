@@ -8,33 +8,26 @@ import SwiftUI
 @MainActor
 final class AppCoordinator: ObservableObject {
     
-    private var _ingredientsCoordinator: IngredientsCoordinator?
-    private var _recentRecipesCoordinator: RecentRecipesCoordinator?
-    private var _favoritesCoordinator: FavoritesCoordinator?
+    private var _discoverCoordinator: DiscoverCoordinator?
+    private var _journeyCoordinator: JourneyCoordinator?
     private var _settingsCoordinator: SettingsCoordinator?
     
-    func ingredientsCoordinator(container: AppContainer) -> IngredientsCoordinator {
-        if let existing = _ingredientsCoordinator { return existing }
-        let coordinator = IngredientsCoordinator(container: container)
-        _ingredientsCoordinator = coordinator
+    func discoverCoordinator(container: AppContainer) -> DiscoverCoordinator {
+        if let existing = _discoverCoordinator { return existing }
+        let coordinator = DiscoverCoordinator(container: container)
+        _discoverCoordinator = coordinator
         return coordinator
     }
     
-    func recentRecipesCoordinator(container: AppContainer) -> RecentRecipesCoordinator {
-        if let existing = _recentRecipesCoordinator { return existing }
-        let coordinator = RecentRecipesCoordinator(container: container)
-        _recentRecipesCoordinator = coordinator
+    func journeyCoordinator(container: AppContainer) -> JourneyCoordinator {
+        if let existing = _journeyCoordinator { return existing }
+        let settings = settingsCoordinator(container: container)
+        let coordinator = JourneyCoordinator(container: container, settingsCoordinator: settings)
+        _journeyCoordinator = coordinator
         return coordinator
     }
     
-    func favoritesCoordinator(container: AppContainer) -> FavoritesCoordinator {
-        if let existing = _favoritesCoordinator { return existing }
-        let coordinator = FavoritesCoordinator(container: container)
-        _favoritesCoordinator = coordinator
-        return coordinator
-    }
-    
-    func settingsCoordinator(container: AppContainer) -> SettingsCoordinator {
+    private func settingsCoordinator(container: AppContainer) -> SettingsCoordinator {
         if let existing = _settingsCoordinator { return existing }
         let coordinator = SettingsCoordinator(container: container)
         _settingsCoordinator = coordinator

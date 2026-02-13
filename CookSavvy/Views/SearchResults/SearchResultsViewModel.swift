@@ -22,7 +22,7 @@ final class SearchResultsViewModel: ObservableObject {
     private let databaseInitService: DatabaseInitializationService
     private let userDataService: UserDataService
     private let subscriptionService: SubscriptionServiceProtocol
-    private weak var coordinator: IngredientsCoordinator?
+    private weak var coordinator: DiscoverCoordinator?
 
     deinit {
         // TODO: Fix the deinit of the view model
@@ -36,7 +36,7 @@ final class SearchResultsViewModel: ObservableObject {
         databaseInitService: DatabaseInitializationService,
         userDataService: UserDataService,
         subscriptionService: SubscriptionServiceProtocol,
-        coordinator: IngredientsCoordinator?
+        coordinator: DiscoverCoordinator?
     ) {
         self.selectedIngredients = selectedIngredients
         self.recipeService = recipeService
