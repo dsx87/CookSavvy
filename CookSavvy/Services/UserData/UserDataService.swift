@@ -133,6 +133,89 @@ final class UserDataService {
         try dbInterface.recordSearch(ingredients: ingredients)
     }
 
+    // MARK: - Cooking Sessions
+
+    func markAsCooked(recipe: Recipe, duration: TimeInterval? = nil) async throws {
+        guard let recipeId = try getRecipeId(byTitle: recipe.title) else {
+            throw UserDataServiceError.recipeNotFound
+        }
+        try dbInterface.recordCookingSession(recipeId: recipeId, date: Date(), duration: duration)
+    }
+
+    func getCookingSessions(limit: Int = 50) async throws -> [CookingSession] {
+        return try dbInterface.getCookingSessions(limit: limit)
+    }
+
+    func getWeekCookingDates() async throws -> [Date] {
+        let calendar = Calendar.current
+        let now = Date()
+        guard let weekStart = calendar.dateInterval(of: .weekOfYear, for: now)?.start else {
+            return []
+        }
+        let weekEnd = calendar.date(byAdding: .day, value: 7, to: weekStart) ?? now
+        return try dbInterface.getCookingSessionDates(from: weekStart, to: weekEnd)
+    }
+
+    func currentStreak() async throws -> Int {
+        let calendar = Calendar.current
+        let now = Date()
+        let lookbackStart = calendar.date(byAdding: .day, value: -365, to: now) ?? now
+        let dates = try dbInterface.getCookingSessionDates(from: lookbackStart, to: now)
+
+        let uniqueDays = Set(dates.map { calendar.startOfDay(for: $0) }).sorted(by: >)
+        guard !uniqueDays.isEmpty else { return 0 }
+
+        var streak = 0
+        var expectedDay = calendar.startOfDay(for: now)
+
+        if uniqueDays.first != expectedDay {
+            expectedDay = calendar.date(byAdding: .day, value: -1, to: expectedDay)!
+        }
+
+        for day in uniqueDays {
+            if day == expectedDay {
+                streak += 1
+                expectedDay = calendar.date(byAdding: .day, value: -1, to: expectedDay)!
+            } else if day < expectedDay {
+                break
+            }
+        }
+        return streak
+    }
+
+    func totalCookingTime() async throws -> TimeInterval {
+        return try dbInterface.getTotalCookingDuration()
+    }
+
+    func recipesCooked() async throws -> Int {
+        return try dbInterface.getCookingSessionCount()
+    }
+
+    // MARK: - User-Created Recipes
+
+    func getUserRecipes() async throws -> [Recipe] {
+        return try dbInterface.getUserCreatedRecipes()
+    }
+
+    func getUserRecipeCount() async throws -> Int {
+        return try dbInterface.getUserCreatedRecipeCount()
+    }
+
+    func saveUserRecipe(_ recipe: Recipe) async throws {
+        try dbInterface.insertUserRecipe(recipe)
+    }
+
+    func updateUserRecipe(_ recipe: Recipe) async throws {
+        try dbInterface.updateUserRecipe(recipe)
+    }
+
+    func deleteUserRecipe(recipe: Recipe) async throws {
+        guard let recipeId = try getRecipeId(byTitle: recipe.title) else {
+            throw UserDataServiceError.recipeNotFound
+        }
+        try dbInterface.deleteUserRecipe(recipeId: recipeId)
+    }
+
     // MARK: - Data Management
 
     /// Clears all recent data (ingredients, recipes, searches)

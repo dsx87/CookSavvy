@@ -63,6 +63,24 @@ protocol DBInterfaceProtocol {
     func getRecentSearches(limit: Int) throws -> [[Ingredient]]
     func recordSearch(ingredients: [Ingredient]) throws
 
+    // MARK: - Cooking Sessions
+    func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?) throws
+    func getCookingSessions(limit: Int) throws -> [CookingSession]
+    func getCookingSessionDates(from startDate: Date, to endDate: Date) throws -> [Date]
+    func getCookingSessionCount() throws -> Int
+    func getTotalCookingDuration() throws -> TimeInterval
+
+    // MARK: - User-Created Recipes
+    func getUserCreatedRecipes() throws -> [Recipe]
+    func getUserCreatedRecipeCount() throws -> Int
+    func insertUserRecipe(_ recipe: Recipe) throws
+    func updateUserRecipe(_ recipe: Recipe) throws
+    func deleteUserRecipe(recipeId: Int) throws
+
+    // MARK: - Ingredient Queries
+    func getAllIngredients(inGroup foodGroup: String?, limit: Int) throws -> [Ingredient]
+    func getDistinctFoodGroups() throws -> [String]
+
     // MARK: - Database Management
     func clearDatabase() throws
     func clearRecentData() throws

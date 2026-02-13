@@ -73,6 +73,18 @@ final class MockDBInterfaceForIngredients: DBInterfaceProtocol {
     func clearRecentData() throws {}
     func clearFavorites() throws {}
     func getRecipeCount() throws -> Int { 0 }
+    func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?) throws {}
+    func getCookingSessions(limit: Int) throws -> [CookingSession] { [] }
+    func getCookingSessionDates(from startDate: Date, to endDate: Date) throws -> [Date] { [] }
+    func getCookingSessionCount() throws -> Int { 0 }
+    func getTotalCookingDuration() throws -> TimeInterval { 0 }
+    func getUserCreatedRecipes() throws -> [Recipe] { [] }
+    func getUserCreatedRecipeCount() throws -> Int { 0 }
+    func insertUserRecipe(_ recipe: Recipe) throws {}
+    func updateUserRecipe(_ recipe: Recipe) throws {}
+    func deleteUserRecipe(recipeId: Int) throws {}
+    func getAllIngredients(inGroup foodGroup: String?, limit: Int) throws -> [Ingredient] { storedIngredients }
+    func getDistinctFoodGroups() throws -> [String] { [] }
 }
 
 // MARK: - IngredientsService Tests

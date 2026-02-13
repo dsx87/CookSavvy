@@ -31,10 +31,20 @@ final class OfflineRecipeSource: RecipeSourceProtocol {
         }
         
         do {
-            let recipes = try dbInterface.getRecipes(byIngredients: ingredients, offset: 0, limit: 20)
+            var recipes = try dbInterface.getRecipes(byIngredients: ingredients, offset: 0, limit: 20)
             
             if recipes.isEmpty {
                 throw RecipeSourceError.noRecipesFound
+            }
+            
+            let searchNames = Set(ingredients.map { $0.name.lowercased() })
+            for i in recipes.indices {
+                let recipeIngredientNames = recipes[i].cleanedIngredients.map { $0.name.lowercased() }
+                let totalIngredients = max(recipeIngredientNames.count, 1)
+                let matchedCount = recipeIngredientNames.filter { name in
+                    searchNames.contains(where: { name.contains($0) || $0.contains(name) })
+                }.count
+                recipes[i].matchPercentage = Double(matchedCount) / Double(totalIngredients) * 100
             }
             
             return recipes

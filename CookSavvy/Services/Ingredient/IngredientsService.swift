@@ -113,6 +113,50 @@ final class IngredientsService {
         }
     }
     
+    func getAllIngredients(category: IngredientCategory? = nil, limit: Int = 100) async throws -> [Ingredient] {
+        if !isImported {
+            try await ensureIngredientsLoaded()
+        }
+
+        do {
+            if let category {
+                let groups = try dbInterface.getDistinctFoodGroups()
+                let matchingGroups = groups.filter { group in
+                    let testIngredient = Ingredient(name: "", description: nil, pictureFileName: nil, foodGroup: group, foodSubgroup: nil)
+                    return testIngredient.category == category
+                }
+                var results: [Ingredient] = []
+                for group in matchingGroups {
+                    let batch = try dbInterface.getAllIngredients(inGroup: group, limit: limit - results.count)
+                    results.append(contentsOf: batch)
+                    if results.count >= limit { break }
+                }
+                return Array(results.prefix(limit))
+            } else {
+                return try dbInterface.getAllIngredients(inGroup: nil, limit: limit)
+            }
+        } catch {
+            throw IngredientsServiceError.searchFailed(error)
+        }
+    }
+
+    func getCategories() async throws -> [IngredientCategory] {
+        if !isImported {
+            try await ensureIngredientsLoaded()
+        }
+
+        do {
+            let groups = try dbInterface.getDistinctFoodGroups()
+            let categories = Set(groups.map { group -> IngredientCategory in
+                let testIngredient = Ingredient(name: "", description: nil, pictureFileName: nil, foodGroup: group, foodSubgroup: nil)
+                return testIngredient.category
+            })
+            return IngredientCategory.allCases.filter { categories.contains($0) }
+        } catch {
+            throw IngredientsServiceError.databaseError(error)
+        }
+    }
+
     /// Forces a re-import of ingredients from the JSON file
     /// - Throws: IngredientsServiceError if import fails
     func forceReimport() async throws {

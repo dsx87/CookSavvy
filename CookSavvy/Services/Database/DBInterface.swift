@@ -31,6 +31,8 @@ final class DBInterface: DBInterfaceProtocol {
     private var recipeCache: [String: Recipe] = [:]
     private let maxRecipeCacheSize = 100
 
+    private static let recipeColumns = "r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.cleaned_ingredients_json, r.additional_info_json, r.source, r.tagline, r.user_rating, r.api_rating, r.author, r.is_user_created, r.emoji, r.cuisine"
+
     // MARK: - Init
     init() {
         let writer: DatabaseWriter
@@ -122,7 +124,14 @@ final class DBInterface: DBInterfaceProtocol {
                     ingredients_json TEXT NOT NULL,
                     cleaned_ingredients_json TEXT NOT NULL,
                     additional_info_json TEXT NOT NULL,
-                    source TEXT
+                    source TEXT,
+                    tagline TEXT,
+                    user_rating REAL,
+                    api_rating REAL,
+                    author TEXT,
+                    is_user_created INTEGER DEFAULT 0,
+                    emoji TEXT,
+                    cuisine TEXT
                 );
                 """)
             
@@ -208,15 +217,17 @@ final class DBInterface: DBInterfaceProtocol {
 
             try db.execute(sql: "CREATE INDEX IF NOT EXISTS idx_recent_searches_date ON recent_searches(search_date DESC);")
 
-            // Migration: add source column if missing (existing DBs)
-            let columns = try Row.fetchAll(db, sql: "PRAGMA table_info(recipes);")
-            let columnNames = columns.map { row -> String in row["name"] }
-            if !columnNames.contains("source") {
-                try db.execute(sql: "ALTER TABLE recipes ADD COLUMN source TEXT;")
-            }
-            
-            // Migration: backfill NULL sources as Offline (CSV-imported recipes)
-            try db.execute(sql: "UPDATE recipes SET source = 'Offline' WHERE source IS NULL;")
+            // 8. Cooking Sessions
+            try db.execute(sql: """
+                CREATE TABLE IF NOT EXISTS cooking_sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    recipe_id INTEGER NOT NULL,
+                    cooked_at INTEGER NOT NULL,
+                    duration_seconds INTEGER,
+                    FOREIGN KEY(recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
+                );
+                """)
+            try db.execute(sql: "CREATE INDEX IF NOT EXISTS idx_cooking_sessions_date ON cooking_sessions(cooked_at DESC);")
         }
     }
 
@@ -287,7 +298,7 @@ final class DBInterface: DBInterfaceProtocol {
         let likeValues = ingredientNames.map { "%\($0)%" } // Add wildcards for partial matching
         
         let sql = """
-            SELECT DISTINCT r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.cleaned_ingredients_json, r.additional_info_json, r.source
+            SELECT DISTINCT \(Self.recipeColumns)
             FROM recipes r
             INNER JOIN recipe_ingredients ri ON ri.recipe_id = r.id
             WHERE \(likeConditions)
@@ -308,37 +319,12 @@ final class DBInterface: DBInterfaceProtocol {
         for row in rows {
             let title: String = row["title"]
             
-            // Check cache first
             if let cachedRecipe = recipeCache[title] {
                 results.append(cachedRecipe)
                 continue
             }
             
-            let image: String = row["image"]
-            let instructionsJSON: String = row["instructions_json"]
-            let ingredientsJSON: String = row["ingredients_json"]
-            let cleanedIngredientsJSON: String = row["cleaned_ingredients_json"]
-            let additionalJSON: String = row["additional_info_json"]
-
-            let instructions = try decoder.decode([String].self, from: Data(instructionsJSON.utf8))
-            let ingredients = try decoder.decode([Ingredient].self, from: Data(ingredientsJSON.utf8))
-            let cleanedIngredients = try decoder.decode([Ingredient].self, from: Data(cleanedIngredientsJSON.utf8))
-            let additionalInfo = try decoder.decode(Recipe.AdditionalInfo.self, from: Data(additionalJSON.utf8))
-
-            let sourceRaw: String? = row["source"]
-            let source = sourceRaw.flatMap { RecipeSourceType(rawValue: $0) }
-
-            let recipe = Recipe(
-                title: title,
-                ingredients: ingredients,
-                instructions: instructions,
-                image: image,
-                cleanedIngredients: cleanedIngredients,
-                additionalInfo: additionalInfo,
-                source: source
-            )
-            
-            // Cache the recipe
+            let recipe = try decodeRecipe(from: row)
             cacheRecipe(recipe)
             results.append(recipe)
         }
@@ -390,8 +376,8 @@ final class DBInterface: DBInterfaceProtocol {
                 let additionalJSON = try String(data: encoder.encode(r.additionalInfo), encoding: .utf8) ?? "{}"
 
                 try db.execute(
-                    sql: "INSERT INTO recipes(title, image, instructions_json, ingredients_json, cleaned_ingredients_json, additional_info_json, source) VALUES (?, ?, ?, ?, ?, ?, ?);",
-                    arguments: [r.title, r.image, instructionsJSON, ingredientsJSON, cleanedIngredientsJSON, additionalJSON, r.source?.rawValue]
+                    sql: "INSERT INTO recipes(title, image, instructions_json, ingredients_json, cleaned_ingredients_json, additional_info_json, source, tagline, user_rating, api_rating, author, is_user_created, emoji, cuisine) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+                    arguments: [r.title, r.image, instructionsJSON, ingredientsJSON, cleanedIngredientsJSON, additionalJSON, r.source?.rawValue, r.tagline, r.userRating, r.apiRating, r.author, r.isUserCreated ? 1 : 0, r.emoji, r.cuisine]
                 )
 
                 let recipeId = db.lastInsertedRowID
@@ -423,14 +409,13 @@ final class DBInterface: DBInterfaceProtocol {
     func clearDatabase() throws {
         try dbWriter.write { db in
             try db.execute(sql: "DELETE FROM recent_searches;")
+            try db.execute(sql: "DELETE FROM cooking_sessions;")
             try db.execute(sql: "DELETE FROM favorite_recipes;")
             try db.execute(sql: "DELETE FROM recent_recipes;")
             try db.execute(sql: "DELETE FROM recent_ingredients;")
             try db.execute(sql: "DELETE FROM recipe_ingredients;")
             try db.execute(sql: "DELETE FROM recipes;")
             try db.execute(sql: "DELETE FROM ingredients;")
-            // FTS tables are cleared automatically via triggers or we can explicitly clear them if needed,
-            // but DELETE FROM main_table triggers DELETE on FTS.
 
             testHelpers?.clearVariants()
             recipeCache.removeAll()
@@ -529,7 +514,7 @@ final class DBInterface: DBInterfaceProtocol {
     func getRecentRecipes(limit: Int) throws -> [Recipe] {
         return try dbWriter.read { db in
             let sql = """
-                SELECT r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.cleaned_ingredients_json, r.additional_info_json, r.source
+                SELECT \(Self.recipeColumns)
                 FROM recent_recipes rr
                 INNER JOIN recipes r ON r.id = rr.recipe_id
                 ORDER BY rr.last_viewed_at DESC
@@ -560,7 +545,7 @@ final class DBInterface: DBInterfaceProtocol {
     func getFavoriteRecipes() throws -> [Recipe] {
         return try dbWriter.read { db in
             let sql = """
-                SELECT r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.cleaned_ingredients_json, r.additional_info_json, r.source
+                SELECT \(Self.recipeColumns)
                 FROM favorite_recipes fr
                 INNER JOIN recipes r ON r.id = fr.recipe_id
                 ORDER BY fr.added_at DESC;
@@ -650,6 +635,193 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    // MARK: - Cooking Sessions
+
+    func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?) throws {
+        let timestamp = Int(date.timeIntervalSince1970)
+        let durationSeconds: Int? = duration.map { Int($0) }
+        try dbWriter.write { db in
+            try db.execute(
+                sql: "INSERT INTO cooking_sessions(recipe_id, cooked_at, duration_seconds) VALUES (?, ?, ?);",
+                arguments: [recipeId, timestamp, durationSeconds]
+            )
+        }
+    }
+
+    func getCookingSessions(limit: Int) throws -> [CookingSession] {
+        return try dbWriter.read { db in
+            let sql = """
+                SELECT id, recipe_id, cooked_at, duration_seconds
+                FROM cooking_sessions
+                ORDER BY cooked_at DESC
+                LIMIT ?;
+            """
+            return try Row.fetchAll(db, sql: sql, arguments: [limit]).map { row in
+                let id: Int = row["id"]
+                let recipeId: Int = row["recipe_id"]
+                let cookedAtTimestamp: Int = row["cooked_at"]
+                let durationSeconds: Int? = row["duration_seconds"]
+                return CookingSession(
+                    id: id,
+                    recipeId: recipeId,
+                    cookedAt: Date(timeIntervalSince1970: TimeInterval(cookedAtTimestamp)),
+                    durationSeconds: durationSeconds.map { TimeInterval($0) }
+                )
+            }
+        }
+    }
+
+    func getCookingSessionDates(from startDate: Date, to endDate: Date) throws -> [Date] {
+        let startTimestamp = Int(startDate.timeIntervalSince1970)
+        let endTimestamp = Int(endDate.timeIntervalSince1970)
+        return try dbWriter.read { db in
+            let sql = """
+                SELECT cooked_at FROM cooking_sessions
+                WHERE cooked_at >= ? AND cooked_at <= ?
+                ORDER BY cooked_at ASC;
+            """
+            return try Row.fetchAll(db, sql: sql, arguments: [startTimestamp, endTimestamp]).map { row in
+                let timestamp: Int = row["cooked_at"]
+                return Date(timeIntervalSince1970: TimeInterval(timestamp))
+            }
+        }
+    }
+
+    func getCookingSessionCount() throws -> Int {
+        return try dbWriter.read { db in
+            try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM cooking_sessions;") ?? 0
+        }
+    }
+
+    func getTotalCookingDuration() throws -> TimeInterval {
+        return try dbWriter.read { db in
+            let total = try Int.fetchOne(db, sql: "SELECT COALESCE(SUM(duration_seconds), 0) FROM cooking_sessions;") ?? 0
+            return TimeInterval(total)
+        }
+    }
+
+    // MARK: - User-Created Recipes
+
+    func getUserCreatedRecipes() throws -> [Recipe] {
+        return try dbWriter.read { db in
+            let sql = """
+                SELECT \(Self.recipeColumns)
+                FROM recipes r
+                WHERE r.is_user_created = 1
+                ORDER BY r.id DESC;
+            """
+            return try Row.fetchAll(db, sql: sql).compactMap { row in
+                try? decodeRecipe(from: row)
+            }
+        }
+    }
+
+    func getUserCreatedRecipeCount() throws -> Int {
+        return try dbWriter.read { db in
+            try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM recipes WHERE is_user_created = 1;") ?? 0
+        }
+    }
+
+    func insertUserRecipe(_ recipe: Recipe) throws {
+        var userRecipe = recipe
+        userRecipe.isUserCreated = true
+        try insertRecipes([userRecipe])
+    }
+
+    func updateUserRecipe(_ recipe: Recipe) throws {
+        guard let recipeId = try getRecipeId(byTitle: recipe.title) else {
+            throw DatabaseError.recipeNotFound(recipe.title)
+        }
+        let instructionsJSON = try String(data: encoder.encode(recipe.instructions), encoding: .utf8) ?? "[]"
+        let ingredientsJSON = try String(data: encoder.encode(recipe.ingredients), encoding: .utf8) ?? "[]"
+        let cleanedIngredientsJSON = try String(data: encoder.encode(recipe.cleanedIngredients), encoding: .utf8) ?? "[]"
+        let additionalJSON = try String(data: encoder.encode(recipe.additionalInfo), encoding: .utf8) ?? "{}"
+
+        try dbWriter.write { db in
+            let sql = """
+                UPDATE recipes SET
+                    title = ?, image = ?, instructions_json = ?, ingredients_json = ?,
+                    cleaned_ingredients_json = ?, additional_info_json = ?, source = ?,
+                    tagline = ?, user_rating = ?, api_rating = ?, author = ?,
+                    emoji = ?, cuisine = ?
+                WHERE id = ?;
+            """
+            try db.execute(sql: sql, arguments: [
+                recipe.title, recipe.image, instructionsJSON, ingredientsJSON,
+                cleanedIngredientsJSON, additionalJSON, recipe.source?.rawValue,
+                recipe.tagline, recipe.userRating, recipe.apiRating, recipe.author,
+                recipe.emoji, recipe.cuisine, recipeId
+            ])
+
+            try db.execute(sql: "DELETE FROM recipe_ingredients WHERE recipe_id = ?;", arguments: [recipeId])
+            var seen: Set<String> = []
+            for ing in recipe.ingredients {
+                let name = ing.name
+                if seen.contains(name) { continue }
+                seen.insert(name)
+                try db.execute(
+                    sql: "INSERT INTO recipe_ingredients(recipe_id, ingredient_name) VALUES(?, ?);",
+                    arguments: [recipeId, name]
+                )
+            }
+        }
+        recipeCache.removeValue(forKey: recipe.title)
+    }
+
+    func deleteUserRecipe(recipeId: Int) throws {
+        try dbWriter.write { db in
+            try db.execute(
+                sql: "DELETE FROM recipes WHERE id = ? AND is_user_created = 1;",
+                arguments: [recipeId]
+            )
+        }
+    }
+
+    // MARK: - Ingredient Queries
+
+    func getAllIngredients(inGroup foodGroup: String? = nil, limit: Int = 100) throws -> [Ingredient] {
+        return try dbWriter.read { db in
+            let sql: String
+            let arguments: StatementArguments
+            if let foodGroup {
+                sql = """
+                    SELECT name, description, picture_file_name, food_group, food_subgroup
+                    FROM ingredients
+                    WHERE food_group = ?
+                    ORDER BY name ASC
+                    LIMIT ?;
+                """
+                arguments = [foodGroup, limit]
+            } else {
+                sql = """
+                    SELECT name, description, picture_file_name, food_group, food_subgroup
+                    FROM ingredients
+                    ORDER BY name ASC
+                    LIMIT ?;
+                """
+                arguments = [limit]
+            }
+            return try Row.fetchAll(db, sql: sql, arguments: arguments).map { row in
+                Ingredient(
+                    name: row["name"],
+                    description: row["description"],
+                    pictureFileName: row["picture_file_name"],
+                    foodGroup: row["food_group"],
+                    foodSubgroup: row["food_subgroup"]
+                )
+            }
+        }
+    }
+
+    func getDistinctFoodGroups() throws -> [String] {
+        return try dbWriter.read { db in
+            try String.fetchAll(
+                db,
+                sql: "SELECT DISTINCT food_group FROM ingredients WHERE food_group IS NOT NULL ORDER BY food_group ASC;"
+            )
+        }
+    }
+
     // MARK: - Internal Helpers (used by services)
 
     /// Gets the database ID for a recipe by its title
@@ -699,6 +871,14 @@ final class DBInterface: DBInterfaceProtocol {
         let cleanedIngredients = try decoder.decode([Ingredient].self, from: Data(cleanedIngredientsJSON.utf8))
         let additionalInfo = try decoder.decode(Recipe.AdditionalInfo.self, from: Data(additionalJSON.utf8))
 
+        let tagline: String? = row["tagline"]
+        let userRating: Double? = row["user_rating"]
+        let apiRating: Double? = row["api_rating"]
+        let author: String? = row["author"]
+        let isUserCreated: Bool = (row["is_user_created"] as Int?) == 1
+        let emoji: String? = row["emoji"]
+        let cuisine: String? = row["cuisine"]
+
         return Recipe(
             title: title,
             ingredients: ingredients,
@@ -706,7 +886,14 @@ final class DBInterface: DBInterfaceProtocol {
             image: image,
             cleanedIngredients: cleanedIngredients,
             additionalInfo: additionalInfo,
-            source: source
+            source: source,
+            tagline: tagline,
+            userRating: userRating,
+            apiRating: apiRating,
+            author: author,
+            isUserCreated: isUserCreated,
+            emoji: emoji,
+            cuisine: cuisine
         )
     }
 
