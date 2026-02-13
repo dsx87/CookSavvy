@@ -7,7 +7,15 @@
 
 import Foundation
 
-import Foundation
+enum IngredientCategory: String, CaseIterable {
+    case proteins
+    case veggies
+    case dairy
+    case grains
+    case fruits
+    case spices
+    case other
+}
 
 struct Ingredient: Codable, Identifiable {
     
@@ -19,6 +27,7 @@ struct Ingredient: Codable, Identifiable {
     let pictureFileName: String?
     let foodGroup: String?
     let foodSubgroup: String?
+    var emoji: String?
     
     enum CodingKeys: String, CodingKey {
         case name
@@ -28,12 +37,33 @@ struct Ingredient: Codable, Identifiable {
         case foodSubgroup = "food_subgroup"
     }
     
+    var category: IngredientCategory {
+        guard let group = foodGroup?.lowercased(), !group.isEmpty else { return .other }
+        switch group {
+        case let g where g.contains("protein") || g.contains("meat") || g.contains("poultry") || g.contains("fish") || g.contains("seafood") || g.contains("egg"):
+            return .proteins
+        case let g where g.contains("vegetable") || g.contains("legume"):
+            return .veggies
+        case let g where g.contains("dairy") || g.contains("milk") || g.contains("cheese"):
+            return .dairy
+        case let g where g.contains("grain") || g.contains("cereal") || g.contains("bread") || g.contains("pasta") || g.contains("rice"):
+            return .grains
+        case let g where g.contains("fruit") || g.contains("berry") || g.contains("citrus"):
+            return .fruits
+        case let g where g.contains("spice") || g.contains("herb") || g.contains("seasoning") || g.contains("condiment"):
+            return .spices
+        default:
+            return .other
+        }
+    }
+    
     init(name: String) {
         self.name = name
-        self.foodGroup = ""
-        self.description = ""
-        self.pictureFileName = ""
-        self.foodSubgroup = ""
+        self.foodGroup = nil
+        self.description = nil
+        self.pictureFileName = nil
+        self.foodSubgroup = nil
+        self.emoji = nil
     }
 }
 
@@ -52,12 +82,13 @@ extension Ingredient: ExpressibleByStringLiteral {
 
 // MARK: - Full initializer for richer mocks
 extension Ingredient {
-    init(name: String, description: String?, pictureFileName: String?, foodGroup: String?, foodSubgroup: String?) {
+    init(name: String, description: String?, pictureFileName: String?, foodGroup: String?, foodSubgroup: String?, emoji: String? = nil) {
         self.name = name
         self.description = description
         self.pictureFileName = pictureFileName
         self.foodGroup = foodGroup
         self.foodSubgroup = foodSubgroup
+        self.emoji = emoji
     }
 }
 

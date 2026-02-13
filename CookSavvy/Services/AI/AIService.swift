@@ -149,7 +149,7 @@ final class AIService: AIServiceProtocol {
                 Recipe(
                     title: recipeData.title,
                     ingredients: recipeData.ingredients.map { Ingredient(name: $0) },
-                    instructions: recipeData.instructions,
+                    instructions: recipeData.instructions.map(Recipe.Step.init(plainText:)),
                     image: "",
                     cleanedIngredients: recipeData.ingredients.map { Ingredient(name: $0) },
                     additionalInfo: Recipe.AdditionalInfo(

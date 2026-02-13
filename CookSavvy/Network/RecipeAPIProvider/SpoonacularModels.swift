@@ -48,10 +48,10 @@ enum SpoonacularMapper {
             Ingredient(name: ext.name)
         }
 
-        let instructions: [String] = (sr.analyzedInstructions ?? [])
+        let instructions: [Recipe.Step] = (sr.analyzedInstructions ?? [])
             .flatMap { $0.steps ?? [] }
             .sorted { $0.number < $1.number }
-            .map { $0.step }
+            .map { Recipe.Step(text: $0.step) }
 
         let imageURL = sr.image ?? ""
 

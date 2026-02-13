@@ -36,50 +36,7 @@ private enum DS2 {
     static let r32: CGFloat = 32
 }
 
-// Neon glow modifier
-private struct NeonGlow: ViewModifier {
-    let color: Color
-    let radius: CGFloat
-
-    func body(content: Content) -> some View {
-        content
-            .shadow(color: color.opacity(0.6), radius: radius, x: 0, y: 0)
-            .shadow(color: color.opacity(0.3), radius: radius * 2, x: 0, y: 4)
-    }
-}
-
-// Frosted glass card
-private struct FrostCard: ViewModifier {
-    var cornerRadius: CGFloat = DS2.r20
-
-    func body(content: Content) -> some View {
-        content
-            .background(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(DS2.Colors.card)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .strokeBorder(
-                                LinearGradient(
-                                    colors: [Color.white.opacity(0.12), Color.white.opacity(0.03)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 0.5
-                            )
-                    )
-            )
-    }
-}
-
-extension View {
-    fileprivate func neonGlow(_ color: Color, radius: CGFloat = 8) -> some View {
-        modifier(NeonGlow(color: color, radius: radius))
-    }
-    fileprivate func frostCard(cornerRadius: CGFloat = DS2.r20) -> some View {
-        modifier(FrostCard(cornerRadius: cornerRadius))
-    }
-}
+// neonGlow / frostCard modifiers now live in Theme/ViewModifiers.swift
 
 // ════════════════════════════════════════════════════════════
 // MARK: - Mock Data V2
@@ -2071,64 +2028,76 @@ fileprivate struct V2CreateRecipeView: View {
                 .foregroundStyle(DS2.Colors.text3)
                 .tracking(1.5)
 
-            VStack(spacing: 12) {
-                ForEach(steps.indices, id: \.self) { i in
-                    HStack(alignment: .top, spacing: 10) {
-                        // Step number
-                        Text("\(i + 1)")
-                            .font(.system(size: 13, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
-                            .frame(width: 28, height: 28)
-                            .background(
-                                LinearGradient(colors: [DS2.Colors.accent, DS2.Colors.rose],
-                                               startPoint: .topLeading, endPoint: .bottomTrailing),
-                                in: Circle()
-                            )
-                            .padding(.top, 10)
+            step3StepsList
+            step3AddStepButton
+        }
+    }
 
-                        TextField("Step \(i + 1)", text: $steps[i], axis: .vertical)
-                            .font(.system(size: 15, design: .rounded))
-                            .foregroundStyle(DS2.Colors.text1)
-                            .lineLimit(3...6)
-                            .padding(14)
-                            .background(DS2.Colors.surface, in: RoundedRectangle(cornerRadius: DS2.r12, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: DS2.r12, style: .continuous)
-                                    .strokeBorder(DS2.Colors.divider, lineWidth: 1)
-                            )
+    @ViewBuilder
+    private var step3StepsList: some View {
+        VStack(spacing: 12) {
+            ForEach(Array(steps.indices), id: \.self) { (i: Int) in
+                step3StepRow(index: i)
+            }
+        }
+    }
 
-                        if steps.count > 1 {
-                            Button {
-                                withAnimation(.spring(response: 0.3)) {
-                                    steps.remove(at: i)
-                                }
-                            } label: {
-                                Image(systemName: "trash")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(DS2.Colors.text3)
-                            }
-                            .padding(.top, 14)
-                        }
+    private func step3StepRow(index i: Int) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text("\(i + 1)")
+                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .frame(width: 28, height: 28)
+                .background(
+                    LinearGradient(colors: [DS2.Colors.accent, DS2.Colors.rose],
+                                   startPoint: .topLeading, endPoint: .bottomTrailing),
+                    in: Circle()
+                )
+                .padding(.top, 10)
+
+            TextField("Step \(i + 1)", text: $steps[i], axis: .vertical)
+                .font(.system(size: 15, design: .rounded))
+                .foregroundStyle(DS2.Colors.text1)
+                .lineLimit(3...6)
+                .padding(14)
+                .background(DS2.Colors.surface, in: RoundedRectangle(cornerRadius: DS2.r12, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: DS2.r12, style: .continuous)
+                        .strokeBorder(DS2.Colors.divider, lineWidth: 1)
+                )
+
+            if steps.count > 1 {
+                Button {
+                    let idx = i
+                    withAnimation(.spring(response: 0.3)) {
+                        _ = steps.remove(at: idx)
                     }
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.system(size: 14))
+                        .foregroundStyle(DS2.Colors.text3)
                 }
+                .padding(.top, 14)
             }
+        }
+    }
 
-            Button {
-                withAnimation(.spring(response: 0.3)) {
-                    steps.append("")
-                }
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 18))
-                    Text("Add Step")
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                }
-                .foregroundStyle(DS2.Colors.accent)
-                .padding(.vertical, 12)
-                .frame(maxWidth: .infinity)
-                .background(DS2.Colors.accentSoft, in: RoundedRectangle(cornerRadius: DS2.r12, style: .continuous))
+    private var step3AddStepButton: some View {
+        Button {
+            withAnimation(.spring(response: 0.3)) {
+                steps.append("")
             }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 18))
+                Text("Add Step")
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+            }
+            .foregroundStyle(DS2.Colors.accent)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+            .background(DS2.Colors.accentSoft, in: RoundedRectangle(cornerRadius: DS2.r12, style: .continuous))
         }
     }
 

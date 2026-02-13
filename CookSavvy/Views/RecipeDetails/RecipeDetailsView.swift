@@ -44,7 +44,7 @@ struct RecipeDetailsView: View {
                     )
                     RecipeDetailsList(
                         title: Strings.RecipeDetails.instructionsTitle,
-                        items: viewModel.recipe.instructions.map { UI.RecipeDetails.bulletPrefix + $0 }
+                        items: viewModel.recipe.instructions.map { UI.RecipeDetails.bulletPrefix + $0.text }
                     )
                 }
                 .padding(.horizontal)

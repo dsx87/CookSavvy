@@ -688,7 +688,13 @@ final class DBInterface: DBInterfaceProtocol {
         let sourceRaw: String? = row["source"]
         let source = sourceRaw.flatMap { RecipeSourceType(rawValue: $0) }
 
-        let instructions = try decoder.decode([String].self, from: Data(instructionsJSON.utf8))
+        let instructions: [Recipe.Step]
+        do {
+            instructions = try decoder.decode([Recipe.Step].self, from: Data(instructionsJSON.utf8))
+        } catch {
+            let strings = try decoder.decode([String].self, from: Data(instructionsJSON.utf8))
+            instructions = strings.map(Recipe.Step.init(plainText:))
+        }
         let ingredients = try decoder.decode([Ingredient].self, from: Data(ingredientsJSON.utf8))
         let cleanedIngredients = try decoder.decode([Ingredient].self, from: Data(cleanedIngredientsJSON.utf8))
         let additionalInfo = try decoder.decode(Recipe.AdditionalInfo.self, from: Data(additionalJSON.utf8))
