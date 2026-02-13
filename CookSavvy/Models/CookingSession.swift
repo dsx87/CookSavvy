@@ -3,6 +3,7 @@ import Foundation
 struct CookingSession: Identifiable, Hashable {
     let id: Int
     let recipeId: Int
+    let recipeTitle: String
     let cookedAt: Date
     let durationSeconds: TimeInterval?
 

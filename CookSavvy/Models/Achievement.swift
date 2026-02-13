@@ -5,8 +5,24 @@ struct Achievement: Identifiable, Hashable {
     let title: String
     let description: String
     let emoji: String
-    let isUnlocked: Bool
-    let unlockedAt: Date?
+    let colorHex: String
+    let maxProgress: Int
+    var currentProgress: Int
+    var isUnlocked: Bool
+    var unlockedAt: Date?
+
+    static func == (lhs: Achievement, rhs: Achievement) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+
+    var progressFraction: Double {
+        guard maxProgress > 0 else { return 0 }
+        return min(Double(currentProgress) / Double(maxProgress), 1.0)
+    }
 
     static let allAchievements: [Achievement] = [
         Achievement(
@@ -14,40 +30,70 @@ struct Achievement: Identifiable, Hashable {
             title: "First Cook",
             description: "Cook your first recipe",
             emoji: "👨‍🍳",
-            isUnlocked: false,
-            unlockedAt: nil
+            colorHex: "#FF9500",
+            maxProgress: 1,
+            currentProgress: 0,
+            isUnlocked: false
         ),
         Achievement(
             id: "week_streak",
             title: "Week Warrior",
             description: "Cook 7 days in a row",
             emoji: "🔥",
-            isUnlocked: false,
-            unlockedAt: nil
+            colorHex: "#FF3B30",
+            maxProgress: 7,
+            currentProgress: 0,
+            isUnlocked: false
         ),
         Achievement(
             id: "recipe_creator",
             title: "Recipe Creator",
             description: "Create your first recipe",
             emoji: "📝",
-            isUnlocked: false,
-            unlockedAt: nil
+            colorHex: "#007AFF",
+            maxProgress: 1,
+            currentProgress: 0,
+            isUnlocked: false
         ),
         Achievement(
             id: "ten_recipes",
             title: "Seasoned Chef",
             description: "Cook 10 different recipes",
             emoji: "⭐",
-            isUnlocked: false,
-            unlockedAt: nil
+            colorHex: "#FFCC00",
+            maxProgress: 10,
+            currentProgress: 0,
+            isUnlocked: false
         ),
         Achievement(
             id: "five_created",
             title: "Cookbook Author",
             description: "Create 5 recipes",
             emoji: "📚",
-            isUnlocked: false,
-            unlockedAt: nil
+            colorHex: "#AF52DE",
+            maxProgress: 5,
+            currentProgress: 0,
+            isUnlocked: false
+        ),
+        Achievement(
+            id: "fifty_recipes",
+            title: "Master Chef",
+            description: "Cook 50 different recipes",
+            emoji: "👑",
+            colorHex: "#FFD14D",
+            maxProgress: 50,
+            currentProgress: 0,
+            isUnlocked: false
+        ),
+        Achievement(
+            id: "hour_cooking",
+            title: "Dedicated Chef",
+            description: "Spend 10 hours cooking",
+            emoji: "⏰",
+            colorHex: "#00C7BE",
+            maxProgress: 10,
+            currentProgress: 0,
+            isUnlocked: false
         ),
     ]
 }

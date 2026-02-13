@@ -40,8 +40,16 @@ final class JourneyCoordinator: ObservableObject {
         )
     }
     
+    func makeCreateRecipeViewModel() -> CreateRecipeViewModel {
+        CreateRecipeViewModel(
+            userDataService: container.userDataService,
+            onDismiss: { [weak self] in
+                self?.dismissSheet()
+            }
+        )
+    }
+
     // TODO: makeJourneyViewModel() — add when JourneyViewModel is created
-    // TODO: makeCreateRecipeViewModel() — add when CreateRecipeViewModel is created
     // TODO: makeRecipeListViewModel(title:recipes:) — add when RecipeListViewModel is created
     
     // MARK: - Navigation

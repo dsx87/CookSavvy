@@ -651,19 +651,22 @@ final class DBInterface: DBInterfaceProtocol {
     func getCookingSessions(limit: Int) throws -> [CookingSession] {
         return try dbWriter.read { db in
             let sql = """
-                SELECT id, recipe_id, cooked_at, duration_seconds
-                FROM cooking_sessions
-                ORDER BY cooked_at DESC
+                SELECT cs.id, cs.recipe_id, cs.cooked_at, cs.duration_seconds, r.title AS recipe_title
+                FROM cooking_sessions cs
+                LEFT JOIN recipes r ON r.id = cs.recipe_id
+                ORDER BY cs.cooked_at DESC
                 LIMIT ?;
             """
             return try Row.fetchAll(db, sql: sql, arguments: [limit]).map { row in
                 let id: Int = row["id"]
                 let recipeId: Int = row["recipe_id"]
+                let recipeTitle: String = row["recipe_title"] ?? ""
                 let cookedAtTimestamp: Int = row["cooked_at"]
                 let durationSeconds: Int? = row["duration_seconds"]
                 return CookingSession(
                     id: id,
                     recipeId: recipeId,
+                    recipeTitle: recipeTitle,
                     cookedAt: Date(timeIntervalSince1970: TimeInterval(cookedAtTimestamp)),
                     durationSeconds: durationSeconds.map { TimeInterval($0) }
                 )

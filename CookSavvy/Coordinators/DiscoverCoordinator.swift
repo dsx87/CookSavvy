@@ -89,10 +89,18 @@ final class DiscoverCoordinator: ObservableObject {
         )
     }
     
+    func makeCreateRecipeViewModel() -> CreateRecipeViewModel {
+        CreateRecipeViewModel(
+            userDataService: container.userDataService,
+            onDismiss: { [weak self] in
+                self?.dismissSheet()
+            }
+        )
+    }
+
     // TODO: makeDiscoverViewModel() — add when DiscoverViewModel is created
     // TODO: makeRecipeListViewModel(title:recipes:) — add when RecipeListViewModel is created
     // TODO: makeCookModeViewModel(recipe:) — add when CookModeViewModel is created
-    // TODO: makeCreateRecipeViewModel() — add when CreateRecipeViewModel is created
     
     // MARK: - Navigation
     

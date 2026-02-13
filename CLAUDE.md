@@ -22,15 +22,18 @@ A hobby iOS recipe app that suggests recipes based on user-provided ingredients.
 
 | Screen | Description |
 |--------|-------------|
-| **Ingredients Input** (initial) | Text input with autocomplete, camera input (AI recognition on paid tiers), recent/fast ingredients |
-| **Search Results** | Recipe table with name, image, complexity, cook time; header with source info |
+| **Discover** (tab 1) | Main screen: ingredient input, recipe search, recent/saved recipes, mood filter |
+| **Journey** (tab 2) | Stats, achievements, user-created recipes, cooking sessions, settings (gear icon in nav bar) |
+| **Ingredients Input** | Text input with autocomplete, camera input (AI recognition on paid tiers), recent/fast ingredients |
+| **Search Results** | Recipe list with name, image, complexity, cook time, match percentage; source header |
 | **Recipe Details** | Full recipe information with additional info section |
-| **Recent Recipes** | Recently viewed recipes (same layout as search results) |
-| **Favorites** | Bookmarked recipes (same layout as search results) |
-| **Settings** | Subscription plan, usage limits, preferences |
+| **Recipe List** | Reusable list view for recent, saved, user recipes |
+| **Cook Mode** | Step-by-step cooking view with visual timer (full screen) |
+| **Create Recipe** | 5-step wizard: Name & Photo → Ingredients → Steps → Details → Review & Save |
+| **Settings** | Subscription plan, usage limits, preferences (accessed from Journey nav bar) |
 | **Camera** | Camera capture for AI ingredient detection (paid tiers) |
 | **Upgrade** | Subscription upgrade prompt |
-| **Tab Container** | Root tab bar hosting all main screens |
+| **Tab Container** | Root tab bar with 2 tabs: Discover + Journey |
 
 > All screens are subject to extension and modification.
 
@@ -48,7 +51,9 @@ A hobby iOS recipe app that suggests recipes based on user-provided ingredients.
 
 ### Coordinator Hierarchy
 - `AppCoordinator`: Root coordinator managing tab-level coordinators via lazy factory methods
-- Feature coordinators: `IngredientsCoordinator`, `FavoritesCoordinator`, `RecentRecipesCoordinator`, `SettingsCoordinator`
+- Feature coordinators: `DiscoverCoordinator`, `JourneyCoordinator`, `SettingsCoordinator`
+- `DiscoverCoordinator`: Ingredients input, search results, recipe detail, recipe list, cook mode (full screen cover), camera, create recipe, upgrade
+- `JourneyCoordinator`: Journey stats, recipe detail, recipe list, settings, create recipe, upgrade
 - Each coordinator owns its navigation stack and sheet presentations
 - ViewModels hold weak references to coordinators for navigation
 
@@ -101,10 +106,16 @@ A hobby iOS recipe app that suggests recipes based on user-provided ingredients.
 - `Configuration.storekit` — StoreKit testing configuration
 
 ### Theme & Localization
-- **Layout constants** — `UI` struct with nested domain structs (`UI.RecipeCell.imageSize`, `UI.SearchBar.cornerRadius`)
-- **Theme system** — `AppTheme` protocol + `DefaultTheme`, injected via `@Environment(\.appTheme)`; views access colors as `theme.borderAccent`, `theme.backgroundPrimary`, etc.
+- **Layout constants** — `UI` struct with nested domain structs (`UI.RecipeCell.imageSize`, `UI.V2.heroImageHeight`)
+- **Theme system** — `AppTheme` protocol + `LightTheme` / `DarkTheme` + `SystemTheme` helper, injected via `@Environment(\.appTheme)`
+  - V2 color tokens: `bg`, `surface`, `surfaceLight`, `card`, `accent`, `accentSoft`, `mint`, `mintSoft`, `rose`, `roseSoft`, `lavender`, `lavenderSoft`, `sky`, `skySoft`, `gold`, `text1`, `text2`, `text3`, `divider`
+  - Corner radius tokens: `cornerRadiusSmall` (12), `cornerRadiusMedium` (16), `cornerRadiusLarge` (20), `cornerRadiusXL` (24), `cornerRadiusPill` (32)
+  - Legacy aliases: `borderAccent`, `backgroundPrimary`, `backgroundSecondary`, `buttonPrimary`, `backgroundSubtle`
+- **View Modifiers** (`Theme/ViewModifiers.swift`): `.frostCard()`, `.neonGlow(_:radius:)`, `.sectionLabel()`
 - **Strings** — `Strings` enum with nested screen enums, using `String(localized:defaultValue:)` for localization; accessed as `Strings.Settings.navigationTitle`
+  - V2 enums: `Discover`, `Journey`, `CookMode`, `CreateRecipe`, `RecipeList`, `MoodFilter`
 - **Icons** — `Icons` enum with nested screen enums for SF Symbol names; accessed as `Icons.Settings.trash`
+  - V2 enums: `Discover`, `Journey`, `CookMode`, `CreateRecipe`, `Mood`
 - **String Catalog** — `Localizable.xcstrings` (Xcode 15+), auto-populated from `String(localized:)` calls
 - Adding a new theme: create a struct conforming to `AppTheme` and inject at app root
 - Adding a new language: add translations in the String Catalog via Xcode
@@ -131,8 +142,11 @@ CookSavvy/
 │   ├── AppContainer.swift            — DI container (singleton)
 │   └── APIKeyConfiguration.swift     — API key reading from plist
 ├── Models/
-│   ├── Recipe.swift
-│   ├── Ingredient.swift
+│   ├── Recipe.swift                 — Recipe + Recipe.Step + AdditionalInfo
+│   ├── Ingredient.swift              — Ingredient + IngredientCategory enum
+│   ├── IngredientEmojiProvider.swift  — Static emoji resolution (exact→contains→word→foodGroup→default)
+│   ├── CookingSession.swift          — Cooking session tracking
+│   ├── Achievement.swift             — Achievement definitions (7 achievements)
 │   └── SubscriptionPlan.swift
 ├── Services/
 │   ├── Recipe/
@@ -190,10 +204,9 @@ CookSavvy/
 │   └── Unarchiver.swift
 ├── Coordinators/
 │   ├── Coordinator.swift              — Base protocol
-│   ├── AppCoordinator.swift           — Root coordinator
-│   ├── IngredientsCoordinator.swift
-│   ├── FavoritesCoordinator.swift
-│   ├── RecentRecipesCoordinator.swift
+│   ├── AppCoordinator.swift           — Root coordinator (Discover + Journey)
+│   ├── DiscoverCoordinator.swift      — Discover tab navigation
+│   ├── JourneyCoordinator.swift       — Journey tab navigation
 │   └── SettingsCoordinator.swift
 ├── Views/
 │   ├── Shared/
@@ -202,6 +215,7 @@ CookSavvy/
 │   ├── IngredientsInput/              — Ingredients input screen + subviews
 │   ├── SearchResults/                 — Search results screen
 │   ├── RecipeDetails/                 — Recipe details screen
+│   ├── CreateRecipe/                  — Create Recipe wizard (5-step)
 │   ├── Camera/                        — Camera capture screen
 │   ├── Favorites/                     — Favorites screen
 │   ├── RecentRecipes/                 — Recent recipes screen
@@ -211,8 +225,9 @@ CookSavvy/
 │   ├── Character+Extensions.swift
 │   └── String+Extensions.swift
 ├── Theme/
-│   ├── UIConstants.swift              — Layout constants only (nested `UI` struct)
-│   ├── AppTheme.swift                 — Theme protocol + DefaultTheme + @Environment key
+│   ├── UIConstants.swift              — Layout constants (nested `UI` struct + `UI.V2`)
+│   ├── AppTheme.swift                 — Theme protocol + LightTheme + DarkTheme + SystemTheme
+│   ├── ViewModifiers.swift            — FrostCard, NeonGlow, SectionLabel modifiers
 │   ├── Strings.swift                  — Localized strings (`String(localized:)`) by screen
 │   └── Icons.swift                    — SF Symbol names by screen
 ├── Localizable.xcstrings              — String Catalog (Xcode 15+)
