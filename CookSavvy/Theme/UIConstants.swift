@@ -89,4 +89,32 @@ struct UI {
         static let defaultPrefix = "Food Images/Food Images/"
         static let defaultExtension = ".jpg"
     }
+
+    struct V2 {
+        static let heroImageHeight: CGFloat = 340
+        static let miniCardWidth: CGFloat = 140
+        static let miniCardImageHeight: CGFloat = 100
+        static let recipeRowImageSize: CGFloat = 80
+        static let avatarSize: CGFloat = 80
+        static let cookModeTimerSize: CGFloat = 120
+        static let contentOverlapOffset: CGFloat = 32
+        static let floatingButtonTopPadding: CGFloat = 56
+
+        struct FrostCard {
+            static let strokeWidth: CGFloat = 0.5
+            static let defaultCornerRadius: CGFloat = 20
+        }
+
+        struct NeonGlow {
+            static let defaultRadius: CGFloat = 12
+            static let innerOpacity: Double = 0.6
+            static let innerRadiusScale: CGFloat = 0.4
+            static let outerOpacity: Double = 0.3
+            static let outerOffsetScale: CGFloat = 0.25
+        }
+
+        struct SectionLabel {
+            static let tracking: CGFloat = 1.5
+        }
+    }
 }

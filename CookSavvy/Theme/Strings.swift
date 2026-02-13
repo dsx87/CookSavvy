@@ -12,6 +12,8 @@ enum Strings {
         static let recent = String(localized: "tab.recent", defaultValue: "Recent")
         static let favorites = String(localized: "tab.favorites", defaultValue: "Favorites")
         static let settings = String(localized: "tab.settings", defaultValue: "Settings")
+        static let discover = String(localized: "tab.discover", defaultValue: "Discover")
+        static let journey = String(localized: "tab.journey", defaultValue: "Journey")
     }
 
     enum IngredientsInput {
@@ -111,5 +113,77 @@ enum Strings {
         static let subscribe = String(localized: "upgrade.subscribe", defaultValue: "Subscribe")
         static let purchaseFailed = String(localized: "upgrade.purchaseFailed", defaultValue: "Purchase Failed")
         static let unknownError = String(localized: "upgrade.unknownError", defaultValue: "An unknown error occurred")
+    }
+
+    enum Discover {
+        static let greetingMorning = String(localized: "discover.greetingMorning", defaultValue: "Good Morning ☀️")
+        static let greetingAfternoon = String(localized: "discover.greetingAfternoon", defaultValue: "Good Afternoon 🌤️")
+        static let greetingEvening = String(localized: "discover.greetingEvening", defaultValue: "Good Evening 🌙")
+        static let greetingLateNight = String(localized: "discover.greetingLateNight", defaultValue: "Late Night Cravings? 🌜")
+        static let kitchenTitle = String(localized: "discover.kitchenTitle", defaultValue: "What's in your kitchen?")
+        static let kitchenSubtitle = String(localized: "discover.kitchenSubtitle", defaultValue: "Add ingredients and we'll find recipes for you")
+        static let recipesForYou = String(localized: "discover.recipesForYou", defaultValue: "Recipes for you")
+        static let yourIngredients = String(localized: "discover.yourIngredients", defaultValue: "YOUR INGREDIENTS")
+        static let edit = String(localized: "discover.edit", defaultValue: "Edit")
+        static let seeAll = String(localized: "discover.seeAll", defaultValue: "See All")
+        static let bestMatch = String(localized: "discover.bestMatch", defaultValue: "BEST MATCH")
+        static let moreRecipes = String(localized: "discover.moreRecipes", defaultValue: "MORE RECIPES")
+        static let recentSection = String(localized: "discover.recentSection", defaultValue: "RECENT")
+        static let savedSection = String(localized: "discover.savedSection", defaultValue: "SAVED")
+        static let addYourOwn = String(localized: "discover.addYourOwn", defaultValue: "Add Your Own")
+        static let allIngredients = String(localized: "discover.allIngredients", defaultValue: "ALL INGREDIENTS")
+        static let searchPlaceholder = String(localized: "discover.searchPlaceholder", defaultValue: "Search ingredients...")
+    }
+
+    enum Journey {
+        static let navigationTitle = String(localized: "journey.navigationTitle", defaultValue: "Journey")
+        static let homeChef = String(localized: "journey.homeChef", defaultValue: "Home Chef")
+        static let recipesCooked = String(localized: "journey.recipesCooked", defaultValue: "Recipes\nCooked")
+        static let dayStreak = String(localized: "journey.dayStreak", defaultValue: "Day\nStreak")
+        static let hoursCooking = String(localized: "journey.hoursCooking", defaultValue: "Hours\nCooking")
+        static let myRecipes = String(localized: "journey.myRecipes", defaultValue: "MY RECIPES")
+        static let addRecipe = String(localized: "journey.addRecipe", defaultValue: "Add Recipe")
+        static let thisWeek = String(localized: "journey.thisWeek", defaultValue: "THIS WEEK")
+        static let achievements = String(localized: "journey.achievements", defaultValue: "ACHIEVEMENTS")
+        static let recentActivity = String(localized: "journey.recentActivity", defaultValue: "RECENT ACTIVITY")
+        static let seeAll = String(localized: "journey.seeAll", defaultValue: "See All")
+        static let shareCreations = String(localized: "journey.shareCreations", defaultValue: "Share your own creations")
+    }
+
+    enum CookMode {
+        static let stepOf = String(localized: "cookMode.stepOf", defaultValue: "Step %lld of %lld")
+        static let startTimer = String(localized: "cookMode.startTimer", defaultValue: "Start Timer")
+        static let pause = String(localized: "cookMode.pause", defaultValue: "Pause")
+        static let done = String(localized: "cookMode.done", defaultValue: "Done")
+        static let finish = String(localized: "cookMode.finish", defaultValue: "Finish")
+        static let startCooking = String(localized: "cookMode.startCooking", defaultValue: "Start Cooking")
+    }
+
+    enum CreateRecipe {
+        static let nameYourRecipe = String(localized: "createRecipe.nameYourRecipe", defaultValue: "Name Your Recipe")
+        static let addIngredients = String(localized: "createRecipe.addIngredients", defaultValue: "Add Ingredients")
+        static let addSteps = String(localized: "createRecipe.addSteps", defaultValue: "Add Steps")
+        static let details = String(localized: "createRecipe.details", defaultValue: "Details")
+        static let reviewAndSave = String(localized: "createRecipe.reviewAndSave", defaultValue: "Review & Save")
+        static let recipeName = String(localized: "createRecipe.recipeName", defaultValue: "Recipe name")
+        static let taglinePlaceholder = String(localized: "createRecipe.taglinePlaceholder", defaultValue: "Short description — e.g. 'Creamy comfort in a bowl'")
+        static let next = String(localized: "createRecipe.next", defaultValue: "Next")
+        static let back = String(localized: "createRecipe.back", defaultValue: "Back")
+        static let saveRecipe = String(localized: "createRecipe.saveRecipe", defaultValue: "Save Recipe")
+    }
+
+    enum RecipeList {
+        static let recentRecipes = String(localized: "recipeList.recentRecipes", defaultValue: "Recent Recipes")
+        static let savedRecipes = String(localized: "recipeList.savedRecipes", defaultValue: "Saved Recipes")
+        static let myRecipes = String(localized: "recipeList.myRecipes", defaultValue: "My Recipes")
+    }
+
+    enum MoodFilter {
+        static let cozy = String(localized: "moodFilter.cozy", defaultValue: "Cozy")
+        static let fresh = String(localized: "moodFilter.fresh", defaultValue: "Fresh")
+        static let bold = String(localized: "moodFilter.bold", defaultValue: "Bold")
+        static let comfort = String(localized: "moodFilter.comfort", defaultValue: "Comfort")
+        static let quick = String(localized: "moodFilter.quick", defaultValue: "Quick")
+        static let refineByMood = String(localized: "moodFilter.refineByMood", defaultValue: "REFINE BY MOOD")
     }
 }

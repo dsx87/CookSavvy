@@ -12,6 +12,8 @@ enum Icons {
         static let recent = "clock"
         static let favorites = "heart"
         static let settings = "gear"
+        static let discover = "compass.drawing"
+        static let journey = "trophy.fill"
     }
 
     enum IngredientsInput {
@@ -69,5 +71,54 @@ enum Icons {
         static let offline = "internaldrive"
         static let online = "globe"
         static let ai = "sparkles"
+    }
+
+    enum Discover {
+        static let clock = "clock"
+        static let bookmark = "bookmark"
+        static let bookmarkFill = "bookmark.fill"
+        static let plus = "plus"
+        static let chevronRight = "chevron.right"
+        static let matchBadge = "checkmark.seal"
+        static let flame = "flame"
+        static let person2 = "person.2"
+        static let chartBar = "chart.bar"
+    }
+
+    enum Journey {
+        static let settings = "gear"
+        static let forkKnife = "fork.knife"
+        static let flame = "flame"
+        static let clock = "clock"
+        static let plus = "plus"
+        static let pencil = "pencil"
+        static let checkmark = "checkmark"
+        static let star = "star.fill"
+    }
+
+    enum CookMode {
+        static let close = "xmark"
+        static let previous = "chevron.left"
+        static let next = "chevron.right"
+        static let checkmark = "checkmark"
+        static let play = "play.fill"
+        static let pause = "pause.fill"
+        static let timer = "timer"
+    }
+
+    enum CreateRecipe {
+        static let close = "xmark"
+        static let minus = "minus.circle"
+        static let plus = "plus"
+        static let dragHandle = "line.3.horizontal"
+        static let timer = "timer"
+    }
+
+    enum Mood {
+        static let cozy = "flame"
+        static let fresh = "leaf"
+        static let bold = "bolt.fill"
+        static let comfort = "heart.fill"
+        static let quick = "hare"
     }
 }
