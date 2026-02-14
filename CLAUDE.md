@@ -212,9 +212,10 @@ CookSavvy/
 │   ├── Shared/
 │   │   ├── AsyncImageDisk.swift
 │   │   ├── TabContainerView.swift
-│   │   └── V2Components.swift         — Shared V2 components (RecipeImage, MiniRecipeCard, RecipeRow, CategoryChip, IngredientBubble, SelectedChip, MoodPill, StarRating, StatPill, AddYourOwnCard, CreateRecipeCard, UserMiniRecipeCard)
-│   ├── Discover/                      — V2 two-state discover screen (DiscoverView + DiscoverViewModel)
-│   ├── Journey/                       — V2 journey screen (JourneyView + JourneyViewModel)
+│   │   ├── RecipeCardComponents.swift   — RecipeImage, MiniRecipeCard, RecipeRow (shared across screens)
+│   │   └── CommonComponents.swift       — StarRating, StatPill (shared across screens)
+│   ├── Discover/                      — V2 two-state discover screen (DiscoverView + DiscoverViewModel + DiscoverComponents)
+│   ├── Journey/                       — V2 journey screen (JourneyView + JourneyViewModel + JourneyComponents)
 │   ├── RecipeList/                    — V2 recipe list (RecipeListView + RecipeListViewModel)
 │   ├── RecipeDetails/                 — V2 recipe details with hero image + sticky CTA
 │   ├── CookMode/                      — V2 cook mode with step nav + timer (CookModeView + CookModeViewModel)

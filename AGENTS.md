@@ -71,7 +71,11 @@
 - **Recipe List** — V2 reusable "See All" destination with `RecipeRow` cards. `RecipeListView` + `RecipeListViewModel`
 - **Cook Mode** — V2 full-screen: progress ring, step dots, large text, countdown timer, prev/next/done nav. `CookModeView` + `CookModeViewModel`
 - **Create Recipe** — V2 5-step wizard sheet (Name & Photo → Ingredients → Steps → Details → Review & Save). `CreateRecipeView` + `CreateRecipeViewModel`
-- **Shared V2 Components** — `V2Components.swift`: `RecipeImage`, `MiniRecipeCard`, `RecipeRow`, `CategoryChip`, `IngredientBubble`, `SelectedChip`, `MoodPill`, `StarRating`, `StatPill`, `AddYourOwnCard`, `CreateRecipeCard`, `UserMiniRecipeCard`
+- **Shared V2 Components** — split by feature:
+  - `Shared/RecipeCardComponents.swift`: `RecipeImage`, `MiniRecipeCard`, `RecipeRow`
+  - `Shared/CommonComponents.swift`: `StarRating`, `StatPill`
+  - `Discover/DiscoverComponents.swift`: `CategoryChip`, `IngredientBubble`, `SelectedChip`, `MoodPill`, `AddYourOwnCard`
+  - `Journey/JourneyComponents.swift`: `CreateRecipeCard`, `UserMiniRecipeCard`
 - **Settings** — subscription, limits (accessed from Journey nav bar)
 - **Camera** — AI ingredient detection (paid tiers)
 - **Upgrade** — subscription upgrade prompt
