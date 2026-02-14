@@ -78,6 +78,8 @@ enum IngredientEmojiProvider {
         "wine": "🍷",
         "parmesan": "🧀",
     ]
+    
+    private static let defaultIcon = "🍽️"
 
     static func emoji(for ingredientName: String) -> String {
         let lowered = ingredientName.lowercased().trimmingCharacters(in: .whitespaces)
@@ -94,30 +96,30 @@ enum IngredientEmojiProvider {
                 return match
             }
         }
-        return "🍽️"
+        return defaultIcon
     }
 
     static func emoji(for ingredientName: String, foodGroup: String?) -> String {
-        let lowered = ingredientName.lowercased().trimmingCharacters(in: .whitespaces)
-        if let exact = emojiMap[lowered] {
-            return exact
-        }
-        let sortedKeys = emojiMap.keys.sorted { $0.count > $1.count }
-        for key in sortedKeys where lowered.contains(key) {
-            return emojiMap[key]!
-        }
-        let words = lowered.components(separatedBy: .whitespaces)
-        for word in words {
-            if let match = emojiMap[word] {
-                return match
-            }
-        }
-        if let group = foodGroup {
+        
+        let emoji = emoji(for: ingredientName)
+        
+        if let group = foodGroup, emoji == defaultIcon {
             return emojiForFoodGroup(group)
         }
-        return "🍽️"
+        
+        return emoji
     }
 
+    static func fillIngredientsWithEmoji(_ ingredients: inout [Ingredient]) {
+        for (i, ingredient) in ingredients.enumerated() {
+            let name = ingredient.name
+            let group = ingredient.foodGroup
+            
+            guard ingredient.emoji == nil else { continue }
+            ingredients[i].emoji = emoji(for: name, foodGroup: group)
+        }
+    }
+    
     private static func emojiForFoodGroup(_ group: String) -> String {
         let g = group.lowercased()
         if g.contains("herb") || g.contains("spice") { return "🌿" }
@@ -130,7 +132,7 @@ enum IngredientEmojiProvider {
         if g.contains("milk") || g.contains("dairy") { return "🧀" }
         if g.contains("fat") || g.contains("oil") { return "🫒" }
         if g.contains("beverage") { return "🥤" }
-        return "🍽️"
+        return defaultIcon
     }
 
     static func emoji(for category: IngredientCategory) -> String {
@@ -141,7 +143,7 @@ enum IngredientEmojiProvider {
         case .grains: return "🌾"
         case .fruits: return "🍎"
         case .spices: return "🌶️"
-        case .other: return "🍽️"
+        case .other: return defaultIcon
         }
     }
 }

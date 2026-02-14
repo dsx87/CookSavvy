@@ -6,7 +6,7 @@ struct DiscoverView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            if viewModel.hasIngredients {
+            if viewModel.showResults {
                 resultsState
                     .transition(.move(edge: .trailing).combined(with: .opacity))
             } else {
@@ -15,7 +15,7 @@ struct DiscoverView: View {
             }
         }
         .background(theme.bg)
-        .animation(UI.Anim.springSmooth, value: viewModel.hasIngredients)
+        .animation(UI.Anim.springSmooth, value: viewModel.showResults)
         .task {
             await viewModel.loadInitialData()
         }
@@ -24,20 +24,46 @@ struct DiscoverView: View {
     // MARK: - State 1: Ingredient Selection
 
     private var ingredientSelectionState: some View {
-        VStack(spacing: 0) {
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: UI.Discover.sectionSpacing) {
-                    headerView
-                    searchBar
-                    recentSection
-                    savedSection
-                    categoryFilter
-                    ingredientGrid
-                    Spacer(minLength: UI.Discover.bottomSpacerMinLength)
+        ZStack(alignment: .bottom) {
+            VStack(spacing: 0) {
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: UI.Discover.sectionSpacing) {
+                        headerView
+                        searchBar
+                        recentSection
+                        savedSection
+                        categoryFilter
+                        ingredientGrid
+                        Spacer(minLength: UI.Discover.bottomSpacerMinLength + UI.Discover.findButtonHeight)
+                    }
+                    .padding(.horizontal, UI.Discover.horizontalPadding)
                 }
-                .padding(.horizontal, UI.Discover.horizontalPadding)
+            }
+            
+            if viewModel.hasIngredients {
+                searchButton
             }
         }
+    }
+    
+    private var searchButton: some View {
+        Button {
+            withAnimation(UI.Anim.springNav) {
+                viewModel.findRecipes()
+            }
+        } label: {
+            Text(Strings.Discover.findRecipes)
+                .font(UI.Fonts.buttonLabel)
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: UI.Discover.findButtonHeight)
+                .background(theme.accent)
+                .clipShape(RoundedRectangle(cornerRadius: UI.Discover.findButtonCornerRadius, style: .continuous))
+                .neonGlow(theme.accent, radius: UI.Common.neonRadiusDefault)
+        }
+        .padding(.horizontal, UI.Discover.horizontalPadding)
+        .padding(.bottom, UI.Discover.findButtonBottomPadding)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 
     private var headerView: some View {

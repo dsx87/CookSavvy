@@ -133,6 +133,7 @@ enum Strings {
         static let addYourOwn = String(localized: "discover.addYourOwn", defaultValue: "Add Your Own")
         static let allIngredients = String(localized: "discover.allIngredients", defaultValue: "ALL INGREDIENTS")
         static let searchPlaceholder = String(localized: "discover.searchPlaceholder", defaultValue: "Search ingredients...")
+        static let findRecipes = String(localized: "discover.findRecipes", defaultValue: "Find Recipes")
     }
 
     enum Journey {

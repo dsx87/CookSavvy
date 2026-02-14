@@ -318,6 +318,9 @@ struct UI {
         static let gradientOpacityTop: Double = 0.8
         static let gradientOpacityMid: Double = 0.3
         static let whiteOpacity085: Double = 0.85
+        static let findButtonHeight: CGFloat = 56
+        static let findButtonCornerRadius: CGFloat = 28 // Pill shape for 56 height
+        static let findButtonBottomPadding: CGFloat = 16
     }
 
     // MARK: - Components (V2Components)

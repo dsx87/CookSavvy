@@ -24,6 +24,7 @@ final class DiscoverViewModel: ObservableObject {
     @Published var searchResultRecipes: [Recipe] = []
     @Published var isSearching = false
     @Published var isLoadingIngredients = false
+    @Published var showResults = false
 
     // MARK: - Dependencies
 
@@ -128,9 +129,13 @@ final class DiscoverViewModel: ObservableObject {
         } else {
             selectedIngredients.append(ingredient)
         }
-        if hasIngredients {
+        
+        if showResults {
             Task { await searchRecipes() }
-        } else {
+        }
+        
+        if !hasIngredients {
+            showResults = false
             searchResultRecipes = []
             selectedMood = nil
         }
@@ -138,9 +143,13 @@ final class DiscoverViewModel: ObservableObject {
 
     func removeIngredient(_ ingredient: Ingredient) {
         selectedIngredients.removeAll { $0.id == ingredient.id }
-        if hasIngredients {
+        
+        if showResults {
             Task { await searchRecipes() }
-        } else {
+        }
+        
+        if !hasIngredients {
+            showResults = false
             searchResultRecipes = []
             selectedMood = nil
         }
@@ -150,6 +159,13 @@ final class DiscoverViewModel: ObservableObject {
         selectedIngredients.removeAll()
         searchResultRecipes = []
         selectedMood = nil
+        showResults = false
+    }
+
+    func findRecipes() {
+        guard hasIngredients else { return }
+        showResults = true
+        Task { await searchRecipes() }
     }
 
     func toggleMood(_ moodId: Int) {
@@ -182,15 +198,8 @@ final class DiscoverViewModel: ObservableObject {
 
     private func loadIngredients() async {
         do {
-            allIngredients = try await ingredientsService.getAllIngredients(limit: 100)
-            for i in allIngredients.indices {
-                if allIngredients[i].emoji == nil {
-                    allIngredients[i].emoji = IngredientEmojiProvider.emoji(
-                        for: allIngredients[i].name,
-                        foodGroup: allIngredients[i].foodGroup
-                    )
-                }
-            }
+            allIngredients = try await userDataService.getPopularIngredients()
+            IngredientEmojiProvider.fillIngredientsWithEmoji(&allIngredients)
         } catch {}
     }
 

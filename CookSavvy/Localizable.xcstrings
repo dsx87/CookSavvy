@@ -434,6 +434,17 @@
         }
       }
     },
+    "discover.findRecipes" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Find Recipes"
+          }
+        }
+      }
+    },
     "discover.greetingAfternoon" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
