@@ -98,9 +98,33 @@ final class DiscoverCoordinator: ObservableObject {
         )
     }
 
-    // TODO: makeDiscoverViewModel() — add when DiscoverViewModel is created
-    // TODO: makeRecipeListViewModel(title:recipes:) — add when RecipeListViewModel is created
-    // TODO: makeCookModeViewModel(recipe:) — add when CookModeViewModel is created
+    func makeDiscoverViewModel() -> DiscoverViewModel {
+        DiscoverViewModel(
+            ingredientsService: container.ingredientsService,
+            recipeService: container.recipeService,
+            userDataService: container.userDataService,
+            subscriptionService: container.subscriptionService,
+            coordinator: self
+        )
+    }
+
+    func makeRecipeListViewModel(title: String, recipes: [Recipe]) -> RecipeListViewModel {
+        RecipeListViewModel(
+            title: title,
+            recipes: recipes,
+            userDataService: container.userDataService
+        )
+    }
+
+    func makeCookModeViewModel(recipe: Recipe) -> CookModeViewModel {
+        CookModeViewModel(
+            recipe: recipe,
+            userDataService: container.userDataService,
+            onDismiss: { [weak self] in
+                self?.dismissFullScreenCover()
+            }
+        )
+    }
     
     // MARK: - Navigation
     
@@ -186,32 +210,38 @@ extension DiscoverCoordinator {
 
 struct DiscoverCoordinatorView: View {
     @ObservedObject var coordinator: DiscoverCoordinator
-    @StateObject private var viewModel: IngredientsInputViewModel
+    @StateObject private var discoverViewModel: DiscoverViewModel
     
     init(coordinator: DiscoverCoordinator) {
         self.coordinator = coordinator
-        _viewModel = StateObject(wrappedValue: coordinator.makeIngredientsInputViewModel())
+        _discoverViewModel = StateObject(wrappedValue: coordinator.makeDiscoverViewModel())
     }
     
     var body: some View {
         NavigationStack(path: $coordinator.navigationPath) {
-            // TODO: Replace with DiscoverView when available
-            IngredientsInputView(viewModel: viewModel)
+            DiscoverView(viewModel: discoverViewModel)
                 .navigationDestination(for: DiscoverCoordinator.NavigationDestination.self) { destination in
                     switch destination {
                     case .recipesResult:
                         SearchResultsView(
                             viewModel: coordinator.makeSearchResultsViewModel(
-                                selectedIngredients: viewModel.selectedIngredients
+                                selectedIngredients: discoverViewModel.selectedIngredients.reduce(into: Set<Ingredient>()) { $0.insert($1) }
                             )
                         )
                     case .recipeDetail(let recipe):
                         RecipeDetailsView(
-                            viewModel: coordinator.makeRecipeDetailsViewModel(recipe: recipe)
+                            viewModel: coordinator.makeRecipeDetailsViewModel(recipe: recipe),
+                            onStartCooking: {
+                                coordinator.showCookMode(recipe: recipe)
+                            }
                         )
-                    case .recipeList:
-                        // TODO: Replace with RecipeListView when available
-                        Text("Recipe List")
+                    case .recipeList(let title, let recipes):
+                        RecipeListView(
+                            viewModel: coordinator.makeRecipeListViewModel(title: title, recipes: recipes),
+                            onRecipeTap: { recipe in
+                                coordinator.showRecipeDetails(recipe: recipe)
+                            }
+                        )
                     }
                 }
         }
@@ -221,12 +251,17 @@ struct DiscoverCoordinatorView: View {
                 CameraView(
                     viewModel: coordinator.makeCameraViewModel(
                         onDismiss: { coordinator.dismissSheet() },
-                        onIngredientsDetected: { viewModel.addDetectedIngredients($0) }
+                        onIngredientsDetected: { ingredients in
+                            for ingredient in ingredients {
+                                discoverViewModel.toggleIngredient(ingredient)
+                            }
+                        }
                     )
                 )
-            case .cookMode:
-                // TODO: Replace with CookModeView when available
-                Text("Cook Mode")
+            case .cookMode(let recipe):
+                CookModeView(
+                    viewModel: coordinator.makeCookModeViewModel(recipe: recipe)
+                )
             }
         }
         .sheet(item: $coordinator.presentedSheet) { sheet in
@@ -234,8 +269,7 @@ struct DiscoverCoordinatorView: View {
             case .upgrade:
                 UpgradeView(viewModel: coordinator.makeUpgradeViewModel())
             case .createRecipe:
-                // TODO: Replace with CreateRecipeView when available
-                Text("Create Recipe")
+                CreateRecipeView(viewModel: coordinator.makeCreateRecipeViewModel())
             }
         }
     }

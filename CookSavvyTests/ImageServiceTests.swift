@@ -145,7 +145,7 @@ final class ImageServiceTests: XCTestCase {
         let recipe = Recipe(
             title: "Test Recipe",
             ingredients: [],
-            instructions: [],
+            instructions: [] as [String],
             image: "test_image.png",
             cleanedIngredients: [],
             additionalInfo: .empty
@@ -162,7 +162,7 @@ final class ImageServiceTests: XCTestCase {
         let recipe = Recipe(
             title: "Test Recipe",
             ingredients: [],
-            instructions: [],
+            instructions: [] as [String],
             image: "",
             cleanedIngredients: [],
             additionalInfo: .empty
@@ -208,7 +208,7 @@ final class ImageServiceTests: XCTestCase {
             Recipe(
                 title: "Recipe 1",
                 ingredients: [],
-                instructions: [],
+                instructions: [] as [String],
                 image: "img1.png",
                 cleanedIngredients: [],
                 additionalInfo: .empty
@@ -216,7 +216,7 @@ final class ImageServiceTests: XCTestCase {
             Recipe(
                 title: "Recipe 2",
                 ingredients: [],
-                instructions: [],
+                instructions: [] as [String],
                 image: "img2.png",
                 cleanedIngredients: [],
                 additionalInfo: .empty
@@ -247,7 +247,7 @@ final class ImageServiceTests: XCTestCase {
             Recipe(
                 title: "Recipe 1",
                 ingredients: [],
-                instructions: [],
+                instructions: [] as [String],
                 image: "img1.png",
                 cleanedIngredients: [],
                 additionalInfo: .empty
@@ -320,7 +320,7 @@ final class ImageServiceTests: XCTestCase {
             Recipe(
                 title: "Recipe \(i)",
                 ingredients: [],
-                instructions: [],
+                instructions: [] as [String],
                 image: "img\(i).png",
                 cleanedIngredients: [],
                 additionalInfo: .empty

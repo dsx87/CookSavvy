@@ -291,7 +291,7 @@ private struct V2RecipeImage: View {
 }
 
 // Mood pill selector
-private struct MoodPill: View {
+private struct MockMoodPill: View {
     let mood: V2Mood
     let isSelected: Bool
 
@@ -320,7 +320,7 @@ private struct MoodPill: View {
 }
 
 // Star rating
-private struct StarRating: View {
+private struct MockStarRating: View {
     let rating: Double
 
     var body: some View {
@@ -674,7 +674,7 @@ fileprivate struct V2DiscoverView: View {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 10) {
                                 ForEach(V2Data.moods) { mood in
-                                    MoodPill(mood: mood, isSelected: selectedMood == mood.id)
+                                    MockMoodPill(mood: mood, isSelected: selectedMood == mood.id)
                                         .onTapGesture {
                                             withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
                                                 selectedMood = selectedMood == mood.id ? nil : mood.id
@@ -720,7 +720,7 @@ fileprivate struct V2DiscoverView: View {
                                         HStack(spacing: 12) {
                                             Label("\(featured.cookTime) min", systemImage: "clock")
                                             Label(featured.difficulty, systemImage: "chart.bar.fill")
-                                            StarRating(rating: featured.rating)
+                                            MockStarRating(rating: featured.rating)
                                         }
                                         .font(.system(size: 12, weight: .medium, design: .rounded))
                                         .foregroundStyle(.white.opacity(0.85))
@@ -889,7 +889,7 @@ private struct V2RecipeRow: View {
                 HStack(spacing: 10) {
                     Label("\(recipe.cookTime)m", systemImage: "clock")
                     Label("\(recipe.calories) cal", systemImage: "flame")
-                    StarRating(rating: recipe.rating)
+                    MockStarRating(rating: recipe.rating)
                 }
                 .font(.system(size: 11, weight: .medium, design: .rounded))
                 .foregroundStyle(DS2.Colors.text3)
@@ -1099,7 +1099,7 @@ fileprivate struct V2RecipeDetailView: View {
                                 .font(.system(size: 15))
                                 .foregroundStyle(DS2.Colors.text2)
                             HStack(spacing: 8) {
-                                StarRating(rating: recipe.rating)
+                                MockStarRating(rating: recipe.rating)
                                 Text(String(format: "%.1f", recipe.rating))
                                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                                     .foregroundStyle(DS2.Colors.gold)
@@ -1662,7 +1662,7 @@ fileprivate struct V2JourneyView: View {
                                         .foregroundStyle(DS2.Colors.text3)
                                 }
                                 Spacer()
-                                StarRating(rating: recipe.rating)
+                                MockStarRating(rating: recipe.rating)
                             }
                             .padding(.vertical, 12)
                             .padding(.horizontal, 14)

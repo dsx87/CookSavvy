@@ -42,6 +42,16 @@
     "%lld steps" : {
 
     },
+    "%lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld/%2$lld"
+          }
+        }
+      }
+    },
     "%lld%%" : {
 
     },
@@ -186,9 +196,6 @@
         }
       }
     },
-    "Cook Mode" : {
-
-    },
     "COOK TIME" : {
 
     },
@@ -266,9 +273,6 @@
           }
         }
       }
-    },
-    "Create Recipe" : {
-
     },
     "createRecipe.addIngredients" : {
       "extractionState" : "extracted_with_value",
@@ -836,6 +840,9 @@
         }
       }
     },
+    "Level %lld" : {
+
+    },
     "Level 7 • Sous Chef" : {
 
     },
@@ -969,9 +976,6 @@
           }
         }
       }
-    },
-    "Recipe List" : {
-
     },
     "Recipe name" : {
 

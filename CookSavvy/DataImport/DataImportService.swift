@@ -57,6 +57,8 @@ final class DataImportService {
             csvFilename: "Food Ingredients and Recipe Dataset with Image Name Mapping.csv",
             useCache: true
         )
+
+        // TODO: optimize
         for i in importedRecipes.indices { importedRecipes[i].source = .offline }
 
         print("📊 Parsed \(importedRecipes.count) recipes from CSV")

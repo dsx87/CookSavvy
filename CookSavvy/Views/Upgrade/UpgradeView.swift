@@ -10,7 +10,7 @@ struct UpgradeView: View {
     
     var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
+            VStack(spacing: UI.Upgrade.headerSpacing) {
                 headerView
                 
                 ForEach(viewModel.availablePlans, id: \.self) { plan in
@@ -56,9 +56,9 @@ struct UpgradeView: View {
     }
     
     private var headerView: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: UI.Upgrade.headerInnerSpacing) {
             Image(systemName: Icons.Upgrade.crown)
-                .font(.system(size: 50))
+                .font(.system(size: UI.Upgrade.headerIconSize))
                 .foregroundStyle(.yellow.gradient)
             
             Text(Strings.Upgrade.unlockTitle)
@@ -83,9 +83,9 @@ struct PlanCard: View {
     let onSelect: () -> Void
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: UI.Upgrade.contentSpacing) {
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: UI.Upgrade.planCardSpacing) {
                     Text(plan.displayName)
                         .font(.title3)
                         .fontWeight(.semibold)
@@ -102,18 +102,18 @@ struct PlanCard: View {
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundColor(.green)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.green.opacity(0.15))
-                        .cornerRadius(6)
+                        .padding(.horizontal, UI.Upgrade.currentBadgePaddingH)
+                        .padding(.vertical, UI.Upgrade.currentBadgePaddingV)
+                        .background(Color.green.opacity(UI.Upgrade.currentBadgeBgOpacity))
+                        .cornerRadius(UI.Upgrade.currentBadgeCornerRadius)
                 }
             }
             
             Divider()
             
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: UI.Upgrade.featureSpacing) {
                 ForEach(features, id: \.self) { feature in
-                    HStack(spacing: 8) {
+                    HStack(spacing: UI.Upgrade.featureSpacing) {
                         Image(systemName: Icons.Upgrade.checkmark)
                             .foregroundColor(.green)
                             .font(.subheadline)
@@ -140,15 +140,15 @@ struct PlanCard: View {
                     .padding()
                     .background(plan == .ai ? Color.purple : Color.blue)
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .cornerRadius(UI.Upgrade.subscribeCornerRadius)
                 }
                 .disabled(isLoading)
             }
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
+        .cornerRadius(UI.Upgrade.cardCornerRadius)
+        .shadow(color: .black.opacity(UI.Upgrade.shadowOpacity), radius: UI.Upgrade.shadowRadius, x: 0, y: UI.Upgrade.shadowY)
     }
     
 }

@@ -49,8 +49,20 @@ final class JourneyCoordinator: ObservableObject {
         )
     }
 
-    // TODO: makeJourneyViewModel() — add when JourneyViewModel is created
-    // TODO: makeRecipeListViewModel(title:recipes:) — add when RecipeListViewModel is created
+    func makeJourneyViewModel() -> JourneyViewModel {
+        JourneyViewModel(
+            userDataService: container.userDataService,
+            coordinator: self
+        )
+    }
+
+    func makeRecipeListViewModel(title: String, recipes: [Recipe]) -> RecipeListViewModel {
+        RecipeListViewModel(
+            title: title,
+            recipes: recipes,
+            userDataService: container.userDataService
+        )
+    }
     
     // MARK: - Navigation
     
@@ -111,20 +123,29 @@ extension JourneyCoordinator {
 
 struct JourneyCoordinatorView: View {
     @ObservedObject var coordinator: JourneyCoordinator
-    
+    @StateObject private var journeyViewModel: JourneyViewModel
+
+    init(coordinator: JourneyCoordinator) {
+        self.coordinator = coordinator
+        _journeyViewModel = StateObject(wrappedValue: coordinator.makeJourneyViewModel())
+    }
+
     var body: some View {
         NavigationStack(path: $coordinator.navigationPath) {
-            // TODO: Replace with JourneyView when available
-            Text("Journey")
+            JourneyView(viewModel: journeyViewModel)
                 .navigationDestination(for: JourneyCoordinator.NavigationDestination.self) { destination in
                     switch destination {
                     case .recipeDetail(let recipe):
                         RecipeDetailsView(
                             viewModel: coordinator.makeRecipeDetailsViewModel(recipe: recipe)
                         )
-                    case .recipeList:
-                        // TODO: Replace with RecipeListView when available
-                        Text("Recipe List")
+                    case .recipeList(let title, let recipes):
+                        RecipeListView(
+                            viewModel: coordinator.makeRecipeListViewModel(title: title, recipes: recipes),
+                            onRecipeTap: { recipe in
+                                coordinator.showRecipeDetail(recipe: recipe)
+                            }
+                        )
                     case .settings:
                         JourneySettingsDestination(settingsCoordinator: coordinator.settingsCoordinator)
                     }
@@ -135,8 +156,7 @@ struct JourneyCoordinatorView: View {
             case .upgrade:
                 UpgradeView(viewModel: coordinator.makeUpgradeViewModel())
             case .createRecipe:
-                // TODO: Replace with CreateRecipeView when available
-                Text("Create Recipe")
+                CreateRecipeView(viewModel: coordinator.makeCreateRecipeViewModel())
             }
         }
     }

@@ -63,17 +63,17 @@
 - **Recipe API:** `RecipeAPIProviderProtocol` → `SpoonacularProvider` (complexSearch endpoint), `SpoonacularModels` (DTOs + mapper)
 - **API Keys:** `APIKeys.plist` (gitignored) via `APIKeyConfiguration` — `OPENAI_API_KEY`, `GEMINI_API_KEY`, `SPOONACULAR_API_KEY`
 
-## Screens
+## Screens (V2 UI implemented)
 
-- **Discover** (tab 1) — ingredient input, recipe search, recent/saved recipes, mood filter
-- **Journey** (tab 2) — stats, achievements, user recipes, cooking sessions, settings (gear in nav bar)
-- **Ingredients Input** — text + autocomplete, camera (paid), recent/fast ingredients
-- **Search Results** — recipe list (name, image, complexity, time, match %), source header
-- **Recipe Details** — full recipe info + additional info section
-- **Recipe List** — reusable list for recent, saved, user recipes
-- **Cook Mode** — step-by-step cooking with visual timer (full screen)
-- **Create Recipe** — 5-step wizard (Name & Photo → Ingredients → Steps → Details → Review & Save)
+- **Discover** (tab 1) — V2 two-state: ingredient selection (grid, categories, search, recent/saved cards) ↔ recipe results (mood filter, hero best-match, recipe rows). `DiscoverView` + `DiscoverViewModel`
+- **Journey** (tab 2) — V2 profile header, stats grid, my recipes + create card, weekly calendar, achievements, recent sessions. `JourneyView` + `JourneyViewModel`
+- **Recipe Details** — V2 hero image (340pt), floating back/bookmark, content card overlay, stats row, ingredient list, steps with timer badges, sticky "Start Cooking" CTA. `RecipeDetailsView` + `RecipeDetailsViewModel`
+- **Recipe List** — V2 reusable "See All" destination with `RecipeRow` cards. `RecipeListView` + `RecipeListViewModel`
+- **Cook Mode** — V2 full-screen: progress ring, step dots, large text, countdown timer, prev/next/done nav. `CookModeView` + `CookModeViewModel`
+- **Create Recipe** — V2 5-step wizard sheet (Name & Photo → Ingredients → Steps → Details → Review & Save). `CreateRecipeView` + `CreateRecipeViewModel`
+- **Shared V2 Components** — `V2Components.swift`: `RecipeImage`, `MiniRecipeCard`, `RecipeRow`, `CategoryChip`, `IngredientBubble`, `SelectedChip`, `MoodPill`, `StarRating`, `StatPill`, `AddYourOwnCard`, `CreateRecipeCard`, `UserMiniRecipeCard`
 - **Settings** — subscription, limits (accessed from Journey nav bar)
 - **Camera** — AI ingredient detection (paid tiers)
 - **Upgrade** — subscription upgrade prompt
 - **Tab Container** — 2 tabs: Discover (`compass.drawing`) + Journey (`trophy.fill`)
+- **V1 Legacy** — `IngredientsInput/`, `SearchResults/`, `Favorites/`, `RecentRecipes/` kept for backward compat; functionality absorbed into V2 Discover

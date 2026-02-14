@@ -211,14 +211,19 @@ CookSavvy/
 ├── Views/
 │   ├── Shared/
 │   │   ├── AsyncImageDisk.swift
-│   │   └── TabContainerView.swift
-│   ├── IngredientsInput/              — Ingredients input screen + subviews
-│   ├── SearchResults/                 — Search results screen
-│   ├── RecipeDetails/                 — Recipe details screen
-│   ├── CreateRecipe/                  — Create Recipe wizard (5-step)
+│   │   ├── TabContainerView.swift
+│   │   └── V2Components.swift         — Shared V2 components (RecipeImage, MiniRecipeCard, RecipeRow, CategoryChip, IngredientBubble, SelectedChip, MoodPill, StarRating, StatPill, AddYourOwnCard, CreateRecipeCard, UserMiniRecipeCard)
+│   ├── Discover/                      — V2 two-state discover screen (DiscoverView + DiscoverViewModel)
+│   ├── Journey/                       — V2 journey screen (JourneyView + JourneyViewModel)
+│   ├── RecipeList/                    — V2 recipe list (RecipeListView + RecipeListViewModel)
+│   ├── RecipeDetails/                 — V2 recipe details with hero image + sticky CTA
+│   ├── CookMode/                      — V2 cook mode with step nav + timer (CookModeView + CookModeViewModel)
+│   ├── CreateRecipe/                  — V2 create recipe wizard (CreateRecipeView + CreateRecipeViewModel)
+│   ├── IngredientsInput/              — V1 ingredients input (legacy, kept for search flow)
+│   ├── SearchResults/                 — V1 search results (legacy, kept for search flow)
 │   ├── Camera/                        — Camera capture screen
-│   ├── Favorites/                     — Favorites screen
-│   ├── RecentRecipes/                 — Recent recipes screen
+│   ├── Favorites/                     — V1 favorites (legacy, absorbed into Discover saved section)
+│   ├── RecentRecipes/                 — V1 recent recipes (legacy, absorbed into Discover recent section)
 │   ├── Settings/                      — Settings screen
 │   └── Upgrade/                       — Subscription upgrade screen
 ├── Extensions/
