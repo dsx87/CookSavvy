@@ -1,4 +1,4 @@
-# CookSavvy — Agent Instructions
+# CookSavvy — Gemini Instructions
 
 > For detailed project documentation, see `CLAUDE.md`
 

@@ -10,6 +10,14 @@ A hobby iOS recipe app that suggests recipes based on user-provided ingredients.
 - **Subscriptions:** StoreKit 2
 - **Philosophy:** Maximize use of Apple frameworks
 
+## Build Instructions
+
+To build the app for any available iOS Simulator (avoiding specific version issues), use:
+
+```bash
+xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
+```
+
 ## Subscription Tiers
 
 | Tier | Recipe Source | Ingredient Detection |
@@ -260,4 +268,4 @@ CookSavvyTests/                        — Unit tests
 
 - **Ask before coding** if you need more info (unless instructed otherwise)
 - **Comments:** Default is `none`. Levels: `none` | `needed only` | `every line` — wait for instruction
-- **Documentation maintenance:** After introducing structural changes (new services, screens, coordinators, architecture shifts, or dependency changes), check `CLAUDE.md` and `AGENTS.md` and update them to reflect the current state of the project
+- **Documentation maintenance:** After introducing structural changes (new services, screens, coordinators, architecture shifts, or dependency changes), check `CLAUDE.md`, `AGENTS.md` and `GEMINI.md` and update them to reflect the current state of the project
