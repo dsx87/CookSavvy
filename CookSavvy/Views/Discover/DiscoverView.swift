@@ -310,7 +310,7 @@ struct DiscoverView: View {
 
                     Button {
                         withAnimation(UI.Anim.springClear) {
-                            viewModel.clearIngredients()
+                            viewModel.showResults = false
                         }
                     } label: {
                         Image(systemName: Icons.Discover.plus)
