@@ -30,6 +30,7 @@ struct DiscoverView: View {
                     VStack(alignment: .leading, spacing: UI.Discover.sectionSpacing) {
                         headerView
                         searchBar
+                        selectedIngredientsStrip
                         recentSection
                         savedSection
                         categoryFilter
@@ -197,12 +198,12 @@ struct DiscoverView: View {
     private var categoryFilter: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: UI.Discover.categoryChipSpacing) {
-                ForEach(IngredientCategory.allCases, id: \.self) { cat in
-                    if cat != .other {
-                        CategoryChip(category: cat, isSelected: viewModel.selectedCategory == cat)
+                ForEach(IngredientCategory.allCases, id: \.self) { category in
+                    if category != .other {
+                        CategoryChip(category: category, isSelected: viewModel.selectedCategory == category)
                             .onTapGesture {
                                 withAnimation(UI.Anim.easeQuick) {
-                                    viewModel.toggleCategory(cat)
+                                    viewModel.toggleCategory(category)
                                 }
                             }
                     }
@@ -222,7 +223,7 @@ struct DiscoverView: View {
                     .padding(.vertical, UI.Discover.loadingPadding)
             } else {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: UI.Discover.gridItemSpacing), count: UI.Discover.gridColumnCount), spacing: UI.Discover.gridSpacing) {
-                    ForEach(viewModel.filteredIngredients) { ingredient in
+                    ForEach(viewModel.shownIngredients) { ingredient in
                         IngredientBubble(
                             ingredient: ingredient,
                             isSelected: viewModel.selectedIngredients.contains(where: { $0.id == ingredient.id })
@@ -287,37 +288,40 @@ struct DiscoverView: View {
                 Text(Strings.Discover.yourIngredients)
                     .sectionLabel()
                 Spacer()
-                Button {
-                    withAnimation(UI.Anim.springClear) {
-                        viewModel.clearIngredients()
+                if viewModel.showResults {
+                    Button {
+                        withAnimation(UI.Anim.springClear) {
+                            viewModel.clearIngredients()
+                        }
+                    } label: {
+                        Text(Strings.Discover.edit)
+                            .font(UI.Fonts.captionSemibold)
+                            .foregroundStyle(theme.accent)
                     }
-                } label: {
-                    Text(Strings.Discover.edit)
-                        .font(UI.Fonts.captionSemibold)
-                        .foregroundStyle(theme.accent)
                 }
             }
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: UI.Discover.categoryChipSpacing) {
-                    ForEach(viewModel.selectedIngredients) { ing in
-                        SelectedChip(ingredient: ing) {
+                    ForEach(viewModel.selectedIngredients) { ingredient in
+                        SelectedChip(ingredient: ingredient) {
                             withAnimation(UI.Anim.springQuick) {
-                                viewModel.removeIngredient(ing)
+                                viewModel.removeIngredient(ingredient)
                             }
                         }
                     }
-
-                    Button {
-                        withAnimation(UI.Anim.springClear) {
-                            viewModel.showResults = false
+                    if viewModel.showResults {
+                        Button {
+                            withAnimation(UI.Anim.springClear) {
+                                viewModel.showResults = false
+                            }
+                        } label: {
+                            Image(systemName: Icons.Discover.plus)
+                                .font(UI.Fonts.smallButtonIcon)
+                                .foregroundStyle(theme.accent)
+                                .frame(width: UI.Discover.addButtonSize, height: UI.Discover.addButtonSize)
+                                .background(theme.accentSoft, in: Circle())
                         }
-                    } label: {
-                        Image(systemName: Icons.Discover.plus)
-                            .font(UI.Fonts.smallButtonIcon)
-                            .foregroundStyle(theme.accent)
-                            .frame(width: UI.Discover.addButtonSize, height: UI.Discover.addButtonSize)
-                            .background(theme.accentSoft, in: Circle())
                     }
                 }
             }
@@ -337,7 +341,7 @@ struct DiscoverView: View {
                             icon: mood.icon,
                             color: mood.color,
                             gradient: mood.gradient,
-                            isSelected: viewModel.selectedMood == mood.id
+                            isSelected: viewModel.selectedMoodID == mood.id
                         )
                         .onTapGesture {
                             withAnimation(UI.Anim.springBouncy) {
@@ -449,14 +453,14 @@ struct DiscoverView: View {
 
     private func cookTimeLabel(_ recipe: Recipe) -> String? {
         for info in recipe.additionalInfo.infos {
-            if case .time(let t) = info { return t }
+            if case .time(let cookTime) = info { return cookTime }
         }
         return nil
     }
 
     private func complexityLabel(_ recipe: Recipe) -> String? {
         for info in recipe.additionalInfo.infos {
-            if case .complexity(let c) = info { return c }
+            if case .complexity(let complexity) = info { return complexity }
         }
         return nil
     }

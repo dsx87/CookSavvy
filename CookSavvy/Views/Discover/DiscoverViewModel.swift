@@ -14,11 +14,25 @@ final class DiscoverViewModel: ObservableObject {
     // MARK: - Published State
 
     @Published var selectedIngredients: [Ingredient] = []
-    @Published var selectedMood: Int? = nil
-    @Published var searchText = ""
-    @Published var selectedCategory: IngredientCategory? = nil
+    @Published var selectedMoodID: Int? = nil
+    @Published var searchText = "" {
+        didSet {
+            guard searchText != oldValue else { return }
+            scheduleIngredientRefresh()
+        }
+    }
+    @Published var selectedCategory: IngredientCategory? = nil {
+        didSet {
+            guard selectedCategory != oldValue else { return }
+            scheduleIngredientRefresh()
+        }
+    }
+    private var categoryIngredients: [Ingredient] = []
+    private var loadedCategory: IngredientCategory?
+    private var ingredientRefreshTask: Task<Void, Never>?
+    private var ingredientRefreshToken = 0
 
-    @Published var allIngredients: [Ingredient] = []
+    @Published var popularIngredients: [Ingredient] = []
     @Published var recentRecipes: [Recipe] = []
     @Published var savedRecipes: [Recipe] = []
     @Published var searchResultRecipes: [Recipe] = []
@@ -63,22 +77,17 @@ final class DiscoverViewModel: ObservableObject {
         default: return Strings.Discover.greetingLateNight
         }
     }
-
-    var filteredIngredients: [Ingredient] {
-        var items = allIngredients
-        if let cat = selectedCategory {
-            items = items.filter { $0.category == cat }
+    @Published var shownIngredients: [Ingredient] = [] {
+        didSet {
+            if shownIngredients.isEmpty {
+                shownIngredients = popularIngredients
+            }
         }
-        if !searchText.isEmpty {
-            items = items.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
-        }
-        return items
     }
 
     var filteredRecipes: [Recipe] {
         guard !searchResultRecipes.isEmpty else { return [] }
-        if let moodIdx = selectedMood, moodIdx < Self.moods.count {
-            let moodName = Self.moods[moodIdx].name.lowercased()
+        if let selectedMoodID, selectedMoodID < Self.moods.count {
             return searchResultRecipes
         }
         return searchResultRecipes
@@ -93,8 +102,8 @@ final class DiscoverViewModel: ObservableObject {
     }
 
     var ingredientGridLabel: String {
-        if let cat = selectedCategory {
-            return cat.rawValue.uppercased()
+        if let selectedCategory {
+            return selectedCategory.rawValue.uppercased()
         }
         return Strings.Discover.allIngredients
     }
@@ -137,8 +146,9 @@ final class DiscoverViewModel: ObservableObject {
         if !hasIngredients {
             showResults = false
             searchResultRecipes = []
-            selectedMood = nil
+            selectedMoodID = nil
         }
+        //searchText = ""
     }
 
     func removeIngredient(_ ingredient: Ingredient) {
@@ -151,14 +161,14 @@ final class DiscoverViewModel: ObservableObject {
         if !hasIngredients {
             showResults = false
             searchResultRecipes = []
-            selectedMood = nil
+            selectedMoodID = nil
         }
     }
 
     func clearIngredients() {
         selectedIngredients.removeAll()
         searchResultRecipes = []
-        selectedMood = nil
+        selectedMoodID = nil
         showResults = false
     }
 
@@ -168,8 +178,8 @@ final class DiscoverViewModel: ObservableObject {
         Task { await searchRecipes() }
     }
 
-    func toggleMood(_ moodId: Int) {
-        selectedMood = selectedMood == moodId ? nil : moodId
+    func toggleMood(_ moodID: Int) {
+        selectedMoodID = selectedMoodID == moodID ? nil : moodID
     }
 
     func toggleCategory(_ category: IngredientCategory) {
@@ -198,8 +208,9 @@ final class DiscoverViewModel: ObservableObject {
 
     private func loadIngredients() async {
         do {
-            allIngredients = try await userDataService.getPopularIngredients()
-            IngredientEmojiProvider.fillIngredientsWithEmoji(&allIngredients)
+            popularIngredients = try await userDataService.getPopularIngredients()
+            shownIngredients = popularIngredients
+            IngredientEmojiProvider.fillIngredientsWithEmoji(&popularIngredients)
         } catch {}
     }
 
@@ -226,5 +237,53 @@ final class DiscoverViewModel: ObservableObject {
             )
         } catch {}
         isSearching = false
+    }
+    
+    private func scheduleIngredientRefresh() {
+        ingredientRefreshTask?.cancel()
+        ingredientRefreshToken += 1
+        let token = ingredientRefreshToken
+
+        ingredientRefreshTask = Task { [weak self] in
+            await self?.refreshIngredients(token: token)
+        }
+    }
+
+    private func refreshIngredients(token: Int) async {
+        let category = selectedCategory
+        let query = searchText
+
+        do {
+            if let category {
+                if loadedCategory != category || categoryIngredients.isEmpty {
+                    let fetchedIngredients = try await ingredientsService.getAllIngredients(category: category)
+                    guard isCurrentRefresh(token) else { return }
+                    categoryIngredients = fetchedIngredients
+                    loadedCategory = category
+                }
+
+                guard isCurrentRefresh(token) else { return }
+                shownIngredients = filterCategoryIngredients(categoryIngredients, query: query)
+            } else {
+                let fetchedIngredients = try await ingredientsService.searchFullIngredients(matching: query)
+                guard isCurrentRefresh(token) else { return }
+                loadedCategory = nil
+                categoryIngredients = []
+                shownIngredients = fetchedIngredients
+            }
+        } catch {
+            guard isCurrentRefresh(token) else { return }
+        }
+    }
+
+    private func filterCategoryIngredients(_ ingredients: [Ingredient], query: String) -> [Ingredient] {
+        guard !query.isEmpty else { return ingredients }
+        return ingredients.filter { ingredient in
+            ingredient.name.localizedCaseInsensitiveContains(query)
+        }
+    }
+
+    private func isCurrentRefresh(_ token: Int) -> Bool {
+        !Task.isCancelled && token == ingredientRefreshToken
     }
 }
