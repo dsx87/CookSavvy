@@ -313,6 +313,10 @@ struct UI {
         static let matchBadgeSpacing: CGFloat = 4
         static let matchBadgePaddingH: CGFloat = 10
         static let matchBadgePaddingV: CGFloat = 5
+        static let matchInfoButtonSize: CGFloat = 16
+        static let matchPopoverSpacing: CGFloat = 6
+        static let matchPopoverPadding: CGFloat = 12
+        static let matchPopoverWidth: CGFloat = 220
         static let featuredInfoPadding: CGFloat = 18
         static let featuredLabelSpacing: CGFloat = 12
         static let gradientOpacityTop: Double = 0.8

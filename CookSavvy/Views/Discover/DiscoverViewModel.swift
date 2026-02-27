@@ -101,6 +101,31 @@ final class DiscoverViewModel: ObservableObject {
         Array(filteredRecipes.dropFirst())
     }
 
+    func matchingIngredientNames(for recipe: Recipe) -> [String] {
+        let queryNames = Set(selectedIngredients.map { Self.normalizedIngredientName($0.name) }.filter { !$0.isEmpty })
+        guard !queryNames.isEmpty else { return [] }
+
+        let recipeIngredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
+        var matches: [String] = []
+        var seen = Set<String>()
+
+        for ingredient in recipeIngredients {
+            let recipeName = Self.normalizedIngredientName(ingredient.name)
+            guard !recipeName.isEmpty else { continue }
+            let isMatch = queryNames.contains(where: { recipeName.contains($0) || $0.contains(recipeName) })
+            guard isMatch else { continue }
+
+            let displayName = ingredient.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !displayName.isEmpty else { continue }
+            let seenKey = displayName.lowercased()
+            if seen.insert(seenKey).inserted {
+                matches.append(displayName)
+            }
+        }
+
+        return matches
+    }
+
     var ingredientGridLabel: String {
         if let selectedCategory {
             return selectedCategory.rawValue.uppercased()
@@ -247,6 +272,10 @@ final class DiscoverViewModel: ObservableObject {
         ingredientRefreshTask = Task { [weak self] in
             await self?.refreshIngredients(token: token)
         }
+    }
+
+    private static func normalizedIngredientName(_ value: String) -> String {
+        value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 
     private func refreshIngredients(token: Int) async {

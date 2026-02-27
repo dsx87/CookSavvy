@@ -511,6 +511,39 @@
         }
       }
     },
+    "discover.matchDetailsEmpty" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No exact ingredient matches found."
+          }
+        }
+      }
+    },
+    "discover.matchDetailsTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Matching ingredients"
+          }
+        }
+      }
+    },
+    "discover.matchLabel" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%lld%% match"
+          }
+        }
+      }
+    },
     "discover.moreRecipes" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {

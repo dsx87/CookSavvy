@@ -134,6 +134,9 @@ enum Strings {
         static let allIngredients = String(localized: "discover.allIngredients", defaultValue: "ALL INGREDIENTS")
         static let searchPlaceholder = String(localized: "discover.searchPlaceholder", defaultValue: "Search ingredients...")
         static let findRecipes = String(localized: "discover.findRecipes", defaultValue: "Find Recipes")
+        static let matchLabel = String(localized: "discover.matchLabel", defaultValue: "%lld%% match")
+        static let matchDetailsTitle = String(localized: "discover.matchDetailsTitle", defaultValue: "Matching ingredients")
+        static let matchDetailsEmpty = String(localized: "discover.matchDetailsEmpty", defaultValue: "No exact ingredient matches found.")
     }
 
     enum Journey {

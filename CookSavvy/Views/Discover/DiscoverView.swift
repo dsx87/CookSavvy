@@ -3,6 +3,7 @@ import SwiftUI
 struct DiscoverView: View {
     @Environment(\.appTheme) private var theme
     @StateObject var viewModel: DiscoverViewModel
+    @State private var isMatchInfoPopoverPresented = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -365,61 +366,55 @@ struct DiscoverView: View {
                 Text(Strings.Discover.bestMatch)
                     .sectionLabel()
 
-                Button {
-                    viewModel.showRecipeDetails(featured)
-                } label: {
-                    ZStack(alignment: .bottomLeading) {
-                        RecipeImage(recipe: featured, height: UI.Discover.recipeImageHeight)
-                            .clipShape(RoundedRectangle(cornerRadius: UI.Discover.recipeCardCornerRadius, style: .continuous))
-
-                        VStack(alignment: .leading, spacing: UI.Discover.featuredInfoSpacing) {
-                            if let match = featured.matchPercentage {
-                                HStack(spacing: UI.Discover.matchBadgeSpacing) {
-                                    Image(systemName: Icons.Discover.matchBadge)
-                                        .font(UI.Fonts.tinyCaption)
-                                    Text("\(Int(match))% match")
-                                        .font(UI.Fonts.smallCaptionBold)
-                                }
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, UI.Discover.matchBadgePaddingH)
-                                .padding(.vertical, UI.Discover.matchBadgePaddingV)
-                                .background(theme.mint.opacity(UI.RecipeDetails.matchBadgeOpacity), in: Capsule())
-                            }
-
-                            Text(featured.title)
-                                .font(UI.Fonts.title)
-                                .foregroundStyle(.white)
-
-                            HStack(spacing: UI.Discover.featuredLabelSpacing) {
-                                if let time = cookTimeLabel(featured) {
-                                    Label(time, systemImage: Icons.Discover.clock)
-                                }
-                                if let complexity = complexityLabel(featured) {
-                                    Label(complexity, systemImage: Icons.Discover.chartBar)
-                                }
-                                if let rating = featured.apiRating ?? featured.userRating {
-                                    StarRating(rating: rating)
-                                }
-                            }
-                            .font(UI.Fonts.smallCaptionMedium)
-                            .foregroundStyle(.white.opacity(UI.Discover.whiteOpacity085))
-                        }
-                        .padding(UI.Discover.featuredInfoPadding)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(
-                            LinearGradient(
-                                stops: [
-                                    .init(color: .black.opacity(UI.Discover.gradientOpacityTop), location: 0),
-                                    .init(color: .black.opacity(UI.Discover.gradientOpacityMid), location: 0.6),
-                                    .init(color: .clear, location: 1),
-                                ],
-                                startPoint: .bottom, endPoint: .top
-                            )
-                        )
+                ZStack(alignment: .bottomLeading) {
+                    RecipeImage(recipe: featured, height: UI.Discover.recipeImageHeight)
                         .clipShape(RoundedRectangle(cornerRadius: UI.Discover.recipeCardCornerRadius, style: .continuous))
+
+                    VStack(alignment: .leading, spacing: UI.Discover.featuredInfoSpacing) {
+                        if let match = featured.matchPercentage {
+                            matchIndicator(match: match, matchingIngredients: viewModel.matchingIngredientNames(for: featured))
+                        }
+
+                        Text(featured.title)
+                            .font(UI.Fonts.title)
+                            .foregroundStyle(.white)
+
+                        HStack(spacing: UI.Discover.featuredLabelSpacing) {
+                            if let time = cookTimeLabel(featured) {
+                                Label(time, systemImage: Icons.Discover.clock)
+                            }
+                            if let complexity = complexityLabel(featured) {
+                                Label(complexity, systemImage: Icons.Discover.chartBar)
+                            }
+                            if let rating = featured.apiRating ?? featured.userRating {
+                                StarRating(rating: rating)
+                            }
+                        }
+                        .font(UI.Fonts.smallCaptionMedium)
+                        .foregroundStyle(.white.opacity(UI.Discover.whiteOpacity085))
                     }
+                    .padding(UI.Discover.featuredInfoPadding)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        LinearGradient(
+                            stops: [
+                                .init(color: .black.opacity(UI.Discover.gradientOpacityTop), location: 0),
+                                .init(color: .black.opacity(UI.Discover.gradientOpacityMid), location: 0.6),
+                                .init(color: .clear, location: 1),
+                            ],
+                            startPoint: .bottom, endPoint: .top
+                        )
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: UI.Discover.recipeCardCornerRadius, style: .continuous))
                 }
-                .buttonStyle(.plain)
+                .contentShape(RoundedRectangle(cornerRadius: UI.Discover.recipeCardCornerRadius, style: .continuous))
+                .gesture(
+                    TapGesture().onEnded {
+                        viewModel.showRecipeDetails(featured)
+                    },
+                    including: .gesture
+                )
+                .accessibilityAddTraits(.isButton)
             }
         }
     }
@@ -463,5 +458,40 @@ struct DiscoverView: View {
             if case .complexity(let complexity) = info { return complexity }
         }
         return nil
+    }
+
+    private func matchIndicator(match: Double, matchingIngredients: [String]) -> some View {
+        HStack(spacing: UI.Discover.matchBadgeSpacing) {
+            Image(systemName: Icons.Discover.matchBadge)
+                .font(UI.Fonts.tinyCaption)
+            Text(String(format: Strings.Discover.matchLabel, Int64(Int(match))))
+                .font(UI.Fonts.smallCaptionBold)
+            Button {
+                isMatchInfoPopoverPresented = true
+            } label: {
+                Image(systemName: Icons.Discover.matchInfo)
+                    .font(UI.Fonts.tinyCaption)
+                    .frame(width: UI.Discover.matchInfoButtonSize, height: UI.Discover.matchInfoButtonSize)
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: $isMatchInfoPopoverPresented) {
+                VStack(alignment: .leading, spacing: UI.Discover.matchPopoverSpacing) {
+                    Text(Strings.Discover.matchDetailsTitle)
+                        .font(UI.Fonts.smallCaptionBold)
+                        .foregroundStyle(theme.text1)
+                    Text(matchingIngredients.isEmpty ? Strings.Discover.matchDetailsEmpty : matchingIngredients.joined(separator: ", "))
+                        .font(UI.Fonts.smallCaption)
+                        .foregroundStyle(theme.text2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: UI.Discover.matchPopoverWidth, alignment: .leading)
+                .padding(UI.Discover.matchPopoverPadding)
+                .presentationCompactAdaptation(.popover)
+            }
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, UI.Discover.matchBadgePaddingH)
+        .padding(.vertical, UI.Discover.matchBadgePaddingV)
+        .background(theme.mint.opacity(UI.RecipeDetails.matchBadgeOpacity), in: Capsule())
     }
 }
