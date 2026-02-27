@@ -20,39 +20,39 @@ actor ImageExtractor {
     
     func extractImages(withNames fileNames: [String], fromZipFile zipFileURL: URL, useCache: Bool = true) async throws -> [String: Data] {
         try await Task {
-            let fm = FileManager.default
-            let imagesDir = fm.urls(for: .documentDirectory, in: .userDomainMask).first!
-            var results: [String: Data] = [:]
-            var filesToExtract: [String] = []
+            let fileManager = FileManager.default
+            let imagesDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+            var extractedImages: [String: Data] = [:]
+            var pendingFileNames: [String] = []
             
             // Check cache first
             for fileName in fileNames {
-                let imageURL = imagesDir.appendingPathComponent(fileName)
-                if useCache, fm.fileExists(atPath: imageURL.path) {
-                    results[fileName] = try Data(contentsOf: imageURL)
+                let imageURL = imagesDirectory.appendingPathComponent(fileName)
+                if useCache, fileManager.fileExists(atPath: imageURL.path) {
+                    extractedImages[fileName] = try Data(contentsOf: imageURL)
                 } else {
-                    filesToExtract.append(fileName)
+                    pendingFileNames.append(fileName)
                 }
             }
             
             // Batch extract remaining files
-            if !filesToExtract.isEmpty {
-                let unarc = Unarchiver()
-                for fileName in filesToExtract {
-                    let imageData = try unarc.extract(file: fileName, fromZipFileUrl: zipFileURL)
-                    results[fileName] = imageData
+            if !pendingFileNames.isEmpty {
+                let unarchiver = Unarchiver()
+                for fileName in pendingFileNames {
+                    let imageData = try unarchiver.extract(file: fileName, fromZipFileUrl: zipFileURL)
+                    extractedImages[fileName] = imageData
                     
                     // Cache asynchronously
                     if useCache {
                         Task {
-                            let imageURL = imagesDir.appendingPathComponent(fileName)
+                            let imageURL = imagesDirectory.appendingPathComponent(fileName)
                             try imageData.write(to: imageURL)
                         }
                     }
                 }
             }
             
-            return results
+            return extractedImages
         }.value
     }
 }

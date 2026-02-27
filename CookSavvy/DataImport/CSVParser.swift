@@ -13,8 +13,10 @@ import CSV
  Common usage:
  let csvConv = CSVParser()
  let zip = Bundle.main.url(forResource: "food-ingredients-and-recipe-dataset-with-images", withExtension: "zip")!
- let res:[Recipe] = try! csvConv.parseCSVFromZip(withURL: zip,
-                                                 usingFilename: "Food Ingredients and Recipe Dataset with Image Name Mapping.csv")
+ let recipes: [Recipe] = try! csvConv.parseCSVFromZip(
+     zipURL: zip,
+     csvFilename: "Food Ingredients and Recipe Dataset with Image Name Mapping.csv"
+ )
  */
 
 class CSVParser {
@@ -26,9 +28,9 @@ class CSVParser {
     }
     
     func parseCSVFromZip<T: Decodable>(zipURL: URL, csvFilename: String, useCache: Bool = true) throws -> [T] {
-        let csvStr = try extractCSV(from: zipURL, with: csvFilename).data(using: .utf8)!
-        let res = try! CSVDecoder().decode([T].self, from: csvStr)
-        return res
+        let csvData = try extractCSV(from: zipURL, with: csvFilename).data(using: .utf8)!
+        let decodedItems = try CSVDecoder().decode([T].self, from: csvData)
+        return decodedItems
 //        let fm = FileManager.default
 //        let docsDir = fm.urls(for: .documentDirectory, in: .userDomainMask).first!
 //        let jsonURL = docsDir
@@ -73,8 +75,8 @@ class CSVParser {
 //    }
     
     private func extractCSV(from zipFile: URL, with name: String) throws -> String {
-        let unarch = Unarchiver()
-        let csvData = try unarch.extract(file: name, fromZipFileUrl: zipFile)
+        let unarchiver = Unarchiver()
+        let csvData = try unarchiver.extract(file: name, fromZipFileUrl: zipFile)
         
         guard let csvString = String(data: csvData, encoding: .utf8) else {
             throw ParserError.csvParsingFailed(NSError(domain: "CSVParser", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to decode CSV data as UTF-8"]))

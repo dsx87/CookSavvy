@@ -1,5 +1,5 @@
 //
-//  String+extensions.swift
+//  String+Extensions.swift
 //  CookSavvy
 //
 //  Created by Igor Pivnyk on 24/06/2025.
@@ -9,16 +9,16 @@ import Foundation
 
 extension String {
     var separatedByQuotes: [String] {
-        var r = self.ranges(of: "'")
-        if r.count % 2 != 0 {
-            r.removeLast()
+        var quoteRanges = self.ranges(of: "'")
+        if quoteRanges.count % 2 != 0 {
+            quoteRanges.removeLast()
         }
-        let res = stride(from: r.startIndex, to: r.endIndex, by: 2).map { idx in
-            let start = r[idx]
-            let finish = r[idx+1]
+        let quotedSegments = stride(from: quoteRanges.startIndex, to: quoteRanges.endIndex, by: 2).map { rangeIndex in
+            let start = quoteRanges[rangeIndex]
+            let finish = quoteRanges[rangeIndex + 1]
             return String(self[start.upperBound..<finish.lowerBound])
         }
-        return res
+        return quotedSegments
     }
     
     var firstCharAsEmoji: Character? {

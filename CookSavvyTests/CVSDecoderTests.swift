@@ -1,5 +1,5 @@
 //
-//  CVSDecoderTests.swift
+//  CSVDecoderTests.swift
 //  CookSavvyTests
 //
 //  Created by Igor Pivnyk on 01/09/2025.
@@ -33,21 +33,21 @@ final class CSVDecoderTests: XCTestCase {
         let empty: String
     }
     
-    var dec: CSVDecoder!
+    var decoder: CSVDecoder!
     
     override func setUpWithError() throws {
-        dec = CSVDecoder()
+        decoder = CSVDecoder()
     }
 
     override func tearDownWithError() throws {
-        dec = nil
+        decoder = nil
     }
 
     func testDecoding() throws {
-        let dec = CSVDecoder()
+        let decoder = CSVDecoder()
         let data = try XCTUnwrap(csvString.data(using: .utf8))
-        let res = try dec.decode([TestStruct].self, from: data)
-        XCTAssertFalse(res.isEmpty)
+        let decodedRows = try decoder.decode([TestStruct].self, from: data)
+        XCTAssertFalse(decodedRows.isEmpty)
     }
 
 }

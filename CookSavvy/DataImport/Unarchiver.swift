@@ -17,39 +17,39 @@ final class Unarchiver {
     }
     
     func extract(file filename: String, fromZipFileUrl zipUrl: URL) throws -> Data {
-        let dest = try extractAndSave(file: filename, fromZipFileUrl: zipUrl)
-        let data = try Data(contentsOf: dest)
+        let destinationURL = try extractAndSave(file: filename, fromZipFileUrl: zipUrl)
+        let data = try Data(contentsOf: destinationURL)
         return data
     }
     
     func extractAndSave(file filename: String, fromZipFileUrl zipUrl: URL) throws -> URL {
-        let fm = FileManager.default
-        guard fm.fileExists(atPath: zipUrl.path) else {
+        let fileManager = FileManager.default
+        guard fileManager.fileExists(atPath: zipUrl.path) else {
             throw UnarchiverError.zipFileNotFound
         }
         
-        let tmpDir = fm.temporaryDirectory
+        let temporaryDirectory = fileManager.temporaryDirectory
         
-        let arch = try Archive(url: URL(filePath: zipUrl.path),
-                               accessMode: .read)
+        let archive = try Archive(url: URL(filePath: zipUrl.path),
+                                  accessMode: .read)
         
-        guard let entry = arch[filename] else {
+        guard let entry = archive[filename] else {
             throw UnarchiverError.fileNotFoundInZipArchive
         }
         
-        let dest = tmpDir.appendingPathComponent("tmp")
+        let destinationURL = temporaryDirectory.appendingPathComponent("tmp")
         
-        if fm.fileExists(atPath: dest.path) {
-            try fm.removeItem(at: dest)
+        if fileManager.fileExists(atPath: destinationURL.path) {
+            try fileManager.removeItem(at: destinationURL)
         }
         
-        _ = try arch.extract(entry, to: dest)
+        _ = try archive.extract(entry, to: destinationURL)
         
-        guard fm.fileExists(atPath: dest.path) else {
+        guard fileManager.fileExists(atPath: destinationURL.path) else {
             throw UnarchiverError.fileNotExtracted
         }
         
-        return dest
+        return destinationURL
     }
     
 }
