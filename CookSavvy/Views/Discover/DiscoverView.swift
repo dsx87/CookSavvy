@@ -486,7 +486,9 @@ struct DiscoverView: View {
                 }
                 .frame(maxWidth: UI.Discover.matchPopoverWidth, alignment: .leading)
                 .padding(UI.Discover.matchPopoverPadding)
+                .background(theme.surface)
                 .presentationCompactAdaptation(.popover)
+                .presentationBackground(theme.surface)
             }
         }
         .foregroundStyle(.white)
