@@ -168,7 +168,8 @@ struct UI {
         static let iconSize: CGFloat = 12
         static let width: CGFloat = 40
         static let height: CGFloat = 32
-        static let borderOpacity: Double = 0.18
+        static let borderOpacity: Double = 0.9
+        static let tintOpacity: Double = 0.22
         static let popoverSpacing: CGFloat = 8
         static let popoverPadding: CGFloat = 14
         static let popoverWidth: CGFloat = 220

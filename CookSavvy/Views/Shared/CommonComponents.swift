@@ -76,6 +76,18 @@ struct RecipeSourceBadge: View {
     var cornerRadius: CGFloat = UI.Common.cardCornerRadius
     @State private var isPopoverPresented = false
 
+    private var badgeShape: UnevenRoundedRectangle {
+        UnevenRoundedRectangle(
+            cornerRadii: .init(
+                topLeading: 0,
+                bottomLeading: cornerRadius,
+                bottomTrailing: 0,
+                topTrailing: cornerRadius
+            ),
+            style: .continuous
+        )
+    }
+
     var body: some View {
         Button {
             isPopoverPresented = true
@@ -84,26 +96,27 @@ struct RecipeSourceBadge: View {
                 .font(.system(size: UI.SourceBadge.iconSize, weight: .semibold))
                 .foregroundStyle(source.foregroundColor(theme: theme))
                 .frame(width: UI.SourceBadge.width, height: UI.SourceBadge.height)
-                .background(source.backgroundColor(theme: theme))
-                .clipShape(
-                    .rect(
-                        topLeadingRadius: 0,
-                        bottomLeadingRadius: cornerRadius,
-                        bottomTrailingRadius: 0,
-                        topTrailingRadius: cornerRadius
-                    )
-                )
+                .background {
+                    badgeShape
+                        .fill(.ultraThinMaterial)
+                        .overlay {
+                            badgeShape
+                                .fill(source.backgroundColor(theme: theme).opacity(UI.SourceBadge.tintOpacity))
+                        }
+                }
                 .overlay {
-                    UnevenRoundedRectangle(
-                        cornerRadii: .init(
-                            topLeading: 0,
-                            bottomLeading: cornerRadius,
-                            bottomTrailing: 0,
-                            topTrailing: cornerRadius
-                        ),
-                        style: .continuous
-                    )
-                    .stroke(.white.opacity(UI.SourceBadge.borderOpacity), lineWidth: UI.Common.borderWidth)
+                    badgeShape
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    theme.frostStrokeTop.opacity(UI.SourceBadge.borderOpacity),
+                                    theme.frostStrokeBottom.opacity(UI.SourceBadge.borderOpacity)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: UI.Common.borderWidth
+                        )
                 }
         }
         .buttonStyle(.plain)
