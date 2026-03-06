@@ -3,18 +3,10 @@ import SwiftUI
 @MainActor
 final class DiscoverViewModel: ObservableObject {
 
-    struct MoodOption: Identifiable {
-        let id: Int
-        let name: String
-        let icon: String
-        let color: Color
-        let gradient: [Color]
-    }
-
     // MARK: - Published State
 
     @Published var selectedIngredients: [Ingredient] = []
-    @Published var selectedMoodID: Int? = nil
+    @Published var selectedMood: RecipeMood? = nil
     @Published var searchText = "" {
         didSet {
             guard searchText != oldValue else { return }
@@ -87,10 +79,11 @@ final class DiscoverViewModel: ObservableObject {
 
     var filteredRecipes: [Recipe] {
         guard !searchResultRecipes.isEmpty else { return [] }
-        if let selectedMoodID, selectedMoodID < Self.moods.count {
+        guard let selectedMood else {
             return searchResultRecipes
         }
-        return searchResultRecipes
+
+        return RecipeMoodRanker.rank(searchResultRecipes, for: selectedMood)
     }
 
     var bestMatch: Recipe? {
@@ -133,19 +126,6 @@ final class DiscoverViewModel: ObservableObject {
         return Strings.Discover.allIngredients
     }
 
-    static let moods: [MoodOption] = [
-        .init(id: 0, name: Strings.MoodFilter.cozy, icon: Icons.Mood.cozy, color: Color(red: 1.0, green: 0.55, blue: 0.20),
-              gradient: [Color(red: 1.0, green: 0.55, blue: 0.20), Color(red: 0.85, green: 0.30, blue: 0.15)]),
-        .init(id: 1, name: Strings.MoodFilter.fresh, icon: Icons.Mood.fresh, color: Color(red: 0.30, green: 0.85, blue: 0.72),
-              gradient: [Color(red: 0.30, green: 0.85, blue: 0.72), Color(red: 0.15, green: 0.65, blue: 0.55)]),
-        .init(id: 2, name: Strings.MoodFilter.bold, icon: Icons.Mood.bold, color: Color(red: 0.95, green: 0.35, blue: 0.50),
-              gradient: [Color(red: 0.95, green: 0.35, blue: 0.50), Color(red: 0.75, green: 0.20, blue: 0.40)]),
-        .init(id: 3, name: Strings.MoodFilter.comfort, icon: Icons.Mood.comfort, color: Color(red: 0.65, green: 0.50, blue: 0.95),
-              gradient: [Color(red: 0.65, green: 0.50, blue: 0.95), Color(red: 0.45, green: 0.30, blue: 0.80)]),
-        .init(id: 4, name: Strings.MoodFilter.quick, icon: Icons.Mood.quick, color: Color(red: 0.35, green: 0.65, blue: 1.0),
-              gradient: [Color(red: 0.35, green: 0.65, blue: 1.0), Color(red: 0.20, green: 0.45, blue: 0.85)]),
-    ]
-
     // MARK: - Actions
 
     func loadInitialData() async {
@@ -171,7 +151,7 @@ final class DiscoverViewModel: ObservableObject {
         if !hasIngredients {
             showResults = false
             searchResultRecipes = []
-            selectedMoodID = nil
+            selectedMood = nil
         }
         //searchText = ""
     }
@@ -186,14 +166,14 @@ final class DiscoverViewModel: ObservableObject {
         if !hasIngredients {
             showResults = false
             searchResultRecipes = []
-            selectedMoodID = nil
+            selectedMood = nil
         }
     }
 
     func clearIngredients() {
         selectedIngredients.removeAll()
         searchResultRecipes = []
-        selectedMoodID = nil
+        selectedMood = nil
         showResults = false
     }
 
@@ -203,8 +183,8 @@ final class DiscoverViewModel: ObservableObject {
         Task { await searchRecipes() }
     }
 
-    func toggleMood(_ moodID: Int) {
-        selectedMoodID = selectedMoodID == moodID ? nil : moodID
+    func toggleMood(_ mood: RecipeMood) {
+        selectedMood = selectedMood == mood ? nil : mood
     }
 
     func toggleCategory(_ category: IngredientCategory) {

@@ -245,6 +245,19 @@ struct UI {
     // MARK: - Discover
 
     struct Discover {
+        struct Mood {
+            static let cozyColor = Color(red: 1.0, green: 0.55, blue: 0.20)
+            static let cozyGradient = [cozyColor, Color(red: 0.85, green: 0.30, blue: 0.15)]
+            static let freshColor = Color(red: 0.30, green: 0.85, blue: 0.72)
+            static let freshGradient = [freshColor, Color(red: 0.15, green: 0.65, blue: 0.55)]
+            static let boldColor = Color(red: 0.95, green: 0.35, blue: 0.50)
+            static let boldGradient = [boldColor, Color(red: 0.75, green: 0.20, blue: 0.40)]
+            static let comfortColor = Color(red: 0.65, green: 0.50, blue: 0.95)
+            static let comfortGradient = [comfortColor, Color(red: 0.45, green: 0.30, blue: 0.80)]
+            static let quickColor = Color(red: 0.35, green: 0.65, blue: 1.0)
+            static let quickGradient = [quickColor, Color(red: 0.20, green: 0.45, blue: 0.85)]
+        }
+
         static let horizontalPadding: CGFloat = 20
         static let headerTopPadding: CGFloat = 8
         static let searchBarHorizontalPadding: CGFloat = 16
@@ -285,6 +298,36 @@ struct UI {
         static let findButtonHeight: CGFloat = 56
         static let findButtonCornerRadius: CGFloat = 28 // Pill shape for 56 height
         static let findButtonBottomPadding: CGFloat = 16
+
+        static func moodColor(for mood: RecipeMood) -> Color {
+            switch mood {
+            case .cozy:
+                return Mood.cozyColor
+            case .fresh:
+                return Mood.freshColor
+            case .bold:
+                return Mood.boldColor
+            case .comfort:
+                return Mood.comfortColor
+            case .quick:
+                return Mood.quickColor
+            }
+        }
+
+        static func moodGradient(for mood: RecipeMood) -> [Color] {
+            switch mood {
+            case .cozy:
+                return Mood.cozyGradient
+            case .fresh:
+                return Mood.freshGradient
+            case .bold:
+                return Mood.boldGradient
+            case .comfort:
+                return Mood.comfortGradient
+            case .quick:
+                return Mood.quickGradient
+            }
+        }
     }
 
     // MARK: - Components (V2Components)

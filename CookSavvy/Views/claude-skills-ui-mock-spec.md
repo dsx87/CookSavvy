@@ -94,7 +94,7 @@ Section labels use UPPERCASE + letter-spacing (tracking 1.5) pattern throughout.
 
 **File reference:** `V2DiscoverView`
 
-This screen has two visual states controlled by `selectedIngredients.isEmpty`:
+This screen has two visual states controlled by ingredient selection plus an explicit `showResults` transition:
 
 ### State 1 — Ingredient Selection + Personal History (landing)
 
@@ -146,14 +146,14 @@ This is what the user sees when opening the app. It combines ingredient selectio
    - Each bubble: 60pt circle with emoji + name below
    - **Selected state:** Orange accent border (2pt), soft accent background, slight scale-up (1.08x), bold name in accent color
    - **Unselected state:** `surface` background, `divider` border (1pt), regular weight name in `text2`
-   - **Behavior:** Tap toggles selection. First ingredient selected triggers animated transition to State 2.
+   - **Behavior:** Tap toggles selection. After at least one ingredient is selected, the "Find Recipes" CTA becomes available and transitions to State 2 when tapped.
    - **Animation:** `.spring(response: 0.3)` on toggle
    - **Data source:** `IngredientsService.allIngredients()` or similar. In mock, 20 ingredients across 6 categories.
    - **Integration note:** This replaces the current `IngredientsInputView` search-bar + autocomplete + fast-ingredient flow. The grid approach removes the need for typed autocomplete — the user taps directly. The search bar acts as a filter for the grid, not a separate autocomplete dropdown.
 
 ### State 2 — Recipe Results (ingredients selected)
 
-Appears immediately when the user selects their first ingredient. Animated transition: slide from trailing + opacity.
+Appears after the user taps the "Find Recipes" CTA once at least one ingredient is selected. Animated transition: slide from trailing + opacity.
 
 **Layout (top to bottom):**
 
@@ -178,12 +178,14 @@ Appears immediately when the user selects their first ingredient. Animated trans
    - Each pill has SF Symbol icon + name, each with unique color
    - **Selected state:** Gradient background (L->R), white text, neon glow
    - **Unselected state:** Color at 12% opacity background, color text, subtle border
-   - **Behavior:** Single-select toggle. Filters recipe results. Optional — can be nil.
-   - **Integration note:** This is a NEW concept not in the current app. Implementation options:
-     - Tag recipes with mood in the database
-     - Use AI to classify recipes by mood
-     - Filter by heuristics (e.g., Quick = cookTime < 15, Comfort = certain categories, etc.)
-     - For MVP: can be omitted or implemented as simple cook-time/category filters
+   - **Behavior:** Single-select toggle. Reranks recipe results instead of hard-filtering them. Optional — can be nil.
+   - **Implementation note:** Current app behavior uses lightweight heuristics from existing recipe data:
+     - `Quick`: boosts short cook time, easy complexity, "quick/fast/easy" terms
+     - `Fresh`: boosts salads, citrus, herbs, greens, avocado, yogurt, lighter ingredient signals
+     - `Bold`: boosts spicy/garlic/smoked/curry keywords and stronger cuisine signals
+     - `Comfort`: boosts pasta/cheese/potato/rice/creamy/baked keywords
+     - `Cozy`: boosts soup/stew/broth/ramen/roast/warm keywords and longer cook times
+   - **Rationale:** Reranking preserves the original search relevance while still making the mood visibly affect hero selection and list order.
 
 4. **Best Match — Featured Hero Card**
    - Section label "BEST MATCH"
@@ -205,7 +207,7 @@ Appears immediately when the user selects their first ingredient. Animated trans
 
 ### Transition Between States
 
-- Controlled by `selectedIngredients.isEmpty`
+- Controlled by a dedicated `showResults` state that is triggered by the "Find Recipes" CTA
 - State 1 uses `.transition(.move(edge: .leading).combined(with: .opacity))`
 - State 2 uses `.transition(.move(edge: .trailing).combined(with: .opacity))`
 - Spring animation: `response: 0.45, dampingFraction: 0.85`

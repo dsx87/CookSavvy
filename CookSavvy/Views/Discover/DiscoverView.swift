@@ -336,17 +336,17 @@ struct DiscoverView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: UI.Discover.moodPillSpacing) {
-                    ForEach(DiscoverViewModel.moods) { mood in
+                    ForEach(RecipeMood.allCases) { mood in
                         MoodPill(
                             name: mood.name,
                             icon: mood.icon,
-                            color: mood.color,
-                            gradient: mood.gradient,
-                            isSelected: viewModel.selectedMoodID == mood.id
+                            color: UI.Discover.moodColor(for: mood),
+                            gradient: UI.Discover.moodGradient(for: mood),
+                            isSelected: viewModel.selectedMood == mood
                         )
                         .onTapGesture {
                             withAnimation(UI.Anim.springBouncy) {
-                                viewModel.toggleMood(mood.id)
+                                viewModel.toggleMood(mood)
                             }
                         }
                     }

@@ -159,6 +159,7 @@ CookSavvy/
 ├── Services/
 │   ├── Recipe/
 │   │   ├── RecipeService.swift
+│   │   ├── RecipeMoodRanker.swift
 │   │   ├── RecipeSourceProtocol.swift — Protocol + RecipeSourceType + errors
 │   │   ├── OfflineRecipeSource.swift
 │   │   ├── OnlineRecipeSource.swift
