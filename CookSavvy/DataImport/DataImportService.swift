@@ -54,8 +54,7 @@ final class DataImportService {
 
         var importedRecipes: [Recipe] = try csvReader.parseCSVFromZip(
             zipURL: zipURL,
-            csvFilename: "Food Ingredients and Recipe Dataset with Image Name Mapping.csv",
-            useCache: true
+            csvFilename: "Food Ingredients and Recipe Dataset with Image Name Mapping.csv"
         )
 
         // TODO: optimize

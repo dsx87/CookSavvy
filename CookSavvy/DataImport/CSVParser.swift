@@ -9,88 +9,70 @@ import Foundation
 import ZIPFoundation
 import CSV
 
-/*
- Common usage:
- let csvConv = CSVParser()
- let zip = Bundle.main.url(forResource: "food-ingredients-and-recipe-dataset-with-images", withExtension: "zip")!
- let recipes: [Recipe] = try! csvConv.parseCSVFromZip(
-     zipURL: zip,
-     csvFilename: "Food Ingredients and Recipe Dataset with Image Name Mapping.csv"
- )
- */
-
-class CSVParser {
-    enum ParserError: Error {
-        case fileNotFound
+final class CSVParser {
+    enum ParserError: LocalizedError {
+        case fileNotFound(String)
         case csvParsingFailed(Error)
         case zipExtractionFailed(Error)
         case emptyCSV
-    }
-    
-    func parseCSVFromZip<T: Decodable>(zipURL: URL, csvFilename: String, useCache: Bool = true) throws -> [T] {
-        let csvData = try extractCSV(from: zipURL, with: csvFilename).data(using: .utf8)!
-        let decodedItems = try CSVDecoder().decode([T].self, from: csvData)
-        return decodedItems
-//        let fm = FileManager.default
-//        let docsDir = fm.urls(for: .documentDirectory, in: .userDomainMask).first!
-//        let jsonURL = docsDir
-//            .appendingPathComponent(csvFilename)
-//            .replacingPathExtension(to: "json")
-//        
-//        let jsonData: Data
-//        if !fm.fileExists(atPath: jsonURL.path) || !useCache {
-//            let csvStr = try extractCSV(from: zipURL, with: csvFilename)
-//            let csvAsDic = try csvToJSON(csvString: csvStr)
-//            let csvAsJson = try JSONSerialization.data(withJSONObject: csvAsDic)
-//            jsonData = csvAsJson
-//            try csvAsJson.write(to: jsonURL)
-//        } else {
-//            jsonData = try Data(contentsOf: jsonURL)
-//        }
-//        
-//        let result = try JSONDecoder().decode([T].self, from: jsonData)
-//        return result
-    }
-    
-    
-//    private func csvToJSON(csvString: String) throws -> [[String:String]] {
-//        let csv = try CSVReader(string: csvString, hasHeaderRow: true)
-//        
-//        guard let headers = csv.headerRow, !headers.isEmpty else {
-//            throw ParserError.emptyCSV
-//        }
-//        
-//        var res: [[String:String]] = []
-//        while let values = csv.next() {
-//            var dic: [String: String] = [:]
-//            for (i, value) in values.enumerated() {
-//                guard i < headers.count else { continue }
-//                let key = headers[i]
-//                if key.isEmpty { continue }
-//                dic[key] = value
-//            }
-//            res.append(dic)
-//        }
-//        return res
-//    }
-    
-    private func extractCSV(from zipFile: URL, with name: String) throws -> String {
-        let unarchiver = Unarchiver()
-        let csvData = try unarchiver.extract(file: name, fromZipFileUrl: zipFile)
-        
-        guard let csvString = String(data: csvData, encoding: .utf8) else {
-            throw ParserError.csvParsingFailed(NSError(domain: "CSVParser", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to decode CSV data as UTF-8"]))
-        }
-        return csvString
-    }
-    
-}
 
-extension URL {
-    func replacingPathExtension(to ext: String) -> URL {
-        
-        deletingPathExtension().appendingPathExtension(ext)
-        
+        var errorDescription: String? {
+            switch self {
+            case .fileNotFound(let filename):
+                return "CSV file not found: \(filename)"
+            case .csvParsingFailed(let error):
+                return "Failed to parse CSV: \(error.localizedDescription)"
+            case .zipExtractionFailed(let error):
+                return "Failed to extract CSV from ZIP: \(error.localizedDescription)"
+            case .emptyCSV:
+                return "CSV file did not contain any rows"
+            }
+        }
+    }
+
+    func parseCSVFromZip<T: Decodable>(zipURL: URL, csvFilename: String) throws -> [T] {
+        let csvString = try extractCSV(from: zipURL, with: csvFilename)
+
+        do {
+            let decodedItems = try CSVDecoder().decode([T].self, from: csvString)
+            guard !decodedItems.isEmpty else {
+                throw ParserError.emptyCSV
+            }
+            return decodedItems
+        } catch let error as ParserError {
+            throw error
+        } catch {
+            throw ParserError.csvParsingFailed(error)
+        }
+    }
+
+    private func extractCSV(from zipFile: URL, with name: String) throws -> String {
+        do {
+            let csvData = try Unarchiver().extract(file: name, fromZipFileUrl: zipFile)
+
+            guard let csvString = String(data: csvData, encoding: .utf8) else {
+                throw ParserError.csvParsingFailed(
+                    NSError(
+                        domain: "CSVParser",
+                        code: -1,
+                        userInfo: [NSLocalizedDescriptionKey: "Failed to decode CSV data as UTF-8"]
+                    )
+                )
+            }
+
+            return csvString
+        } catch let error as ParserError {
+            throw error
+        } catch let error as Unarchiver.UnarchiverError {
+            switch error {
+            case .zipFileNotFound, .fileNotFoundInZipArchive:
+                throw ParserError.fileNotFound(name)
+            case .fileNotExtracted:
+                throw ParserError.zipExtractionFailed(error)
+            }
+        } catch {
+            throw ParserError.zipExtractionFailed(error)
+        }
     }
 }
 
@@ -138,8 +120,30 @@ public struct CSVDecoder {
         return try decode(type, from: string)
     }
 
+    public func decode<T: Decodable>(_ type: [T].Type, from data: Data) throws -> [T] {
+        guard let string = String(data: data, encoding: .utf8) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "CSV data is not valid UTF-8"))
+        }
+        return try decode(type, from: string)
+    }
+
+    public func decode<T: Decodable>(_ type: [T].Type, from string: String) throws -> [T] {
+        let reader = try CSVReader(string: string, hasHeaderRow: true)
+        guard let headers = reader.headerRow, !headers.isEmpty else {
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "CSV has no header row"))
+        }
+
+        var decodedRows: [T] = []
+        while let values = reader.next() {
+            let row = makeRow(headers: headers, values: values)
+            let decoder = RowDecoder(row: row, options: makeOptions())
+            decodedRows.append(try T(from: decoder))
+        }
+
+        return decodedRows
+    }
+
     public func decode<T: Decodable>(_ type: T.Type, from string: String) throws -> T {
-        // Parse the CSV into an array of dictionaries keyed by header names
         let reader = try CSVReader(string: string, hasHeaderRow: true)
         guard let headers = reader.headerRow, !headers.isEmpty else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "CSV has no header row"))
@@ -147,14 +151,7 @@ public struct CSVDecoder {
         
         var rows: [[String: String]] = []
         while let values = reader.next() {
-            var dict: [String: String] = [:]
-            for (i, value) in values.enumerated() {
-                guard i < headers.count else { continue }
-                let key = headers[i]
-                if key.isEmpty { continue }
-                dict[key] = value
-            }
-            rows.append(dict)
+            rows.append(makeRow(headers: headers, values: values))
         }
 
         let top = CSVTopLevelDecoder(rows: rows, options: makeOptions())
@@ -163,6 +160,17 @@ public struct CSVDecoder {
 
     private func makeOptions() -> RowDecoder.Options {
         .init(dateStrategy: dateDecodingStrategy, dataStrategy: dataDecodingStrategy, userInfo: userInfo)
+    }
+
+    private func makeRow(headers: [String], values: [String]) -> [String: String] {
+        var row: [String: String] = [:]
+        for (index, value) in values.enumerated() {
+            guard index < headers.count else { continue }
+            let key = headers[index]
+            if key.isEmpty { continue }
+            row[key] = value
+        }
+        return row
     }
 
     // MARK: RowDecoder
@@ -212,20 +220,20 @@ public struct CSVDecoder {
                 return raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             }
 
-            func decode(_ type: Bool.Type, forKey key: Key) throws -> Bool { try decodeString(for: key).toBool() }
+            func decode(_ type: Bool.Type, forKey key: Key) throws -> Bool { try decodeBool(for: key) }
             func decode(_ type: String.Type, forKey key: Key) throws -> String { try decodeString(for: key) }
-            func decode(_ type: Double.Type, forKey key: Key) throws -> Double { try convert(decodeString(for: key), to: Double.self) }
-            func decode(_ type: Float.Type, forKey key: Key) throws -> Float { try convert(decodeString(for: key), to: Float.self) }
-            func decode(_ type: Int.Type, forKey key: Key) throws -> Int { try convert(decodeString(for: key), to: Int.self) }
-            func decode(_ type: Int8.Type, forKey key: Key) throws -> Int8 { try convert(decodeString(for: key), to: Int8.self) }
-            func decode(_ type: Int16.Type, forKey key: Key) throws -> Int16 { try convert(decodeString(for: key), to: Int16.self) }
-            func decode(_ type: Int32.Type, forKey key: Key) throws -> Int32 { try convert(decodeString(for: key), to: Int32.self) }
-            func decode(_ type: Int64.Type, forKey key: Key) throws -> Int64 { try convert(decodeString(for: key), to: Int64.self) }
-            func decode(_ type: UInt.Type, forKey key: Key) throws -> UInt { try convert(decodeString(for: key), to: UInt.self) }
-            func decode(_ type: UInt8.Type, forKey key: Key) throws -> UInt8 { try convert(decodeString(for: key), to: UInt8.self) }
-            func decode(_ type: UInt16.Type, forKey key: Key) throws -> UInt16 { try convert(decodeString(for: key), to: UInt16.self) }
-            func decode(_ type: UInt32.Type, forKey key: Key) throws -> UInt32 { try convert(decodeString(for: key), to: UInt32.self) }
-            func decode(_ type: UInt64.Type, forKey key: Key) throws -> UInt64 { try convert(decodeString(for: key), to: UInt64.self) }
+            func decode(_ type: Double.Type, forKey key: Key) throws -> Double { try convert(trimmedString(for: key), to: Double.self, key: key) }
+            func decode(_ type: Float.Type, forKey key: Key) throws -> Float { try convert(trimmedString(for: key), to: Float.self, key: key) }
+            func decode(_ type: Int.Type, forKey key: Key) throws -> Int { try convert(trimmedString(for: key), to: Int.self, key: key) }
+            func decode(_ type: Int8.Type, forKey key: Key) throws -> Int8 { try convert(trimmedString(for: key), to: Int8.self, key: key) }
+            func decode(_ type: Int16.Type, forKey key: Key) throws -> Int16 { try convert(trimmedString(for: key), to: Int16.self, key: key) }
+            func decode(_ type: Int32.Type, forKey key: Key) throws -> Int32 { try convert(trimmedString(for: key), to: Int32.self, key: key) }
+            func decode(_ type: Int64.Type, forKey key: Key) throws -> Int64 { try convert(trimmedString(for: key), to: Int64.self, key: key) }
+            func decode(_ type: UInt.Type, forKey key: Key) throws -> UInt { try convert(trimmedString(for: key), to: UInt.self, key: key) }
+            func decode(_ type: UInt8.Type, forKey key: Key) throws -> UInt8 { try convert(trimmedString(for: key), to: UInt8.self, key: key) }
+            func decode(_ type: UInt16.Type, forKey key: Key) throws -> UInt16 { try convert(trimmedString(for: key), to: UInt16.self, key: key) }
+            func decode(_ type: UInt32.Type, forKey key: Key) throws -> UInt32 { try convert(trimmedString(for: key), to: UInt32.self, key: key) }
+            func decode(_ type: UInt64.Type, forKey key: Key) throws -> UInt64 { try convert(trimmedString(for: key), to: UInt64.self, key: key) }
 
             func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T : Decodable {
                 // If T is Decodable but not a primitive, attempt to decode using nested RowDecoder
@@ -234,7 +242,7 @@ public struct CSVDecoder {
                 } else if T.self == Data.self || T.self == NSData.self {
                     return try decodeData(for: key) as! T
                 } else if T.self == URL.self || T.self == NSURL.self {
-                    let s = try decodeString(for: key)
+                    let s = try trimmedString(for: key)
                     guard let url = URL(string: s) else {
                         throw DecodingError.dataCorrupted(.init(codingPath: codingPath + [key], debugDescription: "Invalid URL string: \(s)"))
                     }
@@ -285,8 +293,24 @@ public struct CSVDecoder {
                 return try body()
             }
 
+            private func trimmedString(for key: Key) throws -> String {
+                try decodeString(for: key).trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+
+            private func decodeBool(for key: Key) throws -> Bool {
+                let value = try trimmedString(for: key).lowercased()
+                switch value {
+                case "true", "t", "yes", "y", "1":
+                    return true
+                case "false", "f", "no", "n", "0":
+                    return false
+                default:
+                    throw typeMismatch(Bool.self, value, key)
+                }
+            }
+
             private func decodeDate(for key: Key) throws -> Date {
-                let s = try decodeString(for: key)
+                let s = try trimmedString(for: key)
                 switch decoder.options.dateStrategy {
                 case .deferredToDate:
                     let nested = RowDecoder(row: [key.stringValue: s], options: decoder.options, codingPath: codingPath + [key])
@@ -313,7 +337,7 @@ public struct CSVDecoder {
             }
 
             private func decodeData(for key: Key) throws -> Data {
-                let s = try decodeString(for: key)
+                let s = try trimmedString(for: key)
                 switch decoder.options.dataStrategy {
                 case .deferredToData:
                     let nested = RowDecoder(row: [key.stringValue: s], options: decoder.options, codingPath: codingPath + [key])
@@ -327,9 +351,9 @@ public struct CSVDecoder {
                 }
             }
 
-            private func convert<T: LosslessStringConvertible>(_ s: String, to: T.Type) throws -> T {
+            private func convert<T: LosslessStringConvertible>(_ s: String, to: T.Type, key: Key) throws -> T {
                 if let v = T(s) { return v }
-                throw DecodingError.typeMismatch(T.self, .init(codingPath: codingPath, debugDescription: "Cannot convert \(s) to \(T.self)"))
+                throw typeMismatch(T.self, s, key)
             }
 
             private func typeMismatch(_ t: Any.Type, _ raw: String, _ key: Key) -> DecodingError {
@@ -388,24 +412,8 @@ public struct CSVDecoder {
             return try T(from: d)
         }
 
-        // Primitive convenience implementations redirect to generic path
-        mutating func decode(_ type: Bool.Type) throws -> Bool { try decode(Bool.self) }
-        mutating func decode(_ type: String.Type) throws -> String { try decode(String.self) }
-        mutating func decode(_ type: Double.Type) throws -> Double { try decode(Double.self) }
-        mutating func decode(_ type: Float.Type) throws -> Float { try decode(Float.self) }
-        mutating func decode(_ type: Int.Type) throws -> Int { try decode(Int.self) }
-        mutating func decode(_ type: Int8.Type) throws -> Int8 { try decode(Int8.self) }
-        mutating func decode(_ type: Int16.Type) throws -> Int16 { try decode(Int16.self) }
-        mutating func decode(_ type: Int32.Type) throws -> Int32 { try decode(Int32.self) }
-        mutating func decode(_ type: Int64.Type) throws -> Int64 { try decode(Int64.self) }
-        mutating func decode(_ type: UInt.Type) throws -> UInt { try decode(UInt.self) }
-        mutating func decode(_ type: UInt8.Type) throws -> UInt8 { try decode(UInt8.self) }
-        mutating func decode(_ type: UInt16.Type) throws -> UInt16 { try decode(UInt16.self) }
-        mutating func decode(_ type: UInt32.Type) throws -> UInt32 { try decode(UInt32.self) }
-        mutating func decode(_ type: UInt64.Type) throws -> UInt64 { try decode(UInt64.self) }
-
         mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
-            let d = RowDecoder(row: rows[currentIndex], options: options)
+            let d = RowDecoder(row: try currentRow(), options: options)
             return try d.container(keyedBy: type)
         }
 
@@ -414,20 +422,17 @@ public struct CSVDecoder {
         }
 
         mutating func superDecoder() throws -> Decoder {
-            RowDecoder(row: rows[currentIndex], options: options)
+            RowDecoder(row: try currentRow(), options: options)
         }
-    }
-}
 
-// MARK: - Conversions
-private extension String {
-    func toBool() throws -> Bool {
-        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        switch trimmed {
-        case "true", "t", "yes", "y", "1": return true
-        case "false", "f", "no", "n", "0": return false
-        default:
-            throw DecodingError.typeMismatch(Bool.self, .init(codingPath: [], debugDescription: "Cannot convert \(self) to Bool"))
+        private func currentRow() throws -> [String: String] {
+            guard !isAtEnd else {
+                throw DecodingError.valueNotFound(
+                    [String: String].self,
+                    .init(codingPath: codingPath, debugDescription: "Unkeyed container is at end")
+                )
+            }
+            return rows[currentIndex]
         }
     }
 }

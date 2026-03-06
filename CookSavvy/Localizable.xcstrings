@@ -1,20 +1,7 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "%@ %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ %2$@"
-          }
-        }
-      }
-    },
     "%lld" : {
-
-    },
-    "%lld cal" : {
 
     },
     "%lld found" : {
@@ -45,40 +32,16 @@
     "%lld%%" : {
 
     },
-    "%lld%% match" : {
-
-    },
     "%lldm" : {
 
     },
     "🧑‍🍳" : {
 
     },
-    "1/5" : {
-
-    },
-    "ACHIEVEMENTS" : {
-
-    },
     "Add Ingredient" : {
 
     },
-    "Add ingredients and we'll find recipes for you" : {
-
-    },
-    "Add Recipe" : {
-
-    },
     "Add Step" : {
-
-    },
-    "Add Your Own" : {
-
-    },
-    "Back" : {
-
-    },
-    "BEST MATCH" : {
 
     },
     "by %@" : {
@@ -187,12 +150,6 @@
       }
     },
     "COOK TIME" : {
-
-    },
-    "Cooked 2 days ago" : {
-
-    },
-    "Cooking since January 2026" : {
 
     },
     "COOKING STEPS" : {
@@ -375,9 +332,6 @@
       }
     },
     "DIFFICULTY" : {
-
-    },
-    "Discover" : {
 
     },
     "discover.addYourOwn" : {
@@ -611,25 +565,10 @@
         }
       }
     },
-    "Done" : {
-
-    },
-    "Edit" : {
-
-    },
-    "Finish" : {
-
-    },
-    "Home Chef" : {
-
-    },
     "Ingredient %lld" : {
 
     },
     "INGREDIENTS" : {
-
-    },
-    "Journey" : {
 
     },
     "journey.achievements" : {
@@ -767,9 +706,6 @@
     "Level %lld" : {
 
     },
-    "Level 7 • Sous Chef" : {
-
-    },
     "minutes" : {
 
     },
@@ -839,27 +775,6 @@
         }
       }
     },
-    "MORE RECIPES" : {
-
-    },
-    "MY RECIPES" : {
-
-    },
-    "Next" : {
-
-    },
-    "Pause" : {
-
-    },
-    "RECENT" : {
-
-    },
-    "RECENT ACTIVITY" : {
-
-    },
-    "Recipe name" : {
-
-    },
     "RECIPE NAME" : {
 
     },
@@ -917,24 +832,6 @@
           }
         }
       }
-    },
-    "Recipes for you" : {
-
-    },
-    "REFINE BY MOOD" : {
-
-    },
-    "Save Recipe" : {
-
-    },
-    "SAVED" : {
-
-    },
-    "Search ingredients..." : {
-
-    },
-    "See All" : {
-
     },
     "SERVINGS" : {
 
@@ -1269,27 +1166,8 @@
         }
       }
     },
-    "Short description" : {
-
-    },
-    "Start Cooking" : {
-
-    },
-    "Start Timer" : {
-
-    },
     "Step %lld" : {
 
-    },
-    "Step %lld of %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Step %1$lld of %2$lld"
-          }
-        }
-      }
     },
     "STEPS" : {
 
@@ -1317,9 +1195,6 @@
       }
     },
     "TAGLINE" : {
-
-    },
-    "THIS WEEK" : {
 
     },
     "upgrade.autoRenew" : {
@@ -1420,12 +1295,6 @@
           }
         }
       }
-    },
-    "What's in your\nkitchen?" : {
-
-    },
-    "YOUR INGREDIENTS" : {
-
     }
   },
   "version" : "1.0"
