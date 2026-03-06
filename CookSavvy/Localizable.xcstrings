@@ -11,16 +11,6 @@
         }
       }
     },
-    "%@%lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@%2$lld"
-          }
-        }
-      }
-    },
     "%lld" : {
 
     },
@@ -627,72 +617,6 @@
     "Edit" : {
 
     },
-    "favorites.emptySubtitle" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Tap the heart icon on recipes to save them here"
-          }
-        }
-      }
-    },
-    "favorites.emptyTitle" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "No favorite recipes"
-          }
-        }
-      }
-    },
-    "favorites.loading" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading favorites..."
-          }
-        }
-      }
-    },
-    "favorites.navigationTitle" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Favorites"
-          }
-        }
-      }
-    },
-    "favorites.removeLabel" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Remove"
-          }
-        }
-      }
-    },
-    "findButton.title" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Find Recipes (2 ingredients)"
-          }
-        }
-      }
-    },
     "Finish" : {
 
     },
@@ -704,50 +628,6 @@
     },
     "INGREDIENTS" : {
 
-    },
-    "ingredientsInput.cameraPlaceholder" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "not implemented yet, close"
-          }
-        }
-      }
-    },
-    "ingredientsInput.loading" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading ingredients..."
-          }
-        }
-      }
-    },
-    "ingredientsInput.navigationTitle" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Ingredients Input"
-          }
-        }
-      }
-    },
-    "ingredientsInput.searchLoading" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Searching..."
-          }
-        }
-      }
     },
     "Journey" : {
 
@@ -977,50 +857,6 @@
     "RECENT ACTIVITY" : {
 
     },
-    "recent.emptySubtitle" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Recipes you view will appear here"
-          }
-        }
-      }
-    },
-    "recent.emptyTitle" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "No recent recipes"
-          }
-        }
-      }
-    },
-    "recent.loading" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading recent recipes..."
-          }
-        }
-      }
-    },
-    "recent.navigationTitle" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Recent Recipes"
-          }
-        }
-      }
-    },
     "Recipe name" : {
 
     },
@@ -1096,83 +932,6 @@
     },
     "Search ingredients..." : {
 
-    },
-    "searchBar.placeholder" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Type an ingredient"
-          }
-        }
-      }
-    },
-    "searchResults.foundFormat" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Found %1$lld recipes using %2$@"
-          }
-        }
-      }
-    },
-    "searchResults.loading" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading recipes..."
-          }
-        }
-      }
-    },
-    "searchResults.navigationTitle" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Recipe search result"
-          }
-        }
-      }
-    },
-    "searchResults.noResultsSubtitle" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Try different ingredients"
-          }
-        }
-      }
-    },
-    "searchResults.noResultsTitle" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "No recipes found"
-          }
-        }
-      }
-    },
-    "searchResults.preparingDatabase" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Preparing recipes database..."
-          }
-        }
-      }
     },
     "See All" : {
 
@@ -1546,28 +1305,6 @@
         }
       }
     },
-    "tab.favorites" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Favorites"
-          }
-        }
-      }
-    },
-    "tab.ingredients" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Ingredients"
-          }
-        }
-      }
-    },
     "tab.journey" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -1575,28 +1312,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Journey"
-          }
-        }
-      }
-    },
-    "tab.recent" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Recent"
-          }
-        }
-      }
-    },
-    "tab.settings" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Settings"
           }
         }
       }

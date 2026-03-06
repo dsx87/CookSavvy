@@ -228,11 +228,7 @@ CookSavvy/
 │   ├── RecipeDetails/                 — V2 recipe details with hero image + sticky CTA
 │   ├── CookMode/                      — V2 cook mode with step nav + timer (CookModeView + CookModeViewModel)
 │   ├── CreateRecipe/                  — V2 create recipe wizard (CreateRecipeView + CreateRecipeViewModel)
-│   ├── IngredientsInput/              — V1 ingredients input (legacy, kept for search flow)
-│   ├── SearchResults/                 — V1 search results (legacy, kept for search flow)
 │   ├── Camera/                        — Camera capture screen
-│   ├── Favorites/                     — V1 favorites (legacy, absorbed into Discover saved section)
-│   ├── RecentRecipes/                 — V1 recent recipes (legacy, absorbed into Discover recent section)
 │   ├── Settings/                      — Settings screen
 │   └── Upgrade/                       — Subscription upgrade screen
 ├── Extensions/

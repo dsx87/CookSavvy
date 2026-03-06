@@ -114,46 +114,6 @@ struct UI {
         static let previewCount: Int = 10
     }
 
-    // MARK: - IngredientsInput
-
-    struct IngredientsInput {
-        static let backgroundCornerRadius: CGFloat = 10
-        static let popoverWidth: CGFloat = 400
-        static let popoverHeight: CGFloat = 300
-        static let findButtonSpacerMinLength: CGFloat = 150
-        static let fastGridSize: Int = 3
-        static let fastCellCornerRadius: CGFloat = 6
-    }
-
-    // MARK: - SearchBar
-
-    struct SearchBar {
-        static let verticalPadding: CGFloat = 9
-        static let cornerRadius: CGFloat = 6
-        static let borderWidth: CGFloat = 3
-    }
-
-    // MARK: - SelectedIngredient
-
-    struct SelectedIngredient {
-        static let cellSpacing: CGFloat = 0
-        static let removeIconScale: CGFloat = 0.5
-        static let cellPadding: CGFloat = 7
-    }
-
-    // MARK: - FindButton
-
-    struct FindButton {
-        static let cornerRadius: CGFloat = 8
-        static let height: CGFloat = 40
-    }
-
-    // MARK: - SearchResults
-
-    struct SearchResults {
-        static let ingredientLimit: Int = 3
-    }
-
     // MARK: - RecipeDetails
 
     struct RecipeDetails {

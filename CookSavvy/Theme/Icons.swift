@@ -8,16 +8,8 @@ enum Icons {
     }
 
     enum Tab {
-        static let ingredients = "carrot"
-        static let recent = "clock"
-        static let favorites = "heart"
-        static let settings = "gear"
         static let discover = "compass.drawing"
         static let journey = "trophy.fill"
-    }
-
-    enum IngredientsInput {
-        static let autocompleteSelected = "checkmark.circle"
     }
 
     enum SearchBar {
@@ -29,22 +21,9 @@ enum Icons {
         static let remove = "xmark"
     }
 
-    enum SearchResults {
-        static let noResults = "magnifyingglass"
-    }
-
     enum RecipeDetails {
         static let favoriteFilled = "heart.fill"
         static let favoriteOutline = "heart"
-    }
-
-    enum Favorites {
-        static let empty = "heart"
-        static let remove = "heart.slash"
-    }
-
-    enum Recent {
-        static let empty = "clock"
     }
 
     enum Settings {

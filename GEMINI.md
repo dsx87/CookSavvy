@@ -88,4 +88,4 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 - **Camera** — AI ingredient detection (paid tiers)
 - **Upgrade** — subscription upgrade prompt
 - **Tab Container** — 2 tabs: Discover (`compass.drawing`) + Journey (`trophy.fill`)
-- **V1 Legacy** — `IngredientsInput/`, `SearchResults/`, `Favorites/`, `RecentRecipes/` kept for backward compat; functionality absorbed into V2 Discover
+- **Legacy cleanup** — V1 `IngredientsInput/`, `SearchResults/`, `Favorites/`, and `RecentRecipes/` were removed after their flows were absorbed into V2 Discover

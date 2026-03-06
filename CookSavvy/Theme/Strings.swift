@@ -8,56 +8,13 @@ enum Strings {
     }
 
     enum Tab {
-        static let ingredients = String(localized: "tab.ingredients", defaultValue: "Ingredients")
-        static let recent = String(localized: "tab.recent", defaultValue: "Recent")
-        static let favorites = String(localized: "tab.favorites", defaultValue: "Favorites")
-        static let settings = String(localized: "tab.settings", defaultValue: "Settings")
         static let discover = String(localized: "tab.discover", defaultValue: "Discover")
         static let journey = String(localized: "tab.journey", defaultValue: "Journey")
-    }
-
-    enum IngredientsInput {
-        static let navigationTitle = String(localized: "ingredientsInput.navigationTitle", defaultValue: "Ingredients Input")
-        static let cameraPlaceholder = String(localized: "ingredientsInput.cameraPlaceholder", defaultValue: "not implemented yet, close")
-        static let loading = String(localized: "ingredientsInput.loading", defaultValue: "Loading ingredients...")
-        static let searchLoading = String(localized: "ingredientsInput.searchLoading", defaultValue: "Searching...")
-    }
-
-    enum SearchBar {
-        static let placeholder = String(localized: "searchBar.placeholder", defaultValue: "Type an ingredient")
-    }
-
-    enum FindButton {
-        static let title = String(localized: "findButton.title", defaultValue: "Find Recipes (2 ingredients)")
-    }
-
-    enum SearchResults {
-        static let preparingDatabase = String(localized: "searchResults.preparingDatabase", defaultValue: "Preparing recipes database...")
-        static let loading = String(localized: "searchResults.loading", defaultValue: "Loading recipes...")
-        static let noResultsTitle = String(localized: "searchResults.noResultsTitle", defaultValue: "No recipes found")
-        static let noResultsSubtitle = String(localized: "searchResults.noResultsSubtitle", defaultValue: "Try different ingredients")
-        static let navigationTitle = String(localized: "searchResults.navigationTitle", defaultValue: "Recipe search result")
-        static let foundFormat = String(localized: "searchResults.foundFormat", defaultValue: "Found %lld recipes using %@")
     }
 
     enum RecipeDetails {
         static let ingredientsTitle = String(localized: "recipeDetails.ingredientsTitle", defaultValue: "🛒 Ingredients")
         static let instructionsTitle = String(localized: "recipeDetails.instructionsTitle", defaultValue: "🧑‍🍳 Instructions")
-    }
-
-    enum Favorites {
-        static let loading = String(localized: "favorites.loading", defaultValue: "Loading favorites...")
-        static let emptyTitle = String(localized: "favorites.emptyTitle", defaultValue: "No favorite recipes")
-        static let emptySubtitle = String(localized: "favorites.emptySubtitle", defaultValue: "Tap the heart icon on recipes to save them here")
-        static let navigationTitle = String(localized: "favorites.navigationTitle", defaultValue: "Favorites")
-        static let removeLabel = String(localized: "favorites.removeLabel", defaultValue: "Remove")
-    }
-
-    enum Recent {
-        static let loading = String(localized: "recent.loading", defaultValue: "Loading recent recipes...")
-        static let emptyTitle = String(localized: "recent.emptyTitle", defaultValue: "No recent recipes")
-        static let emptySubtitle = String(localized: "recent.emptySubtitle", defaultValue: "Recipes you view will appear here")
-        static let navigationTitle = String(localized: "recent.navigationTitle", defaultValue: "Recent Recipes")
     }
 
     enum Settings {

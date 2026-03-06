@@ -21,51 +21,12 @@ final class DiscoverCoordinator: ObservableObject {
         DiscoverCoordinatorView(coordinator: self)
     }
     
-    // MARK: - Factory Methods (existing VMs)
-    
-    func makeIngredientsInputViewModel() -> IngredientsInputViewModel {
-        IngredientsInputViewModel(
-            ingredientsService: container.ingredientsService,
-            userDataService: container.userDataService,
-            databaseInitService: container.databaseInitService,
-            ingredientDetectionService: container.ingredientDetectionService,
-            subscriptionService: container.subscriptionService,
-            coordinator: self
-        )
-    }
-    
-    func makeSearchResultsViewModel(selectedIngredients: Set<Ingredient>) -> SearchResultsViewModel {
-        SearchResultsViewModel(
-            selectedIngredients: selectedIngredients,
-            recipeService: container.recipeService,
-            imageService: container.imageService,
-            databaseInitService: container.databaseInitService,
-            userDataService: container.userDataService,
-            subscriptionService: container.subscriptionService,
-            coordinator: self
-        )
-    }
+    // MARK: - Factory Methods
     
     func makeRecipeDetailsViewModel(recipe: Recipe) -> RecipeDetailsViewModel {
         RecipeDetailsViewModel(
             recipe: recipe,
             userDataService: container.userDataService
-        )
-    }
-    
-    func makeFavoritesViewModel() -> FavoritesViewModel {
-        FavoritesViewModel(
-            userDataService: container.userDataService,
-            imageService: container.imageService,
-            coordinator: self
-        )
-    }
-    
-    func makeRecentRecipesViewModel() -> RecentRecipesViewModel {
-        RecentRecipesViewModel(
-            userDataService: container.userDataService,
-            imageService: container.imageService,
-            coordinator: self
         )
     }
     
@@ -128,10 +89,6 @@ final class DiscoverCoordinator: ObservableObject {
     
     // MARK: - Navigation
     
-    func showRecipesResult() {
-        navigationPath.append(NavigationDestination.recipesResult)
-    }
-    
     func showRecipeDetails(recipe: Recipe) {
         navigationPath.append(NavigationDestination.recipeDetail(recipe))
     }
@@ -176,7 +133,6 @@ final class DiscoverCoordinator: ObservableObject {
 
 extension DiscoverCoordinator {
     enum NavigationDestination: Hashable {
-        case recipesResult
         case recipeDetail(Recipe)
         case recipeList(title: String, recipes: [Recipe])
     }
@@ -222,12 +178,6 @@ struct DiscoverCoordinatorView: View {
             DiscoverView(viewModel: discoverViewModel)
                 .navigationDestination(for: DiscoverCoordinator.NavigationDestination.self) { destination in
                     switch destination {
-                    case .recipesResult:
-                        SearchResultsView(
-                            viewModel: coordinator.makeSearchResultsViewModel(
-                                selectedIngredients: discoverViewModel.selectedIngredients.reduce(into: Set<Ingredient>()) { $0.insert($1) }
-                            )
-                        )
                     case .recipeDetail(let recipe):
                         RecipeDetailsView(
                             viewModel: coordinator.makeRecipeDetailsViewModel(recipe: recipe),
