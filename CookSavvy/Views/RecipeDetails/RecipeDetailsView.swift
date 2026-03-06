@@ -37,46 +37,50 @@ struct RecipeDetailsView: View {
                         .padding(.top, UI.V2.floatingButtonTopPadding)
                     }
 
-                    VStack(alignment: .leading, spacing: UI.RecipeDetails.sectionSpacing) {
-                        VStack(alignment: .leading, spacing: UI.RecipeDetails.headerSpacing) {
-                            HStack {
+                    ZStack(alignment: .topTrailing) {
+                        VStack(alignment: .leading, spacing: UI.RecipeDetails.sectionSpacing) {
+                            VStack(alignment: .leading, spacing: UI.RecipeDetails.headerSpacing) {
                                 Text(viewModel.recipe.title)
                                     .font(UI.Fonts.largeTitle)
                                     .foregroundStyle(theme.text1)
-                                Spacer()
-                            }
-                            if let tagline = viewModel.recipe.tagline {
-                                Text(tagline)
-                                    .font(UI.Fonts.tagline)
-                                    .foregroundStyle(theme.text2)
-                            }
-                            HStack(spacing: UI.RecipeDetails.ratingSpacing) {
-                                if let rating = viewModel.recipe.apiRating ?? viewModel.recipe.userRating {
-                                    StarRating(rating: rating)
-                                    Text(String(format: "%.1f", rating))
-                                        .font(UI.Fonts.captionBold)
-                                        .foregroundStyle(theme.gold)
+                                if let tagline = viewModel.recipe.tagline {
+                                    Text(tagline)
+                                        .font(UI.Fonts.tagline)
+                                        .foregroundStyle(theme.text2)
                                 }
-                                if let author = viewModel.recipe.author {
-                                    Text("by \(author)")
-                                        .font(UI.Fonts.caption)
-                                        .foregroundStyle(theme.text3)
+                                HStack(spacing: UI.RecipeDetails.ratingSpacing) {
+                                    if let rating = viewModel.recipe.apiRating ?? viewModel.recipe.userRating {
+                                        StarRating(rating: rating)
+                                        Text(String(format: "%.1f", rating))
+                                            .font(UI.Fonts.captionBold)
+                                            .foregroundStyle(theme.gold)
+                                    }
+                                    if let author = viewModel.recipe.author {
+                                        Text("by \(author)")
+                                            .font(UI.Fonts.caption)
+                                            .foregroundStyle(theme.text3)
+                                    }
                                 }
                             }
+
+                            statsRow
+
+                            ingredientsSection
+
+                            stepsSection
+
+                            Spacer(minLength: UI.Common.bottomSpacerMinLength)
                         }
+                        .padding(UI.RecipeDetails.contentPadding)
+                        .background(theme.bg)
+                        .clipShape(.rect(topLeadingRadius: UI.RecipeDetails.contentTopCornerRadius, topTrailingRadius: UI.RecipeDetails.contentTopCornerRadius))
+                        .offset(y: -UI.V2.contentOverlapOffset)
 
-                        statsRow
-
-                        ingredientsSection
-
-                        stepsSection
-
-                        Spacer(minLength: UI.Common.bottomSpacerMinLength)
+                        if let source = RecipeDisplaySource(recipe: viewModel.recipe) {
+                            RecipeSourceBadge(source: source, cornerRadius: UI.RecipeDetails.contentTopCornerRadius)
+                                .offset(y: -UI.V2.contentOverlapOffset)
+                        }
                     }
-                    .padding(UI.RecipeDetails.contentPadding)
-                    .background(theme.bg)
-                    .clipShape(.rect(topLeadingRadius: UI.RecipeDetails.contentTopCornerRadius, topTrailingRadius: UI.RecipeDetails.contentTopCornerRadius))
-                    .offset(y: -UI.V2.contentOverlapOffset)
                 }
             }
 

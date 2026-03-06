@@ -50,6 +50,7 @@ enum Icons {
         static let offline = "internaldrive"
         static let online = "globe"
         static let ai = "sparkles"
+        static let user = "person.crop.circle"
     }
 
     enum Discover {

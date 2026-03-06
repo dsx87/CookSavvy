@@ -139,6 +139,18 @@ enum Strings {
         static let myRecipes = String(localized: "recipeList.myRecipes", defaultValue: "My Recipes")
     }
 
+    enum SourceBadge {
+        static let localTitle = String(localized: "sourceBadge.localTitle", defaultValue: "Local recipe")
+        static let localDescription = String(localized: "sourceBadge.localDescription", defaultValue: "This recipe comes from CookSavvy's local recipe collection.")
+        static let networkTitle = String(localized: "sourceBadge.networkTitle", defaultValue: "Network recipe")
+        static let networkDescription = String(localized: "sourceBadge.networkDescription", defaultValue: "This recipe was fetched from an online recipe provider.")
+        static let aiTitle = String(localized: "sourceBadge.aiTitle", defaultValue: "AI recipe")
+        static let aiDescription = String(localized: "sourceBadge.aiDescription", defaultValue: "This recipe was generated with AI from your ingredients.")
+        static let userTitle = String(localized: "sourceBadge.userTitle", defaultValue: "Your recipe")
+        static let userDescription = String(localized: "sourceBadge.userDescription", defaultValue: "This recipe was created and saved by you.")
+        static let accessibilityHint = String(localized: "sourceBadge.accessibilityHint", defaultValue: "Shows where this recipe came from")
+    }
+
     enum MoodFilter {
         static let cozy = String(localized: "moodFilter.cozy", defaultValue: "Cozy")
         static let fresh = String(localized: "moodFilter.fresh", defaultValue: "Fresh")

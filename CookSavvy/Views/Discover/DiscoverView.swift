@@ -140,12 +140,12 @@ struct DiscoverView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: UI.Discover.sectionContentSpacing) {
                         ForEach(viewModel.recentRecipes) { recipe in
-                            Button {
-                                viewModel.showRecipeDetails(recipe)
-                            } label: {
-                                MiniRecipeCard(recipe: recipe)
-                            }
-                            .buttonStyle(.plain)
+                            MiniRecipeCard(recipe: recipe)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    viewModel.showRecipeDetails(recipe)
+                                }
+                                .accessibilityAddTraits(.isButton)
                         }
                     }
                 }
@@ -176,12 +176,12 @@ struct DiscoverView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: UI.Discover.sectionContentSpacing) {
                         ForEach(viewModel.savedRecipes) { recipe in
-                            Button {
-                                viewModel.showRecipeDetails(recipe)
-                            } label: {
-                                MiniRecipeCard(recipe: recipe)
-                            }
-                            .buttonStyle(.plain)
+                            MiniRecipeCard(recipe: recipe)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    viewModel.showRecipeDetails(recipe)
+                                }
+                                .accessibilityAddTraits(.isButton)
                         }
 
                         Button {
@@ -406,6 +406,11 @@ struct DiscoverView: View {
                         )
                     )
                     .clipShape(RoundedRectangle(cornerRadius: UI.Discover.recipeCardCornerRadius, style: .continuous))
+
+                    if let source = RecipeDisplaySource(recipe: featured) {
+                        RecipeSourceBadge(source: source, cornerRadius: UI.Discover.recipeCardCornerRadius)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                    }
                 }
                 .contentShape(RoundedRectangle(cornerRadius: UI.Discover.recipeCardCornerRadius, style: .continuous))
                 .gesture(
@@ -433,12 +438,12 @@ struct DiscoverView: View {
                 }
 
                 ForEach(viewModel.moreRecipes) { recipe in
-                    Button {
-                        viewModel.showRecipeDetails(recipe)
-                    } label: {
-                        RecipeRow(recipe: recipe)
-                    }
-                    .buttonStyle(.plain)
+                    RecipeRow(recipe: recipe)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            viewModel.showRecipeDetails(recipe)
+                        }
+                        .accessibilityAddTraits(.isButton)
                 }
             }
         }

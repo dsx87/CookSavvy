@@ -138,12 +138,12 @@ struct JourneyView: View {
                     .buttonStyle(.plain)
 
                     ForEach(viewModel.userRecipes) { recipe in
-                        Button {
-                            viewModel.showRecipeDetails(recipe)
-                        } label: {
-                            UserMiniRecipeCard(recipe: recipe)
-                        }
-                        .buttonStyle(.plain)
+                        UserMiniRecipeCard(recipe: recipe)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                viewModel.showRecipeDetails(recipe)
+                            }
+                            .accessibilityAddTraits(.isButton)
                     }
                 }
             }

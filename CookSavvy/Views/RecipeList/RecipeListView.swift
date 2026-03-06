@@ -9,12 +9,12 @@ struct RecipeListView: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: UI.RecipeList.stackSpacing) {
                 ForEach(viewModel.recipes) { recipe in
-                    Button {
-                        onRecipeTap?(recipe)
-                    } label: {
-                        RecipeRow(recipe: recipe, isSaved: viewModel.isSaved(recipe))
-                    }
-                    .buttonStyle(.plain)
+                    RecipeRow(recipe: recipe, isSaved: viewModel.isSaved(recipe))
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            onRecipeTap?(recipe)
+                        }
+                        .accessibilityAddTraits(.isButton)
                 }
             }
             .padding(.horizontal, UI.RecipeList.horizontalPadding)

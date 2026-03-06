@@ -1166,6 +1166,105 @@
         }
       }
     },
+    "sourceBadge.accessibilityHint" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Shows where this recipe came from"
+          }
+        }
+      }
+    },
+    "sourceBadge.aiDescription" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This recipe was generated with AI from your ingredients."
+          }
+        }
+      }
+    },
+    "sourceBadge.aiTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "AI recipe"
+          }
+        }
+      }
+    },
+    "sourceBadge.localDescription" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This recipe comes from CookSavvy's local recipe collection."
+          }
+        }
+      }
+    },
+    "sourceBadge.localTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Local recipe"
+          }
+        }
+      }
+    },
+    "sourceBadge.networkDescription" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This recipe was fetched from an online recipe provider."
+          }
+        }
+      }
+    },
+    "sourceBadge.networkTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Network recipe"
+          }
+        }
+      }
+    },
+    "sourceBadge.userDescription" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This recipe was created and saved by you."
+          }
+        }
+      }
+    },
+    "sourceBadge.userTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your recipe"
+          }
+        }
+      }
+    },
     "Step %lld" : {
 
     },

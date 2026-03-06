@@ -165,12 +165,13 @@ struct UI {
     // MARK: - SourceBadge
 
     struct SourceBadge {
-        static let iconSize: CGFloat = 10
-        static let padding: CGFloat = 4
-        static let cornerRadius: CGFloat = 6
-        static let fontSize: CGFloat = 9
-        static let spacing: CGFloat = 2
-        static let backgroundOpacity: Double = 0.85
+        static let iconSize: CGFloat = 12
+        static let width: CGFloat = 40
+        static let height: CGFloat = 32
+        static let borderOpacity: Double = 0.18
+        static let popoverSpacing: CGFloat = 8
+        static let popoverPadding: CGFloat = 14
+        static let popoverWidth: CGFloat = 220
     }
 
     // MARK: - DiskImage
