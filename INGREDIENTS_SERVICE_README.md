@@ -78,7 +78,7 @@ try await service.forceReimport()
 ### Integration with View Model
 
 ```swift
-final class IngredientsInputViewModel: ObservableObject {
+final class IngredientSearchViewModel: ObservableObject {
     @Published var searchText: String = ""
     @Published var suggestions: [String] = []
     
@@ -102,7 +102,7 @@ final class IngredientsInputViewModel: ObservableObject {
 
 ```swift
 struct IngredientsSearchView: View {
-    @StateObject var viewModel = IngredientsInputViewModel()
+    @StateObject var viewModel = IngredientSearchViewModel()
     
     var body: some View {
         VStack {
@@ -283,14 +283,14 @@ let results = try await service.searchIngredients(matching: "xyz")
 - [x] Service created
 - [x] Tests written and passing
 - [x] Documentation complete
-- [ ] Integrate into `IngredientsInputViewModel`
+- [ ] Integrate into a feature ViewModel
 - [ ] Update UI to use service
 - [ ] Add loading states
 - [ ] Add error handling in UI
 
 ## Next Steps
 
-1. Replace the commented-out code in `IngredientsInputViewModel`
+1. Integrate `IngredientsService` into the active ingredient search flow
 2. Update `getIngredientsByString` to use `IngredientsService`
 3. Add debouncing for search input
 4. Consider adding search history

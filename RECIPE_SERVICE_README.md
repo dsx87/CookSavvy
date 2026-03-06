@@ -198,12 +198,12 @@ The service integrates seamlessly with existing components:
 - Uses existing `DBInterface` for database operations
 - Works with existing `Recipe` and `Ingredient` models
 - No modifications to existing code required
-- Can be integrated into `IngredientsInputViewModel` when ready
+- Can be integrated into the active recipe search flow when ready
 
 ### Example Integration
 
 ```swift
-final class IngredientsInputViewModel: ObservableObject {
+final class RecipeSearchViewModel: ObservableObject {
     private let recipeService = RecipeService()
     
     func findRecipes() async {

@@ -30,13 +30,11 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 
 | Screen | Description |
 |--------|-------------|
-| **Discover** (tab 1) | Main screen: ingredient input, recipe search, recent/saved recipes, mood filter |
-| **Journey** (tab 2) | Stats, achievements, user-created recipes, cooking sessions, settings (gear icon in nav bar) |
-| **Ingredients Input** | Text input with autocomplete, camera input (AI recognition on paid tiers), recent/fast ingredients |
-| **Search Results** | Recipe list with name, image, complexity, cook time, match percentage; source header |
-| **Recipe Details** | Full recipe information with additional info section |
-| **Recipe List** | Reusable list view for recent, saved, user recipes |
-| **Cook Mode** | Step-by-step cooking view with visual timer (full screen) |
+| **Discover** (tab 1) | V2 two-state flow: ingredient selection (grid, categories, search, recent/saved cards) and recipe results (mood filter, hero best match, recipe rows) |
+| **Journey** (tab 2) | V2 profile header, stats, user-created recipes, weekly calendar, achievements, recent sessions, settings (gear icon in nav bar) |
+| **Recipe Details** | V2 hero image, floating back/bookmark actions, stats row, ingredients, steps, sticky Start Cooking CTA |
+| **Recipe List** | Reusable See All destination for recent, saved, and user recipes |
+| **Cook Mode** | Full-screen step-by-step cooking flow with progress ring, timer, and prev/next navigation |
 | **Create Recipe** | 5-step wizard: Name & Photo → Ingredients → Steps → Details → Review & Save |
 | **Settings** | Subscription plan, usage limits, preferences (accessed from Journey nav bar) |
 | **Camera** | Camera capture for AI ingredient detection (paid tiers) |
@@ -60,7 +58,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 ### Coordinator Hierarchy
 - `AppCoordinator`: Root coordinator managing tab-level coordinators via lazy factory methods
 - Feature coordinators: `DiscoverCoordinator`, `JourneyCoordinator`, `SettingsCoordinator`
-- `DiscoverCoordinator`: Ingredients input, search results, recipe detail, recipe list, cook mode (full screen cover), camera, create recipe, upgrade
+- `DiscoverCoordinator`: Discover landing/results flow, recipe detail, recipe list, cook mode (full screen cover), camera, create recipe, upgrade
 - `JourneyCoordinator`: Journey stats, recipe detail, recipe list, settings, create recipe, upgrade
 - Each coordinator owns its navigation stack and sheet presentations
 - ViewModels hold weak references to coordinators for navigation
