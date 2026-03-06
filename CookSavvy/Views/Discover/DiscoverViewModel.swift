@@ -226,6 +226,10 @@ final class DiscoverViewModel: ObservableObject {
     }
 
     func showCamera() {
+        guard subscriptionService.canAccessFeature(.cameraIngredientDetection) else {
+            coordinator?.showUpgrade()
+            return
+        }
         coordinator?.showCamera()
     }
 
@@ -247,7 +251,7 @@ final class DiscoverViewModel: ObservableObject {
 
     private func loadSavedRecipes() async {
         do {
-            savedRecipes = try await userDataService.getFavorites()
+            savedRecipes = try await userDataService.getSavedRecipes()
         } catch {}
     }
 

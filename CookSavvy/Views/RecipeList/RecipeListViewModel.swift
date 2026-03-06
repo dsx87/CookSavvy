@@ -16,12 +16,12 @@ final class RecipeListViewModel: ObservableObject {
 
     func loadSavedStatus() async {
         do {
-            let favorites = try await userDataService.getFavorites()
-            savedIds = Set(favorites.map(\.id))
+            let savedRecipes = try await userDataService.getSavedRecipes()
+            savedIds = Set(savedRecipes.map(\.id))
         } catch {}
     }
 
     func isSaved(_ recipe: Recipe) -> Bool {
-        savedIds.contains(recipe.id)
+        recipe.isUserCreated || savedIds.contains(recipe.id)
     }
 }

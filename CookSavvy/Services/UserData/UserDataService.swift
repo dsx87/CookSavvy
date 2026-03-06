@@ -89,12 +89,34 @@ final class UserDataService {
         return try dbInterface.getFavoriteRecipes()
     }
 
+    /// Gets saved recipes, combining explicit favorites with user-created recipes.
+    func getSavedRecipes() async throws -> [Recipe] {
+        let favorites = try dbInterface.getFavoriteRecipes()
+        let userRecipes = try dbInterface.getUserCreatedRecipes()
+
+        var savedRecipes = favorites
+        var seenRecipeIDs = Set(favorites.map(\.id))
+
+        for recipe in userRecipes where seenRecipeIDs.insert(recipe.id).inserted {
+            savedRecipes.append(recipe)
+        }
+
+        return savedRecipes
+    }
+
     /// Toggles the favorite status of a recipe
     /// - Parameter recipe: The recipe to toggle
     /// - Returns: True if the recipe is now favorited, false if it was unfavorited
     func toggleFavorite(_ recipe: Recipe) async throws -> Bool {
         guard let recipeId = try getRecipeId(byTitle: recipe.title) else {
             throw UserDataServiceError.recipeNotFound
+        }
+
+        if recipe.isUserCreated {
+            if try !dbInterface.isFavorite(recipeId) {
+                try dbInterface.addFavorite(recipeId)
+            }
+            return true
         }
 
         let isFavorited = try dbInterface.isFavorite(recipeId)
@@ -112,6 +134,9 @@ final class UserDataService {
     /// - Parameter recipe: The recipe to check
     /// - Returns: True if the recipe is favorited, false otherwise
     func isFavorite(_ recipe: Recipe) async throws -> Bool {
+        if recipe.isUserCreated {
+            return true
+        }
         guard let recipeId = try getRecipeId(byTitle: recipe.title) else {
             return false
         }
