@@ -35,6 +35,7 @@ final class JourneyViewModel: ObservableObject {
         async let weekTask: () = loadWeekActivity()
         async let sessionsTask: () = loadRecentSessions()
         _ = await (statsTask, recipesTask, weekTask, sessionsTask)
+        await refreshAchievements()
         isLoading = false
     }
 
@@ -103,5 +104,31 @@ final class JourneyViewModel: ObservableObject {
         do {
             recentSessions = try await userDataService.getCookingSessions(limit: 5)
         } catch {}
+    }
+
+    private func refreshAchievements() async {
+        do {
+            let allSessions = try await userDataService.getCookingSessions(limit: max(recipesCooked, 50))
+            let distinctRecipesCooked = Set(allSessions.map(\.recipeId)).count
+            achievements = AchievementEvaluator.evaluate(
+                metrics: AchievementMetrics(
+                    recipesCooked: recipesCooked,
+                    dayStreak: dayStreak,
+                    totalCookingHours: hoursCooking,
+                    userRecipeCount: userRecipes.count,
+                    distinctRecipesCooked: distinctRecipesCooked
+                )
+            )
+        } catch {
+            achievements = AchievementEvaluator.evaluate(
+                metrics: AchievementMetrics(
+                    recipesCooked: recipesCooked,
+                    dayStreak: dayStreak,
+                    totalCookingHours: hoursCooking,
+                    userRecipeCount: userRecipes.count,
+                    distinctRecipesCooked: 0
+                )
+            )
+        }
     }
 }

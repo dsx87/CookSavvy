@@ -8,6 +8,11 @@
 import SwiftUI
 
 @MainActor
+protocol RecipeDetailsCoordinating: AnyObject {
+    func showCookMode(recipe: Recipe)
+}
+
+@MainActor
 final class RecipeDetailsViewModel: ObservableObject {
 
     // MARK: - Published Properties
@@ -19,12 +24,18 @@ final class RecipeDetailsViewModel: ObservableObject {
     // MARK: - Properties
 
     private let userDataService: UserDataService
+    private weak var coordinator: (any RecipeDetailsCoordinating)?
 
     // MARK: - Initialization
 
-    init(recipe: Recipe, userDataService: UserDataService) {
+    init(
+        recipe: Recipe,
+        userDataService: UserDataService,
+        coordinator: (any RecipeDetailsCoordinating)?
+    ) {
         self.recipe = recipe
         self.userDataService = userDataService
+        self.coordinator = coordinator
 
         // Load data on init
         Task {
@@ -48,6 +59,10 @@ final class RecipeDetailsViewModel: ObservableObject {
         } catch {
             print("❌ Failed to toggle favorite: \(error)")
         }
+    }
+
+    func startCooking() {
+        coordinator?.showCookMode(recipe: recipe)
     }
 
     // MARK: - Private Methods

@@ -38,6 +38,7 @@ final class DiscoverViewModel: ObservableObject {
     private let recipeService: RecipeService
     private let userDataService: UserDataService
     private let subscriptionService: SubscriptionServiceProtocol
+    private let databaseInitService: DatabaseInitializationService
     private weak var coordinator: DiscoverCoordinator?
 
     // MARK: - Init
@@ -47,12 +48,14 @@ final class DiscoverViewModel: ObservableObject {
         recipeService: RecipeService,
         userDataService: UserDataService,
         subscriptionService: SubscriptionServiceProtocol,
+        databaseInitService: DatabaseInitializationService,
         coordinator: DiscoverCoordinator
     ) {
         self.ingredientsService = ingredientsService
         self.recipeService = recipeService
         self.userDataService = userDataService
         self.subscriptionService = subscriptionService
+        self.databaseInitService = databaseInitService
         self.coordinator = coordinator
     }
 
@@ -239,13 +242,35 @@ final class DiscoverViewModel: ObservableObject {
         guard hasIngredients else { return }
         isSearching = true
         do {
-            let enabledSources = userDataService.getEnabledSources()
+            let enabledSources = accessibleEnabledSources()
+            if shouldWaitForRecipeImport(for: enabledSources) {
+                await databaseInitService.waitForRecipes()
+            }
             searchResultRecipes = try await recipeService.getRecipes(
                 for: selectedIngredients,
                 from: enabledSources
             )
         } catch {}
         isSearching = false
+    }
+
+    func filteredEnabledSources(
+        _ sources: Set<RecipeSourceType>,
+        canAccessOnline: Bool,
+        canAccessAI: Bool
+    ) -> Set<RecipeSourceType> {
+        var accessibleSources = sources
+        if accessibleSources.contains(.online) && !canAccessOnline {
+            accessibleSources.remove(.online)
+        }
+        if accessibleSources.contains(.ai) && !canAccessAI {
+            accessibleSources.remove(.ai)
+        }
+        return accessibleSources.isEmpty ? [.offline] : accessibleSources
+    }
+
+    func shouldWaitForRecipeImport(for enabledSources: Set<RecipeSourceType>) -> Bool {
+        enabledSources == [.offline]
     }
     
     private func scheduleIngredientRefresh() {
@@ -260,6 +285,14 @@ final class DiscoverViewModel: ObservableObject {
 
     private static func normalizedIngredientName(_ value: String) -> String {
         value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    private func accessibleEnabledSources() -> Set<RecipeSourceType> {
+        filteredEnabledSources(
+            userDataService.getEnabledSources(),
+            canAccessOnline: subscriptionService.canAccessFeature(.onlineRecipes),
+            canAccessAI: subscriptionService.canAccessFeature(.aiRecipes)
+        )
     }
 
     private func refreshIngredients(token: Int) async {

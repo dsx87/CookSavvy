@@ -4,7 +4,6 @@ struct RecipeDetailsView: View {
     @ObservedObject var viewModel: RecipeDetailsViewModel
     @Environment(\.appTheme) private var theme
     @Environment(\.dismiss) private var dismiss
-    var onStartCooking: (() -> Void)?
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -191,9 +190,10 @@ struct RecipeDetailsView: View {
 
     // MARK: - Start Cooking Button
 
+    @ViewBuilder
     private var startCookingButton: some View {
         Button {
-            onStartCooking?()
+            viewModel.startCooking()
         } label: {
             HStack(spacing: UI.RecipeDetails.buttonSpacing) {
                 Image(systemName: Icons.CookMode.play)

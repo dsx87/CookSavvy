@@ -6,12 +6,13 @@
 import SwiftUI
 
 @MainActor
-final class JourneyCoordinator: ObservableObject {
+final class JourneyCoordinator: ObservableObject, RecipeDetailsCoordinating {
     
     private let container: AppContainer
     let settingsCoordinator: SettingsCoordinator
     @Published var navigationPath = NavigationPath()
     @Published var presentedSheet: SheetDestination?
+    @Published var presentedFullScreenCover: FullScreenCoverDestination?
     
     init(container: AppContainer, settingsCoordinator: SettingsCoordinator) {
         self.container = container
@@ -27,7 +28,8 @@ final class JourneyCoordinator: ObservableObject {
     func makeRecipeDetailsViewModel(recipe: Recipe) -> RecipeDetailsViewModel {
         RecipeDetailsViewModel(
             recipe: recipe,
-            userDataService: container.userDataService
+            userDataService: container.userDataService,
+            coordinator: self
         )
     }
     
@@ -63,6 +65,16 @@ final class JourneyCoordinator: ObservableObject {
             userDataService: container.userDataService
         )
     }
+
+    func makeCookModeViewModel(recipe: Recipe) -> CookModeViewModel {
+        CookModeViewModel(
+            recipe: recipe,
+            userDataService: container.userDataService,
+            onDismiss: { [weak self] in
+                self?.dismissFullScreenCover()
+            }
+        )
+    }
     
     // MARK: - Navigation
     
@@ -82,6 +94,10 @@ final class JourneyCoordinator: ObservableObject {
         presentedSheet = .createRecipe
     }
     
+    func showCookMode(recipe: Recipe) {
+        presentedFullScreenCover = .cookMode(recipe)
+    }
+    
     func showUpgrade() {
         presentedSheet = .upgrade
     }
@@ -94,6 +110,10 @@ final class JourneyCoordinator: ObservableObject {
     
     func dismissSheet() {
         presentedSheet = nil
+    }
+
+    func dismissFullScreenCover() {
+        presentedFullScreenCover = nil
     }
 }
 
@@ -114,6 +134,16 @@ extension JourneyCoordinator {
             switch self {
             case .createRecipe: return "createRecipe"
             case .upgrade: return "upgrade"
+            }
+        }
+    }
+
+    enum FullScreenCoverDestination: Identifiable {
+        case cookMode(Recipe)
+
+        var id: String {
+            switch self {
+            case .cookMode(let recipe): return "cookMode_\(recipe.id)"
             }
         }
     }
@@ -151,7 +181,25 @@ struct JourneyCoordinatorView: View {
                     }
                 }
         }
-        .sheet(item: $coordinator.presentedSheet) { sheet in
+        .fullScreenCover(
+            item: $coordinator.presentedFullScreenCover,
+            onDismiss: {
+                Task { await journeyViewModel.loadData() }
+            }
+        ) { destination in
+            switch destination {
+            case .cookMode(let recipe):
+                CookModeView(
+                    viewModel: coordinator.makeCookModeViewModel(recipe: recipe)
+                )
+            }
+        }
+        .sheet(
+            item: $coordinator.presentedSheet,
+            onDismiss: {
+                Task { await journeyViewModel.loadData() }
+            }
+        ) { sheet in
             switch sheet {
             case .upgrade:
                 UpgradeView(viewModel: coordinator.makeUpgradeViewModel())
