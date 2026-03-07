@@ -7,6 +7,7 @@ import SwiftUI
 
 struct UpgradeView: View {
     @ObservedObject var viewModel: UpgradeViewModel
+    @Environment(\.appTheme) private var theme
     
     var body: some View {
         ScrollView {
@@ -30,14 +31,16 @@ struct UpgradeView: View {
                 
                 Text(Strings.Upgrade.autoRenew)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(theme.text2)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
             }
             .padding()
         }
+        .background(theme.bg)
         .navigationTitle(Strings.Upgrade.navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .tint(theme.accent)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button(Strings.Upgrade.done) {
@@ -67,7 +70,7 @@ struct UpgradeView: View {
             
             Text(Strings.Upgrade.unlockSubtitle)
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundStyle(theme.text2)
                 .multilineTextAlignment(.center)
         }
         .padding(.vertical)
@@ -81,6 +84,7 @@ struct PlanCard: View {
     let isCurrentPlan: Bool
     let isLoading: Bool
     let onSelect: () -> Void
+    @Environment(\.appTheme) private var theme
     
     var body: some View {
         VStack(alignment: .leading, spacing: UI.Upgrade.contentSpacing) {
@@ -89,10 +93,11 @@ struct PlanCard: View {
                     Text(plan.displayName)
                         .font(.title3)
                         .fontWeight(.semibold)
+                        .foregroundStyle(theme.text1)
                     
                     Text(priceText)
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(theme.text2)
                 }
                 
                 Spacer()
@@ -101,10 +106,10 @@ struct PlanCard: View {
                     Text(Strings.Upgrade.current)
                         .font(.caption)
                         .fontWeight(.medium)
-                        .foregroundColor(.green)
+                        .foregroundStyle(theme.mint)
                         .padding(.horizontal, UI.Upgrade.currentBadgePaddingH)
                         .padding(.vertical, UI.Upgrade.currentBadgePaddingV)
-                        .background(Color.green.opacity(UI.Upgrade.currentBadgeBgOpacity))
+                        .background(theme.mintSoft)
                         .cornerRadius(UI.Upgrade.currentBadgeCornerRadius)
                 }
             }
@@ -115,10 +120,11 @@ struct PlanCard: View {
                 ForEach(features, id: \.self) { feature in
                     HStack(spacing: UI.Upgrade.featureSpacing) {
                         Image(systemName: Icons.Upgrade.checkmark)
-                            .foregroundColor(.green)
+                            .foregroundStyle(theme.mint)
                             .font(.subheadline)
                         Text(feature)
                             .font(.subheadline)
+                            .foregroundStyle(theme.text1)
                     }
                 }
             }
@@ -138,15 +144,22 @@ struct PlanCard: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(plan == .ai ? Color.purple : Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(UI.Upgrade.subscribeCornerRadius)
+                    .background(
+                        LinearGradient(
+                            colors: plan == .ai ? [theme.lavender, theme.rose] : [theme.accent, theme.sky],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ),
+                        in: RoundedRectangle(cornerRadius: UI.Upgrade.subscribeCornerRadius, style: .continuous)
+                    )
+                    .foregroundStyle(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: UI.Upgrade.subscribeCornerRadius, style: .continuous))
                 }
                 .disabled(isLoading)
             }
         }
         .padding()
-        .background(Color(.systemBackground))
+        .background(theme.card)
         .cornerRadius(UI.Upgrade.cardCornerRadius)
         .shadow(color: .black.opacity(UI.Upgrade.shadowOpacity), radius: UI.Upgrade.shadowRadius, x: 0, y: UI.Upgrade.shadowY)
     }

@@ -9,9 +9,30 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var viewModel: SettingsViewModel
+    @Environment(\.appTheme) private var theme
 
     var body: some View {
             List {
+                Section {
+                    Picker(
+                        Strings.Settings.appearancePickerLabel,
+                        selection: Binding(
+                            get: { viewModel.themePreference },
+                            set: { viewModel.updateThemePreference($0) }
+                        )
+                    ) {
+                        ForEach(ThemePreference.allCases) { preference in
+                            Text(preference.displayName)
+                                .tag(preference)
+                        }
+                    }
+                    .pickerStyle(.inline)
+                } header: {
+                    Text(Strings.Settings.appearanceHeader)
+                } footer: {
+                    Text(Strings.Settings.appearanceFooter)
+                }
+
                 // Subscription Plan Section
                 Section {
                     HStack {
@@ -20,11 +41,11 @@ struct SettingsView: View {
                                 .font(.headline)
                             Text(viewModel.currentPlan.description)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(theme.text2)
                         }
                         Spacer()
                         Image(systemName: Icons.Settings.planCheckmark)
-                            .foregroundColor(.green)
+                            .foregroundStyle(theme.mint)
                     }
                     
                     if viewModel.currentPlan != .ai {
@@ -33,11 +54,11 @@ struct SettingsView: View {
                         } label: {
                             HStack {
                                 Image(systemName: Icons.Settings.crown)
-                                    .foregroundColor(.yellow)
+                                    .foregroundStyle(theme.gold)
                                 Text(Strings.Settings.upgradePlan)
                                 Spacer()
                                 Image(systemName: Icons.Settings.chevronRight)
-                                    .foregroundColor(.secondary)
+                                    .foregroundStyle(theme.text3)
                             }
                         }
                     }
@@ -64,7 +85,7 @@ struct SettingsView: View {
                             Text(Strings.Settings.manageSubscription)
                             Spacer()
                             Image(systemName: Icons.Settings.manageSubscription)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(theme.text3)
                         }
                     }
                 } header: {
@@ -80,7 +101,7 @@ struct SettingsView: View {
                             Text(Strings.Settings.localRecipes)
                             Text(Strings.Settings.offlineDatabase)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(theme.text2)
                         }
                     }
                     
@@ -92,7 +113,7 @@ struct SettingsView: View {
                             Text(Strings.Settings.onlineRecipes)
                             Text(Strings.Settings.apiSource)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(theme.text2)
                         }
                     }
                     .disabled(!viewModel.canAccessSource(.online))
@@ -105,7 +126,7 @@ struct SettingsView: View {
                             Text(Strings.Settings.aiRecipes)
                             Text(Strings.Settings.aiGeneratedRecipes)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(theme.text2)
                         }
                     }
                     .disabled(!viewModel.canAccessSource(.ai))
@@ -124,7 +145,7 @@ struct SettingsView: View {
                             ProgressView()
                         } else {
                             Text("\(viewModel.recipeCount)")
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(theme.text2)
                         }
                     }
 
@@ -135,7 +156,7 @@ struct SettingsView: View {
                             ProgressView()
                         } else {
                             Text("\(viewModel.favoriteCount)")
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(theme.text2)
                         }
                     }
 
@@ -146,7 +167,7 @@ struct SettingsView: View {
                             ProgressView()
                         } else {
                             Text("\(viewModel.recentRecipeCount)")
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(theme.text2)
                         }
                     }
                 } header: {
@@ -186,20 +207,21 @@ struct SettingsView: View {
                         Text(Strings.Settings.versionLabel)
                         Spacer()
                         Text(viewModel.appVersion)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(theme.text2)
                     }
 
                     HStack {
                         Text(Strings.Settings.buildLabel)
                         Spacer()
                         Text(viewModel.buildNumber)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(theme.text2)
                     }
                 } header: {
                     Text(Strings.Settings.appInfoHeader)
                 }
             }
             .navigationTitle(Strings.Settings.navigationTitle)
+            .tint(theme.accent)
             .task {
                 await viewModel.loadSettings()
             }

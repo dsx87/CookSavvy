@@ -44,18 +44,21 @@ struct RecipeDetailsAdditionalInfo: View {
 
 struct RecipeDetailsAdditionalInfoCell: View {
     let info: (title: String, value:String)
+    @Environment(\.appTheme) private var theme
 
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: UI.RecipeDetails.cardCornerRadius)
-                .foregroundStyle(Color.white)
-                .shadow(radius: UI.RecipeDetails.cardShadowRadius, x: UI.RecipeDetails.cardShadowOffset, y: UI.RecipeDetails.cardShadowOffset)
+                .foregroundStyle(theme.card)
+                .shadow(color: .black.opacity(0.08), radius: UI.RecipeDetails.cardShadowRadius, x: UI.RecipeDetails.cardShadowOffset, y: UI.RecipeDetails.cardShadowOffset)
                 .frame(maxWidth: .infinity, maxHeight: UI.RecipeDetails.additionalInfoCellHeight)
             VStack {
                 Text(info.title)
                     .font(.caption)
+                    .foregroundStyle(theme.text2)
                 Text(info.value)
                     .font(.caption)
+                    .foregroundStyle(theme.text1)
             }
         }
     }

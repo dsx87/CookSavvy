@@ -18,6 +18,7 @@ final class UserDataService {
     
     private enum Keys {
         static let enabledSources = "enabled_recipe_sources"
+        static let themePreference = ThemePreference.storageKey
     }
 
     // MARK: - Initialization
@@ -224,6 +225,14 @@ final class UserDataService {
 
     func getUserRecipeCount() async throws -> Int {
         return try dbInterface.getUserCreatedRecipeCount()
+    }
+
+    func getThemePreference() -> ThemePreference {
+        ThemePreference.from(rawValue: defaults.string(forKey: Keys.themePreference))
+    }
+
+    func setThemePreference(_ themePreference: ThemePreference) {
+        defaults.set(themePreference.rawValue, forKey: Keys.themePreference)
     }
 
     func saveUserRecipe(_ recipe: Recipe) async throws {

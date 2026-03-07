@@ -19,6 +19,12 @@ enum Strings {
 
     enum Settings {
         static let navigationTitle = String(localized: "settings.navigationTitle", defaultValue: "Settings")
+        static let appearanceHeader = String(localized: "settings.appearanceHeader", defaultValue: "Appearance")
+        static let appearanceFooter = String(localized: "settings.appearanceFooter", defaultValue: "Choose Light, Dark, or follow your device settings.")
+        static let appearancePickerLabel = String(localized: "settings.appearancePickerLabel", defaultValue: "Theme")
+        static let appearanceLight = String(localized: "settings.appearanceLight", defaultValue: "Light")
+        static let appearanceDark = String(localized: "settings.appearanceDark", defaultValue: "Dark")
+        static let appearanceSystem = String(localized: "settings.appearanceSystem", defaultValue: "Use System Settings")
         static let subscriptionHeader = String(localized: "settings.subscriptionHeader", defaultValue: "Subscription Plan")
         static let upgradePlan = String(localized: "settings.upgradePlan", defaultValue: "Upgrade Plan")
         static let restorePurchases = String(localized: "settings.restorePurchases", defaultValue: "Restore Purchases")

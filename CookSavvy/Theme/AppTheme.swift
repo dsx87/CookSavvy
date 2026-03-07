@@ -55,43 +55,43 @@ extension AppTheme {
 }
 
 struct LightTheme: AppTheme {
-    var frostStrokeTop: Color { Color.black.opacity(0.06) }
-    var frostStrokeBottom: Color { Color.black.opacity(0.02) }
+    var frostStrokeTop: Color { Color.white.opacity(0.82) }
+    var frostStrokeBottom: Color { Color(red: 0x1F/255, green: 0x1A/255, blue: 0x17/255).opacity(0.06) }
 
-    var bg: Color { Color(red: 0.98, green: 0.98, blue: 0.99) }
-    var surface: Color { Color(red: 0.94, green: 0.94, blue: 0.96) }
-    var surfaceLight: Color { Color(red: 0.90, green: 0.90, blue: 0.93) }
-    var card: Color { .white }
-    var accent: Color { Color(red: 1.0, green: 0.549, blue: 0.2) }
+    var bg: Color { Color(red: 0xF7/255, green: 0xF2/255, blue: 0xEC/255) }
+    var surface: Color { Color(red: 0xEF/255, green: 0xE7/255, blue: 0xDD/255) }
+    var surfaceLight: Color { Color(red: 0xE6/255, green: 0xDB/255, blue: 0xCF/255) }
+    var card: Color { Color(red: 0xFF/255, green: 0xFC/255, blue: 0xF8/255) }
+    var accent: Color { Color(red: 0xE4/255, green: 0x7A/255, blue: 0x2E/255) }
     var accentSoft: Color { accent.opacity(0.15) }
-    var mint: Color { Color(red: 0.302, green: 0.851, blue: 0.722) }
+    var mint: Color { Color(red: 0x2F/255, green: 0x9F/255, blue: 0x88/255) }
     var mintSoft: Color { mint.opacity(0.15) }
-    var rose: Color { Color(red: 0.949, green: 0.349, blue: 0.498) }
+    var rose: Color { Color(red: 0xD9/255, green: 0x60/255, blue: 0x78/255) }
     var roseSoft: Color { rose.opacity(0.15) }
-    var lavender: Color { Color(red: 0.651, green: 0.502, blue: 0.949) }
+    var lavender: Color { Color(red: 0x7F/255, green: 0x68/255, blue: 0xD9/255) }
     var lavenderSoft: Color { lavender.opacity(0.15) }
-    var sky: Color { Color(red: 0.349, green: 0.651, blue: 1.0) }
+    var sky: Color { Color(red: 0x4B/255, green: 0x8E/255, blue: 0xF6/255) }
     var skySoft: Color { sky.opacity(0.15) }
-    var gold: Color { Color(red: 1.0, green: 0.82, blue: 0.302) }
-    var text1: Color { Color(red: 0.1, green: 0.1, blue: 0.12) }
-    var text2: Color { Color(red: 0.1, green: 0.1, blue: 0.12).opacity(0.65) }
-    var text3: Color { Color(red: 0.1, green: 0.1, blue: 0.12).opacity(0.35) }
-    var divider: Color { Color(red: 0.1, green: 0.1, blue: 0.12).opacity(0.08) }
+    var gold: Color { Color(red: 0xD7/255, green: 0xA6/255, blue: 0x42/255) }
+    var text1: Color { Color(red: 0x1F/255, green: 0x1A/255, blue: 0x17/255) }
+    var text2: Color { Color(red: 0x6D/255, green: 0x63/255, blue: 0x5B/255) }
+    var text3: Color { Color(red: 0xA0/255, green: 0x94/255, blue: 0x8A/255) }
+    var divider: Color { text1.opacity(0.10) }
 
     var borderAccent: Color {
-        Color(red: 254.0/255.0, green: 215.0/255.0, blue: 170.0/255.0)
+        accent.opacity(0.35)
     }
     var backgroundPrimary: Color {
-        Color(red: 255.0/255.0, green: 237.0/255.0, blue: 213.0/255.0)
+        Color(red: 0xF8/255, green: 0xEE/255, blue: 0xE3/255)
     }
     var backgroundSecondary: Color {
-        Color(red: 255.0/255.0, green: 244.0/255.0, blue: 239.0/255.0)
+        surface
     }
     var buttonPrimary: Color {
-        Color(red: 246.0/255.0, green: 115.0/255.0, blue: 21.0/255.0)
+        accent
     }
     var backgroundSubtle: Color {
-        Color(red: 249.0/255.0, green: 250.0/255.0, blue: 251.0/255.0)
+        bg
     }
     var sourceBadgeOffline: Color { .gray }
     var sourceBadgeOnline: Color { .blue }

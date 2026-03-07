@@ -9,12 +9,25 @@ import SwiftUI
 
 @main
 struct CookSavvyApp: App {
-    @StateObject private var coordinator = AppCoordinator()
-
     var body: some Scene {
         WindowGroup {
-            TabContainerView(coordinator: coordinator)
-                .environment(\.appTheme, DarkTheme())
+            ThemedAppRoot()
         }
+    }
+}
+
+private struct ThemedAppRoot: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @AppStorage(ThemePreference.storageKey) private var themePreferenceRawValue = ThemePreference.defaultValue.rawValue
+    @StateObject private var coordinator = AppCoordinator()
+
+    private var themePreference: ThemePreference {
+        ThemePreference.from(rawValue: themePreferenceRawValue)
+    }
+
+    var body: some View {
+        TabContainerView(coordinator: coordinator)
+            .preferredColorScheme(themePreference.preferredColorScheme)
+            .environment(\.appTheme, themePreference.resolvedTheme(for: colorScheme))
     }
 }

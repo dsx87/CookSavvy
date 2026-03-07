@@ -880,6 +880,72 @@
         }
       }
     },
+    "settings.appearanceDark" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Dark"
+          }
+        }
+      }
+    },
+    "settings.appearanceFooter" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Choose Light, Dark, or follow your device settings."
+          }
+        }
+      }
+    },
+    "settings.appearanceHeader" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Appearance"
+          }
+        }
+      }
+    },
+    "settings.appearanceLight" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Light"
+          }
+        }
+      }
+    },
+    "settings.appearancePickerLabel" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Theme"
+          }
+        }
+      }
+    },
+    "settings.appearanceSystem" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Use System Settings"
+          }
+        }
+      }
+    },
     "settings.appInfoHeader" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {

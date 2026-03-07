@@ -25,6 +25,7 @@ final class SettingsViewModel: ObservableObject {
     @Published var localSourceEnabled: Bool = true
     @Published var apiSourceEnabled: Bool = false
     @Published var aiSourceEnabled: Bool = false
+    @Published var themePreference: ThemePreference = .defaultValue
 
     // MARK: - Properties
 
@@ -72,6 +73,7 @@ final class SettingsViewModel: ObservableObject {
         
         currentPlan = subscriptionService.currentPlan
         loadSourcePreferences()
+        themePreference = userDataService.getThemePreference()
     }
     
     private func loadSourcePreferences() {
@@ -119,6 +121,13 @@ final class SettingsViewModel: ObservableObject {
             return subscriptionService.canAccessFeature(.aiRecipes)
         }
     }
+
+    func updateThemePreference(_ themePreference: ThemePreference) {
+        guard self.themePreference != themePreference else { return }
+        self.themePreference = themePreference
+        userDataService.setThemePreference(themePreference)
+    }
+
     // TODO: check the link
     func openManageSubscriptions() {
         if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
