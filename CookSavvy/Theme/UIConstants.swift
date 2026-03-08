@@ -10,6 +10,7 @@ struct UI {
         static let largeTitle: Font = .system(size: 28, weight: .bold, design: .rounded)
         static let title: Font = .system(size: 22, weight: .bold, design: .rounded)
         static let sectionTitle: Font = .system(size: 15, weight: .bold, design: .rounded)
+        static let recipeRowTitle: Font = .system(size: 16, weight: .bold, design: .rounded)
         // Body
         static let body: Font = .system(size: 15)
         static let bodyRounded: Font = .system(size: 15, design: .rounded)
@@ -336,6 +337,7 @@ struct UI {
 
     struct Components {
         // RecipeImage
+        static let recipeImageDefaultHeight: CGFloat = 200
         static let emojiScaleFactor: CGFloat = 0.3
         static let emojiShadowOpacity: Double = 0.25
         static let emojiShadowRadius: CGFloat = 12
@@ -345,19 +347,58 @@ struct UI {
         static let miniCardPaddingH: CGFloat = 10
         static let miniCardPaddingV: CGFloat = 8
         static let miniCardIconSpacing: CGFloat = 4
+        static let miniCardTitleLineLimit: Int = 1
         // RecipeRow
-        static let rowSpacing: CGFloat = 14
-        static let rowContentSpacing: CGFloat = 8
-        static let rowInfoSpacing: CGFloat = 8
-        static let rowPadding: CGFloat = 12
-        static let rowThumbnailInset: CGFloat = 3
-        static let rowThumbnailShadowRadius: CGFloat = 16
-        static let rowThumbnailShadowY: CGFloat = 8
-        static let rowBookmarkSize: CGFloat = 34
-        static let rowMetaPaddingH: CGFloat = 8
-        static let rowMetaPaddingV: CGFloat = 5
-        static let rowCardShadowRadius: CGFloat = 18
-        static let rowCardShadowY: CGFloat = 10
+        struct RecipeRow {
+            static let spacing: CGFloat = 14
+            static let contentSpacing: CGFloat = 8
+            static let infoSpacing: CGFloat = 8
+            static let padding: CGFloat = 12
+            static let titleLineLimit: Int = 2
+            static let taglineLineLimit: Int = 2
+
+            struct Card {
+                static let accentShadowOpacity: Double = 0.10
+                static let shadowRadius: CGFloat = 18
+                static let shadowY: CGFloat = 10
+                static let shadowOpacity: Double = 0.10
+                static let secondaryShadowRadius: CGFloat = 12
+                static let secondaryShadowY: CGFloat = 6
+                static let backgroundMidOpacity: Double = 0.98
+                static let backgroundBottomOpacity: Double = 0.92
+                static let borderOpacity: Double = 0.9
+            }
+
+            struct Thumbnail {
+                static let inset: CGFloat = 3
+                static let saturation: Double = 1.04
+                static let contrast: Double = 1.03
+                static let overlaySkyOpacity: Double = 0.08
+                static let overlayAccentOpacity: Double = 0.16
+                static let borderOpacity: Double = 0.65
+                static let accentShadowOpacity: Double = 0.16
+                static let shadowRadius: CGFloat = 16
+                static let accentShadowY: CGFloat = 6
+                static let roseShadowOpacity: Double = 0.08
+                static let roseShadowRadius: CGFloat = 12
+                static let roseShadowY: CGFloat = 8
+                static let shadowOpacity: Double = 0.14
+                static let secondaryShadowRadius: CGFloat = 8
+                static let secondaryShadowY: CGFloat = 4
+            }
+
+            struct Bookmark {
+                static let size: CGFloat = 34
+                static let backgroundOpacity: Double = 0.72
+            }
+
+            struct Meta {
+                static let paddingH: CGFloat = 8
+                static let paddingV: CGFloat = 5
+                static let backgroundOpacity: Double = 0.12
+                static let ratingSpacing: CGFloat = 4
+            }
+        }
         // CategoryChip
         static let categoryChipSpacing: CGFloat = 5
         static let categoryChipPaddingH: CGFloat = 14

@@ -1,20 +1,25 @@
 import SwiftUI
 
+private enum RecipeImageStyle {
+    static let placeholderImageName = "recipe_placeholder"
+    static let placeholderEmoji = "🍽️"
+}
+
 struct RecipeImage: View {
     @Environment(\.appTheme) private var theme
     let recipe: Recipe
-    var height: CGFloat = 200
+    var height: CGFloat = UI.Components.recipeImageDefaultHeight
     var contentMode: ContentMode = .fit
 
     var body: some View {
         ZStack {
-            if recipe.image.isEmpty || recipe.image == "recipe_placeholder" {
+            if recipe.image.isEmpty || recipe.image == RecipeImageStyle.placeholderImageName {
                 LinearGradient(
                     colors: gradientColors,
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
-                Text(recipe.emoji ?? "🍽️")
+                Text(recipe.emoji ?? RecipeImageStyle.placeholderEmoji)
                     .font(.system(size: height * UI.Components.emojiScaleFactor))
                     .shadow(color: .black.opacity(UI.Components.emojiShadowOpacity), radius: UI.Components.emojiShadowRadius, y: UI.Components.emojiShadowY)
             } else {
@@ -25,7 +30,7 @@ struct RecipeImage: View {
                         endPoint: .bottomTrailing
                     )
                     .overlay {
-                        Text(recipe.emoji ?? "🍽️")
+                        Text(recipe.emoji ?? RecipeImageStyle.placeholderEmoji)
                             .font(.system(size: height * UI.Components.emojiScaleFactor))
                             .shadow(color: .black.opacity(UI.Components.emojiShadowOpacity), radius: UI.Components.emojiShadowRadius, y: UI.Components.emojiShadowY)
                     }
@@ -57,7 +62,7 @@ struct MiniRecipeCard: View {
                     Text(recipe.title)
                         .font(UI.Fonts.captionBold)
                         .foregroundStyle(theme.text1)
-                        .lineLimit(1)
+                        .lineLimit(UI.Components.miniCardTitleLineLimit)
 
                     HStack(spacing: UI.Components.miniCardIconSpacing) {
                         Image(systemName: Icons.Discover.clock)
@@ -95,24 +100,24 @@ struct RecipeRow: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            HStack(spacing: UI.Components.rowSpacing) {
+            HStack(spacing: UI.Components.RecipeRow.spacing) {
                 rowThumbnail
 
-                VStack(alignment: .leading, spacing: UI.Components.rowContentSpacing) {
+                VStack(alignment: .leading, spacing: UI.Components.RecipeRow.contentSpacing) {
                     Text(recipe.title)
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .font(UI.Fonts.recipeRowTitle)
                         .foregroundStyle(theme.text1)
-                        .lineLimit(2)
+                        .lineLimit(UI.Components.RecipeRow.titleLineLimit)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     if let tagline = recipe.tagline {
                         Text(tagline)
                             .font(UI.Fonts.caption)
                             .foregroundStyle(theme.text2)
-                            .lineLimit(2)
+                            .lineLimit(UI.Components.RecipeRow.taglineLineLimit)
                     }
 
-                    HStack(spacing: UI.Components.rowInfoSpacing) {
+                    HStack(spacing: UI.Components.RecipeRow.infoSpacing) {
                         if let time = cookTimeText {
                             rowMetaLabel(time, systemImage: Icons.Discover.clock, tint: theme.accent)
                         }
@@ -130,17 +135,22 @@ struct RecipeRow: View {
 
                 bookmarkBadge
             }
-            .padding(UI.Components.rowPadding)
+            .padding(UI.Components.RecipeRow.padding)
             .background(cardBackground)
             .overlay(cardBorder)
             .clipShape(RoundedRectangle(cornerRadius: UI.Common.cardCornerRadius, style: .continuous))
             .shadow(
-                color: theme.accent.opacity(0.10),
-                radius: UI.Components.rowCardShadowRadius,
+                color: theme.accent.opacity(UI.Components.RecipeRow.Card.accentShadowOpacity),
+                radius: UI.Components.RecipeRow.Card.shadowRadius,
                 x: 0,
-                y: UI.Components.rowCardShadowY
+                y: UI.Components.RecipeRow.Card.shadowY
             )
-            .shadow(color: .black.opacity(0.10), radius: 12, x: 0, y: 6)
+            .shadow(
+                color: .black.opacity(UI.Components.RecipeRow.Card.shadowOpacity),
+                radius: UI.Components.RecipeRow.Card.secondaryShadowRadius,
+                x: 0,
+                y: UI.Components.RecipeRow.Card.secondaryShadowY
+            )
 
             if let source = RecipeDisplaySource(recipe: recipe) {
                 RecipeSourceBadge(source: source, cornerRadius: UI.Common.cardCornerRadius)
@@ -171,24 +181,24 @@ struct RecipeRow: View {
 
             RecipeImage(recipe: recipe, height: UI.V2.recipeRowImageSize)
                 .frame(
-                    width: UI.V2.recipeRowImageSize - (UI.Components.rowThumbnailInset * 2),
-                    height: UI.V2.recipeRowImageSize - (UI.Components.rowThumbnailInset * 2)
+                    width: UI.V2.recipeRowImageSize - (UI.Components.RecipeRow.Thumbnail.inset * 2),
+                    height: UI.V2.recipeRowImageSize - (UI.Components.RecipeRow.Thumbnail.inset * 2)
                 )
-                .saturation(1.04)
-                .contrast(1.03)
+                .saturation(UI.Components.RecipeRow.Thumbnail.saturation)
+                .contrast(UI.Components.RecipeRow.Thumbnail.contrast)
                 .overlay {
                     LinearGradient(
                         colors: [
-                            theme.sky.opacity(0.08),
+                            theme.sky.opacity(UI.Components.RecipeRow.Thumbnail.overlaySkyOpacity),
                             .clear,
-                            theme.accent.opacity(0.16)
+                            theme.accent.opacity(UI.Components.RecipeRow.Thumbnail.overlayAccentOpacity)
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 }
                 .clipShape(shape)
-                .padding(UI.Components.rowThumbnailInset)
+                .padding(UI.Components.RecipeRow.Thumbnail.inset)
         }
         .frame(width: UI.V2.recipeRowImageSize, height: UI.V2.recipeRowImageSize)
         .background(
@@ -196,25 +206,38 @@ struct RecipeRow: View {
                 .fill(theme.card)
                 .overlay {
                     shape
-                        .stroke(theme.frostStrokeTop.opacity(0.65), lineWidth: UI.Common.borderWidth)
+                        .stroke(
+                            theme.frostStrokeTop.opacity(UI.Components.RecipeRow.Thumbnail.borderOpacity),
+                            lineWidth: UI.Common.borderWidth
+                        )
                 }
         )
         .shadow(
-            color: theme.accent.opacity(0.16),
-            radius: UI.Components.rowThumbnailShadowRadius,
+            color: theme.accent.opacity(UI.Components.RecipeRow.Thumbnail.accentShadowOpacity),
+            radius: UI.Components.RecipeRow.Thumbnail.shadowRadius,
             x: 0,
-            y: UI.Components.rowThumbnailShadowY - 2
+            y: UI.Components.RecipeRow.Thumbnail.accentShadowY
         )
-        .shadow(color: theme.rose.opacity(0.08), radius: 12, x: 0, y: 8)
-        .shadow(color: .black.opacity(0.14), radius: 8, x: 0, y: 4)
+        .shadow(
+            color: theme.rose.opacity(UI.Components.RecipeRow.Thumbnail.roseShadowOpacity),
+            radius: UI.Components.RecipeRow.Thumbnail.roseShadowRadius,
+            x: 0,
+            y: UI.Components.RecipeRow.Thumbnail.roseShadowY
+        )
+        .shadow(
+            color: .black.opacity(UI.Components.RecipeRow.Thumbnail.shadowOpacity),
+            radius: UI.Components.RecipeRow.Thumbnail.secondaryShadowRadius,
+            x: 0,
+            y: UI.Components.RecipeRow.Thumbnail.secondaryShadowY
+        )
     }
 
     private var bookmarkBadge: some View {
         Image(systemName: isSaved ? Icons.Discover.bookmarkFill : Icons.Discover.bookmark)
             .font(UI.Fonts.iconSemibold)
             .foregroundStyle(isSaved ? theme.accent : theme.text3)
-            .frame(width: UI.Components.rowBookmarkSize, height: UI.Components.rowBookmarkSize)
-            .background(theme.surface.opacity(0.72), in: Circle())
+            .frame(width: UI.Components.RecipeRow.Bookmark.size, height: UI.Components.RecipeRow.Bookmark.size)
+            .background(theme.surface.opacity(UI.Components.RecipeRow.Bookmark.backgroundOpacity), in: Circle())
             .overlay {
                 Circle()
                     .stroke(theme.divider, lineWidth: UI.Common.borderWidth)
@@ -227,8 +250,8 @@ struct RecipeRow: View {
                 LinearGradient(
                     colors: [
                         theme.card,
-                        theme.card.opacity(0.98),
-                        theme.surface.opacity(0.92)
+                        theme.card.opacity(UI.Components.RecipeRow.Card.backgroundMidOpacity),
+                        theme.surface.opacity(UI.Components.RecipeRow.Card.backgroundBottomOpacity)
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
@@ -241,8 +264,8 @@ struct RecipeRow: View {
             .stroke(
                 LinearGradient(
                     colors: [
-                        theme.frostStrokeTop.opacity(0.9),
-                        theme.frostStrokeBottom.opacity(0.9)
+                        theme.frostStrokeTop.opacity(UI.Components.RecipeRow.Card.borderOpacity),
+                        theme.frostStrokeBottom.opacity(UI.Components.RecipeRow.Card.borderOpacity)
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
@@ -255,20 +278,20 @@ struct RecipeRow: View {
         Label(text, systemImage: systemImage)
             .font(UI.Fonts.tinyCaptionMedium)
             .foregroundStyle(theme.text2)
-            .padding(.horizontal, UI.Components.rowMetaPaddingH)
-            .padding(.vertical, UI.Components.rowMetaPaddingV)
-            .background(tint.opacity(0.12), in: Capsule())
+            .padding(.horizontal, UI.Components.RecipeRow.Meta.paddingH)
+            .padding(.vertical, UI.Components.RecipeRow.Meta.paddingV)
+            .background(tint.opacity(UI.Components.RecipeRow.Meta.backgroundOpacity), in: Capsule())
     }
 
     private func rowRating(_ rating: Double) -> some View {
-        HStack(spacing: UI.Components.rowInfoSpacing / 2) {
+        HStack(spacing: UI.Components.RecipeRow.Meta.ratingSpacing) {
             StarRating(rating: rating)
             Text(String(format: "%.1f", rating))
                 .font(UI.Fonts.tinyCaptionMedium)
                 .foregroundStyle(theme.text2)
         }
-        .padding(.horizontal, UI.Components.rowMetaPaddingH)
-        .padding(.vertical, UI.Components.rowMetaPaddingV)
-        .background(theme.gold.opacity(0.12), in: Capsule())
+        .padding(.horizontal, UI.Components.RecipeRow.Meta.paddingH)
+        .padding(.vertical, UI.Components.RecipeRow.Meta.paddingV)
+        .background(theme.gold.opacity(UI.Components.RecipeRow.Meta.backgroundOpacity), in: Capsule())
     }
 }
