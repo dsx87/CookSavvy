@@ -30,9 +30,9 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 
 | Screen | Description |
 |--------|-------------|
-| **Discover** (tab 1) | V2 two-state flow: ingredient selection (grid, categories, search, recent/saved cards) and recipe results (mood filter, hero best match, recipe rows) |
-| **Journey** (tab 2) | V2 profile header, stats, user-created recipes, weekly calendar, achievements, recent sessions, settings (gear icon in nav bar) |
-| **Recipe Details** | V2 hero image, floating back/bookmark actions, stats row, ingredients, steps, sticky Start Cooking CTA |
+| **Discover** (tab 1) | Two-state flow: ingredient selection (grid, categories, search, recent/saved cards) and recipe results (mood filter, hero best match, recipe rows) |
+| **Journey** (tab 2) | Profile header, stats, user-created recipes, weekly calendar, achievements, recent sessions, settings (gear icon in nav bar) |
+| **Recipe Details** | Hero image, floating back/bookmark actions, stats row, ingredients, steps, sticky Start Cooking CTA |
 | **Recipe List** | Reusable See All destination for recent, saved, and user recipes |
 | **Cook Mode** | Full-screen step-by-step cooking flow with progress ring, timer, and prev/next navigation |
 | **Create Recipe** | 5-step wizard: Name & Photo → Ingredients → Steps → Details → Review & Save |
@@ -114,14 +114,13 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 ### Theme & Localization
 - **Layout constants** — `UI` struct with nested domain structs (`UI.RecipeCell.imageSize`, `UI.V2.heroImageHeight`)
 - **Theme system** — `AppTheme` protocol + `LightTheme` / `DarkTheme` + `SystemTheme` helper, injected via `@Environment(\.appTheme)`
-  - V2 color tokens: `bg`, `surface`, `surfaceLight`, `card`, `accent`, `accentSoft`, `mint`, `mintSoft`, `rose`, `roseSoft`, `lavender`, `lavenderSoft`, `sky`, `skySoft`, `gold`, `text1`, `text2`, `text3`, `divider`
+  - Color tokens: `bg`, `surface`, `surfaceLight`, `card`, `accent`, `accentSoft`, `mint`, `mintSoft`, `rose`, `roseSoft`, `lavender`, `lavenderSoft`, `sky`, `skySoft`, `gold`, `text1`, `text2`, `text3`, `divider`
   - Corner radius tokens: `cornerRadiusSmall` (12), `cornerRadiusMedium` (16), `cornerRadiusLarge` (20), `cornerRadiusXL` (24), `cornerRadiusPill` (32)
-  - Legacy aliases: `borderAccent`, `backgroundPrimary`, `backgroundSecondary`, `buttonPrimary`, `backgroundSubtle`
 - **View Modifiers** (`Theme/ViewModifiers.swift`): `.frostCard()`, `.neonGlow(_:radius:)`, `.sectionLabel()`
 - **Strings** — `Strings` enum with nested screen enums, using `String(localized:defaultValue:)` for localization; accessed as `Strings.Settings.navigationTitle`
-  - V2 enums: `Discover`, `Journey`, `CookMode`, `CreateRecipe`, `RecipeList`, `MoodFilter`
+  - Screen enums include `Discover`, `Journey`, `CookMode`, `CreateRecipe`, `RecipeList`, `MoodFilter`
 - **Icons** — `Icons` enum with nested screen enums for SF Symbol names; accessed as `Icons.Settings.trash`
-  - V2 enums: `Discover`, `Journey`, `CookMode`, `CreateRecipe`, `Mood`
+  - Screen enums include `Discover`, `Journey`, `CookMode`, `CreateRecipe`, `Mood`
 - **String Catalog** — `Localizable.xcstrings` (Xcode 15+), auto-populated from `String(localized:)` calls
 - Adding a new theme: create a struct conforming to `AppTheme` and inject at app root
 - Adding a new language: add translations in the String Catalog via Xcode
@@ -221,12 +220,12 @@ CookSavvy/
 │   │   ├── TabContainerView.swift
 │   │   ├── RecipeCardComponents.swift   — RecipeImage, MiniRecipeCard, RecipeRow (shared across screens)
 │   │   └── CommonComponents.swift       — StarRating, StatPill (shared across screens)
-│   ├── Discover/                      — V2 two-state discover screen (DiscoverView + DiscoverViewModel + DiscoverComponents)
-│   ├── Journey/                       — V2 journey screen (JourneyView + JourneyViewModel + JourneyComponents)
-│   ├── RecipeList/                    — V2 recipe list (RecipeListView + RecipeListViewModel)
-│   ├── RecipeDetails/                 — V2 recipe details with hero image + sticky CTA
-│   ├── CookMode/                      — V2 cook mode with step nav + timer (CookModeView + CookModeViewModel)
-│   ├── CreateRecipe/                  — V2 create recipe wizard (CreateRecipeView + CreateRecipeViewModel)
+│   ├── Discover/                      — Two-state discover screen (DiscoverView + DiscoverViewModel + DiscoverComponents)
+│   ├── Journey/                       — Journey screen (JourneyView + JourneyViewModel + JourneyComponents)
+│   ├── RecipeList/                    — Recipe list (RecipeListView + RecipeListViewModel)
+│   ├── RecipeDetails/                 — Recipe details with hero image + sticky CTA
+│   ├── CookMode/                      — Cook mode with step nav + timer (CookModeView + CookModeViewModel)
+│   ├── CreateRecipe/                  — Create recipe wizard (CreateRecipeView + CreateRecipeViewModel)
 │   ├── Camera/                        — Camera capture screen
 │   ├── Settings/                      — Settings screen
 │   └── Upgrade/                       — Subscription upgrade screen
