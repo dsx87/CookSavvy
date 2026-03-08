@@ -243,18 +243,16 @@ struct DiscoverView: View {
     // MARK: - State 2: Recipe Results
 
     private var resultsState: some View {
-        VStack(spacing: 0) {
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: UI.Discover.sectionSpacing) {
-                    resultsHeader
-                    selectedIngredientsStrip
-                    moodFilter
-                    bestMatchSection
-                    moreRecipesSection
-                    Spacer(minLength: UI.Discover.bottomSpacerMinLength)
-                }
-                .padding(.horizontal, UI.Discover.horizontalPadding)
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: UI.Discover.sectionSpacing) {
+                resultsHeader
+                selectedIngredientsStrip
+                moodFilter
+                bestMatchSection
+                moreRecipesSection
             }
+            .padding(.horizontal, UI.Discover.horizontalPadding)
+            .padding(.bottom, UI.Discover.findButtonBottomPadding)
         }
     }
 

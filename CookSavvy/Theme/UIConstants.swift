@@ -188,7 +188,7 @@ struct UI {
         static let heroImageHeight: CGFloat = 340
         static let miniCardWidth: CGFloat = 140
         static let miniCardImageHeight: CGFloat = 100
-        static let recipeRowImageSize: CGFloat = 80
+        static let recipeRowImageSize: CGFloat = 92
         static let avatarSize: CGFloat = 80
         static let cookModeTimerSize: CGFloat = 120
         static let contentOverlapOffset: CGFloat = 32
@@ -347,9 +347,17 @@ struct UI {
         static let miniCardIconSpacing: CGFloat = 4
         // RecipeRow
         static let rowSpacing: CGFloat = 14
-        static let rowContentSpacing: CGFloat = 6
-        static let rowInfoSpacing: CGFloat = 10
+        static let rowContentSpacing: CGFloat = 8
+        static let rowInfoSpacing: CGFloat = 8
         static let rowPadding: CGFloat = 12
+        static let rowThumbnailInset: CGFloat = 3
+        static let rowThumbnailShadowRadius: CGFloat = 16
+        static let rowThumbnailShadowY: CGFloat = 8
+        static let rowBookmarkSize: CGFloat = 34
+        static let rowMetaPaddingH: CGFloat = 8
+        static let rowMetaPaddingV: CGFloat = 5
+        static let rowCardShadowRadius: CGFloat = 18
+        static let rowCardShadowY: CGFloat = 10
         // CategoryChip
         static let categoryChipSpacing: CGFloat = 5
         static let categoryChipPaddingH: CGFloat = 14

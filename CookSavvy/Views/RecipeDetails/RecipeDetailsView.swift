@@ -3,38 +3,12 @@ import SwiftUI
 struct RecipeDetailsView: View {
     @ObservedObject var viewModel: RecipeDetailsViewModel
     @Environment(\.appTheme) private var theme
-    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ZStack(alignment: .bottom) {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
-                    ZStack(alignment: .top) {
-                        RecipeImage(recipe: viewModel.recipe, height: UI.V2.heroImageHeight)
-
-                        HStack {
-                            Button { dismiss() } label: {
-                                Image(systemName: Icons.Common.backButton)
-                                    .font(UI.Fonts.buttonIcon)
-                                    .foregroundStyle(.white)
-                                    .frame(width: UI.Common.backButtonSize, height: UI.Common.backButtonSize)
-                                    .background(.ultraThinMaterial, in: Circle())
-                            }
-                            Spacer()
-                            Button {
-                                Task { await viewModel.toggleFavorite() }
-                            } label: {
-                                Image(systemName: viewModel.isFavorite ? Icons.Discover.bookmarkFill : Icons.Discover.bookmark)
-                                    .font(UI.Fonts.buttonIcon)
-                                    .foregroundStyle(viewModel.isFavorite ? theme.accent : .white)
-                                    .frame(width: UI.Common.backButtonSize, height: UI.Common.backButtonSize)
-                                    .background(.ultraThinMaterial, in: Circle())
-                            }
-                            .disabled(viewModel.isLoadingFavorite)
-                        }
-                        .padding(.horizontal, UI.RecipeDetails.topBarHorizontalPadding)
-                        .padding(.top, UI.V2.floatingButtonTopPadding)
-                    }
+                    RecipeImage(recipe: viewModel.recipe, height: UI.V2.heroImageHeight)
 
                     ZStack(alignment: .topTrailing) {
                         VStack(alignment: .leading, spacing: UI.RecipeDetails.sectionSpacing) {
@@ -86,8 +60,19 @@ struct RecipeDetailsView: View {
             startCookingButton
         }
         .background(theme.bg)
-        .ignoresSafeArea(edges: .top)
-        .navigationBarHidden(true)
+        .navigationBarTitleDisplayMode(.inline)
+        .tint(theme.accent)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    Task { await viewModel.toggleFavorite() }
+                } label: {
+                    Image(systemName: viewModel.isFavorite ? Icons.Discover.bookmarkFill : Icons.Discover.bookmark)
+                        .foregroundStyle(viewModel.isFavorite ? theme.accent : theme.text2)
+                }
+                .disabled(viewModel.isLoadingFavorite)
+            }
+        }
     }
 
     // MARK: - Stats Row

@@ -29,6 +29,7 @@ struct DefaultPlaceholder: View {
 struct AsyncImageDisk<Placeholder: View>: View {
     
     let imageName: String
+    let contentMode: ContentMode
     private var imageNamePrefix: String?
     private let imageNameBuilder: ((String?, String) -> String)
     @State private var image: UIImage? = nil
@@ -36,19 +37,26 @@ struct AsyncImageDisk<Placeholder: View>: View {
     
     init(
         imageName: String,
+        contentMode: ContentMode = .fill,
         imageNamePrefix: String?,
         imageNameBuilder: @escaping ((String?, String) -> String),
         @ViewBuilder placeholder: @escaping () -> Placeholder
     ) {
         self.imageNamePrefix = imageNamePrefix
         self.imageName = imageName
+        self.contentMode = contentMode
         self.placeholder = placeholder()
         self.imageNameBuilder = imageNameBuilder
     }
     
-    init(imageName: String, @ViewBuilder placeholder: @escaping () -> Placeholder) {
+    init(
+        imageName: String,
+        contentMode: ContentMode = .fill,
+        @ViewBuilder placeholder: @escaping () -> Placeholder
+    ) {
         self.imageNamePrefix = UI.DiskImage.defaultPrefix
         self.imageName = imageName
+        self.contentMode = contentMode
         self.placeholder = placeholder()
         self.imageNameBuilder = ({ prefix, imageFileName in
             var imageFileName = imageFileName + UI.DiskImage.defaultExtension
@@ -65,7 +73,7 @@ struct AsyncImageDisk<Placeholder: View>: View {
             if let image {
                 Image(uiImage: image)
                     .resizable()
-                    .aspectRatio(contentMode: .fit)
+                    .aspectRatio(contentMode: contentMode)
             } else {
                 placeholder
             }
