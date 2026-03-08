@@ -26,6 +26,7 @@ protocol AppTheme {
     var frostStrokeTop: Color { get }
     var frostStrokeBottom: Color { get }
     var sectionLabelFont: Font { get }
+    var shadowStrength: Double { get }
 
     // MARK: - Corner Radius Tokens
     var cornerRadiusSmall: CGFloat { get }
@@ -52,6 +53,7 @@ extension AppTheme {
     var cornerRadiusXL: CGFloat { 24 }
     var cornerRadiusPill: CGFloat { 32 }
     var sectionLabelFont: Font { .system(size: 11, weight: .bold, design: .rounded) }
+    var shadowStrength: Double { 1.0 }
 }
 
 struct LightTheme: AppTheme {
@@ -93,14 +95,15 @@ struct LightTheme: AppTheme {
     var backgroundSubtle: Color {
         bg
     }
+    var shadowStrength: Double { 1.0 }
     var sourceBadgeOffline: Color { .gray }
     var sourceBadgeOnline: Color { .blue }
     var sourceBadgeAI: Color { .purple }
 }
 
 struct DarkTheme: AppTheme {
-    var frostStrokeTop: Color { Color.white.opacity(0.12) }
-    var frostStrokeBottom: Color { Color.white.opacity(0.03) }
+    var frostStrokeTop: Color { Color.white.opacity(0.28) }
+    var frostStrokeBottom: Color { Color.white.opacity(0.10) }
 
     var bg: Color { Color(red: 0x0F/255, green: 0x0F/255, blue: 0x17/255) }
     var surface: Color { Color(red: 0x1C/255, green: 0x1C/255, blue: 0x26/255) }
@@ -127,6 +130,7 @@ struct DarkTheme: AppTheme {
     var backgroundSecondary: Color { surfaceLight }
     var buttonPrimary: Color { accent }
     var backgroundSubtle: Color { card }
+    var shadowStrength: Double { 0.5 }
     var sourceBadgeOffline: Color { .gray }
     var sourceBadgeOnline: Color { sky }
     var sourceBadgeAI: Color { lavender }

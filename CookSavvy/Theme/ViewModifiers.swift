@@ -23,18 +23,19 @@ struct FrostCardModifier: ViewModifier {
 }
 
 struct NeonGlowModifier: ViewModifier {
+    @Environment(\.appTheme) private var theme
     let color: Color
     let radius: CGFloat
 
     func body(content: Content) -> some View {
         content
             .shadow(
-                color: color.opacity(UI.V2.NeonGlow.innerOpacity),
+                color: color.opacity(UI.V2.NeonGlow.innerOpacity * theme.shadowStrength),
                 radius: radius * UI.V2.NeonGlow.innerRadiusScale,
                 x: 0, y: 0
             )
             .shadow(
-                color: color.opacity(UI.V2.NeonGlow.outerOpacity),
+                color: color.opacity(UI.V2.NeonGlow.outerOpacity * theme.shadowStrength),
                 radius: radius,
                 x: 0, y: radius * UI.V2.NeonGlow.outerOffsetScale
             )
