@@ -145,22 +145,11 @@ struct CreateRecipeView: View {
 
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: UI.CreateRecipe.emojiGridSpacing), count: UI.CreateRecipe.emojiGridColumns), spacing: UI.CreateRecipe.emojiGridSpacing) {
                     ForEach(CreateRecipeViewModel.foodEmojis, id: \.self) { emoji in
-                        Text(emoji)
-                            .font(UI.Fonts.largeTitle)
-                            .frame(width: UI.CreateRecipe.emojiSize, height: UI.CreateRecipe.emojiSize)
-                            .background(
-                                Circle()
-                                    .fill(viewModel.selectedEmoji == emoji ? theme.accentSoft : theme.surface)
-                            )
-                            .overlay(
-                                Circle()
-                                    .strokeBorder(viewModel.selectedEmoji == emoji ? theme.accent : theme.divider,
-                                                  lineWidth: viewModel.selectedEmoji == emoji ? UI.Components.bubbleSelectedBorder : UI.Common.borderWidth)
-                            )
-                            .scaleEffect(viewModel.selectedEmoji == emoji ? UI.CreateRecipe.emojiSelectedScale : 1.0)
-                            .onTapGesture {
-                                withAnimation(UI.Anim.springQuick) { viewModel.selectedEmoji = emoji }
-                            }
+                        EmojiPickerCell(
+                            emoji: emoji,
+                            isSelected: viewModel.selectedEmoji == emoji,
+                            onTap: { viewModel.selectedEmoji = emoji }
+                        )
                     }
                 }
             }
@@ -228,46 +217,16 @@ struct CreateRecipeView: View {
                 .sectionLabel()
 
             VStack(spacing: UI.CreateRecipe.stepsRowSpacing) {
-                ForEach(Array(viewModel.stepRows.enumerated()), id: \.element.id) { i, row in
-                    HStack(alignment: .top, spacing: UI.CreateRecipe.stepRowItemSpacing) {
-                        Text("\(i + 1)")
-                            .font(UI.Fonts.stepNumber)
-                            .foregroundStyle(.white)
-                            .frame(width: UI.RecipeDetails.stepNumberSize, height: UI.RecipeDetails.stepNumberSize)
-                            .background(
-                                LinearGradient(colors: [theme.accent, theme.rose],
-                                               startPoint: .topLeading, endPoint: .bottomTrailing),
-                                in: Circle()
-                            )
-                            .padding(.top, UI.CreateRecipe.stepNumberTopPadding)
-
-                        TextField("Step \(i + 1)", text: Binding(
+                ForEach(Array(viewModel.stepRows.enumerated()), id: \.element.id) { i, _ in
+                    StepInputRow(
+                        index: i,
+                        text: Binding(
                             get: { viewModel.stepRows[i].text },
                             set: { viewModel.stepRows[i].text = $0 }
-                        ), axis: .vertical)
-                            .font(UI.Fonts.bodyRounded)
-                            .foregroundStyle(theme.text1)
-                            .lineLimit(3...6)
-                            .padding(UI.CreateRecipe.ingredientInputPadding)
-                            .background(theme.surface, in: RoundedRectangle(cornerRadius: UI.CreateRecipe.ingredientInputCornerRadius, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: UI.CreateRecipe.ingredientInputCornerRadius, style: .continuous)
-                                    .strokeBorder(theme.divider, lineWidth: UI.Common.borderWidth)
-                            )
-
-                        if viewModel.stepRows.count > 1 {
-                            Button {
-                                withAnimation(UI.Anim.springQuick) {
-                                    viewModel.removeStepRow(at: i)
-                                }
-                            } label: {
-                                Image(systemName: "trash")
-                                    .font(UI.Fonts.smallButton)
-                                    .foregroundStyle(theme.text3)
-                            }
-                            .padding(.top, UI.CreateRecipe.stepDeleteTopPadding)
-                        }
-                    }
+                        ),
+                        canDelete: viewModel.stepRows.count > 1,
+                        onDelete: { viewModel.removeStepRow(at: i) }
+                    )
                 }
             }
 
@@ -301,22 +260,11 @@ struct CreateRecipeView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: UI.CreateRecipe.cookTimeChipSpacing) {
                         ForEach([5, 10, 15, 20, 30, 45, 60, 90], id: \.self) { time in
-                            Text("\(time)m")
-                                .font(UI.Fonts.smallButton)
-                                .foregroundStyle(viewModel.cookTimeMinutes == time ? .white : theme.text2)
-                                .padding(.horizontal, UI.CreateRecipe.cookTimeChipPaddingH)
-                                .padding(.vertical, UI.CreateRecipe.cookTimeChipPaddingV)
-                                .background(
-                                    Capsule()
-                                        .fill(viewModel.cookTimeMinutes == time ? theme.accent : theme.surface)
-                                )
-                                .overlay(
-                                    Capsule()
-                                        .strokeBorder(viewModel.cookTimeMinutes == time ? Color.clear : theme.divider, lineWidth: UI.Common.borderWidth)
-                                )
-                                .onTapGesture {
-                                    withAnimation(UI.Anim.easeQuick) { viewModel.cookTimeMinutes = time }
-                                }
+                            CookTimeChip(
+                                time: time,
+                                isSelected: viewModel.cookTimeMinutes == time,
+                                onTap: { viewModel.cookTimeMinutes = time }
+                            )
                         }
                     }
                 }
@@ -363,22 +311,12 @@ struct CreateRecipeView: View {
                 HStack(spacing: UI.CreateRecipe.difficultySpacing) {
                     ForEach(Array(zip(CreateRecipeViewModel.difficulties,
                                       [theme.mint, theme.accent, theme.rose])), id: \.0) { diff, color in
-                        Text(diff)
-                            .font(UI.Fonts.smallButton)
-                            .foregroundStyle(viewModel.difficulty == diff ? .white : color)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, UI.CreateRecipe.difficultyPaddingV)
-                            .background(
-                                RoundedRectangle(cornerRadius: UI.CreateRecipe.ingredientInputCornerRadius, style: .continuous)
-                                    .fill(viewModel.difficulty == diff ? AnyShapeStyle(color) : AnyShapeStyle(color.opacity(UI.CreateRecipe.opacityFaint)))
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: UI.CreateRecipe.ingredientInputCornerRadius, style: .continuous)
-                                    .strokeBorder(viewModel.difficulty == diff ? Color.clear : color.opacity(UI.CreateRecipe.opacityLight), lineWidth: UI.Common.borderWidth)
-                            )
-                            .onTapGesture {
-                                withAnimation(UI.Anim.easeQuick) { viewModel.difficulty = diff }
-                            }
+                        DifficultyButton(
+                            title: diff,
+                            color: color,
+                            isSelected: viewModel.difficulty == diff,
+                            onTap: { viewModel.difficulty = diff }
+                        )
                     }
                 }
             }

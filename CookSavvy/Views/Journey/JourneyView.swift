@@ -165,33 +165,11 @@ struct JourneyView: View {
 
             HStack(spacing: UI.Journey.dayCircleSpacing) {
                 ForEach(Array(viewModel.weekdayLabels.enumerated()), id: \.offset) { index, day in
-                    VStack(spacing: UI.Journey.dayCircleSpacing) {
-                        let isActive = viewModel.isActiveDay(index)
-                        let isToday = viewModel.isTodayIndex(index)
-
-                        Circle()
-                            .fill(isActive ? theme.accent : theme.surface)
-                            .frame(width: UI.Journey.dayCircleSize, height: UI.Journey.dayCircleSize)
-                            .overlay(
-                                Group {
-                                    if isActive {
-                                        Image(systemName: Icons.Journey.checkmark)
-                                            .font(UI.Fonts.smallCaptionBold)
-                                            .foregroundStyle(.white)
-                                    }
-                                }
-                            )
-                            .overlay(
-                                Circle()
-                                    .strokeBorder(isToday ? theme.accent : .clear, lineWidth: UI.Journey.dayTodayBorderWidth)
-                                    .frame(width: UI.Journey.dayTodayCircleSize, height: UI.Journey.dayTodayCircleSize)
-                            )
-
-                        Text(day)
-                            .font(UI.Fonts.tinyCaptionMedium)
-                            .foregroundStyle(isToday ? theme.accent : theme.text3)
-                    }
-                    .frame(maxWidth: .infinity)
+                    WeekdayDotView(
+                        isActive: viewModel.isActiveDay(index),
+                        isToday: viewModel.isTodayIndex(index),
+                        label: day
+                    )
                 }
             }
             .padding(UI.Journey.weeklyPadding)
@@ -241,17 +219,7 @@ struct JourneyView: View {
                     .font(UI.Fonts.smallCaption)
                     .foregroundStyle(theme.text3)
 
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(theme.surface)
-                            .frame(height: UI.Journey.achievementProgressHeight)
-                        Capsule()
-                            .fill(color)
-                            .frame(width: geo.size.width * achievement.progressFraction, height: UI.Journey.achievementProgressHeight)
-                    }
-                }
-                .frame(height: UI.Journey.achievementProgressHeight)
+                AchievementProgressBar(color: color, progressFraction: achievement.progressFraction)
             }
 
             Text("\(Int(achievement.progressFraction * 100))%")
@@ -273,39 +241,10 @@ struct JourneyView: View {
 
                 VStack(spacing: 0) {
                     ForEach(Array(viewModel.recentSessions.enumerated()), id: \.element.id) { index, session in
-                        HStack(spacing: UI.Journey.activityRowSpacing) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: UI.Journey.activityIconCornerRadius, style: .continuous)
-                                    .fill(theme.accentSoft)
-                                    .frame(width: UI.Journey.activityIconSize, height: UI.Journey.activityIconSize)
-                                Image(systemName: Icons.Journey.forkKnife)
-                                    .font(UI.Fonts.iconMedium)
-                                    .foregroundStyle(theme.accent)
-                            }
-
-                            VStack(alignment: .leading, spacing: UI.Journey.activityTextSpacing) {
-                                Text(session.recipeTitle)
-                                    .font(UI.Fonts.smallButton)
-                                    .foregroundStyle(theme.text1)
-                                Text(relativeDate(session.cookedAt))
-                                    .font(UI.Fonts.tinyCaption)
-                                    .foregroundStyle(theme.text3)
-                            }
-                            Spacer()
-                            if let duration = session.durationFormatted {
-                                Text(duration)
-                                    .font(UI.Fonts.smallCaptionMedium)
-                                    .foregroundStyle(theme.text3)
-                            }
-                        }
-                        .padding(.vertical, UI.Journey.activityVerticalPadding)
-                        .padding(.horizontal, UI.Journey.activityHorizontalPadding)
-
-                        if index < viewModel.recentSessions.count - 1 {
-                            Divider()
-                                .background(theme.divider)
-                                .padding(.leading, UI.Journey.activityDividerLeading)
-                        }
+                        ActivitySessionRow(
+                            session: session,
+                            showDivider: index < viewModel.recentSessions.count - 1
+                        )
                     }
                 }
                 .frostCard(cornerRadius: UI.Common.cardCornerRadius)
@@ -313,9 +252,4 @@ struct JourneyView: View {
         }
     }
 
-    private func relativeDate(_ date: Date) -> String {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .full
-        return formatter.localizedString(for: date, relativeTo: Date())
-    }
 }
