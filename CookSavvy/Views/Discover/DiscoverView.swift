@@ -368,45 +368,10 @@ struct DiscoverView: View {
                     RecipeImage(recipe: featured, height: UI.Discover.recipeImageHeight)
                         .clipShape(RoundedRectangle(cornerRadius: UI.Discover.recipeCardCornerRadius, style: .continuous))
 
-                    VStack(alignment: .leading, spacing: UI.Discover.featuredInfoSpacing) {
-                        if let match = featured.matchPercentage {
-                            matchIndicator(match: match, matchingIngredients: viewModel.matchingIngredientNames(for: featured))
-                        }
-
-                        Text(featured.title)
-                            .font(UI.Fonts.title)
-                            .foregroundStyle(.white)
-
-                        HStack(spacing: UI.Discover.featuredLabelSpacing) {
-                            if let time = cookTimeLabel(featured) {
-                                Label(time, systemImage: Icons.Discover.clock)
-                            }
-                            if let complexity = complexityLabel(featured) {
-                                Label(complexity, systemImage: Icons.Discover.chartBar)
-                            }
-                            if let rating = featured.apiRating ?? featured.userRating {
-                                StarRating(rating: rating)
-                            }
-                        }
-                        .font(UI.Fonts.smallCaptionMedium)
-                        .foregroundStyle(.white.opacity(UI.Discover.whiteOpacity085))
-                    }
-                    .padding(UI.Discover.featuredInfoPadding)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        LinearGradient(
-                            stops: [
-                                .init(color: .black.opacity(UI.Discover.gradientOpacityTop), location: 0),
-                                .init(color: .black.opacity(UI.Discover.gradientOpacityMid), location: 0.6),
-                                .init(color: .clear, location: 1),
-                            ],
-                            startPoint: .bottom, endPoint: .top
-                        )
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: UI.Discover.recipeCardCornerRadius, style: .continuous))
+                    featuredHeroOverlay(for: featured)
 
                     if let source = RecipeDisplaySource(recipe: featured) {
-                        RecipeSourceBadge(source: source, cornerRadius: UI.Discover.recipeCardCornerRadius)
+                        RecipeSourceBadge(source: source)
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                     }
                 }
@@ -420,6 +385,43 @@ struct DiscoverView: View {
                 .accessibilityAddTraits(.isButton)
             }
         }
+    }
+
+    private func featuredHeroOverlay(for recipe: Recipe) -> some View {
+        VStack(alignment: .leading, spacing: UI.Discover.featuredInfoSpacing) {
+            if let match = recipe.matchPercentage {
+                matchIndicator(match: match, matchingIngredients: viewModel.matchingIngredientNames(for: recipe))
+            }
+            Text(recipe.title)
+                .font(UI.Fonts.title)
+                .foregroundStyle(.white)
+            HStack(spacing: UI.Discover.featuredLabelSpacing) {
+                if let time = cookTimeLabel(recipe) {
+                    Label(time, systemImage: Icons.Discover.clock)
+                }
+                if let complexity = complexityLabel(recipe) {
+                    Label(complexity, systemImage: Icons.Discover.chartBar)
+                }
+                if let rating = recipe.apiRating ?? recipe.userRating {
+                    StarRating(rating: rating)
+                }
+            }
+            .font(UI.Fonts.smallCaptionMedium)
+            .foregroundStyle(.white.opacity(UI.Discover.whiteOpacity085))
+        }
+        .padding(UI.Discover.featuredInfoPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            LinearGradient(
+                stops: [
+                    .init(color: .black.opacity(UI.Discover.gradientOpacityTop), location: 0),
+                    .init(color: .black.opacity(UI.Discover.gradientOpacityMid), location: 0.6),
+                    .init(color: .clear, location: 1),
+                ],
+                startPoint: .bottom, endPoint: .top
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: UI.Discover.recipeCardCornerRadius, style: .continuous))
     }
 
     @ViewBuilder
@@ -478,25 +480,34 @@ struct DiscoverView: View {
             }
             .buttonStyle(.plain)
             .popover(isPresented: $isMatchInfoPopoverPresented) {
-                VStack(alignment: .leading, spacing: UI.Discover.matchPopoverSpacing) {
-                    Text(Strings.Discover.matchDetailsTitle)
-                        .font(UI.Fonts.smallCaptionBold)
-                        .foregroundStyle(theme.text1)
-                    Text(matchingIngredients.isEmpty ? Strings.Discover.matchDetailsEmpty : matchingIngredients.joined(separator: ", "))
-                        .font(UI.Fonts.smallCaption)
-                        .foregroundStyle(theme.text2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .frame(maxWidth: UI.Discover.matchPopoverWidth, alignment: .leading)
-                .padding(UI.Discover.matchPopoverPadding)
-                .background(theme.surface)
-                .presentationCompactAdaptation(.popover)
-                .presentationBackground(theme.surface)
+                MatchDetailsPopover(ingredients: matchingIngredients)
             }
         }
         .foregroundStyle(.white)
         .padding(.horizontal, UI.Discover.matchBadgePaddingH)
         .padding(.vertical, UI.Discover.matchBadgePaddingV)
         .background(theme.mint.opacity(UI.RecipeDetails.matchBadgeOpacity), in: Capsule())
+    }
+}
+
+private struct MatchDetailsPopover: View {
+    @Environment(\.appTheme) private var theme
+    let ingredients: [String]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: UI.Discover.matchPopoverSpacing) {
+            Text(Strings.Discover.matchDetailsTitle)
+                .font(UI.Fonts.smallCaptionBold)
+                .foregroundStyle(theme.text1)
+            Text(ingredients.isEmpty ? Strings.Discover.matchDetailsEmpty : ingredients.joined(separator: ", "))
+                .font(UI.Fonts.smallCaption)
+                .foregroundStyle(theme.text2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: UI.Discover.matchPopoverWidth, alignment: .leading)
+        .padding(UI.Discover.matchPopoverPadding)
+        .background(theme.surface)
+        .presentationCompactAdaptation(.popover)
+        .presentationBackground(theme.surface)
     }
 }

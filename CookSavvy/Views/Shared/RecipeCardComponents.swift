@@ -77,7 +77,7 @@ struct MiniRecipeCard: View {
             }
 
             if let source = RecipeDisplaySource(recipe: recipe) {
-                RecipeSourceBadge(source: source, cornerRadius: UI.Common.cardCornerRadius)
+                RecipeSourceBadge(source: source)
             }
         }
         .frame(width: UI.V2.miniCardWidth)
@@ -153,7 +153,7 @@ struct RecipeRow: View {
             )
 
             if let source = RecipeDisplaySource(recipe: recipe) {
-                RecipeSourceBadge(source: source, cornerRadius: UI.Common.cardCornerRadius)
+                RecipeSourceBadge(source: source)
             }
         }
     }
@@ -173,63 +173,7 @@ struct RecipeRow: View {
     }
 
     private var rowThumbnail: some View {
-        let shape = RoundedRectangle(cornerRadius: UI.Common.cardCornerRadius, style: .continuous)
-
-        return ZStack {
-            shape
-                .fill(theme.surfaceLight)
-
-            RecipeImage(recipe: recipe, height: UI.V2.recipeRowImageSize)
-                .frame(
-                    width: UI.V2.recipeRowImageSize - (UI.Components.RecipeRow.Thumbnail.inset * 2),
-                    height: UI.V2.recipeRowImageSize - (UI.Components.RecipeRow.Thumbnail.inset * 2)
-                )
-                .saturation(UI.Components.RecipeRow.Thumbnail.saturation)
-                .contrast(UI.Components.RecipeRow.Thumbnail.contrast)
-                .overlay {
-                    LinearGradient(
-                        colors: [
-                            theme.sky.opacity(UI.Components.RecipeRow.Thumbnail.overlaySkyOpacity),
-                            .clear,
-                            theme.accent.opacity(UI.Components.RecipeRow.Thumbnail.overlayAccentOpacity)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                }
-                .clipShape(shape)
-                .padding(UI.Components.RecipeRow.Thumbnail.inset)
-        }
-        .frame(width: UI.V2.recipeRowImageSize, height: UI.V2.recipeRowImageSize)
-        .background(
-            shape
-                .fill(theme.card)
-                .overlay {
-                    shape
-                        .stroke(
-                            theme.frostStrokeTop.opacity(UI.Components.RecipeRow.Thumbnail.borderOpacity),
-                            lineWidth: UI.Common.borderWidth
-                        )
-                }
-        )
-        .shadow(
-            color: theme.accent.opacity(UI.Components.RecipeRow.Thumbnail.accentShadowOpacity * theme.shadowStrength),
-            radius: UI.Components.RecipeRow.Thumbnail.shadowRadius,
-            x: 0,
-            y: UI.Components.RecipeRow.Thumbnail.accentShadowY
-        )
-        .shadow(
-            color: theme.rose.opacity(UI.Components.RecipeRow.Thumbnail.roseShadowOpacity * theme.shadowStrength),
-            radius: UI.Components.RecipeRow.Thumbnail.roseShadowRadius,
-            x: 0,
-            y: UI.Components.RecipeRow.Thumbnail.roseShadowY
-        )
-        .shadow(
-            color: .black.opacity(UI.Components.RecipeRow.Thumbnail.shadowOpacity * theme.shadowStrength),
-            radius: UI.Components.RecipeRow.Thumbnail.secondaryShadowRadius,
-            x: 0,
-            y: UI.Components.RecipeRow.Thumbnail.secondaryShadowY
-        )
+        RecipeRowThumbnailView(recipe: recipe)
     }
 
     private var bookmarkBadge: some View {
@@ -293,5 +237,65 @@ struct RecipeRow: View {
         .padding(.horizontal, UI.Components.RecipeRow.Meta.paddingH)
         .padding(.vertical, UI.Components.RecipeRow.Meta.paddingV)
         .background(theme.gold.opacity(UI.Components.RecipeRow.Meta.backgroundOpacity), in: Capsule())
+    }
+}
+
+private struct RecipeRowThumbnailView: View {
+    @Environment(\.appTheme) private var theme
+    let recipe: Recipe
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: UI.Common.cardCornerRadius, style: .continuous)
+
+        ZStack {
+            shape.fill(theme.surfaceLight)
+
+            RecipeImage(recipe: recipe, height: UI.V2.recipeRowImageSize)
+                .frame(
+                    width: UI.V2.recipeRowImageSize - (UI.Components.RecipeRow.Thumbnail.inset * 2),
+                    height: UI.V2.recipeRowImageSize - (UI.Components.RecipeRow.Thumbnail.inset * 2)
+                )
+                .saturation(UI.Components.RecipeRow.Thumbnail.saturation)
+                .contrast(UI.Components.RecipeRow.Thumbnail.contrast)
+                .overlay {
+                    LinearGradient(
+                        colors: [
+                            theme.sky.opacity(UI.Components.RecipeRow.Thumbnail.overlaySkyOpacity),
+                            .clear,
+                            theme.accent.opacity(UI.Components.RecipeRow.Thumbnail.overlayAccentOpacity)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                }
+                .clipShape(shape)
+                .padding(UI.Components.RecipeRow.Thumbnail.inset)
+        }
+        .frame(width: UI.V2.recipeRowImageSize, height: UI.V2.recipeRowImageSize)
+        .background(
+            shape
+                .fill(theme.card)
+                .overlay {
+                    shape.stroke(
+                        theme.frostStrokeTop.opacity(UI.Components.RecipeRow.Thumbnail.borderOpacity),
+                        lineWidth: UI.Common.borderWidth
+                    )
+                }
+        )
+        .shadow(
+            color: theme.accent.opacity(UI.Components.RecipeRow.Thumbnail.accentShadowOpacity * theme.shadowStrength),
+            radius: UI.Components.RecipeRow.Thumbnail.shadowRadius,
+            x: 0, y: UI.Components.RecipeRow.Thumbnail.accentShadowY
+        )
+        .shadow(
+            color: theme.rose.opacity(UI.Components.RecipeRow.Thumbnail.roseShadowOpacity * theme.shadowStrength),
+            radius: UI.Components.RecipeRow.Thumbnail.roseShadowRadius,
+            x: 0, y: UI.Components.RecipeRow.Thumbnail.roseShadowY
+        )
+        .shadow(
+            color: .black.opacity(UI.Components.RecipeRow.Thumbnail.shadowOpacity * theme.shadowStrength),
+            radius: UI.Components.RecipeRow.Thumbnail.secondaryShadowRadius,
+            x: 0, y: UI.Components.RecipeRow.Thumbnail.secondaryShadowY
+        )
     }
 }

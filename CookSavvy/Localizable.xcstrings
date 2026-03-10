@@ -1254,6 +1254,17 @@
         }
       }
     },
+    "sourceBadge.aiShortLabel" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "AI"
+          }
+        }
+      }
+    },
     "sourceBadge.aiTitle" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -1272,6 +1283,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "This recipe comes from CookSavvy's local recipe collection."
+          }
+        }
+      }
+    },
+    "sourceBadge.localShortLabel" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Local"
           }
         }
       }
@@ -1298,6 +1320,17 @@
         }
       }
     },
+    "sourceBadge.networkShortLabel" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Web"
+          }
+        }
+      }
+    },
     "sourceBadge.networkTitle" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -1316,6 +1349,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "This recipe was created and saved by you."
+          }
+        }
+      }
+    },
+    "sourceBadge.userShortLabel" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Mine"
           }
         }
       }

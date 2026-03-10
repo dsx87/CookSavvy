@@ -33,6 +33,15 @@ enum RecipeDisplaySource: Equatable {
         }
     }
 
+    var shortLabel: String {
+        switch self {
+        case .local: Strings.SourceBadge.localShortLabel
+        case .network: Strings.SourceBadge.networkShortLabel
+        case .ai: Strings.SourceBadge.aiShortLabel
+        case .user: Strings.SourceBadge.userShortLabel
+        }
+    }
+
     var title: String {
         switch self {
         case .local: Strings.SourceBadge.localTitle
@@ -53,19 +62,10 @@ enum RecipeDisplaySource: Equatable {
 
     func backgroundColor(theme: AppTheme) -> Color {
         switch self {
-        case .local: theme.text1
+        case .local: theme.mint
         case .network: theme.sky
         case .ai: theme.lavender
         case .user: theme.gold
-        }
-    }
-
-    func foregroundColor(theme: AppTheme) -> Color {
-        switch self {
-        case .local, .user:
-            theme.bg
-        case .network, .ai:
-            .white
         }
     }
 }
@@ -73,71 +73,73 @@ enum RecipeDisplaySource: Equatable {
 struct RecipeSourceBadge: View {
     @Environment(\.appTheme) private var theme
     let source: RecipeDisplaySource
-    var cornerRadius: CGFloat = UI.Common.cardCornerRadius
     @State private var isPopoverPresented = false
-
-    private var badgeShape: UnevenRoundedRectangle {
-        UnevenRoundedRectangle(
-            cornerRadii: .init(
-                topLeading: 0,
-                bottomLeading: cornerRadius,
-                bottomTrailing: 0,
-                topTrailing: cornerRadius
-            ),
-            style: .continuous
-        )
-    }
 
     var body: some View {
         Button {
             isPopoverPresented = true
         } label: {
-            Image(systemName: source.iconName)
-                .font(.system(size: UI.SourceBadge.iconSize, weight: .semibold))
-                .foregroundStyle(source.foregroundColor(theme: theme))
-                .frame(width: UI.SourceBadge.width, height: UI.SourceBadge.height)
-                .background {
-                    badgeShape
-                        .fill(.ultraThinMaterial)
-                        .overlay {
-                            badgeShape
-                                .fill(source.backgroundColor(theme: theme).opacity(UI.SourceBadge.tintOpacity))
-                        }
-                }
-                .overlay {
-                    badgeShape
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    theme.frostStrokeTop.opacity(UI.SourceBadge.borderOpacity),
-                                    theme.frostStrokeBottom.opacity(UI.SourceBadge.borderOpacity)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: UI.Common.borderWidth
-                        )
-                }
-        }
-        .buttonStyle(.plain)
-        .popover(isPresented: $isPopoverPresented) {
-            VStack(alignment: .leading, spacing: UI.SourceBadge.popoverSpacing) {
-                Text(source.title)
-                    .font(UI.Fonts.smallCaptionBold)
-                    .foregroundStyle(theme.text1)
-                Text(source.description)
-                    .font(UI.Fonts.smallCaption)
-                    .foregroundStyle(theme.text2)
-                    .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: UI.SourceBadge.labelSpacing) {
+                Image(systemName: source.iconName)
+                    .symbolVariant(.fill)
+                Text(source.shortLabel)
             }
-            .frame(maxWidth: UI.SourceBadge.popoverWidth, alignment: .leading)
-            .padding(UI.SourceBadge.popoverPadding)
-            .background(theme.surface)
-            .presentationCompactAdaptation(.popover)
-            .presentationBackground(theme.surface)
+            .font(.system(size: UI.SourceBadge.iconSize, weight: .semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, UI.SourceBadge.pillPaddingH)
+            .padding(.vertical, UI.SourceBadge.pillPaddingV)
+            .background(source.backgroundColor(theme: theme), in: Capsule(style: .continuous))
+            .shadow(
+                color: source.backgroundColor(theme: theme).opacity(UI.SourceBadge.shadowOpacity),
+                radius: UI.SourceBadge.shadowRadius,
+                y: UI.SourceBadge.shadowY
+            )
+        }
+        .buttonStyle(SourceBadgePressStyle())
+        .padding(UI.SourceBadge.edgePadding)
+        .popover(isPresented: $isPopoverPresented) {
+            SourceBadgePopoverContent(source: source)
         }
         .accessibilityLabel(source.title)
         .accessibilityHint(Strings.SourceBadge.accessibilityHint)
+    }
+}
+
+private struct SourceBadgePopoverContent: View {
+    @Environment(\.appTheme) private var theme
+    let source: RecipeDisplaySource
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: UI.SourceBadge.popoverSpacing) {
+            HStack(spacing: UI.SourceBadge.labelSpacing) {
+                Image(systemName: source.iconName)
+                    .symbolVariant(.fill)
+                    .font(.system(size: UI.SourceBadge.popoverIconSize, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(UI.SourceBadge.popoverIconPadding)
+                    .background(source.backgroundColor(theme: theme), in: Circle())
+                Text(source.title)
+                    .font(UI.Fonts.smallCaptionBold)
+                    .foregroundStyle(theme.text1)
+            }
+            Text(source.description)
+                .font(UI.Fonts.smallCaption)
+                .foregroundStyle(theme.text2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: UI.SourceBadge.popoverWidth, alignment: .leading)
+        .padding(UI.SourceBadge.popoverPadding)
+        .background(theme.surface)
+        .presentationCompactAdaptation(.popover)
+        .presentationBackground(theme.surface)
+    }
+}
+
+private struct SourceBadgePressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.90 : 1.0)
+            .animation(.spring(response: 0.2, dampingFraction: 0.65), value: configuration.isPressed)
     }
 }
 

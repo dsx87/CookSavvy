@@ -155,6 +155,10 @@ enum Strings {
         static let userTitle = String(localized: "sourceBadge.userTitle", defaultValue: "Your recipe")
         static let userDescription = String(localized: "sourceBadge.userDescription", defaultValue: "This recipe was created and saved by you.")
         static let accessibilityHint = String(localized: "sourceBadge.accessibilityHint", defaultValue: "Shows where this recipe came from")
+        static let localShortLabel = String(localized: "sourceBadge.localShortLabel", defaultValue: "Local")
+        static let networkShortLabel = String(localized: "sourceBadge.networkShortLabel", defaultValue: "Web")
+        static let aiShortLabel = String(localized: "sourceBadge.aiShortLabel", defaultValue: "AI")
+        static let userShortLabel = String(localized: "sourceBadge.userShortLabel", defaultValue: "Mine")
     }
 
     enum MoodFilter {

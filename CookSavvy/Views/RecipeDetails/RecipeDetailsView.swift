@@ -9,54 +9,9 @@ struct RecipeDetailsView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
                     RecipeImage(recipe: viewModel.recipe, height: UI.V2.heroImageHeight)
-
-                    ZStack(alignment: .topTrailing) {
-                        VStack(alignment: .leading, spacing: UI.RecipeDetails.sectionSpacing) {
-                            VStack(alignment: .leading, spacing: UI.RecipeDetails.headerSpacing) {
-                                Text(viewModel.recipe.title)
-                                    .font(UI.Fonts.largeTitle)
-                                    .foregroundStyle(theme.text1)
-                                if let tagline = viewModel.recipe.tagline {
-                                    Text(tagline)
-                                        .font(UI.Fonts.tagline)
-                                        .foregroundStyle(theme.text2)
-                                }
-                                HStack(spacing: UI.RecipeDetails.ratingSpacing) {
-                                    if let rating = viewModel.recipe.apiRating ?? viewModel.recipe.userRating {
-                                        StarRating(rating: rating)
-                                        Text(String(format: "%.1f", rating))
-                                            .font(UI.Fonts.captionBold)
-                                            .foregroundStyle(theme.gold)
-                                    }
-                                    if let author = viewModel.recipe.author {
-                                        Text("by \(author)")
-                                            .font(UI.Fonts.caption)
-                                            .foregroundStyle(theme.text3)
-                                    }
-                                }
-                            }
-
-                            statsRow
-
-                            ingredientsSection
-
-                            stepsSection
-
-                            Spacer(minLength: UI.Common.bottomSpacerMinLength)
-                        }
-                        .padding(UI.RecipeDetails.contentPadding)
-                        .background(theme.bg)
-                        .clipShape(.rect(topLeadingRadius: UI.RecipeDetails.contentTopCornerRadius, topTrailingRadius: UI.RecipeDetails.contentTopCornerRadius))
-                        .offset(y: -UI.V2.contentOverlapOffset)
-
-                        if let source = RecipeDisplaySource(recipe: viewModel.recipe) {
-                            RecipeSourceBadge(source: source, cornerRadius: UI.RecipeDetails.contentTopCornerRadius)
-                                .offset(y: -UI.V2.contentOverlapOffset)
-                        }
-                    }
+                    contentCard
                 }
             }
-
             startCookingButton
         }
         .background(theme.bg)
@@ -71,6 +26,51 @@ struct RecipeDetailsView: View {
                         .foregroundStyle(viewModel.isFavorite ? theme.accent : theme.text2)
                 }
                 .disabled(viewModel.isLoadingFavorite)
+            }
+        }
+    }
+
+    private var contentCard: some View {
+        VStack(alignment: .leading, spacing: UI.RecipeDetails.sectionSpacing) {
+            recipeHeader
+            statsRow
+            ingredientsSection
+            stepsSection
+            Spacer(minLength: UI.Common.bottomSpacerMinLength)
+        }
+        .padding(UI.RecipeDetails.contentPadding)
+        .background(theme.bg)
+        .clipShape(.rect(topLeadingRadius: UI.RecipeDetails.contentTopCornerRadius, topTrailingRadius: UI.RecipeDetails.contentTopCornerRadius))
+        .offset(y: -UI.V2.contentOverlapOffset)
+        .overlay(alignment: .topTrailing) {
+            if let source = RecipeDisplaySource(recipe: viewModel.recipe) {
+                RecipeSourceBadge(source: source) // TODO: fix misplacement
+            }
+        }
+    }
+
+    private var recipeHeader: some View {
+        VStack(alignment: .leading, spacing: UI.RecipeDetails.headerSpacing) {
+            Text(viewModel.recipe.title)
+                .font(UI.Fonts.largeTitle)
+                .foregroundStyle(theme.text1)
+            if let tagline = viewModel.recipe.tagline {
+                Text(tagline)
+                    .font(UI.Fonts.tagline)
+                    .foregroundStyle(theme.text2)
+            }
+            HStack(spacing: UI.RecipeDetails.ratingSpacing) {
+                if let rating = viewModel.recipe.apiRating ?? viewModel.recipe.userRating {
+                    StarRating(rating: rating)
+                    Text(String(format: "%.1f", rating))
+                        .font(UI.Fonts.captionBold)
+                        .foregroundStyle(theme.gold)
+                }
+                if let author = viewModel.recipe.author {
+                    Text("by \(author)")
+                        .font(UI.Fonts.caption)
+                        .foregroundStyle(theme.text3)
+                }
             }
         }
     }
@@ -101,26 +101,32 @@ struct RecipeDetailsView: View {
 
             VStack(spacing: 0) {
                 ForEach(Array(viewModel.recipe.ingredients.indices), id: \.self) { i in
-                    HStack(spacing: UI.RecipeDetails.ingredientItemSpacing) {
-                        Circle()
-                            .fill(theme.accent.opacity(UI.RecipeDetails.ingredientDotOpacity))
-                            .frame(width: UI.RecipeDetails.ingredientDotSize, height: UI.RecipeDetails.ingredientDotSize)
-                        Text(viewModel.recipe.ingredients[i].name)
-                            .font(UI.Fonts.body)
-                            .foregroundStyle(theme.text1)
-                        Spacer()
-                    }
-                    .padding(.vertical, UI.RecipeDetails.ingredientVerticalPadding)
-                    .padding(.horizontal, UI.RecipeDetails.ingredientHorizontalPadding)
-
-                    if i < viewModel.recipe.ingredients.count - 1 {
-                        Divider()
-                            .background(theme.divider)
-                            .padding(.leading, UI.RecipeDetails.ingredientDividerLeadingPadding)
-                    }
+                    ingredientRow(at: i)
                 }
             }
             .frostCard(cornerRadius: UI.RecipeDetails.cardCornerRadius)
+        }
+    }
+
+    private func ingredientRow(at index: Int) -> some View {
+        VStack(spacing: 0) {
+            HStack(spacing: UI.RecipeDetails.ingredientItemSpacing) {
+                Circle()
+                    .fill(theme.accent.opacity(UI.RecipeDetails.ingredientDotOpacity))
+                    .frame(width: UI.RecipeDetails.ingredientDotSize, height: UI.RecipeDetails.ingredientDotSize)
+                Text(viewModel.recipe.ingredients[index].name)
+                    .font(UI.Fonts.body)
+                    .foregroundStyle(theme.text1)
+                Spacer()
+            }
+            .padding(.vertical, UI.RecipeDetails.ingredientVerticalPadding)
+            .padding(.horizontal, UI.RecipeDetails.ingredientHorizontalPadding)
+
+            if index < viewModel.recipe.ingredients.count - 1 {
+                Divider()
+                    .background(theme.divider)
+                    .padding(.leading, UI.RecipeDetails.ingredientDividerLeadingPadding)
+            }
         }
     }
 
@@ -133,44 +139,48 @@ struct RecipeDetailsView: View {
 
             VStack(spacing: UI.RecipeDetails.stepsSpacing) {
                 ForEach(Array(viewModel.recipe.instructions.enumerated()), id: \.offset) { index, step in
-                    HStack(alignment: .top, spacing: UI.RecipeDetails.stepItemSpacing) {
-                        Text("\(index + 1)")
-                            .font(UI.Fonts.stepNumber)
-                            .foregroundStyle(.white)
-                            .frame(width: UI.RecipeDetails.stepNumberSize, height: UI.RecipeDetails.stepNumberSize)
-                            .background(
-                                LinearGradient(colors: [theme.accent, theme.rose],
-                                               startPoint: .topLeading, endPoint: .bottomTrailing),
-                                in: Circle()
-                            )
-
-                        VStack(alignment: .leading, spacing: UI.Common.smallSpacing) {
-                            Text(step.text)
-                                .font(UI.Fonts.body)
-                                .foregroundStyle(theme.text1)
-                                .fixedSize(horizontal: false, vertical: true)
-
-                            if let timer = step.timerMinutes {
-                                HStack(spacing: UI.Common.smallSpacing) {
-                                    Image(systemName: Icons.CookMode.timer)
-                                        .font(UI.Fonts.tinyCaption)
-                                    Text("\(timer) min")
-                                        .font(UI.Fonts.smallCaptionSemibold)
-                                }
-                                .foregroundStyle(theme.accent)
-                                .padding(.horizontal, UI.RecipeDetails.stepTimerHorizontalPadding)
-                                .padding(.vertical, UI.RecipeDetails.stepTimerVerticalPadding)
-                                .background(theme.accentSoft, in: Capsule())
-                            }
-                        }
-
-                        Spacer()
-                    }
-                    .padding(UI.RecipeDetails.stepPadding)
-                    .frostCard(cornerRadius: UI.RecipeDetails.stepCornerRadius)
+                    stepCard(index: index, step: step)
                 }
             }
         }
+    }
+
+    private func stepCard(index: Int, step: Recipe.Step) -> some View {
+        HStack(alignment: .top, spacing: UI.RecipeDetails.stepItemSpacing) {
+            Text("\(index + 1)")
+                .font(UI.Fonts.stepNumber)
+                .foregroundStyle(.white)
+                .frame(width: UI.RecipeDetails.stepNumberSize, height: UI.RecipeDetails.stepNumberSize)
+                .background(
+                    LinearGradient(colors: [theme.accent, theme.rose],
+                                   startPoint: .topLeading, endPoint: .bottomTrailing),
+                    in: Circle()
+                )
+
+            VStack(alignment: .leading, spacing: UI.Common.smallSpacing) {
+                Text(step.text)
+                    .font(UI.Fonts.body)
+                    .foregroundStyle(theme.text1)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if let timer = step.timerMinutes {
+                    HStack(spacing: UI.Common.smallSpacing) {
+                        Image(systemName: Icons.CookMode.timer)
+                            .font(UI.Fonts.tinyCaption)
+                        Text("\(timer) min")
+                            .font(UI.Fonts.smallCaptionSemibold)
+                    }
+                    .foregroundStyle(theme.accent)
+                    .padding(.horizontal, UI.RecipeDetails.stepTimerHorizontalPadding)
+                    .padding(.vertical, UI.RecipeDetails.stepTimerVerticalPadding)
+                    .background(theme.accentSoft, in: Capsule())
+                }
+            }
+
+            Spacer()
+        }
+        .padding(UI.RecipeDetails.stepPadding)
+        .frostCard(cornerRadius: UI.RecipeDetails.stepCornerRadius)
     }
 
     // MARK: - Start Cooking Button
@@ -197,12 +207,12 @@ struct RecipeDetailsView: View {
         }
         .padding(.horizontal, UI.RecipeDetails.topBarHorizontalPadding)
         .padding(.bottom, UI.RecipeDetails.buttonBottomPadding)
-        .background(
+        .background(alignment: .bottom) {
             LinearGradient(colors: [theme.bg, theme.bg.opacity(0)],
                            startPoint: .bottom, endPoint: .top)
                 .frame(height: UI.RecipeDetails.gradientHeight)
                 .allowsHitTesting(false)
-        , alignment: .bottom)
+        }
     }
 
     // MARK: - Helpers
