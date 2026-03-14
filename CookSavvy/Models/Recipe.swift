@@ -101,6 +101,7 @@ struct Recipe {
     var emoji: String?
     var cuisine: String?
     var matchPercentage: Double?
+    var matchReason: String?
 
     init(
         title: String,
@@ -117,7 +118,8 @@ struct Recipe {
         isUserCreated: Bool = false,
         emoji: String? = nil,
         cuisine: String? = nil,
-        matchPercentage: Double? = nil
+        matchPercentage: Double? = nil,
+        matchReason: String? = nil
     ) {
         self.title = title
         self.ingredients = ingredients
@@ -134,6 +136,7 @@ struct Recipe {
         self.emoji = emoji
         self.cuisine = cuisine
         self.matchPercentage = matchPercentage
+        self.matchReason = matchReason
     }
     
     init(
@@ -151,7 +154,8 @@ struct Recipe {
         isUserCreated: Bool = false,
         emoji: String? = nil,
         cuisine: String? = nil,
-        matchPercentage: Double? = nil
+        matchPercentage: Double? = nil,
+        matchReason: String? = nil
     ) {
         self.init(
             title: title,
@@ -168,32 +172,14 @@ struct Recipe {
             isUserCreated: isUserCreated,
             emoji: emoji,
             cuisine: cuisine,
-            matchPercentage: matchPercentage
+            matchPercentage: matchPercentage,
+            matchReason: matchReason
         )
     }
 
     // Mock init
     init() {
         self = Self.mockRandom()
-//        self.title = "Mock Title"
-//        self.ingredients = [
-//            "Some Ingredient",
-//            "Some Ingredient",
-//            "Some Ingredient",
-//            "Some Ingredient",
-//            "Some Ingredient",
-//        ]
-//        self.image = ""
-//        self.instructions = [
-//            "some instruction",
-//            "some instruction",
-//            "some instruction",
-//            "some instruction",
-//            "some instruction",
-//            "some instruction",
-//        ]
-//        self.cleanedIngredients = []
-//        self.additionalInfo = .init(time: "10 mins", servings: 3, complexity: "easy", calories: 250)
     }
 }
 
@@ -240,6 +226,7 @@ extension Recipe: Codable {
         self.emoji = nil
         self.cuisine = nil
         self.matchPercentage = nil
+        self.matchReason = nil
     }
     
 }

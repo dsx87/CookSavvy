@@ -131,6 +131,15 @@ struct RecipeRow: View {
                     .lineLimit(UI.Components.RecipeRow.taglineLineLimit)
             }
 
+            if let reason = recipe.matchReason {
+                Label(reason, systemImage: "lightbulb.fill")
+                    .font(UI.Fonts.tinyCaption)
+                    .foregroundStyle(theme.mint)
+                    .padding(.horizontal, UI.Components.RecipeRow.Meta.paddingH)
+                    .padding(.vertical, UI.Components.RecipeRow.Meta.paddingV)
+                    .background(theme.mintSoft, in: Capsule())
+            }
+
             metaInfoRow
 
             Spacer(minLength: 0)

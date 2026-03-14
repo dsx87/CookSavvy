@@ -262,10 +262,20 @@ final class DiscoverViewModel: ObservableObject {
             if RecipeSourceType.requiresDatabaseReady(enabledSources) {
                 await databaseInitService.waitForRecipes()
             }
-            searchResultRecipes = try await recipeService.getRecipes(
+            var results = try await recipeService.getRecipes(
                 for: selectedIngredients,
                 from: enabledSources
             )
+            let ingredients = selectedIngredients
+            for index in results.indices {
+                let matching = matchingIngredientNames(for: results[index])
+                results[index].matchReason = RecipeMatchExplainer.explain(
+                    recipe: results[index],
+                    selectedIngredients: ingredients,
+                    matchingNames: matching
+                )
+            }
+            searchResultRecipes = results
         } catch {}
         isSearching = false
     }

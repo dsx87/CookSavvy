@@ -402,6 +402,14 @@ struct DiscoverView: View {
             if let match = recipe.matchPercentage {
                 matchIndicator(match: match, matchingIngredients: viewModel.matchingIngredientNames(for: recipe))
             }
+            if let reason = recipe.matchReason {
+                Label(reason, systemImage: "lightbulb.fill")
+                    .font(UI.Fonts.tinyCaption)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, UI.Discover.matchBadgePaddingH)
+                    .padding(.vertical, UI.Discover.matchBadgePaddingV)
+                    .background(.white.opacity(0.2), in: Capsule())
+            }
             Text(recipe.title)
                 .font(UI.Fonts.title)
                 .foregroundStyle(.white)
