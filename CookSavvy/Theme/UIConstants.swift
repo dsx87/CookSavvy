@@ -155,6 +155,10 @@ struct UI {
         static let gradientHeight: CGFloat = 100
         static let ingredientDotOpacity: Double = 0.2
         static let matchBadgeOpacity: Double = 0.8
+        static let addToListSpacing: CGFloat = 8
+        static let addToListPaddingH: CGFloat = 16
+        static let addToListPaddingV: CGFloat = 10
+        static let addToListCornerRadius: CGFloat = 10
     }
 
     // MARK: - Settings
@@ -572,6 +576,17 @@ struct UI {
         static let opacityLight: Double = 0.3
         static let opacitySubtle: Double = 0.25
         static let opacityFaint: Double = 0.12
+    }
+
+    // MARK: - ShoppingList
+
+    struct ShoppingList {
+        static let horizontalPadding: CGFloat = 20
+        static let checkboxSize: CGFloat = 22
+        static let checkboxSpacing: CGFloat = 12
+        static let rowVerticalPadding: CGFloat = 12
+        static let emptyStateSpacing: CGFloat = 20
+        static let emptyIconSize: CGFloat = 60
     }
 
     // MARK: - Upgrade

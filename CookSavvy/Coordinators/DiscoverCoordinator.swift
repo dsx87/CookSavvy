@@ -28,7 +28,16 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating {
             recipe: recipe,
             selectedIngredients: selectedIngredients,
             userDataService: container.userDataService,
+            shoppingListService: container.shoppingListService,
+            subscriptionService: container.subscriptionService,
             coordinator: self
+        )
+    }
+
+    func makeShoppingListViewModel() -> ShoppingListViewModel {
+        ShoppingListViewModel(
+            shoppingListService: container.shoppingListService,
+            onDismiss: { [weak self] in self?.dismissSheet() }
         )
     }
     
@@ -112,6 +121,10 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating {
     func showUpgrade() {
         presentedSheet = .upgrade
     }
+
+    func showShoppingList() {
+        presentedSheet = .shoppingList
+    }
     
     func showCreateRecipe() {
         presentedSheet = .createRecipe
@@ -144,11 +157,13 @@ extension DiscoverCoordinator {
     enum SheetDestination: Identifiable {
         case upgrade
         case createRecipe
-        
+        case shoppingList
+
         var id: String {
             switch self {
             case .upgrade: return "upgrade"
             case .createRecipe: return "createRecipe"
+            case .shoppingList: return "shoppingList"
             }
         }
     }
@@ -221,6 +236,8 @@ struct DiscoverCoordinatorView: View {
                 UpgradeView(viewModel: coordinator.makeUpgradeViewModel())
             case .createRecipe:
                 CreateRecipeView(viewModel: coordinator.makeCreateRecipeViewModel())
+            case .shoppingList:
+                ShoppingListView(viewModel: coordinator.makeShoppingListViewModel())
             }
         }
     }

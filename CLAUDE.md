@@ -27,6 +27,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 
 - Product identifier: `com.cooksavvy.subscription.premium`
 - Free tier weekly camera scan limit tracked via `CameraScanTracker` (UserDefaults)
+- Premium-gated features: `PaidFeature` enum — `cameraIngredientDetection`, `onlineRecipes`, `aiRecipes`, `shoppingList`
 
 ## App Screens
 
@@ -34,7 +35,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 |--------|-------------|
 | **Discover** (tab 1) | Two-state flow: ingredient selection (grid, categories, search, recent/saved cards) and recipe results (mood filter, hero best match, recipe rows) |
 | **Journey** (tab 2) | Profile header, stats, user-created recipes, weekly calendar, achievements, recent sessions, settings (gear icon in nav bar) |
-| **Recipe Details** | Hero image, floating back/bookmark actions, stats row, ingredients, steps, sticky Start Cooking CTA |
+| **Recipe Details** | Hero image, floating back/bookmark actions, stats row, ingredients (with "Add Missing to List" button for premium), steps, sticky Start Cooking CTA |
 | **Recipe List** | Reusable See All destination for recent, saved, and user recipes |
 | **Cook Mode** | Full-screen step-by-step cooking flow with progress ring, timer, and prev/next navigation |
 | **Create Recipe** | 5-step wizard: Name & Photo → Ingredients → Steps → Details → Review & Save |
@@ -42,6 +43,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 | **Camera** | Camera capture for AI ingredient detection (free users: 5/week via `CameraScanTracker`) |
 | **Upgrade** | Single-plan upgrade prompt (CookSavvy+) |
 | **Onboarding** | 3-screen first-launch walkthrough (fork.knife.circle → camera.viewfinder → timer); gated by `hasCompletedOnboarding` AppStorage |
+| **Shopping List** | Premium checklist of missing ingredients grouped by recipe; swipe-to-delete, toggle checked, clear done; sheet from Recipe Details or Journey |
 | **Tab Container** | Root tab bar with 2 tabs: Discover + Journey |
 
 > All screens are subject to extension and modification.
@@ -73,7 +75,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 - TODO: refactor away from singleton pattern
 
 ### Database Layer
-- `DBInterfaceProtocol` / `DBInterface` — GRDB-based SQLite database
+- `DBInterfaceProtocol` / `DBInterface` — GRDB-based SQLite database; tables: `ingredients`, `recipes`, `recipe_ingredients`, `recent_ingredients`, `recent_recipes`, `favorite_recipes`, `recent_searches`, `cooking_sessions`, `shopping_items`
 - Used by `RecipeService`, `IngredientsService`, `UserDataService`, `DataImportService`, `DatabaseInitializationService`
 - `DBTestHelpers` for test support
 
@@ -150,6 +152,7 @@ CookSavvy/
 │   ├── AppContainer.swift            — DI container (singleton)
 │   └── APIKeyConfiguration.swift     — API key reading from plist
 ├── Models/
+│   ├── ShoppingItem.swift            — Shopping list item (id, name, isChecked, addedAt, recipeTitle)
 │   ├── Recipe.swift                 — Recipe + Recipe.Step + AdditionalInfo
 │   ├── Ingredient.swift              — Ingredient + IngredientCategory enum
 │   ├── IngredientEmojiProvider.swift  — Static emoji resolution (exact→contains→word→foodGroup→default)
@@ -177,6 +180,8 @@ CookSavvy/
 │   │   ├── StoreKitSubscriptionService.swift
 │   │   ├── MockSubscriptionService.swift
 │   │   └── CameraScanTracker.swift         — weekly scan counter (UserDefaults, resets each calendar week)
+│   ├── ShoppingList/
+│   │   └── ShoppingListService.swift       — CRUD for shopping items via DBInterface
 │   ├── AI/
 │   │   ├── AIServiceProtocol.swift
 │   │   ├── AIService.swift
@@ -231,6 +236,7 @@ CookSavvy/
 │   ├── CookMode/                      — Cook mode with step nav + timer (CookModeView + CookModeViewModel)
 │   ├── CreateRecipe/                  — Create recipe wizard (CreateRecipeView + CreateRecipeViewModel)
 │   ├── Camera/                        — Camera capture screen
+│   ├── ShoppingList/                  — Shopping list (ShoppingListView + ShoppingListViewModel)
 │   ├── Settings/                      — Settings screen
 │   ├── Upgrade/                       — Subscription upgrade screen (single CookSavvy+ plan)
 │   └── Onboarding/                    — First-launch walkthrough (OnboardingView + OnboardingViewModel)

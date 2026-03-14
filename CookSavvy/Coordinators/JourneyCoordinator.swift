@@ -29,7 +29,16 @@ final class JourneyCoordinator: ObservableObject, RecipeDetailsCoordinating {
         RecipeDetailsViewModel(
             recipe: recipe,
             userDataService: container.userDataService,
+            shoppingListService: container.shoppingListService,
+            subscriptionService: container.subscriptionService,
             coordinator: self
+        )
+    }
+
+    func makeShoppingListViewModel() -> ShoppingListViewModel {
+        ShoppingListViewModel(
+            shoppingListService: container.shoppingListService,
+            onDismiss: { [weak self] in self?.dismissSheet() }
         )
     }
     
@@ -101,6 +110,10 @@ final class JourneyCoordinator: ObservableObject, RecipeDetailsCoordinating {
     func showUpgrade() {
         presentedSheet = .upgrade
     }
+
+    func showShoppingList() {
+        presentedSheet = .shoppingList
+    }
     
     func goBack() {
         if !navigationPath.isEmpty {
@@ -129,11 +142,13 @@ extension JourneyCoordinator {
     enum SheetDestination: Identifiable {
         case createRecipe
         case upgrade
-        
+        case shoppingList
+
         var id: String {
             switch self {
             case .createRecipe: return "createRecipe"
             case .upgrade: return "upgrade"
+            case .shoppingList: return "shoppingList"
             }
         }
     }
@@ -205,6 +220,8 @@ struct JourneyCoordinatorView: View {
                 UpgradeView(viewModel: coordinator.makeUpgradeViewModel())
             case .createRecipe:
                 CreateRecipeView(viewModel: coordinator.makeCreateRecipeViewModel())
+            case .shoppingList:
+                ShoppingListView(viewModel: coordinator.makeShoppingListViewModel())
             }
         }
     }

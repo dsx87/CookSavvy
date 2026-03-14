@@ -96,6 +96,14 @@ enum Icons {
         static let timer = "timer"
     }
 
+    enum ShoppingList {
+        static let cart = "cart"
+        static let cartBadgePlus = "cart.badge.plus"
+        static let checkCircleFill = "checkmark.circle.fill"
+        static let circle = "circle"
+        static let trash = "trash"
+    }
+
     enum Mood {
         static let cozy = "flame"
         static let fresh = "leaf"

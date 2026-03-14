@@ -231,6 +231,18 @@ final class DBInterface: DBInterfaceProtocol {
             try db.execute(sql: "CREATE INDEX IF NOT EXISTS idx_cooking_sessions_date ON cooking_sessions(cooked_at DESC);")
             // Migration: add rating column if it doesn't exist (for existing databases)
             try? db.execute(sql: "ALTER TABLE cooking_sessions ADD COLUMN rating INTEGER;")
+
+            // 9. Shopping List
+            try db.execute(sql: """
+                CREATE TABLE IF NOT EXISTS shopping_items (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    is_checked INTEGER DEFAULT 0,
+                    added_at INTEGER NOT NULL,
+                    recipe_title TEXT
+                );
+                """)
+            try db.execute(sql: "CREATE INDEX IF NOT EXISTS idx_shopping_items_added ON shopping_items(added_at DESC);")
         }
     }
 
@@ -419,6 +431,7 @@ final class DBInterface: DBInterfaceProtocol {
             try db.execute(sql: "DELETE FROM recipe_ingredients;")
             try db.execute(sql: "DELETE FROM recipes;")
             try db.execute(sql: "DELETE FROM ingredients;")
+            try db.execute(sql: "DELETE FROM shopping_items;")
 
             testHelpers?.clearVariants()
             recipeCache.removeAll()
@@ -842,6 +855,65 @@ final class DBInterface: DBInterfaceProtocol {
                 sql: "SELECT id FROM recipes WHERE title = ? LIMIT 1;",
                 arguments: [title]
             )
+        }
+    }
+
+    // MARK: - Shopping List
+
+    func getShoppingItems() throws -> [ShoppingItem] {
+        try dbWriter.read { db in
+            try Row.fetchAll(db, sql: "SELECT id, name, is_checked, added_at, recipe_title FROM shopping_items ORDER BY added_at ASC;").map { row in
+                ShoppingItem(
+                    id: row["id"],
+                    name: row["name"],
+                    isChecked: (row["is_checked"] as Int) == 1,
+                    addedAt: Date(timeIntervalSince1970: TimeInterval(row["added_at"] as Int)),
+                    recipeTitle: row["recipe_title"]
+                )
+            }
+        }
+    }
+
+    func addShoppingItems(_ names: [String], recipeTitle: String?) throws -> [ShoppingItem] {
+        let timestamp = Int(Date().timeIntervalSince1970)
+        var inserted: [ShoppingItem] = []
+        try dbWriter.write { db in
+            for name in names {
+                try db.execute(
+                    sql: "INSERT INTO shopping_items(name, is_checked, added_at, recipe_title) VALUES (?, 0, ?, ?);",
+                    arguments: [name, timestamp, recipeTitle]
+                )
+                let id = Int(db.lastInsertedRowID)
+                inserted.append(ShoppingItem(
+                    id: id,
+                    name: name,
+                    isChecked: false,
+                    addedAt: Date(timeIntervalSince1970: TimeInterval(timestamp)),
+                    recipeTitle: recipeTitle
+                ))
+            }
+        }
+        return inserted
+    }
+
+    func toggleShoppingItem(id: Int) throws -> Bool {
+        try dbWriter.write { db in
+            let current = try Int.fetchOne(db, sql: "SELECT is_checked FROM shopping_items WHERE id = ?;", arguments: [id]) ?? 0
+            let newValue = current == 0 ? 1 : 0
+            try db.execute(sql: "UPDATE shopping_items SET is_checked = ? WHERE id = ?;", arguments: [newValue, id])
+            return newValue == 1
+        }
+    }
+
+    func removeShoppingItem(id: Int) throws {
+        try dbWriter.write { db in
+            try db.execute(sql: "DELETE FROM shopping_items WHERE id = ?;", arguments: [id])
+        }
+    }
+
+    func clearCheckedShoppingItems() throws {
+        try dbWriter.write { db in
+            try db.execute(sql: "DELETE FROM shopping_items WHERE is_checked = 1;")
         }
     }
 

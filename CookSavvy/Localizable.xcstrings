@@ -618,6 +618,17 @@
         }
       }
     },
+    "discover.useItAll" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Use It All"
+          }
+        }
+      }
+    },
     "discover.yourIngredients" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -1443,6 +1454,72 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Version"
+          }
+        }
+      }
+    },
+    "shoppingList.addMissingToList" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add %lld Missing to List"
+          }
+        }
+      }
+    },
+    "shoppingList.clearDone" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear Done"
+          }
+        }
+      }
+    },
+    "shoppingList.emptySubtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add missing ingredients from recipe details"
+          }
+        }
+      }
+    },
+    "shoppingList.emptyTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your list is empty"
+          }
+        }
+      }
+    },
+    "shoppingList.navigationTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Shopping List"
+          }
+        }
+      }
+    },
+    "shoppingList.otherGroup" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Other"
           }
         }
       }

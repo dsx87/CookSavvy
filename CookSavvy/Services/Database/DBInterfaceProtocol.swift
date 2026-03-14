@@ -81,6 +81,13 @@ protocol DBInterfaceProtocol {
     func getAllIngredients(inGroup foodGroup: String?, limit: Int) throws -> [Ingredient]
     func getDistinctFoodGroups() throws -> [String]
 
+    // MARK: - Shopping List
+    func getShoppingItems() throws -> [ShoppingItem]
+    func addShoppingItems(_ names: [String], recipeTitle: String?) throws -> [ShoppingItem]
+    func toggleShoppingItem(id: Int) throws -> Bool
+    func removeShoppingItem(id: Int) throws
+    func clearCheckedShoppingItems() throws
+
     // MARK: - Database Management
     func clearDatabase() throws
     func clearRecentData() throws

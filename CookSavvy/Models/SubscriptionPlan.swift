@@ -47,6 +47,7 @@ enum PaidFeature {
     case cameraIngredientDetection
     case onlineRecipes
     case aiRecipes
+    case shoppingList
 
     var requiredPlans: Set<SubscriptionPlan> {
         return [.premium]
@@ -57,6 +58,7 @@ enum PaidFeature {
         case .cameraIngredientDetection: return "Camera Scanning"
         case .onlineRecipes: return "Extended Recipes"
         case .aiRecipes: return "AI Recipes"
+        case .shoppingList: return "Shopping List"
         }
     }
 }

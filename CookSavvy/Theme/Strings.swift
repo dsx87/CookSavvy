@@ -186,6 +186,15 @@ enum Strings {
         static let skip = String(localized: "onboarding.skip", defaultValue: "Skip")
     }
 
+    enum ShoppingList {
+        static let navigationTitle = String(localized: "shoppingList.navigationTitle", defaultValue: "Shopping List")
+        static let clearDone = String(localized: "shoppingList.clearDone", defaultValue: "Clear Done")
+        static let emptyTitle = String(localized: "shoppingList.emptyTitle", defaultValue: "Your list is empty")
+        static let emptySubtitle = String(localized: "shoppingList.emptySubtitle", defaultValue: "Add missing ingredients from recipe details")
+        static let addMissingToList = String(localized: "shoppingList.addMissingToList", defaultValue: "Add %lld Missing to List")
+        static let otherGroup = String(localized: "shoppingList.otherGroup", defaultValue: "Other")
+    }
+
     enum MoodFilter {
         static let cozy = String(localized: "moodFilter.cozy", defaultValue: "Cozy")
         static let fresh = String(localized: "moodFilter.fresh", defaultValue: "Fresh")

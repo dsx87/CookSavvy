@@ -10,6 +10,8 @@ import SwiftUI
 @MainActor
 protocol RecipeDetailsCoordinating: AnyObject {
     func showCookMode(recipe: Recipe)
+    func showShoppingList()
+    func showUpgrade()
 }
 
 @MainActor
@@ -25,7 +27,21 @@ final class RecipeDetailsViewModel: ObservableObject {
 
     let selectedIngredients: [Ingredient]
     private let userDataService: UserDataService
+    private let shoppingListService: ShoppingListService
+    private let subscriptionService: SubscriptionServiceProtocol
     private weak var coordinator: (any RecipeDetailsCoordinating)?
+
+    // MARK: - Computed
+
+    var missingIngredientNames: [String] {
+        if !selectedIngredients.isEmpty {
+            return recipe.ingredients.filter { ingredientStatus($0) == .missing }.map { $0.name }
+        }
+        // Fall back to pre-computed missing ingredients from search (e.g. "See All" path)
+        return recipe.missingIngredients ?? []
+    }
+
+    var canShowAddToShoppingList: Bool { !missingIngredientNames.isEmpty }
 
     // MARK: - Initialization
 
@@ -33,11 +49,15 @@ final class RecipeDetailsViewModel: ObservableObject {
         recipe: Recipe,
         selectedIngredients: [Ingredient] = [],
         userDataService: UserDataService,
+        shoppingListService: ShoppingListService,
+        subscriptionService: SubscriptionServiceProtocol,
         coordinator: (any RecipeDetailsCoordinating)?
     ) {
         self.recipe = recipe
         self.selectedIngredients = selectedIngredients
         self.userDataService = userDataService
+        self.shoppingListService = shoppingListService
+        self.subscriptionService = subscriptionService
         self.coordinator = coordinator
 
         // Load data on init
@@ -66,6 +86,29 @@ final class RecipeDetailsViewModel: ObservableObject {
 
     func startCooking() {
         coordinator?.showCookMode(recipe: recipe)
+    }
+
+    func addMissingToShoppingList() async {
+        let missing = missingIngredientNames
+        guard !missing.isEmpty else { return }
+        guard subscriptionService.canAccessFeature(.shoppingList) else {
+            coordinator?.showUpgrade()
+            return
+        }
+        do {
+            _ = try await shoppingListService.addItems(missing, recipeTitle: recipe.title)
+            coordinator?.showShoppingList()
+        } catch {
+            print("❌ Failed to add items to shopping list: \(error)")
+        }
+    }
+
+    func showShoppingList() {
+        guard subscriptionService.canAccessFeature(.shoppingList) else {
+            coordinator?.showUpgrade()
+            return
+        }
+        coordinator?.showShoppingList()
     }
 
     enum IngredientStatus {

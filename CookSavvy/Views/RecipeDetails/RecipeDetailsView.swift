@@ -100,6 +100,28 @@ struct RecipeDetailsView: View {
                 }
             }
             .frostCard(cornerRadius: UI.RecipeDetails.cardCornerRadius)
+
+            if viewModel.canShowAddToShoppingList {
+                addToShoppingListButton
+            }
+        }
+    }
+
+    private var addToShoppingListButton: some View {
+        Button {
+            Task { await viewModel.addMissingToShoppingList() }
+        } label: {
+            HStack(spacing: UI.RecipeDetails.addToListSpacing) {
+                Image(systemName: Icons.ShoppingList.cartBadgePlus)
+                    .font(UI.Fonts.smallButtonIcon)
+                Text(String(format: Strings.ShoppingList.addMissingToList, viewModel.missingIngredientNames.count))
+                    .font(UI.Fonts.smallButton)
+            }
+            .foregroundStyle(theme.accent)
+            .padding(.horizontal, UI.RecipeDetails.addToListPaddingH)
+            .padding(.vertical, UI.RecipeDetails.addToListPaddingV)
+            .frame(maxWidth: .infinity)
+            .background(theme.accentSoft, in: RoundedRectangle(cornerRadius: UI.RecipeDetails.addToListCornerRadius, style: .continuous))
         }
     }
 
