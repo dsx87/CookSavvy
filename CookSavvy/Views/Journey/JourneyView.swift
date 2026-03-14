@@ -51,23 +51,9 @@ struct JourneyView: View {
             }
             .neonGlow(theme.accent, radius: UI.Common.neonRadiusDefault)
 
-            VStack(spacing: UI.Journey.profileNameSpacing) {
-                Text(Strings.Journey.homeChef)
-                    .font(UI.Fonts.profileName)
-                    .foregroundStyle(theme.text1)
-            }
-
-            HStack(spacing: UI.Journey.levelSpacing) {
-                Image(systemName: Icons.Journey.star)
-                    .font(UI.Fonts.smallCaption)
-                    .foregroundStyle(theme.gold)
-                Text("Level \(max(1, viewModel.recipesCooked / 5))")
-                    .font(UI.Fonts.captionBold)
-                    .foregroundStyle(theme.gold)
-            }
-            .padding(.horizontal, UI.Journey.levelPaddingH)
-            .padding(.vertical, UI.Journey.levelPaddingV)
-            .background(theme.gold.opacity(UI.Journey.levelBadgeOpacity), in: Capsule())
+            Text(Strings.Journey.homeChef)
+                .font(UI.Fonts.profileName)
+                .foregroundStyle(theme.text1)
         }
         .padding(.top, UI.Journey.profileTopPadding)
     }
@@ -182,52 +168,50 @@ struct JourneyView: View {
     private var achievementsSection: some View {
         VStack(alignment: .leading, spacing: UI.Journey.achievementSpacing) {
             HStack {
-                Text(Strings.Journey.achievements)
+                Text(Strings.Journey.milestones)
                     .sectionLabel()
                 Spacer()
-                Text("\(viewModel.unlockedCount)/\(viewModel.achievements.count)")
+                Text(String(format: Strings.Journey.milestonesEarned, viewModel.unlockedCount, viewModel.achievements.count))
                     .font(UI.Fonts.captionSemibold)
                     .foregroundStyle(theme.text2)
             }
 
-            VStack(spacing: UI.Journey.statItemSpacing) {
-                ForEach(viewModel.achievements) { achievement in
-                    achievementRow(achievement)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: UI.Journey.achievementBadgeSpacing) {
+                    ForEach(viewModel.achievements) { achievement in
+                        achievementBadge(achievement)
+                    }
                 }
+                .padding(.horizontal, UI.Journey.achievementBadgeHorizontalPadding)
             }
         }
     }
 
-    private func achievementRow(_ achievement: Achievement) -> some View {
+    private func achievementBadge(_ achievement: Achievement) -> some View {
         let color = Color(hex: achievement.colorHex)
-        return HStack(spacing: UI.Journey.achievementRowSpacing) {
+        return VStack(spacing: UI.Journey.achievementBadgeLabelSpacing) {
             ZStack {
                 Circle()
                     .fill(achievement.isUnlocked ? color.opacity(UI.Journey.achievementIconOpacity) : theme.surface)
-                    .frame(width: UI.Journey.achievementIconSize, height: UI.Journey.achievementIconSize)
+                    .frame(width: UI.Journey.achievementBadgeSize, height: UI.Journey.achievementBadgeSize)
+                    .overlay {
+                        Circle()
+                            .stroke(achievement.isUnlocked ? color.opacity(UI.Journey.achievementBadgeStrokeOpacity) : theme.divider, lineWidth: UI.Common.borderWidth)
+                    }
                 Text(achievement.emoji)
-                    .font(.system(size: UI.Journey.statIconSize))
+                    .font(.system(size: UI.Journey.achievementBadgeEmojiSize))
+                    .grayscale(achievement.isUnlocked ? 0 : 1)
+                    .opacity(achievement.isUnlocked ? 1 : UI.Journey.achievementBadgeLockedOpacity)
             }
             .neonGlow(achievement.isUnlocked ? color : .clear, radius: UI.Common.neonRadiusMini)
 
-            VStack(alignment: .leading, spacing: UI.Common.smallSpacing) {
-                Text(achievement.title)
-                    .font(UI.Fonts.sectionTitle)
-                    .foregroundStyle(achievement.isUnlocked ? theme.text1 : theme.text2)
-
-                Text(achievement.description)
-                    .font(UI.Fonts.smallCaption)
-                    .foregroundStyle(theme.text3)
-
-                AchievementProgressBar(color: color, progressFraction: achievement.progressFraction)
-            }
-
-            Text("\(Int(achievement.progressFraction * 100))%")
-                .font(UI.Fonts.smallCaptionBold)
-                .foregroundStyle(color)
+            Text(achievement.title)
+                .font(UI.Fonts.tinyCaption)
+                .foregroundStyle(achievement.isUnlocked ? theme.text2 : theme.text3)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .frame(width: UI.Journey.achievementBadgeWidth)
         }
-        .padding(UI.Journey.achievementPadding)
-        .frostCard(cornerRadius: UI.Common.cardCornerRadius)
     }
 
     // MARK: - Recent Activity

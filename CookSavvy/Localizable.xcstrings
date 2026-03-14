@@ -19,19 +19,6 @@
     "%lld steps" : {
 
     },
-    "%lld/%lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld/%2$lld"
-          }
-        }
-      }
-    },
-    "%lld%%" : {
-
-    },
     "%lldm" : {
 
     },
@@ -433,6 +420,17 @@
         }
       }
     },
+    "discover.haveAll" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You have everything!"
+          }
+        }
+      }
+    },
     "discover.kitchenSubtitle" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -484,6 +482,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%lld%% match"
+          }
+        }
+      }
+    },
+    "discover.missingCount" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Missing %lld"
           }
         }
       }
@@ -648,6 +657,28 @@
         }
       }
     },
+    "journey.milestones" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "MILESTONES"
+          }
+        }
+      }
+    },
+    "journey.milestonesEarned" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld earned"
+          }
+        }
+      }
+    },
     "journey.myRecipes" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -724,9 +755,6 @@
           }
         }
       }
-    },
-    "Level %lld" : {
-
     },
     "minutes" : {
 
@@ -906,6 +934,28 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "🧑‍🍳 Instructions"
+          }
+        }
+      }
+    },
+    "recipeDetails.youHave" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You have this"
+          }
+        }
+      }
+    },
+    "recipeDetails.youNeed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You need this"
           }
         }
       }

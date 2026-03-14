@@ -120,6 +120,8 @@ enum Strings {
         static let addRecipe = String(localized: "journey.addRecipe", defaultValue: "Add Recipe")
         static let thisWeek = String(localized: "journey.thisWeek", defaultValue: "THIS WEEK")
         static let achievements = String(localized: "journey.achievements", defaultValue: "ACHIEVEMENTS")
+        static let milestones = String(localized: "journey.milestones", defaultValue: "MILESTONES")
+        static let milestonesEarned = String(localized: "journey.milestonesEarned", defaultValue: "%lld of %lld earned")
         static let recentActivity = String(localized: "journey.recentActivity", defaultValue: "RECENT ACTIVITY")
         static let seeAll = String(localized: "journey.seeAll", defaultValue: "See All")
         static let shareCreations = String(localized: "journey.shareCreations", defaultValue: "Share your own creations")
