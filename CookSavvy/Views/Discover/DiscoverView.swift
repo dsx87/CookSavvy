@@ -257,12 +257,33 @@ struct DiscoverView: View {
 
     // MARK: - State 2: Recipe Results
 
+    private var useItAllToggle: some View {
+        Button {
+            withAnimation(UI.Anim.springBouncy) {
+                viewModel.useItAllFilter.toggle()
+            }
+        } label: {
+            Label(Strings.Discover.useItAll, systemImage: Icons.Discover.useItAll)
+                .font(UI.Fonts.captionSemibold)
+                .foregroundStyle(viewModel.useItAllFilter ? .white : theme.text2)
+                .padding(.horizontal, UI.Discover.useItAllPaddingH)
+                .padding(.vertical, UI.Discover.useItAllPaddingV)
+                .background(viewModel.useItAllFilter ? theme.mint : theme.surface, in: Capsule())
+                .overlay(
+                    Capsule().strokeBorder(theme.divider, lineWidth: UI.Common.borderWidth)
+                        .opacity(viewModel.useItAllFilter ? 0 : 1)
+                )
+        }
+        .buttonStyle(.plain)
+    }
+
     private var resultsState: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: UI.Discover.sectionSpacing) {
                 resultsHeader
                 selectedIngredientsStrip
                 moodFilter
+                useItAllToggle
                 bestMatchSection
                 moreRecipesSection
             }

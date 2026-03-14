@@ -61,6 +61,7 @@ enum Icons {
         static let chevronRight = "chevron.right"
         static let matchBadge = "checkmark.seal"
         static let matchInfo = "info.circle"
+        static let useItAll = "checkmark.circle.fill"
         static let flame = "flame"
         static let person2 = "person.2"
         static let chartBar = "chart.bar"

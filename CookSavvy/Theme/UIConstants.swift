@@ -319,6 +319,8 @@ struct UI {
         static let cameraBadgePaddingV: CGFloat = 1
         static let cameraBadgeOffsetX: CGFloat = 8
         static let cameraBadgeOffsetY: CGFloat = -6
+        static let useItAllPaddingH: CGFloat = 14
+        static let useItAllPaddingV: CGFloat = 8
 
         static func moodColor(for mood: RecipeMood) -> Color {
             switch mood {

@@ -31,6 +31,7 @@ final class DiscoverViewModel: ObservableObject {
     @Published var isSearching = false
     @Published var isLoadingIngredients = false
     @Published var showResults = false
+    @Published var useItAllFilter = false
 
     // MARK: - Dependencies
 
@@ -85,11 +86,22 @@ final class DiscoverViewModel: ObservableObject {
 
     var filteredRecipes: [Recipe] {
         guard !searchResultRecipes.isEmpty else { return [] }
-        guard let selectedMood else {
-            return searchResultRecipes
+
+        let moodFiltered: [Recipe]
+        if let selectedMood {
+            moodFiltered = RecipeMoodRanker.rank(searchResultRecipes, for: selectedMood)
+        } else {
+            moodFiltered = searchResultRecipes
         }
 
-        return RecipeMoodRanker.rank(searchResultRecipes, for: selectedMood)
+        guard useItAllFilter else { return moodFiltered }
+
+        let perfect = moodFiltered.filter { $0.missingIngredients?.isEmpty == true }
+        if !perfect.isEmpty { return perfect }
+
+        return moodFiltered.sorted {
+            ($0.missingIngredients?.count ?? Int.max) < ($1.missingIngredients?.count ?? Int.max)
+        }
     }
 
     var bestMatch: Recipe? {
