@@ -20,11 +20,13 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 
 ## Subscription Tiers
 
-| Tier | Recipe Source | Ingredient Detection |
-|------|---------------|---------------------|
-| Free | Local database (`OfflineRecipeSource`) | Manual text input only |
-| API | REST API (`OnlineRecipeSource`) | AI photo recognition |
-| AI | AI-generated (`AIRecipeSource`) | AI photo recognition |
+| Tier | Display Name | Recipe Source | Ingredient Detection |
+|------|--------------|---------------|---------------------|
+| Free | Free | Local database (`OfflineRecipeSource`) | Manual text input + 5 camera scans/week |
+| Premium | CookSavvy+ | Local + REST API + AI (`OnlineRecipeSource`, `AIRecipeSource`) | Unlimited AI photo recognition |
+
+- Product identifier: `com.cooksavvy.subscription.premium`
+- Free tier weekly camera scan limit tracked via `CameraScanTracker` (UserDefaults)
 
 ## App Screens
 
@@ -37,8 +39,9 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 | **Cook Mode** | Full-screen step-by-step cooking flow with progress ring, timer, and prev/next navigation |
 | **Create Recipe** | 5-step wizard: Name & Photo → Ingredients → Steps → Details → Review & Save |
 | **Settings** | Subscription plan, usage limits, preferences (accessed from Journey nav bar) |
-| **Camera** | Camera capture for AI ingredient detection (paid tiers) |
-| **Upgrade** | Subscription upgrade prompt |
+| **Camera** | Camera capture for AI ingredient detection (free users: 5/week via `CameraScanTracker`) |
+| **Upgrade** | Single-plan upgrade prompt (CookSavvy+) |
+| **Onboarding** | 3-screen first-launch walkthrough (fork.knife.circle → camera.viewfinder → timer); gated by `hasCompletedOnboarding` AppStorage |
 | **Tab Container** | Root tab bar with 2 tabs: Discover + Journey |
 
 > All screens are subject to extension and modification.
@@ -172,7 +175,8 @@ CookSavvy/
 │   ├── Subscription/
 │   │   ├── SubscriptionServiceProtocol.swift
 │   │   ├── StoreKitSubscriptionService.swift
-│   │   └── MockSubscriptionService.swift
+│   │   ├── MockSubscriptionService.swift
+│   │   └── CameraScanTracker.swift         — weekly scan counter (UserDefaults, resets each calendar week)
 │   ├── AI/
 │   │   ├── AIServiceProtocol.swift
 │   │   ├── AIService.swift
@@ -228,7 +232,8 @@ CookSavvy/
 │   ├── CreateRecipe/                  — Create recipe wizard (CreateRecipeView + CreateRecipeViewModel)
 │   ├── Camera/                        — Camera capture screen
 │   ├── Settings/                      — Settings screen
-│   └── Upgrade/                       — Subscription upgrade screen
+│   ├── Upgrade/                       — Subscription upgrade screen (single CookSavvy+ plan)
+│   └── Onboarding/                    — First-launch walkthrough (OnboardingView + OnboardingViewModel)
 ├── Extensions/
 │   ├── Character+Extensions.swift
 │   └── String+Extensions.swift

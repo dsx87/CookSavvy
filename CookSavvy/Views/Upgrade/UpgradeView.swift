@@ -146,7 +146,7 @@ struct PlanCard: View {
                     .padding()
                     .background(
                         LinearGradient(
-                            colors: plan == .ai ? [theme.lavender, theme.rose] : [theme.accent, theme.sky],
+                            colors: [theme.accent, theme.sky],
                             startPoint: .leading,
                             endPoint: .trailing
                         ),

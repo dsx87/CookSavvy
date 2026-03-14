@@ -7,41 +7,37 @@ import Foundation
 
 enum SubscriptionPlan: String, CaseIterable, Codable, Comparable {
     case free = "Free"
-    case api = "API"
-    case ai = "AI"
-    
-    var displayName: String { rawValue }
-    
+    case premium = "Premium"
+
+    var displayName: String {
+        switch self {
+        case .free: return "Free"
+        case .premium: return "CookSavvy+"
+        }
+    }
+
     var description: String {
         switch self {
-        case .free:
-            return "Local database recipes"
-        case .api:
-            return "Curated recipe API + AI detection"
-        case .ai:
-            return "AI-generated recipes + AI detection"
+        case .free: return "Basic recipe discovery"
+        case .premium: return "Unlimited recipes, camera scanning & smart features"
         }
     }
-    
+
     var productIdentifier: String? {
         switch self {
-        case .free:
-            return nil
-        case .api:
-            return "com.cooksavvy.subscription.api"
-        case .ai:
-            return "com.cooksavvy.subscription.ai"
+        case .free: return nil
+        case .premium: return "com.cooksavvy.subscription.premium"
         }
     }
-    
+
+
     private var tier: Int {
         switch self {
         case .free: return 0
-        case .api: return 1
-        case .ai: return 2
+        case .premium: return 1
         }
     }
-    
+
     static func < (lhs: SubscriptionPlan, rhs: SubscriptionPlan) -> Bool {
         lhs.tier < rhs.tier
     }
@@ -51,26 +47,16 @@ enum PaidFeature {
     case cameraIngredientDetection
     case onlineRecipes
     case aiRecipes
-    
+
     var requiredPlans: Set<SubscriptionPlan> {
-        switch self {
-        case .cameraIngredientDetection:
-            return [.api, .ai]
-        case .onlineRecipes:
-            return [.api, .ai]
-        case .aiRecipes:
-            return [.ai]
-        }
+        return [.premium]
     }
-    
+
     var displayName: String {
         switch self {
-        case .cameraIngredientDetection:
-            return "Camera Ingredient Detection"
-        case .onlineRecipes:
-            return "Online Recipes"
-        case .aiRecipes:
-            return "AI-Generated Recipes"
+        case .cameraIngredientDetection: return "Camera Scanning"
+        case .onlineRecipes: return "Extended Recipes"
+        case .aiRecipes: return "AI Recipes"
         }
     }
 }

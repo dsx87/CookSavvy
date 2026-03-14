@@ -19,7 +19,7 @@ final class UpgradeViewModel: ObservableObject {
     private let onDismiss: () -> Void
     private var cancellables = Set<AnyCancellable>()
     
-    let availablePlans: [SubscriptionPlan] = [.api, .ai]
+    let availablePlans: [SubscriptionPlan] = [.premium]
     
     init(
         subscriptionService: SubscriptionServiceProtocol,
@@ -92,18 +92,13 @@ final class UpgradeViewModel: ObservableObject {
     func featureDescription(for plan: SubscriptionPlan) -> [String] {
         switch plan {
         case .free:
-            return ["Local database recipes"]
-        case .api:
+            return ["Basic recipe discovery"]
+        case .premium:
             return [
-                "All Free features",
-                "Online recipe API",
-                "Camera ingredient detection"
-            ]
-        case .ai:
-            return [
-                "All API features",
-                "AI-generated recipes",
-                "Unlimited recipe suggestions"
+                "Unlimited recipe sources",
+                "Camera ingredient scanning",
+                "AI-powered features",
+                "Priority suggestions"
             ]
         }
     }

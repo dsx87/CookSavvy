@@ -21,13 +21,30 @@ private struct ThemedAppRoot: View {
     @AppStorage(ThemePreference.storageKey) private var themePreferenceRawValue = ThemePreference.defaultValue.rawValue
     @StateObject private var coordinator = AppCoordinator()
 
+    init() {
+        // Migration: existing installs that predate the onboarding key should skip it.
+        // If the DB file already exists the app has been used before, so mark onboarding done.
+        guard UserDefaults.standard.object(forKey: "hasCompletedOnboarding") == nil else { return }
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        let dbURL = appSupport?.appendingPathComponent("CookSavvy/db.sqlite")
+        if let dbURL, FileManager.default.fileExists(atPath: dbURL.path) {
+            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+        }
+    }
+
     private var themePreference: ThemePreference {
         ThemePreference.from(rawValue: themePreferenceRawValue)
     }
 
     var body: some View {
-        TabContainerView(coordinator: coordinator)
-            .preferredColorScheme(themePreference.preferredColorScheme)
-            .environment(\.appTheme, themePreference.resolvedTheme(for: colorScheme))
+        Group {
+            if coordinator.hasCompletedOnboarding {
+                coordinator.start()
+            } else {
+                OnboardingView(viewModel: coordinator.makeOnboardingViewModel())
+            }
+        }
+        .preferredColorScheme(themePreference.preferredColorScheme)
+        .environment(\.appTheme, themePreference.resolvedTheme(for: colorScheme))
     }
 }

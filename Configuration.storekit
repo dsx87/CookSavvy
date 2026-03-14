@@ -45,49 +45,21 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "0.99",
+          "displayPrice" : "4.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "BC35C4B9",
           "introductoryOffer" : null,
           "localizations" : [
             {
-              "description" : "",
-              "displayName" : "",
+              "description" : "Unlimited recipes, camera scanning & smart features",
+              "displayName" : "CookSavvy+",
               "locale" : "en_US"
             }
           ],
-          "productID" : "com.cooksavvy.subscription.api",
+          "productID" : "com.cooksavvy.subscription.premium",
           "recurringSubscriptionPeriod" : "P1M",
-          "referenceName" : "api",
-          "subscriptionGroupID" : "8D03CFD8",
-          "type" : "RecurringSubscription",
-          "winbackOffers" : [
-
-          ]
-        },
-        {
-          "adHocOffers" : [
-
-          ],
-          "codeOffers" : [
-
-          ],
-          "displayPrice" : "0.99",
-          "familyShareable" : false,
-          "groupNumber" : 1,
-          "internalID" : "6CEF791F",
-          "introductoryOffer" : null,
-          "localizations" : [
-            {
-              "description" : "",
-              "displayName" : "",
-              "locale" : "en_US"
-            }
-          ],
-          "productID" : "com.cooksavvy.subscription.ai",
-          "recurringSubscriptionPeriod" : "P1M",
-          "referenceName" : "ai",
+          "referenceName" : "premium",
           "subscriptionGroupID" : "8D03CFD8",
           "type" : "RecurringSubscription",
           "winbackOffers" : [

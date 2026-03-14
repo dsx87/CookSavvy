@@ -68,6 +68,27 @@ struct DiscoverView: View {
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 
+    private var cameraButton: some View {
+        Button {
+            viewModel.showCamera()
+        } label: {
+            ZStack(alignment: .topTrailing) {
+                Image(systemName: "camera.fill")
+                    .font(UI.Fonts.iconMedium)
+                    .foregroundStyle(theme.accent)
+                if viewModel.showScansBadge {
+                    Text("\(viewModel.remainingCameraScans)")
+                        .font(.system(size: UI.Discover.cameraBadgeFontSize, weight: .bold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, UI.Discover.cameraBadgePaddingH)
+                        .padding(.vertical, UI.Discover.cameraBadgePaddingV)
+                        .background(viewModel.remainingCameraScans > 0 ? theme.mint : theme.rose, in: Capsule())
+                        .offset(x: UI.Discover.cameraBadgeOffsetX, y: UI.Discover.cameraBadgeOffsetY)
+                }
+            }
+        }
+    }
+
     private var headerView: some View {
         VStack(alignment: .leading, spacing: UI.Discover.headerSpacing) {
             Text(viewModel.greeting)
@@ -100,13 +121,7 @@ struct DiscoverView: View {
                         .foregroundStyle(theme.text3)
                 }
             }
-            Button {
-                viewModel.showCamera()
-            } label: {
-                Image(systemName: "camera.fill")
-                    .font(UI.Fonts.iconMedium)
-                    .foregroundStyle(theme.accent)
-            }
+            cameraButton
         }
         .padding(.horizontal, UI.Discover.searchBarHorizontalPadding)
         .padding(.vertical, UI.Discover.searchBarVerticalPadding)
@@ -369,11 +384,6 @@ struct DiscoverView: View {
                         .clipShape(RoundedRectangle(cornerRadius: UI.Discover.recipeCardCornerRadius, style: .continuous))
 
                     featuredHeroOverlay(for: featured)
-
-                    if let source = RecipeDisplaySource(recipe: featured) {
-                        RecipeSourceBadge(source: source)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                    }
                 }
                 .contentShape(RoundedRectangle(cornerRadius: UI.Discover.recipeCardCornerRadius, style: .continuous))
                 .gesture(

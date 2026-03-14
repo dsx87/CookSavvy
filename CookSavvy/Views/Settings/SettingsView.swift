@@ -48,7 +48,7 @@ struct SettingsView: View {
                             .foregroundStyle(theme.mint)
                     }
                     
-                    if viewModel.currentPlan != .ai {
+                    if viewModel.currentPlan != .premium {
                         Button {
                             viewModel.showUpgrade()
                         } label: {
@@ -104,32 +104,20 @@ struct SettingsView: View {
                                 .foregroundStyle(theme.text2)
                         }
                     }
-                    
-                    Toggle(isOn: Binding(
-                        get: { viewModel.apiSourceEnabled },
-                        set: { _ in viewModel.toggleApiSource() }
-                    )) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(Strings.Settings.onlineRecipes)
-                            Text(Strings.Settings.apiSource)
-                                .font(.caption)
-                                .foregroundStyle(theme.text2)
+
+                    if viewModel.currentPlan == .premium {
+                        Toggle(isOn: Binding(
+                            get: { viewModel.extendedRecipesEnabled },
+                            set: { _ in viewModel.toggleExtendedRecipes() }
+                        )) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(Strings.Settings.extendedRecipes)
+                                Text(Strings.Settings.extendedRecipesDescription)
+                                    .font(.caption)
+                                    .foregroundStyle(theme.text2)
+                            }
                         }
                     }
-                    .disabled(!viewModel.canAccessSource(.online))
-                    
-                    Toggle(isOn: Binding(
-                        get: { viewModel.aiSourceEnabled },
-                        set: { _ in viewModel.toggleAiSource() }
-                    )) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(Strings.Settings.aiRecipes)
-                            Text(Strings.Settings.aiGeneratedRecipes)
-                                .font(.caption)
-                                .foregroundStyle(theme.text2)
-                        }
-                    }
-                    .disabled(!viewModel.canAccessSource(.ai))
                 } header: {
                     Text(Strings.Settings.recipeSourcesHeader)
                 } footer: {

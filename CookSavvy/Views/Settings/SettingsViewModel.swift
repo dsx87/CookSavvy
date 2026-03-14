@@ -110,7 +110,21 @@ final class SettingsViewModel: ObservableObject {
     func toggleAiSource() {
         aiSourceEnabled = userDataService.toggleSource(.ai)
     }
-    
+
+    var extendedRecipesEnabled: Bool {
+        apiSourceEnabled || aiSourceEnabled
+    }
+
+    func toggleExtendedRecipes() {
+        let shouldEnable = !extendedRecipesEnabled
+        if apiSourceEnabled != shouldEnable {
+            apiSourceEnabled = userDataService.toggleSource(.online)
+        }
+        if aiSourceEnabled != shouldEnable {
+            aiSourceEnabled = userDataService.toggleSource(.ai)
+        }
+    }
+
     func canAccessSource(_ source: RecipeSourceType) -> Bool {
         switch source {
         case .offline:

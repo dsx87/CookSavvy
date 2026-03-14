@@ -40,10 +40,8 @@ final class MockSubscriptionService: SubscriptionServiceProtocol {
         switch plan {
         case .free:
             return nil
-        case .api:
-            return "$0.99"
-        case .ai:
-            return "$0.99"
+        case .premium:
+            return "$4.99"
         }
     }
     

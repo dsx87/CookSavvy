@@ -7,7 +7,9 @@ import SwiftUI
 
 @MainActor
 final class AppCoordinator: ObservableObject {
-    
+
+    @Published var hasCompletedOnboarding: Bool = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+
     private var _discoverCoordinator: DiscoverCoordinator?
     private var _journeyCoordinator: JourneyCoordinator?
     private var _settingsCoordinator: SettingsCoordinator?
@@ -34,6 +36,12 @@ final class AppCoordinator: ObservableObject {
         return coordinator
     }
     
+    func makeOnboardingViewModel() -> OnboardingViewModel {
+        OnboardingViewModel(onComplete: { [weak self] in
+            self?.hasCompletedOnboarding = true
+        })
+    }
+
     func start() -> some View {
         TabContainerView(coordinator: self)
     }

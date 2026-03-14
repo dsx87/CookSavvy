@@ -306,6 +306,11 @@ struct UI {
         static let findButtonHeight: CGFloat = 56
         static let findButtonCornerRadius: CGFloat = 28 // Pill shape for 56 height
         static let findButtonBottomPadding: CGFloat = 16
+        static let cameraBadgeFontSize: CGFloat = 8
+        static let cameraBadgePaddingH: CGFloat = 3
+        static let cameraBadgePaddingV: CGFloat = 1
+        static let cameraBadgeOffsetX: CGFloat = 8
+        static let cameraBadgeOffsetY: CGFloat = -6
 
         static func moodColor(for mood: RecipeMood) -> Color {
             switch mood {

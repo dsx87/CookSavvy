@@ -194,7 +194,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Start Cooking"
+            "value" : "Let's Cook"
           }
         }
       }
@@ -362,7 +362,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "BEST MATCH"
+            "value" : "TOP PICK"
           }
         }
       }
@@ -384,7 +384,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Find Recipes"
+            "value" : "Find Dinner"
           }
         }
       }
@@ -406,7 +406,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Good Evening 🌙"
+            "value" : "Dinner time? Let's go 🍽️"
           }
         }
       }
@@ -417,7 +417,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Late Night Cravings? 🌜"
+            "value" : "Late night snack? 🌜"
           }
         }
       }
@@ -439,7 +439,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Add ingredients and we'll find recipes for you"
+            "value" : "Add what you have — get dinner ideas in seconds"
           }
         }
       }
@@ -450,7 +450,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "What's in your kitchen?"
+            "value" : "What's for dinner?"
           }
         }
       }
@@ -494,7 +494,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "MORE RECIPES"
+            "value" : "MORE OPTIONS"
           }
         }
       }
@@ -516,7 +516,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Recipes for you"
+            "value" : "Your dinner options"
           }
         }
       }
@@ -528,6 +528,28 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "SAVED"
+          }
+        }
+      }
+    },
+    "discover.scansExhausted" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No scans left"
+          }
+        }
+      }
+    },
+    "discover.scansRemaining" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%lld scans left"
           }
         }
       }
@@ -771,6 +793,94 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "REFINE BY MOOD"
+          }
+        }
+      }
+    },
+    "onboarding.getStarted" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Get Started"
+          }
+        }
+      }
+    },
+    "onboarding.page1Subtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tell us what you have. We'll find what to make."
+          }
+        }
+      }
+    },
+    "onboarding.page1Title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Dinner, Decided"
+          }
+        }
+      }
+    },
+    "onboarding.page2Subtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Use your camera to add ingredients instantly"
+          }
+        }
+      }
+    },
+    "onboarding.page2Title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Snap Your Ingredients"
+          }
+        }
+      }
+    },
+    "onboarding.page3Subtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Step-by-step guidance with built-in timers"
+          }
+        }
+      }
+    },
+    "onboarding.page3Title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cook with Confidence"
+          }
+        }
+      }
+    },
+    "onboarding.skip" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Skip"
           }
         }
       }
@@ -1052,6 +1162,28 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Data Management"
+          }
+        }
+      }
+    },
+    "settings.extendedRecipes" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Extended Recipes"
+          }
+        }
+      }
+    },
+    "settings.extendedRecipesDescription" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Search online databases for more options"
           }
         }
       }
@@ -1489,7 +1621,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Get access to more recipes and AI-powered features"
+            "value" : "Faster dinner decisions with more recipes and camera scanning"
           }
         }
       }
@@ -1500,7 +1632,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Unlock Premium Features"
+            "value" : "Upgrade to CookSavvy+"
           }
         }
       }

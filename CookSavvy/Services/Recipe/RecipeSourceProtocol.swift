@@ -40,6 +40,26 @@ protocol RecipeSourceProtocol {
     func isAvailable() async -> Bool
 }
 
+extension RecipeSourceType {
+    /// Filters `sources` down to those the user can actually access given their subscription.
+    /// Falls back to `[.offline]` if all enabled sources are gated.
+    static func accessible(
+        from sources: Set<RecipeSourceType>,
+        canAccessOnline: Bool,
+        canAccessAI: Bool
+    ) -> Set<RecipeSourceType> {
+        var result = sources
+        if result.contains(.online) && !canAccessOnline { result.remove(.online) }
+        if result.contains(.ai) && !canAccessAI { result.remove(.ai) }
+        return result.isEmpty ? [.offline] : result
+    }
+
+    /// Returns true when only the offline source is active, meaning the DB must be ready before querying.
+    static func requiresDatabaseReady(_ sources: Set<RecipeSourceType>) -> Bool {
+        sources == [.offline]
+    }
+}
+
 /// Error types for recipe fetching operations
 enum RecipeSourceError: Error, LocalizedError {
     case sourceUnavailable(RecipeSourceType)

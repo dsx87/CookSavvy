@@ -39,6 +39,7 @@ final class DiscoverViewModel: ObservableObject {
     private let userDataService: UserDataService
     private let subscriptionService: SubscriptionServiceProtocol
     private let databaseInitService: DatabaseInitializationService
+    private let cameraScanTracker: CameraScanTracker
     private weak var coordinator: DiscoverCoordinator?
 
     // MARK: - Init
@@ -49,6 +50,7 @@ final class DiscoverViewModel: ObservableObject {
         userDataService: UserDataService,
         subscriptionService: SubscriptionServiceProtocol,
         databaseInitService: DatabaseInitializationService,
+        cameraScanTracker: CameraScanTracker,
         coordinator: DiscoverCoordinator
     ) {
         self.ingredientsService = ingredientsService
@@ -56,6 +58,7 @@ final class DiscoverViewModel: ObservableObject {
         self.userDataService = userDataService
         self.subscriptionService = subscriptionService
         self.databaseInitService = databaseInitService
+        self.cameraScanTracker = cameraScanTracker
         self.coordinator = coordinator
     }
 
@@ -208,12 +211,25 @@ final class DiscoverViewModel: ObservableObject {
         coordinator?.showCreateRecipe()
     }
 
+    var showScansBadge: Bool {
+        !subscriptionService.canAccessFeature(.cameraIngredientDetection)
+    }
+
+    var remainingCameraScans: Int {
+        cameraScanTracker.remainingScans()
+    }
+
     func showCamera() {
-        guard subscriptionService.canAccessFeature(.cameraIngredientDetection) else {
+        if subscriptionService.canAccessFeature(.cameraIngredientDetection) {
+            coordinator?.showCamera()
+        } else if cameraScanTracker.canScan() {
+            // Deduct the scan when the camera opens — the attempt is consumed
+            // regardless of whether detection returns results.
+            cameraScanTracker.recordScan()
+            coordinator?.showCamera()
+        } else {
             coordinator?.showUpgrade()
-            return
         }
-        coordinator?.showCamera()
     }
 
     // MARK: - Private
@@ -243,7 +259,7 @@ final class DiscoverViewModel: ObservableObject {
         isSearching = true
         do {
             let enabledSources = accessibleEnabledSources()
-            if shouldWaitForRecipeImport(for: enabledSources) {
+            if RecipeSourceType.requiresDatabaseReady(enabledSources) {
                 await databaseInitService.waitForRecipes()
             }
             searchResultRecipes = try await recipeService.getRecipes(
@@ -254,25 +270,6 @@ final class DiscoverViewModel: ObservableObject {
         isSearching = false
     }
 
-    func filteredEnabledSources(
-        _ sources: Set<RecipeSourceType>,
-        canAccessOnline: Bool,
-        canAccessAI: Bool
-    ) -> Set<RecipeSourceType> {
-        var accessibleSources = sources
-        if accessibleSources.contains(.online) && !canAccessOnline {
-            accessibleSources.remove(.online)
-        }
-        if accessibleSources.contains(.ai) && !canAccessAI {
-            accessibleSources.remove(.ai)
-        }
-        return accessibleSources.isEmpty ? [.offline] : accessibleSources
-    }
-
-    func shouldWaitForRecipeImport(for enabledSources: Set<RecipeSourceType>) -> Bool {
-        enabledSources == [.offline]
-    }
-    
     private func scheduleIngredientRefresh() {
         ingredientRefreshTask?.cancel()
         ingredientRefreshToken += 1
@@ -288,8 +285,8 @@ final class DiscoverViewModel: ObservableObject {
     }
 
     private func accessibleEnabledSources() -> Set<RecipeSourceType> {
-        filteredEnabledSources(
-            userDataService.getEnabledSources(),
+        RecipeSourceType.accessible(
+            from: userDataService.getEnabledSources(),
             canAccessOnline: subscriptionService.canAccessFeature(.onlineRecipes),
             canAccessAI: subscriptionService.canAccessFeature(.aiRecipes)
         )

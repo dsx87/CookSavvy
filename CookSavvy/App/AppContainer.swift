@@ -27,6 +27,7 @@ final class AppContainer {
     let aiService: AIServiceProtocol
     let ingredientDetectionService: IngredientDetectionServiceProtocol
     let subscriptionService: SubscriptionServiceProtocol
+    let cameraScanTracker: CameraScanTracker
 
     // MARK: - Initialization
 
@@ -77,7 +78,9 @@ final class AppContainer {
         #else
         self.subscriptionService = StoreKitSubscriptionService()
         #endif
-        
+
+        self.cameraScanTracker = CameraScanTracker()
+
         databaseInitService.startInitialization()
     }
     

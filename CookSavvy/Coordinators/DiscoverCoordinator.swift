@@ -67,6 +67,7 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating {
             userDataService: container.userDataService,
             subscriptionService: container.subscriptionService,
             databaseInitService: container.databaseInitService,
+            cameraScanTracker: container.cameraScanTracker,
             coordinator: self
         )
     }

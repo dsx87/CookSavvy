@@ -42,11 +42,6 @@ struct RecipeDetailsView: View {
         .background(theme.bg)
         .clipShape(.rect(topLeadingRadius: UI.RecipeDetails.contentTopCornerRadius, topTrailingRadius: UI.RecipeDetails.contentTopCornerRadius))
         .offset(y: -UI.V2.contentOverlapOffset)
-        .overlay(alignment: .topTrailing) {
-            if let source = RecipeDisplaySource(recipe: viewModel.recipe) {
-                RecipeSourceBadge(source: source) // TODO: fix misplacement
-            }
-        }
     }
 
     private var recipeHeader: some View {

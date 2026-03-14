@@ -53,11 +53,12 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 
 ## Subscription Tiers
 
-| Tier | Recipes | Photo AI |
-|------|---------|----------|
-| Free | Local DB (`OfflineRecipeSource`) | ❌ |
-| API | REST API (`OnlineRecipeSource`) | ✅ |
-| AI | AI-generated (`AIRecipeSource`) | ✅ |
+| Tier | Display Name | Recipes | Camera Scanning |
+|------|--------------|---------|-----------------|
+| Free | Free | Local DB (`OfflineRecipeSource`) | 5 scans/week (`CameraScanTracker`) |
+| Premium | CookSavvy+ | Local + API + AI | Unlimited |
+
+Product ID: `com.cooksavvy.subscription.premium`
 
 ## Key Services
 
@@ -85,7 +86,8 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
   - `Shared/CommonComponents.swift`: `StarRating`, `StatPill`
   - `Discover/DiscoverComponents.swift`: `CategoryChip`, `IngredientBubble`, `SelectedChip`, `MoodPill`, `AddYourOwnCard`
   - `Journey/JourneyComponents.swift`: `CreateRecipeCard`, `UserMiniRecipeCard`
-- **Settings** — subscription, limits (accessed from Journey nav bar)
-- **Camera** — AI ingredient detection (paid tiers)
-- **Upgrade** — subscription upgrade prompt
+- **Settings** — subscription, preferences (accessed from Journey nav bar); single "Extended Recipes" toggle for premium users
+- **Camera** — AI ingredient detection; free users get 5 scans/week tracked by `CameraScanTracker`
+- **Upgrade** — single CookSavvy+ plan upgrade prompt
+- **Onboarding** — 3-screen first-launch flow (gated by `hasCompletedOnboarding` UserDefaults/AppStorage)
 - **Tab Container** — 2 tabs: Discover (`compass.drawing`) + Journey (`trophy.fill`)
