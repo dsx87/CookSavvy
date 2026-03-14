@@ -200,7 +200,7 @@ final class DiscoverViewModel: ObservableObject {
     // MARK: - Navigation
 
     func showRecipeDetails(_ recipe: Recipe) {
-        coordinator?.showRecipeDetails(recipe: recipe)
+        coordinator?.showRecipeDetails(recipe: recipe, selectedIngredients: selectedIngredients)
     }
 
     func showRecipeList(title: String, recipes: [Recipe]) {
@@ -273,6 +273,10 @@ final class DiscoverViewModel: ObservableObject {
                     recipe: results[index],
                     selectedIngredients: ingredients,
                     matchingNames: matching
+                )
+                results[index].missingIngredients = RecipeMatchExplainer.missingIngredients(
+                    recipe: results[index],
+                    selectedIngredients: ingredients
                 )
             }
             searchResultRecipes = results

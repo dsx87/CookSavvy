@@ -102,6 +102,7 @@ struct Recipe {
     var cuisine: String?
     var matchPercentage: Double?
     var matchReason: String?
+    var missingIngredients: [String]?
 
     init(
         title: String,
@@ -119,7 +120,8 @@ struct Recipe {
         emoji: String? = nil,
         cuisine: String? = nil,
         matchPercentage: Double? = nil,
-        matchReason: String? = nil
+        matchReason: String? = nil,
+        missingIngredients: [String]? = nil
     ) {
         self.title = title
         self.ingredients = ingredients
@@ -137,8 +139,9 @@ struct Recipe {
         self.cuisine = cuisine
         self.matchPercentage = matchPercentage
         self.matchReason = matchReason
+        self.missingIngredients = missingIngredients
     }
-    
+
     init(
         title: String,
         ingredients: [Ingredient],
@@ -155,7 +158,8 @@ struct Recipe {
         emoji: String? = nil,
         cuisine: String? = nil,
         matchPercentage: Double? = nil,
-        matchReason: String? = nil
+        matchReason: String? = nil,
+        missingIngredients: [String]? = nil
     ) {
         self.init(
             title: title,
@@ -173,7 +177,8 @@ struct Recipe {
             emoji: emoji,
             cuisine: cuisine,
             matchPercentage: matchPercentage,
-            matchReason: matchReason
+            matchReason: matchReason,
+            missingIngredients: missingIngredients
         )
     }
 
@@ -227,8 +232,9 @@ extension Recipe: Codable {
         self.cuisine = nil
         self.matchPercentage = nil
         self.matchReason = nil
+        self.missingIngredients = nil
     }
-    
+
 }
 
 // MARK: - Mock Factories for Testing

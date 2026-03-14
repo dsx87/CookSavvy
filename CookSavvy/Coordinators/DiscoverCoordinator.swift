@@ -23,9 +23,10 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating {
     
     // MARK: - Factory Methods
     
-    func makeRecipeDetailsViewModel(recipe: Recipe) -> RecipeDetailsViewModel {
+    func makeRecipeDetailsViewModel(recipe: Recipe, selectedIngredients: [Ingredient] = []) -> RecipeDetailsViewModel {
         RecipeDetailsViewModel(
             recipe: recipe,
+            selectedIngredients: selectedIngredients,
             userDataService: container.userDataService,
             coordinator: self
         )
@@ -92,8 +93,8 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating {
     
     // MARK: - Navigation
     
-    func showRecipeDetails(recipe: Recipe) {
-        navigationPath.append(NavigationDestination.recipeDetail(recipe))
+    func showRecipeDetails(recipe: Recipe, selectedIngredients: [Ingredient] = []) {
+        navigationPath.append(NavigationDestination.recipeDetail(recipe, selectedIngredients: selectedIngredients))
     }
     
     func showRecipeList(title: String, recipes: [Recipe]) {
@@ -136,7 +137,7 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating {
 
 extension DiscoverCoordinator {
     enum NavigationDestination: Hashable {
-        case recipeDetail(Recipe)
+        case recipeDetail(Recipe, selectedIngredients: [Ingredient])
         case recipeList(title: String, recipes: [Recipe])
     }
     
@@ -181,9 +182,9 @@ struct DiscoverCoordinatorView: View {
             DiscoverView(viewModel: discoverViewModel)
                 .navigationDestination(for: DiscoverCoordinator.NavigationDestination.self) { destination in
                     switch destination {
-                    case .recipeDetail(let recipe):
+                    case .recipeDetail(let recipe, let selectedIngredients):
                         RecipeDetailsView(
-                            viewModel: coordinator.makeRecipeDetailsViewModel(recipe: recipe)
+                            viewModel: coordinator.makeRecipeDetailsViewModel(recipe: recipe, selectedIngredients: selectedIngredients)
                         )
                     case .recipeList(let title, let recipes):
                         RecipeListView(

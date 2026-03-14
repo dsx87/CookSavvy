@@ -15,6 +15,8 @@ enum Strings {
     enum RecipeDetails {
         static let ingredientsTitle = String(localized: "recipeDetails.ingredientsTitle", defaultValue: "🛒 Ingredients")
         static let instructionsTitle = String(localized: "recipeDetails.instructionsTitle", defaultValue: "🧑‍🍳 Instructions")
+        static let youHave = String(localized: "recipeDetails.youHave", defaultValue: "You have this")
+        static let youNeed = String(localized: "recipeDetails.youNeed", defaultValue: "You need this")
     }
 
     enum Settings {
@@ -104,6 +106,8 @@ enum Strings {
         static let matchLabel = String(localized: "discover.matchLabel", defaultValue: "%lld%% match")
         static let matchDetailsTitle = String(localized: "discover.matchDetailsTitle", defaultValue: "Matching ingredients")
         static let matchDetailsEmpty = String(localized: "discover.matchDetailsEmpty", defaultValue: "No exact ingredient matches found.")
+        static let missingCount = String(localized: "discover.missingCount", defaultValue: "Missing %lld")
+        static let haveAll = String(localized: "discover.haveAll", defaultValue: "You have everything!")
     }
 
     enum Journey {

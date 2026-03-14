@@ -23,6 +23,7 @@ final class RecipeDetailsViewModel: ObservableObject {
 
     // MARK: - Properties
 
+    let selectedIngredients: [Ingredient]
     private let userDataService: UserDataService
     private weak var coordinator: (any RecipeDetailsCoordinating)?
 
@@ -30,10 +31,12 @@ final class RecipeDetailsViewModel: ObservableObject {
 
     init(
         recipe: Recipe,
+        selectedIngredients: [Ingredient] = [],
         userDataService: UserDataService,
         coordinator: (any RecipeDetailsCoordinating)?
     ) {
         self.recipe = recipe
+        self.selectedIngredients = selectedIngredients
         self.userDataService = userDataService
         self.coordinator = coordinator
 
@@ -63,6 +66,18 @@ final class RecipeDetailsViewModel: ObservableObject {
 
     func startCooking() {
         coordinator?.showCookMode(recipe: recipe)
+    }
+
+    enum IngredientStatus {
+        case available, missing, unknown
+    }
+
+    func ingredientStatus(_ ingredient: Ingredient) -> IngredientStatus {
+        guard !selectedIngredients.isEmpty else { return .unknown }
+        let queryNames = Set(selectedIngredients.map { RecipeMatchExplainer.normalizedIngredientName($0.name) }.filter { !$0.isEmpty })
+        let recipeName = RecipeMatchExplainer.normalizedIngredientName(ingredient.name)
+        let isMatch = queryNames.contains(where: { recipeName.contains($0) || $0.contains(recipeName) })
+        return isMatch ? .available : .missing
     }
 
     // MARK: - Private Methods

@@ -24,6 +24,30 @@ enum RecipeMatchExplainer {
         return reason
     }
 
+    static func missingIngredients(recipe: Recipe, selectedIngredients: [Ingredient]) -> [String] {
+        guard !selectedIngredients.isEmpty else { return [] }
+        let queryNames = Set(selectedIngredients.map { normalizedIngredientName($0.name) }.filter { !$0.isEmpty })
+        let recipeIngredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
+        var missing: [String] = []
+        var seen = Set<String>()
+        for ingredient in recipeIngredients {
+            let recipeName = normalizedIngredientName(ingredient.name)
+            guard !recipeName.isEmpty else { continue }
+            let isMatch = queryNames.contains(where: { recipeName.contains($0) || $0.contains(recipeName) })
+            guard !isMatch else { continue }
+            let displayName = ingredient.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !displayName.isEmpty else { continue }
+            if seen.insert(displayName.lowercased()).inserted {
+                missing.append(displayName)
+            }
+        }
+        return missing
+    }
+
+    static func normalizedIngredientName(_ value: String) -> String {
+        value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
     // MARK: - Private
 
     private static func cookTimeMinutes(_ recipe: Recipe) -> Int? {

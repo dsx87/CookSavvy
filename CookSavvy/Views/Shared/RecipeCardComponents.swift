@@ -140,6 +140,24 @@ struct RecipeRow: View {
                     .background(theme.mintSoft, in: Capsule())
             }
 
+            if let missing = recipe.missingIngredients {
+                if missing.isEmpty {
+                    Label(Strings.Discover.haveAll, systemImage: "checkmark.circle.fill")
+                        .font(UI.Fonts.tinyCaption)
+                        .foregroundStyle(theme.mint)
+                        .padding(.horizontal, UI.Components.RecipeRow.Meta.paddingH)
+                        .padding(.vertical, UI.Components.RecipeRow.Meta.paddingV)
+                        .background(theme.mintSoft, in: Capsule())
+                } else {
+                    Label(String(format: Strings.Discover.missingCount, missing.count), systemImage: "cart.badge.plus")
+                        .font(UI.Fonts.tinyCaption)
+                        .foregroundStyle(theme.rose)
+                        .padding(.horizontal, UI.Components.RecipeRow.Meta.paddingH)
+                        .padding(.vertical, UI.Components.RecipeRow.Meta.paddingV)
+                        .background(theme.roseSoft, in: Capsule())
+                }
+            }
+
             metaInfoRow
 
             Spacer(minLength: 0)

@@ -104,12 +104,15 @@ struct RecipeDetailsView: View {
     }
 
     private func ingredientRow(at index: Int) -> some View {
-        VStack(spacing: 0) {
+        let ingredient = viewModel.recipe.ingredients[index]
+        let status = viewModel.ingredientStatus(ingredient)
+        return VStack(spacing: 0) {
             HStack(spacing: UI.RecipeDetails.ingredientItemSpacing) {
                 Circle()
-                    .fill(theme.accent.opacity(UI.RecipeDetails.ingredientDotOpacity))
+                    .fill(ingredientDotColor(for: status))
                     .frame(width: UI.RecipeDetails.ingredientDotSize, height: UI.RecipeDetails.ingredientDotSize)
-                Text(viewModel.recipe.ingredients[index].name)
+                    .accessibilityLabel(ingredientDotAccessibilityLabel(for: status))
+                Text(ingredient.name)
                     .font(UI.Fonts.body)
                     .foregroundStyle(theme.text1)
                 Spacer()
@@ -122,6 +125,22 @@ struct RecipeDetailsView: View {
                     .background(theme.divider)
                     .padding(.leading, UI.RecipeDetails.ingredientDividerLeadingPadding)
             }
+        }
+    }
+
+    private func ingredientDotColor(for status: RecipeDetailsViewModel.IngredientStatus) -> Color {
+        switch status {
+        case .available: return theme.mint
+        case .missing: return theme.rose
+        case .unknown: return theme.accent.opacity(UI.RecipeDetails.ingredientDotOpacity)
+        }
+    }
+
+    private func ingredientDotAccessibilityLabel(for status: RecipeDetailsViewModel.IngredientStatus) -> String {
+        switch status {
+        case .available: return Strings.RecipeDetails.youHave
+        case .missing: return Strings.RecipeDetails.youNeed
+        case .unknown: return ""
         }
     }
 
