@@ -248,6 +248,14 @@ struct UI {
         static let titleInfoSpacing: CGFloat = 2
         static let bgOpacity: Double = 0.3
         static let doneButtonSpacing: CGFloat = 8
+        static let feedbackOverlayOpacity: Double = 0.5
+        static let feedbackCardSpacing: CGFloat = 24
+        static let feedbackCardPadding: CGFloat = 28
+        static let feedbackCardHorizontalPadding: CGFloat = 24
+        static let feedbackStarSpacing: CGFloat = 12
+        static let feedbackStarSize: CGFloat = 36
+        static let feedbackButtonSpacing: CGFloat = 12
+        static let feedbackButtonHeight: CGFloat = 48
     }
 
     // MARK: - Discover

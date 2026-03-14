@@ -134,6 +134,9 @@ enum Strings {
         static let done = String(localized: "cookMode.done", defaultValue: "Done")
         static let finish = String(localized: "cookMode.finish", defaultValue: "Finish")
         static let startCooking = String(localized: "cookMode.startCooking", defaultValue: "Let's Cook")
+        static let howWasIt = String(localized: "cookMode.howWasIt", defaultValue: "How was it?")
+        static let submit = String(localized: "cookMode.submit", defaultValue: "Submit")
+        static let skipRating = String(localized: "cookMode.skipRating", defaultValue: "Skip")
     }
 
     enum CreateRecipe {

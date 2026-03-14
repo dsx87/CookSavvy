@@ -164,6 +164,17 @@
         }
       }
     },
+    "cookMode.howWasIt" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "How was it?"
+          }
+        }
+      }
+    },
     "cookMode.pause" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -171,6 +182,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Pause"
+          }
+        }
+      }
+    },
+    "cookMode.skipRating" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Skip"
           }
         }
       }
@@ -204,6 +226,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Step %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "cookMode.submit" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Submit"
           }
         }
       }

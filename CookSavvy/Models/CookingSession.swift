@@ -6,6 +6,7 @@ struct CookingSession: Identifiable, Hashable {
     let recipeTitle: String
     let cookedAt: Date
     let durationSeconds: TimeInterval?
+    let rating: Int?
 
     var durationFormatted: String? {
         guard let duration = durationSeconds else { return nil }

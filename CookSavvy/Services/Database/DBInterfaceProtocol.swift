@@ -64,7 +64,7 @@ protocol DBInterfaceProtocol {
     func recordSearch(ingredients: [Ingredient]) throws
 
     // MARK: - Cooking Sessions
-    func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?) throws
+    func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?, rating: Int?) throws
     func getCookingSessions(limit: Int) throws -> [CookingSession]
     func getCookingSessionDates(from startDate: Date, to endDate: Date) throws -> [Date]
     func getCookingSessionCount() throws -> Int

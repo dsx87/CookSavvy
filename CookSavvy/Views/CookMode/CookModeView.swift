@@ -20,7 +20,13 @@ struct CookModeView: View {
                 Spacer()
                 navigationButtons
             }
+
+            if viewModel.showFeedback {
+                feedbackOverlay
+                    .transition(.scale.combined(with: .opacity))
+            }
         }
+        .animation(UI.Anim.easeDefault, value: viewModel.showFeedback)
     }
 
     // MARK: - Top Bar
@@ -139,6 +145,68 @@ struct CookModeView: View {
                 .padding(.horizontal, UI.CookMode.timerButtonHorizontalPadding)
                 .padding(.vertical, UI.CookMode.timerButtonVerticalPadding)
                 .background(theme.accentSoft, in: Capsule())
+            }
+        }
+    }
+
+    // MARK: - Feedback Overlay
+
+    private var feedbackOverlay: some View {
+        ZStack {
+            Color.black.opacity(UI.CookMode.feedbackOverlayOpacity)
+                .ignoresSafeArea()
+            feedbackCard
+                .padding(.horizontal, UI.CookMode.feedbackCardHorizontalPadding)
+        }
+    }
+
+    private var feedbackCard: some View {
+        VStack(spacing: UI.CookMode.feedbackCardSpacing) {
+            Text(Strings.CookMode.howWasIt)
+                .font(UI.Fonts.sectionTitle)
+                .foregroundStyle(theme.text1)
+            feedbackStars
+            feedbackButtons
+        }
+        .padding(UI.CookMode.feedbackCardPadding)
+        .background(theme.card, in: RoundedRectangle(cornerRadius: theme.cornerRadiusXL))
+    }
+
+    private var feedbackStars: some View {
+        HStack(spacing: UI.CookMode.feedbackStarSpacing) {
+            ForEach(1...5, id: \.self) { star in
+                Button {
+                    viewModel.feedbackRating = star
+                } label: {
+                    Image(systemName: star <= viewModel.feedbackRating ? "star.fill" : "star")
+                        .font(.system(size: UI.CookMode.feedbackStarSize))
+                        .foregroundStyle(star <= viewModel.feedbackRating ? theme.gold : theme.text3)
+                }
+                .animation(UI.Anim.springDefault, value: viewModel.feedbackRating)
+            }
+        }
+    }
+
+    private var feedbackButtons: some View {
+        HStack(spacing: UI.CookMode.feedbackButtonSpacing) {
+            Button { viewModel.skipFeedback() } label: {
+                Text(Strings.CookMode.skipRating)
+                    .font(UI.Fonts.bodySemibold)
+                    .foregroundStyle(theme.text2)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: UI.CookMode.feedbackButtonHeight)
+                    .background(theme.surface, in: Capsule())
+            }
+            Button { viewModel.submitFeedback() } label: {
+                Text(Strings.CookMode.submit)
+                    .font(UI.Fonts.buttonLabel)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: UI.CookMode.feedbackButtonHeight)
+                    .background(
+                        LinearGradient(colors: [theme.accent, theme.rose], startPoint: .leading, endPoint: .trailing),
+                        in: Capsule()
+                    )
             }
         }
     }

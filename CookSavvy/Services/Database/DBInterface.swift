@@ -224,10 +224,13 @@ final class DBInterface: DBInterfaceProtocol {
                     recipe_id INTEGER NOT NULL,
                     cooked_at INTEGER NOT NULL,
                     duration_seconds INTEGER,
+                    rating INTEGER,
                     FOREIGN KEY(recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
                 );
                 """)
             try db.execute(sql: "CREATE INDEX IF NOT EXISTS idx_cooking_sessions_date ON cooking_sessions(cooked_at DESC);")
+            // Migration: add rating column if it doesn't exist (for existing databases)
+            try? db.execute(sql: "ALTER TABLE cooking_sessions ADD COLUMN rating INTEGER;")
         }
     }
 
@@ -637,13 +640,13 @@ final class DBInterface: DBInterfaceProtocol {
 
     // MARK: - Cooking Sessions
 
-    func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?) throws {
+    func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?, rating: Int?) throws {
         let timestamp = Int(date.timeIntervalSince1970)
         let durationSeconds: Int? = duration.map { Int($0) }
         try dbWriter.write { db in
             try db.execute(
-                sql: "INSERT INTO cooking_sessions(recipe_id, cooked_at, duration_seconds) VALUES (?, ?, ?);",
-                arguments: [recipeId, timestamp, durationSeconds]
+                sql: "INSERT INTO cooking_sessions(recipe_id, cooked_at, duration_seconds, rating) VALUES (?, ?, ?, ?);",
+                arguments: [recipeId, timestamp, durationSeconds, rating]
             )
         }
     }
@@ -651,7 +654,7 @@ final class DBInterface: DBInterfaceProtocol {
     func getCookingSessions(limit: Int) throws -> [CookingSession] {
         return try dbWriter.read { db in
             let sql = """
-                SELECT cs.id, cs.recipe_id, cs.cooked_at, cs.duration_seconds, r.title AS recipe_title
+                SELECT cs.id, cs.recipe_id, cs.cooked_at, cs.duration_seconds, cs.rating, r.title AS recipe_title
                 FROM cooking_sessions cs
                 LEFT JOIN recipes r ON r.id = cs.recipe_id
                 ORDER BY cs.cooked_at DESC
@@ -663,12 +666,14 @@ final class DBInterface: DBInterfaceProtocol {
                 let recipeTitle: String = row["recipe_title"] ?? ""
                 let cookedAtTimestamp: Int = row["cooked_at"]
                 let durationSeconds: Int? = row["duration_seconds"]
+                let rating: Int? = row["rating"]
                 return CookingSession(
                     id: id,
                     recipeId: recipeId,
                     recipeTitle: recipeTitle,
                     cookedAt: Date(timeIntervalSince1970: TimeInterval(cookedAtTimestamp)),
-                    durationSeconds: durationSeconds.map { TimeInterval($0) }
+                    durationSeconds: durationSeconds.map { TimeInterval($0) },
+                    rating: rating
                 )
             }
         }

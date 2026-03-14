@@ -161,11 +161,11 @@ final class UserDataService {
 
     // MARK: - Cooking Sessions
 
-    func markAsCooked(recipe: Recipe, duration: TimeInterval? = nil) async throws {
+    func markAsCooked(recipe: Recipe, duration: TimeInterval? = nil, rating: Int? = nil) async throws {
         guard let recipeId = try getRecipeId(byTitle: recipe.title) else {
             throw UserDataServiceError.recipeNotFound
         }
-        try dbInterface.recordCookingSession(recipeId: recipeId, date: Date(), duration: duration)
+        try dbInterface.recordCookingSession(recipeId: recipeId, date: Date(), duration: duration, rating: rating)
     }
 
     func getCookingSessions(limit: Int = 50) async throws -> [CookingSession] {

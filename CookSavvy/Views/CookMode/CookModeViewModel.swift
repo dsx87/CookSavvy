@@ -10,11 +10,14 @@ final class CookModeViewModel: ObservableObject {
     @Published var timerSeconds: Int = 0
     @Published var timerRunning: Bool = false
     @Published var completedSteps: Set<Int> = []
+    @Published var showFeedback: Bool = false
+    @Published var feedbackRating: Int = 0
 
     private let userDataService: UserDataService
     private let onDismiss: () -> Void
     private var timerCancellable: AnyCancellable?
     private var startDate: Date?
+    private var cookDuration: TimeInterval?
 
     init(recipe: Recipe, userDataService: UserDataService, onDismiss: @escaping () -> Void) {
         self.recipe = recipe
@@ -85,7 +88,21 @@ final class CookModeViewModel: ObservableObject {
     func finish() {
         completedSteps.insert(currentStep)
         stopTimer()
-        let duration: TimeInterval? = startDate.map { Date().timeIntervalSince($0) }
+        cookDuration = startDate.map { Date().timeIntervalSince($0) }
+        showFeedback = true
+    }
+
+    func submitFeedback() {
+        let rating = feedbackRating > 0 ? feedbackRating : nil
+        let duration = cookDuration
+        Task {
+            try? await userDataService.markAsCooked(recipe: recipe, duration: duration, rating: rating)
+        }
+        onDismiss()
+    }
+
+    func skipFeedback() {
+        let duration = cookDuration
         Task {
             try? await userDataService.markAsCooked(recipe: recipe, duration: duration)
         }
