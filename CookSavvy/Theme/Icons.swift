@@ -24,6 +24,7 @@ enum Icons {
     enum RecipeDetails {
         static let favoriteFilled = "heart.fill"
         static let favoriteOutline = "heart"
+        static let share = "square.and.arrow.up"
     }
 
     enum Settings {

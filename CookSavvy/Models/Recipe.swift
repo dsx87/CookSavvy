@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreTransferable
 
 struct Recipe {
 
@@ -235,6 +236,23 @@ extension Recipe: Codable {
         self.missingIngredients = nil
     }
 
+}
+
+// MARK: - Transferable (Sharing)
+
+extension Recipe: Transferable {
+    static var transferRepresentation: some TransferRepresentation {
+        ProxyRepresentation { $0.shareText }
+    }
+
+    var shareText: String {
+        var lines = [title, "", "Ingredients:"]
+        lines += ingredients.map { "- \($0.name)" }
+        lines += ["", "Steps:"]
+        lines += instructions.enumerated().map { "\($0.offset + 1). \($0.element.text)" }
+        lines += ["", "Shared from CookSavvy"]
+        return lines.joined(separator: "\n")
+    }
 }
 
 // MARK: - Mock Factories for Testing

@@ -18,7 +18,11 @@ struct RecipeDetailsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .tint(theme.accent)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                ShareLink(item: viewModel.recipe, preview: SharePreview(viewModel.recipe.title)) {
+                    Image(systemName: Icons.RecipeDetails.share)
+                        .foregroundStyle(theme.text2)
+                }
                 Button {
                     Task { await viewModel.toggleFavorite() }
                 } label: {
