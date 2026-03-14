@@ -2,7 +2,26 @@ import SwiftUI
 
 private enum RecipeImageStyle {
     static let placeholderImageName = "recipe_placeholder"
-    static let placeholderEmoji = "🍽️"
+    static let defaultEmoji = "🍽️"
+
+    private static let keywordEmojiMap: [(keyword: String, emoji: String)] = [
+        ("chicken", "🍗"),
+        ("pasta", "🍝"),
+        ("salad", "🥗"),
+        ("soup", "🍲"),
+        ("beef", "🥩"),
+        ("fish", "🐟"),
+        ("cake", "🍰"),
+    ]
+
+    static func emoji(for recipe: Recipe) -> String {
+        if let emoji = recipe.emoji { return emoji }
+        let title = recipe.title.lowercased()
+        for (keyword, emoji) in keywordEmojiMap {
+            if title.contains(keyword) { return emoji }
+        }
+        return defaultEmoji
+    }
 }
 
 struct RecipeImage: View {
@@ -19,7 +38,7 @@ struct RecipeImage: View {
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
-                Text(recipe.emoji ?? RecipeImageStyle.placeholderEmoji)
+                Text(RecipeImageStyle.emoji(for: recipe))
                     .font(.system(size: height * UI.Components.emojiScaleFactor))
                     .shadow(color: .black.opacity(UI.Components.emojiShadowOpacity), radius: UI.Components.emojiShadowRadius, y: UI.Components.emojiShadowY)
             } else {
@@ -30,7 +49,7 @@ struct RecipeImage: View {
                         endPoint: .bottomTrailing
                     )
                     .overlay {
-                        Text(recipe.emoji ?? RecipeImageStyle.placeholderEmoji)
+                        Text(RecipeImageStyle.emoji(for: recipe))
                             .font(.system(size: height * UI.Components.emojiScaleFactor))
                             .shadow(color: .black.opacity(UI.Components.emojiShadowOpacity), radius: UI.Components.emojiShadowRadius, y: UI.Components.emojiShadowY)
                     }
@@ -42,9 +61,18 @@ struct RecipeImage: View {
     }
 
     private var gradientColors: [Color] {
-        let base = theme.accent.opacity(0.85)
-        let secondary = theme.rose.opacity(0.85)
-        return [base, secondary]
+        let hash = recipe.title.unicodeScalars.reduce(0) { $0 &+ Int($1.value) }
+        let index = abs(hash) % UI.Components.gradientPairCount
+        let op = UI.Components.gradientOpacity
+        let pairs: [[Color]] = [
+            [theme.accent.opacity(op), theme.rose.opacity(op)],
+            [theme.mint.opacity(op), theme.sky.opacity(op)],
+            [theme.lavender.opacity(op), theme.rose.opacity(op)],
+            [theme.gold.opacity(op), theme.accent.opacity(op)],
+            [theme.sky.opacity(op), theme.mint.opacity(op)],
+            [theme.rose.opacity(op), theme.lavender.opacity(op)],
+        ]
+        return pairs[index]
     }
 }
 

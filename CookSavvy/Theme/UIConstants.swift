@@ -360,6 +360,8 @@ struct UI {
         static let emojiShadowOpacity: Double = 0.25
         static let emojiShadowRadius: CGFloat = 12
         static let emojiShadowY: CGFloat = 6
+        static let gradientPairCount: Int = 6
+        static let gradientOpacity: Double = 0.85
         // MiniRecipeCard
         static let miniCardContentSpacing: CGFloat = 4
         static let miniCardPaddingH: CGFloat = 10
