@@ -32,6 +32,8 @@ final class DiscoverViewModel: ObservableObject {
     @Published var isLoadingIngredients = false
     @Published var showResults = false
     @Published var useItAllFilter = false
+    @Published var suggestedRecipes: [Recipe] = []
+    @Published var suggestionReason: String? = nil
 
     // MARK: - Dependencies
 
@@ -41,6 +43,7 @@ final class DiscoverViewModel: ObservableObject {
     private let subscriptionService: SubscriptionServiceProtocol
     private let databaseInitService: DatabaseInitializationService
     private let cameraScanTracker: CameraScanTracker
+    private let recommendationService: RecipeRecommendationService
     private weak var coordinator: DiscoverCoordinator?
 
     // MARK: - Init
@@ -52,6 +55,7 @@ final class DiscoverViewModel: ObservableObject {
         subscriptionService: SubscriptionServiceProtocol,
         databaseInitService: DatabaseInitializationService,
         cameraScanTracker: CameraScanTracker,
+        recommendationService: RecipeRecommendationService,
         coordinator: DiscoverCoordinator
     ) {
         self.ingredientsService = ingredientsService
@@ -60,6 +64,7 @@ final class DiscoverViewModel: ObservableObject {
         self.subscriptionService = subscriptionService
         self.databaseInitService = databaseInitService
         self.cameraScanTracker = cameraScanTracker
+        self.recommendationService = recommendationService
         self.coordinator = coordinator
     }
 
@@ -153,6 +158,7 @@ final class DiscoverViewModel: ObservableObject {
         async let savedTask: () = loadSavedRecipes()
         _ = await (ingredientsTask, recentTask, savedTask)
         isLoadingIngredients = false
+        Task { await loadSuggestions() }
     }
 
     func toggleIngredient(_ ingredient: Ingredient) {
@@ -263,6 +269,14 @@ final class DiscoverViewModel: ObservableObject {
     private func loadSavedRecipes() async {
         do {
             savedRecipes = try await userDataService.getSavedRecipes()
+        } catch {}
+    }
+
+    private func loadSuggestions() async {
+        do {
+            let result = try await recommendationService.getSuggestions()
+            suggestedRecipes = result.recipes
+            suggestionReason = result.reason
         } catch {}
     }
 

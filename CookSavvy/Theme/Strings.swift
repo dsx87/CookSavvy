@@ -109,6 +109,8 @@ enum Strings {
         static let missingCount = String(localized: "discover.missingCount", defaultValue: "Missing %lld")
         static let haveAll = String(localized: "discover.haveAll", defaultValue: "You have everything!")
         static let useItAll = String(localized: "discover.useItAll", defaultValue: "Use It All")
+        static let suggestedForYou = String(localized: "discover.suggestedForYou", defaultValue: "SUGGESTED FOR YOU")
+        static let suggestedBecause = String(localized: "discover.suggestedBecause", defaultValue: "Based on your %@ recipes")
     }
 
     enum Journey {

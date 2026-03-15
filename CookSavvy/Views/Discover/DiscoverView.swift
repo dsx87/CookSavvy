@@ -34,6 +34,7 @@ struct DiscoverView: View {
                         selectedIngredientsStrip
                         recentSection
                         savedSection
+                        suggestedSection
                         categoryFilter
                         ingredientGrid
                         Spacer(minLength: UI.Discover.bottomSpacerMinLength + UI.Discover.findButtonHeight)
@@ -205,6 +206,36 @@ struct DiscoverView: View {
                             AddYourOwnCard()
                         }
                         .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var suggestedSection: some View {
+        if !viewModel.suggestedRecipes.isEmpty {
+            VStack(alignment: .leading, spacing: UI.Discover.sectionContentSpacing) {
+                VStack(alignment: .leading, spacing: UI.Common.smallSpacing) {
+                    Text(Strings.Discover.suggestedForYou)
+                        .sectionLabel()
+                    if let reason = viewModel.suggestionReason {
+                        Text(reason)
+                            .font(UI.Fonts.caption)
+                            .foregroundStyle(theme.text3)
+                    }
+                }
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: UI.Discover.sectionContentSpacing) {
+                        ForEach(viewModel.suggestedRecipes) { recipe in
+                            MiniRecipeCard(recipe: recipe)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    viewModel.showRecipeDetails(recipe)
+                                }
+                                .accessibilityAddTraits(.isButton)
+                        }
                     }
                 }
             }

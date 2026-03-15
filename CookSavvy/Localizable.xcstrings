@@ -618,6 +618,28 @@
         }
       }
     },
+    "discover.suggestedBecause" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Based on your %@ recipes"
+          }
+        }
+      }
+    },
+    "discover.suggestedForYou" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "SUGGESTED FOR YOU"
+          }
+        }
+      }
+    },
     "discover.useItAll" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {

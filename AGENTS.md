@@ -70,6 +70,7 @@ Product ID: `com.cooksavvy.subscription.premium`
 - **Detection:** `IngredientDetectionServiceProtocol` → `AIIngredientDetectionAdapter`
 - **Subscriptions:** `SubscriptionServiceProtocol` → `StoreKitSubscriptionService` / `MockSubscriptionService`
 - **Mood Ranking:** `RecipeMoodRanker` (stateless recipe ranking helper)
+- **Recommendations:** `RecipeRecommendationService` — derives suggestions from favorites + rated sessions, queries offline DB after init is complete
 - **Recipe API:** `RecipeAPIProviderProtocol` → `SpoonacularProvider` (complexSearch endpoint), `SpoonacularModels` (DTOs + mapper)
 - **API Keys:** `APIKeys.plist` (gitignored) via `APIKeyConfiguration` — `OPENAI_API_KEY`, `GEMINI_API_KEY`, `SPOONACULAR_API_KEY`
 
