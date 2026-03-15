@@ -29,7 +29,7 @@ enum DatabaseInitializationState: Equatable {
     }
 }
 
-final class DatabaseInitializationService: ObservableObject {
+final class DatabaseInitializationService: ObservableObject, DatabaseInitializationServiceProtocol {
     
     private static let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "CookSavvy",
@@ -39,15 +39,15 @@ final class DatabaseInitializationService: ObservableObject {
     @Published private(set) var state: DatabaseInitializationState = .notStarted
     
     private let dbInterface: DBInterfaceProtocol
-    private let ingredientsService: IngredientsService
-    private let dataImportService: DataImportService
+    private let ingredientsService: IngredientsServiceProtocol
+    private let dataImportService: DataImportServiceProtocol
     
     private var initializationTask: Task<Void, Never>?
     
     init(
         dbInterface: DBInterfaceProtocol,
-        ingredientsService: IngredientsService,
-        dataImportService: DataImportService
+        ingredientsService: IngredientsServiceProtocol,
+        dataImportService: DataImportServiceProtocol
     ) {
         self.dbInterface = dbInterface
         self.ingredientsService = ingredientsService

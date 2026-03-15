@@ -8,8 +8,18 @@
 import Foundation
 import GRDB
 
+private enum UserDataServiceConstants {
+    static let recentIngredientsLimit = 10
+    static let recentRecipesLimit = 20
+    static let recentSearchesLimit = 10
+    static let cookingSessionsLimit = 50
+    static let weekDurationDays = 7
+    static let streakLookbackDays = 365
+    static let singleDayOffset = -1
+}
+
 /// Service for managing user-related data (recent items, favorites, search history)
-final class UserDataService {
+final class UserDataService: UserDataServiceProtocol {
 
     // MARK: - Properties
 
@@ -32,7 +42,7 @@ final class UserDataService {
     /// Gets the most recently used ingredients
     /// - Parameter limit: Maximum number of ingredients to return (default: 10)
     /// - Returns: Array of recent ingredients ordered by last used date
-    func getRecentIngredients(limit: Int = 10) async throws -> [Ingredient] {
+    func getRecentIngredients(limit: Int = UserDataServiceConstants.recentIngredientsLimit) async throws -> [Ingredient] {
         return try dbInterface.getRecentIngredients(limit: limit)
     }
 
@@ -69,7 +79,7 @@ final class UserDataService {
     /// Gets the most recently viewed recipes
     /// - Parameter limit: Maximum number of recipes to return (default: 20)
     /// - Returns: Array of recent recipes ordered by last viewed date
-    func getRecentRecipes(limit: Int = 20) async throws -> [Recipe] {
+    func getRecentRecipes(limit: Int = UserDataServiceConstants.recentRecipesLimit) async throws -> [Recipe] {
         return try dbInterface.getRecentRecipes(limit: limit)
     }
 
@@ -149,7 +159,7 @@ final class UserDataService {
     /// Gets recent ingredient searches
     /// - Parameter limit: Maximum number of searches to return (default: 10)
     /// - Returns: Array of ingredient arrays representing past searches
-    func getRecentSearches(limit: Int = 10) async throws -> [[Ingredient]] {
+    func getRecentSearches(limit: Int = UserDataServiceConstants.recentSearchesLimit) async throws -> [[Ingredient]] {
         return try dbInterface.getRecentSearches(limit: limit)
     }
 
@@ -168,7 +178,7 @@ final class UserDataService {
         try dbInterface.recordCookingSession(recipeId: recipeId, date: Date(), duration: duration, rating: rating)
     }
 
-    func getCookingSessions(limit: Int = 50) async throws -> [CookingSession] {
+    func getCookingSessions(limit: Int = UserDataServiceConstants.cookingSessionsLimit) async throws -> [CookingSession] {
         return try dbInterface.getCookingSessions(limit: limit)
     }
 
@@ -178,14 +188,14 @@ final class UserDataService {
         guard let weekStart = calendar.dateInterval(of: .weekOfYear, for: now)?.start else {
             return []
         }
-        let weekEnd = calendar.date(byAdding: .day, value: 7, to: weekStart) ?? now
+        let weekEnd = calendar.date(byAdding: .day, value: UserDataServiceConstants.weekDurationDays, to: weekStart) ?? now
         return try dbInterface.getCookingSessionDates(from: weekStart, to: weekEnd)
     }
 
     func currentStreak() async throws -> Int {
         let calendar = Calendar.current
         let now = Date()
-        let lookbackStart = calendar.date(byAdding: .day, value: -365, to: now) ?? now
+        let lookbackStart = calendar.date(byAdding: .day, value: -UserDataServiceConstants.streakLookbackDays, to: now) ?? now
         let dates = try dbInterface.getCookingSessionDates(from: lookbackStart, to: now)
 
         let uniqueDays = Set(dates.map { calendar.startOfDay(for: $0) }).sorted(by: >)
@@ -195,13 +205,13 @@ final class UserDataService {
         var expectedDay = calendar.startOfDay(for: now)
 
         if uniqueDays.first != expectedDay {
-            expectedDay = calendar.date(byAdding: .day, value: -1, to: expectedDay)!
+            expectedDay = calendar.date(byAdding: .day, value: UserDataServiceConstants.singleDayOffset, to: expectedDay)!
         }
 
         for day in uniqueDays {
             if day == expectedDay {
                 streak += 1
-                expectedDay = calendar.date(byAdding: .day, value: -1, to: expectedDay)!
+                expectedDay = calendar.date(byAdding: .day, value: UserDataServiceConstants.singleDayOffset, to: expectedDay)!
             } else if day < expectedDay {
                 break
             }
@@ -306,9 +316,6 @@ final class UserDataService {
     private func getRecipeId(byTitle title: String) throws -> Int? {
         // This requires direct database access - we need to query the recipes table
         // Since DBInterfaceProtocol doesn't expose this, we need to cast to DBInterface
-        guard let dbInterface = dbInterface as? DBInterface else {
-            return nil
-        }
         return try dbInterface.getRecipeId(byTitle: title)
     }
 }

@@ -5,6 +5,8 @@ enum Strings {
     enum Common {
         static let ok = String(localized: "common.ok", defaultValue: "OK")
         static let cancel = String(localized: "common.cancel", defaultValue: "Cancel")
+        static let minutesShort = String(localized: "common.minutesShort", defaultValue: "%lld min")
+        static let minutesCompact = String(localized: "common.minutesCompact", defaultValue: "%lldm")
     }
 
     enum Tab {
@@ -17,6 +19,9 @@ enum Strings {
         static let instructionsTitle = String(localized: "recipeDetails.instructionsTitle", defaultValue: "🧑‍🍳 Instructions")
         static let youHave = String(localized: "recipeDetails.youHave", defaultValue: "You have this")
         static let youNeed = String(localized: "recipeDetails.youNeed", defaultValue: "You need this")
+        static let byAuthor = String(localized: "recipeDetails.byAuthor", defaultValue: "by %@")
+        static let sectionIngredients = String(localized: "recipeDetails.sectionIngredients", defaultValue: "INGREDIENTS")
+        static let sectionSteps = String(localized: "recipeDetails.sectionSteps", defaultValue: "STEPS")
     }
 
     enum Settings {
@@ -111,6 +116,7 @@ enum Strings {
         static let useItAll = String(localized: "discover.useItAll", defaultValue: "Use It All")
         static let suggestedForYou = String(localized: "discover.suggestedForYou", defaultValue: "SUGGESTED FOR YOU")
         static let suggestedBecause = String(localized: "discover.suggestedBecause", defaultValue: "Based on your %@ recipes")
+        static let resultsFound = String(localized: "discover.resultsFound", defaultValue: "%lld found")
     }
 
     enum Journey {
@@ -153,6 +159,27 @@ enum Strings {
         static let next = String(localized: "createRecipe.next", defaultValue: "Next")
         static let back = String(localized: "createRecipe.back", defaultValue: "Back")
         static let saveRecipe = String(localized: "createRecipe.saveRecipe", defaultValue: "Save Recipe")
+        static let sectionRecipeName = String(localized: "createRecipe.sectionRecipeName", defaultValue: "RECIPE NAME")
+        static let sectionTagline = String(localized: "createRecipe.sectionTagline", defaultValue: "TAGLINE")
+        static let sectionChooseIcon = String(localized: "createRecipe.sectionChooseIcon", defaultValue: "CHOOSE AN ICON")
+        static let sectionIngredients = String(localized: "createRecipe.sectionIngredients", defaultValue: "INGREDIENTS")
+        static let ingredientPlaceholder = String(localized: "createRecipe.ingredientPlaceholder", defaultValue: "Ingredient %lld")
+        static let addIngredient = String(localized: "createRecipe.addIngredient", defaultValue: "Add Ingredient")
+        static let sectionSteps = String(localized: "createRecipe.sectionSteps", defaultValue: "COOKING STEPS")
+        static let stepPlaceholder = String(localized: "createRecipe.stepPlaceholder", defaultValue: "Step %lld")
+        static let addStep = String(localized: "createRecipe.addStep", defaultValue: "Add Step")
+        static let sectionCookTime = String(localized: "createRecipe.sectionCookTime", defaultValue: "COOK TIME")
+        static let sectionServings = String(localized: "createRecipe.sectionServings", defaultValue: "SERVINGS")
+        static let sectionDifficulty = String(localized: "createRecipe.sectionDifficulty", defaultValue: "DIFFICULTY")
+        static let untitledRecipe = String(localized: "createRecipe.untitledRecipe", defaultValue: "Untitled Recipe")
+        static let statTime = String(localized: "createRecipe.statTime", defaultValue: "Time")
+        static let statServings = String(localized: "createRecipe.statServings", defaultValue: "Serve")
+        static let statLevel = String(localized: "createRecipe.statLevel", defaultValue: "Level")
+        static let ingredientCount = String(localized: "createRecipe.ingredientCount", defaultValue: "%lld ingredients")
+        static let stepCount = String(localized: "createRecipe.stepCount", defaultValue: "%lld steps")
+        static let difficultyEasy = String(localized: "createRecipe.difficultyEasy", defaultValue: "Easy")
+        static let difficultyMedium = String(localized: "createRecipe.difficultyMedium", defaultValue: "Medium")
+        static let difficultyHard = String(localized: "createRecipe.difficultyHard", defaultValue: "Hard")
     }
 
     enum RecipeList {

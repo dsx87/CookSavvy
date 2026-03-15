@@ -5,7 +5,7 @@
 
 import Foundation
 
-final class ShoppingListService {
+final class ShoppingListService: ShoppingListServiceProtocol {
     private let dbInterface: DBInterfaceProtocol
 
     init(dbInterface: DBInterfaceProtocol) {

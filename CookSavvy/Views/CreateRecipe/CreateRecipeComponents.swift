@@ -46,10 +46,10 @@ struct StepInputRow: View {
                 )
                 .padding(.top, UI.CreateRecipe.stepNumberTopPadding)
 
-            TextField("Step \(index + 1)", text: $text, axis: .vertical)
+            TextField(String(format: Strings.CreateRecipe.stepPlaceholder, Int64(index + 1)), text: $text, axis: .vertical)
                 .font(UI.Fonts.bodyRounded)
                 .foregroundStyle(theme.text1)
-                .lineLimit(3...6)
+                .lineLimit(UI.CreateRecipe.stepTextLineLimit)
                 .padding(UI.CreateRecipe.ingredientInputPadding)
                 .background(theme.surface, in: RoundedRectangle(cornerRadius: UI.CreateRecipe.ingredientInputCornerRadius, style: .continuous))
                 .overlay(
@@ -61,7 +61,7 @@ struct StepInputRow: View {
                 Button {
                     withAnimation(UI.Anim.springQuick) { onDelete() }
                 } label: {
-                    Image(systemName: "trash")
+                    Image(systemName: Icons.Settings.trash)
                         .font(UI.Fonts.smallButton)
                         .foregroundStyle(theme.text3)
                 }
@@ -78,7 +78,7 @@ struct CookTimeChip: View {
     let onTap: () -> Void
 
     var body: some View {
-        Text("\(time)m")
+        Text(String(format: Strings.Common.minutesCompact, Int64(time)))
             .font(UI.Fonts.smallButton)
             .foregroundStyle(isSelected ? .white : theme.text2)
             .padding(.horizontal, UI.CreateRecipe.cookTimeChipPaddingH)

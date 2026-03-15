@@ -50,6 +50,7 @@ final class MockDBInterfaceForIngredients: DBInterfaceProtocol {
     
     // Unused protocol methods
     func getRecipes(byIngredients: [Ingredient], offset: Int, limit: Int) throws -> [Recipe] { [] }
+    func getRecipeId(byTitle title: String) throws -> Int? { nil }
     func insertRecipes(_ recipes: [Recipe]) throws {}
     func removeIngredients(_ ingredients: [Ingredient]) throws {}
     func removeRecipes(_ recipes: [Recipe]) throws {}
@@ -73,7 +74,7 @@ final class MockDBInterfaceForIngredients: DBInterfaceProtocol {
     func clearRecentData() throws {}
     func clearFavorites() throws {}
     func getRecipeCount() throws -> Int { 0 }
-    func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?) throws {}
+    func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?, rating: Int?) throws {}
     func getCookingSessions(limit: Int) throws -> [CookingSession] { [] }
     func getCookingSessionDates(from startDate: Date, to endDate: Date) throws -> [Date] { [] }
     func getCookingSessionCount() throws -> Int { 0 }
@@ -85,6 +86,11 @@ final class MockDBInterfaceForIngredients: DBInterfaceProtocol {
     func deleteUserRecipe(recipeId: Int) throws {}
     func getAllIngredients(inGroup foodGroup: String?, limit: Int) throws -> [Ingredient] { storedIngredients }
     func getDistinctFoodGroups() throws -> [String] { [] }
+    func getShoppingItems() throws -> [ShoppingItem] { [] }
+    func addShoppingItems(_ names: [String], recipeTitle: String?) throws -> [ShoppingItem] { [] }
+    func toggleShoppingItem(id: Int) throws -> Bool { false }
+    func removeShoppingItem(id: Int) throws {}
+    func clearCheckedShoppingItems() throws {}
 }
 
 // MARK: - IngredientsService Tests

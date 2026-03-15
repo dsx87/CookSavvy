@@ -9,6 +9,17 @@ import Foundation
 import UIKit
 import CryptoKit
 
+private enum ImageServiceConstants {
+    static let bytesPerPixel = 4.0
+    static let defaultCacheSize = 100
+    static let memoryCacheLimit = 50 * 1024 * 1024
+    static let datasetName = "food-ingredients-and-recipe-dataset-with-images"
+    static let datasetExtension = "zip"
+    static let pngExtension = "png"
+    static let jpgExtension = "jpg"
+    static let remoteSchemes = ["http://", "https://"]
+}
+
 /// LRU Cache wrapper for images
 private class ImageCache {
     private let cache = NSCache<NSString, UIImage>()
@@ -21,7 +32,7 @@ private class ImageCache {
     }
     
     func setImage(_ image: UIImage, forKey key: String) {
-        let cost = Int(image.size.width * image.size.height * 4) // Approximate memory cost
+        let cost = Int(image.size.width * image.size.height * ImageServiceConstants.bytesPerPixel)
         lock.lock()
         cache.setObject(image, forKey: key as NSString, cost: cost)
         keys.insert(key)
@@ -52,7 +63,7 @@ private class ImageCache {
 }
 
 /// Service for loading and caching recipe and ingredient images
-final class ImageService {
+final class ImageService: ImageServiceProtocol {
     
     // MARK: - Properties
     
@@ -77,21 +88,21 @@ final class ImageService {
     init(
         imageExtractor: ImageExtractor = ImageExtractor(),
         zipFileURL: URL? = nil,
-        maxCacheSize: Int = 100
+        maxCacheSize: Int = ImageServiceConstants.defaultCacheSize
     ) {
         self.imageExtractor = imageExtractor
         self.maxCacheSize = maxCacheSize
         self.fileManager = FileManager.default
         self.imagesDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-        self.imageCache = ImageCache(countLimit: maxCacheSize, totalCostLimit: 50 * 1024 * 1024) // 50MB memory limit
+        self.imageCache = ImageCache(countLimit: maxCacheSize, totalCostLimit: ImageServiceConstants.memoryCacheLimit)
         
         // Find dataset ZIP if not provided
         if let providedURL = zipFileURL {
             self.zipFileURL = providedURL
         } else {
             self.zipFileURL = Bundle.main.url(
-                forResource: "food-ingredients-and-recipe-dataset-with-images",
-                withExtension: "zip"
+                forResource: ImageServiceConstants.datasetName,
+                withExtension: ImageServiceConstants.datasetExtension
             )
         }
     }
@@ -124,7 +135,7 @@ final class ImageService {
         }
         
         // TODO: think about separate method to handle online images
-        if fileName.hasPrefix("http://") || fileName.hasPrefix("https://") {
+        if ImageServiceConstants.remoteSchemes.contains(where: fileName.hasPrefix) {
             return try await loadRemoteImage(urlString: fileName)
         }
         
@@ -216,7 +227,9 @@ final class ImageService {
         } else {
             // Clear all cached images
             let contents = try fileManager.contentsOfDirectory(at: imagesDirectory, includingPropertiesForKeys: nil)
-            for fileURL in contents where fileURL.pathExtension.lowercased() == "png" || fileURL.pathExtension.lowercased() == "jpg" {
+            for fileURL in contents where
+                fileURL.pathExtension.lowercased() == ImageServiceConstants.pngExtension ||
+                fileURL.pathExtension.lowercased() == ImageServiceConstants.jpgExtension {
                 try fileManager.removeItem(at: fileURL)
             }
         }
@@ -286,7 +299,7 @@ final class ImageService {
         let hex = hash.compactMap { String(format: "%02x", $0) }.joined()
         let ext = URL(string: urlString)?.pathExtension.isEmpty == false
             ? "." + URL(string: urlString)!.pathExtension
-            : ".jpg"
+            : "." + ImageServiceConstants.jpgExtension
         return hex + ext
     }
     

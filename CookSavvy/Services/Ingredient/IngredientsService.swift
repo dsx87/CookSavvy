@@ -7,8 +7,17 @@
 
 import Foundation
 
+private enum IngredientsServiceConstants {
+    static let defaultFileName = "Food"
+    static let defaultFileExtension = "json"
+    static let defaultSearchLimit = 50
+    static let defaultCategoryLimit = 100
+    static let populationProbe = "a"
+    static let populationProbeLimit = 1
+}
+
 /// Service for managing ingredient operations including autocompletion
-final class IngredientsService {
+final class IngredientsService: IngredientsServiceProtocol {
     
     // MARK: - Properties
     
@@ -28,8 +37,8 @@ final class IngredientsService {
     ///   - ingredientsFileExtension: File extension (default: "json")
     init(
         dbInterface: DBInterfaceProtocol = DBInterface(),
-        ingredientsFileName: String = "Food",
-        ingredientsFileExtension: String = "json"
+        ingredientsFileName: String = IngredientsServiceConstants.defaultFileName,
+        ingredientsFileExtension: String = IngredientsServiceConstants.defaultFileExtension
     ) {
         self.dbInterface = dbInterface
         self.ingredientsFileName = ingredientsFileName
@@ -58,7 +67,7 @@ final class IngredientsService {
     ///   - limit: Maximum number of results to return (default: 50)
     /// - Returns: Array of matching ingredient names
     /// - Throws: IngredientsServiceError if search fails
-    func searchIngredients(matching query: String, limit: Int = 50) async throws -> [String] {
+    func searchIngredients(matching query: String, limit: Int = IngredientsServiceConstants.defaultSearchLimit) async throws -> [String] {
         // Ensure ingredients are loaded before searching
         if !isImported {
             try await ensureIngredientsLoaded()
@@ -80,7 +89,7 @@ final class IngredientsService {
     ///   - limit: Maximum number of results to return (default: 50)
     /// - Returns: Array of matching ingredients
     /// - Throws: IngredientsServiceError if search fails
-    func searchFullIngredients(matching query: String, limit: Int = 50) async throws -> [Ingredient] {
+    func searchFullIngredients(matching query: String, limit: Int = IngredientsServiceConstants.defaultSearchLimit) async throws -> [Ingredient] {
         // Ensure ingredients are loaded before searching
         if !isImported {
             try await ensureIngredientsLoaded()
@@ -113,7 +122,7 @@ final class IngredientsService {
         }
     }
     
-    func getAllIngredients(category: IngredientCategory? = nil, limit: Int = 100) async throws -> [Ingredient] {
+    func getAllIngredients(category: IngredientCategory? = nil, limit: Int = IngredientsServiceConstants.defaultCategoryLimit) async throws -> [Ingredient] {
         if !isImported {
             try await ensureIngredientsLoaded()
         }
@@ -171,7 +180,10 @@ final class IngredientsService {
     private func checkIngredientsExist() async throws -> Bool {
         do {
             // Try to search for a common ingredient to check if DB is populated
-            let results = try dbInterface.searchIngredients(matching: "a", limit: 1)
+            let results = try dbInterface.searchIngredients(
+                matching: IngredientsServiceConstants.populationProbe,
+                limit: IngredientsServiceConstants.populationProbeLimit
+            )
             return !results.isEmpty
         } catch {
             throw IngredientsServiceError.databaseError(error)

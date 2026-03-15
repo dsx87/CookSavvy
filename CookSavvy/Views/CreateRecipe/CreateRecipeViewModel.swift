@@ -1,5 +1,11 @@
 import SwiftUI
 
+private enum CreateRecipeViewModelConstants {
+    static let defaultEmoji = "🍕"
+    static let defaultCookTimeMinutes = 30
+    static let defaultServings = 2
+}
+
 @MainActor
 final class CreateRecipeViewModel: ObservableObject {
 
@@ -40,13 +46,13 @@ final class CreateRecipeViewModel: ObservableObject {
 
     @Published var currentStep: WizardStep = .nameAndPhoto
     @Published var recipeName: String = ""
-    @Published var selectedEmoji: String = "🍕"
+    @Published var selectedEmoji: String = CreateRecipeViewModelConstants.defaultEmoji
     @Published var tagline: String = ""
     @Published var ingredientRows: [String] = [""]
     @Published var stepRows: [StepRow] = [StepRow(text: "")]
-    @Published var cookTimeMinutes: Int = 30
-    @Published var servings: Int = 2
-    @Published var difficulty: String = "Easy"
+    @Published var cookTimeMinutes: Int = CreateRecipeViewModelConstants.defaultCookTimeMinutes
+    @Published var servings: Int = CreateRecipeViewModelConstants.defaultServings
+    @Published var difficulty: String = Strings.CreateRecipe.difficultyEasy
     @Published var cuisine: String = ""
     @Published var isSaving: Bool = false
     @Published var saveError: String?
@@ -54,14 +60,18 @@ final class CreateRecipeViewModel: ObservableObject {
 
     // MARK: - Dependencies
 
-    private let userDataService: UserDataService
+    private let userDataService: UserDataServiceProtocol
     private let onDismiss: () -> Void
 
-    static let difficulties = ["Easy", "Medium", "Hard"]
+    static let difficulties = [
+        Strings.CreateRecipe.difficultyEasy,
+        Strings.CreateRecipe.difficultyMedium,
+        Strings.CreateRecipe.difficultyHard
+    ]
 
     // MARK: - Init
 
-    init(userDataService: UserDataService, onDismiss: @escaping () -> Void) {
+    init(userDataService: UserDataServiceProtocol, onDismiss: @escaping () -> Void) {
         self.userDataService = userDataService
         self.onDismiss = onDismiss
     }
@@ -180,7 +190,7 @@ final class CreateRecipeViewModel: ObservableObject {
             Recipe.Step(text: row.text.trimmingCharacters(in: .whitespaces), timerMinutes: row.timerMinutes)
         }
         let ingredients = validIngredients.map { Ingredient(name: $0) }
-        let timeString = "\(cookTimeMinutes) min"
+        let timeString = String(format: Strings.Common.minutesShort, Int64(cookTimeMinutes))
         let additionalInfo = Recipe.AdditionalInfo(
             time: timeString,
             servings: servings,

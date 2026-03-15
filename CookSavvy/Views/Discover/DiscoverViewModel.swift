@@ -37,25 +37,25 @@ final class DiscoverViewModel: ObservableObject {
 
     // MARK: - Dependencies
 
-    private let ingredientsService: IngredientsService
-    private let recipeService: RecipeService
-    private let userDataService: UserDataService
+    private let ingredientsService: IngredientsServiceProtocol
+    private let recipeService: RecipeServiceProtocol
+    private let userDataService: UserDataServiceProtocol
     private let subscriptionService: SubscriptionServiceProtocol
-    private let databaseInitService: DatabaseInitializationService
-    private let cameraScanTracker: CameraScanTracker
-    private let recommendationService: RecipeRecommendationService
+    private let databaseInitService: DatabaseInitializationServiceProtocol
+    private let cameraScanTracker: CameraScanTrackerProtocol
+    private let recommendationService: RecipeRecommendationServiceProtocol
     private weak var coordinator: DiscoverCoordinator?
 
     // MARK: - Init
 
     init(
-        ingredientsService: IngredientsService,
-        recipeService: RecipeService,
-        userDataService: UserDataService,
+        ingredientsService: IngredientsServiceProtocol,
+        recipeService: RecipeServiceProtocol,
+        userDataService: UserDataServiceProtocol,
         subscriptionService: SubscriptionServiceProtocol,
-        databaseInitService: DatabaseInitializationService,
-        cameraScanTracker: CameraScanTracker,
-        recommendationService: RecipeRecommendationService,
+        databaseInitService: DatabaseInitializationServiceProtocol,
+        cameraScanTracker: CameraScanTrackerProtocol,
+        recommendationService: RecipeRecommendationServiceProtocol,
         coordinator: DiscoverCoordinator
     ) {
         self.ingredientsService = ingredientsService

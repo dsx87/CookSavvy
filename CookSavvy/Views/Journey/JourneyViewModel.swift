@@ -12,10 +12,10 @@ final class JourneyViewModel: ObservableObject {
     @Published var recentSessions: [CookingSession] = []
     @Published var isLoading = false
 
-    private let userDataService: UserDataService
+    private let userDataService: UserDataServiceProtocol
     private weak var coordinator: JourneyCoordinator?
 
-    init(userDataService: UserDataService, coordinator: JourneyCoordinator) {
+    init(userDataService: UserDataServiceProtocol, coordinator: JourneyCoordinator) {
         self.userDataService = userDataService
         self.coordinator = coordinator
     }

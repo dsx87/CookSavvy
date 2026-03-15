@@ -110,7 +110,7 @@ struct CreateRecipeView: View {
             .clipShape(RoundedRectangle(cornerRadius: UI.CreateRecipe.photoCornerRadius, style: .continuous))
 
             VStack(alignment: .leading, spacing: UI.CreateRecipe.fieldSpacing) {
-                Text("RECIPE NAME")
+                Text(Strings.CreateRecipe.sectionRecipeName)
                     .sectionLabel()
 
                 TextField(Strings.CreateRecipe.recipeName, text: $viewModel.recipeName)
@@ -125,7 +125,7 @@ struct CreateRecipeView: View {
             }
 
             VStack(alignment: .leading, spacing: UI.CreateRecipe.fieldSpacing) {
-                Text("TAGLINE")
+                Text(Strings.CreateRecipe.sectionTagline)
                     .sectionLabel()
 
                 TextField(Strings.CreateRecipe.taglinePlaceholder, text: $viewModel.tagline)
@@ -140,7 +140,7 @@ struct CreateRecipeView: View {
             }
 
             VStack(alignment: .leading, spacing: UI.CreateRecipe.fieldSpacing) {
-                Text("CHOOSE AN ICON")
+                Text(Strings.CreateRecipe.sectionChooseIcon)
                     .sectionLabel()
 
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: UI.CreateRecipe.emojiGridSpacing), count: UI.CreateRecipe.emojiGridColumns), spacing: UI.CreateRecipe.emojiGridSpacing) {
@@ -160,7 +160,7 @@ struct CreateRecipeView: View {
 
     private var step2Ingredients: some View {
         VStack(alignment: .leading, spacing: UI.CreateRecipe.ingredientSpacing) {
-            Text("INGREDIENTS")
+            Text(Strings.CreateRecipe.sectionIngredients)
                 .sectionLabel()
 
             VStack(spacing: UI.CreateRecipe.ingredientRowSpacing) {
@@ -171,13 +171,13 @@ struct CreateRecipeView: View {
                                 viewModel.removeIngredientRow(at: i)
                             }
                         } label: {
-                            Image(systemName: "minus.circle.fill")
+                            Image(systemName: Icons.CreateRecipe.minusFilled)
                                 .font(.system(size: UI.Journey.statIconSize))
                                 .foregroundStyle(theme.rose.opacity(viewModel.ingredientRows.count > 1 ? 1 : UI.CreateRecipe.opacityLight))
                         }
                         .disabled(viewModel.ingredientRows.count <= 1)
 
-                        TextField("Ingredient \(i + 1)", text: $viewModel.ingredientRows[i])
+                        TextField(String(format: Strings.CreateRecipe.ingredientPlaceholder, Int64(i + 1)), text: $viewModel.ingredientRows[i])
                             .font(UI.Fonts.bodyRounded)
                             .foregroundStyle(theme.text1)
                             .padding(UI.CreateRecipe.ingredientInputPadding)
@@ -196,9 +196,9 @@ struct CreateRecipeView: View {
                 }
             } label: {
                 HStack(spacing: UI.CreateRecipe.addButtonSpacing) {
-                    Image(systemName: "plus.circle.fill")
+                    Image(systemName: Icons.CreateRecipe.plusFilled)
                         .font(UI.Fonts.iconMedium)
-                    Text("Add Ingredient")
+                    Text(Strings.CreateRecipe.addIngredient)
                         .font(UI.Fonts.smallButton)
                 }
                 .foregroundStyle(theme.accent)
@@ -213,7 +213,7 @@ struct CreateRecipeView: View {
 
     private var step3Steps: some View {
         VStack(alignment: .leading, spacing: UI.CreateRecipe.stepsSpacing) {
-            Text("COOKING STEPS")
+            Text(Strings.CreateRecipe.sectionSteps)
                 .sectionLabel()
 
             VStack(spacing: UI.CreateRecipe.stepsRowSpacing) {
@@ -236,9 +236,9 @@ struct CreateRecipeView: View {
                 }
             } label: {
                 HStack(spacing: UI.CreateRecipe.addButtonSpacing) {
-                    Image(systemName: "plus.circle.fill")
+                    Image(systemName: Icons.CreateRecipe.plusFilled)
                         .font(UI.Fonts.iconMedium)
-                    Text("Add Step")
+                    Text(Strings.CreateRecipe.addStep)
                         .font(UI.Fonts.smallButton)
                 }
                 .foregroundStyle(theme.accent)
@@ -254,12 +254,12 @@ struct CreateRecipeView: View {
     private var step4Details: some View {
         VStack(alignment: .leading, spacing: UI.CreateRecipe.detailsSpacing) {
             VStack(alignment: .leading, spacing: UI.CreateRecipe.detailItemSpacing) {
-                Text("COOK TIME")
+                Text(Strings.CreateRecipe.sectionCookTime)
                     .sectionLabel()
 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: UI.CreateRecipe.cookTimeChipSpacing) {
-                        ForEach([5, 10, 15, 20, 30, 45, 60, 90], id: \.self) { time in
+                        ForEach(UI.CreateRecipe.cookTimeOptions, id: \.self) { time in
                             CookTimeChip(
                                 time: time,
                                 isSelected: viewModel.cookTimeMinutes == time,
@@ -271,16 +271,16 @@ struct CreateRecipeView: View {
             }
 
             VStack(alignment: .leading, spacing: UI.CreateRecipe.detailItemSpacing) {
-                Text("SERVINGS")
+                Text(Strings.CreateRecipe.sectionServings)
                     .sectionLabel()
 
                 HStack(spacing: UI.CreateRecipe.servingsSpacing) {
                     Button {
-                        if viewModel.servings > 1 { withAnimation { viewModel.servings -= 1 } }
+                        if viewModel.servings > UI.CreateRecipe.minServings { withAnimation { viewModel.servings -= 1 } }
                     } label: {
-                        Image(systemName: "minus")
+                        Image(systemName: Icons.CreateRecipe.minus)
                             .font(UI.Fonts.buttonIcon)
-                            .foregroundStyle(viewModel.servings > 1 ? theme.text1 : theme.text3)
+                            .foregroundStyle(viewModel.servings > UI.CreateRecipe.minServings ? theme.text1 : theme.text3)
                             .frame(width: UI.CreateRecipe.servingsButtonSize, height: UI.CreateRecipe.servingsButtonSize)
                             .background(theme.surface, in: Circle())
                     }
@@ -291,11 +291,11 @@ struct CreateRecipeView: View {
                         .frame(width: UI.CreateRecipe.servingsValueWidth)
 
                     Button {
-                        if viewModel.servings < 12 { withAnimation { viewModel.servings += 1 } }
+                        if viewModel.servings < UI.CreateRecipe.maxServings { withAnimation { viewModel.servings += 1 } }
                     } label: {
-                        Image(systemName: "plus")
+                        Image(systemName: Icons.CreateRecipe.plus)
                             .font(UI.Fonts.buttonIcon)
-                            .foregroundStyle(viewModel.servings < 12 ? theme.text1 : theme.text3)
+                            .foregroundStyle(viewModel.servings < UI.CreateRecipe.maxServings ? theme.text1 : theme.text3)
                             .frame(width: UI.CreateRecipe.servingsButtonSize, height: UI.CreateRecipe.servingsButtonSize)
                             .background(theme.surface, in: Circle())
                     }
@@ -305,7 +305,7 @@ struct CreateRecipeView: View {
             }
 
             VStack(alignment: .leading, spacing: UI.CreateRecipe.detailItemSpacing) {
-                Text("DIFFICULTY")
+                Text(Strings.CreateRecipe.sectionDifficulty)
                     .sectionLabel()
 
                 HStack(spacing: UI.CreateRecipe.difficultySpacing) {
@@ -342,7 +342,7 @@ struct CreateRecipeView: View {
                 .clipShape(.rect(topLeadingRadius: UI.V2.FrostCard.defaultCornerRadius, topTrailingRadius: UI.V2.FrostCard.defaultCornerRadius))
 
                 VStack(alignment: .leading, spacing: UI.CreateRecipe.reviewContentSpacing) {
-                    Text(viewModel.recipeName.isEmpty ? "Untitled Recipe" : viewModel.recipeName)
+                    Text(viewModel.recipeName.isEmpty ? Strings.CreateRecipe.untitledRecipe : viewModel.recipeName)
                         .font(UI.Fonts.inputField)
                         .foregroundStyle(theme.text1)
 
@@ -353,19 +353,19 @@ struct CreateRecipeView: View {
                     }
 
                     HStack(spacing: 0) {
-                        StatPill(icon: Icons.Discover.clock, value: "\(viewModel.cookTimeMinutes)m",
-                                 label: "Time", color: theme.accent)
+                        StatPill(icon: Icons.Discover.clock, value: String(format: Strings.Common.minutesCompact, Int64(viewModel.cookTimeMinutes)),
+                                 label: Strings.CreateRecipe.statTime, color: theme.accent)
                         StatPill(icon: Icons.Discover.person2, value: "\(viewModel.servings)",
-                                 label: "Serve", color: theme.mint)
+                                 label: Strings.CreateRecipe.statServings, color: theme.mint)
                         StatPill(icon: Icons.Discover.chartBar, value: viewModel.difficulty,
-                                 label: "Level", color: theme.lavender)
+                                 label: Strings.CreateRecipe.statLevel, color: theme.lavender)
                     }
                     .padding(UI.RecipeDetails.statsPadding)
                     .frostCard()
 
                     HStack(spacing: UI.CreateRecipe.reviewStatsSpacing) {
-                        Label("\(viewModel.validIngredients.count) ingredients", systemImage: "list.bullet")
-                        Label("\(viewModel.validSteps.count) steps", systemImage: "number")
+                        Label(String(format: Strings.CreateRecipe.ingredientCount, Int64(viewModel.validIngredients.count)), systemImage: Icons.CreateRecipe.list)
+                        Label(String(format: Strings.CreateRecipe.stepCount, Int64(viewModel.validSteps.count)), systemImage: Icons.CreateRecipe.number)
                     }
                     .font(UI.Fonts.captionSemibold)
                     .foregroundStyle(theme.text3)

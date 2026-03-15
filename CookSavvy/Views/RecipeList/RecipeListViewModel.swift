@@ -6,9 +6,9 @@ final class RecipeListViewModel: ObservableObject {
     @Published var recipes: [Recipe]
     @Published private var savedIds: Set<String> = []
 
-    private let userDataService: UserDataService
+    private let userDataService: UserDataServiceProtocol
 
-    init(title: String, recipes: [Recipe], userDataService: UserDataService) {
+    init(title: String, recipes: [Recipe], userDataService: UserDataServiceProtocol) {
         self.title = title
         self.recipes = recipes
         self.userDataService = userDataService

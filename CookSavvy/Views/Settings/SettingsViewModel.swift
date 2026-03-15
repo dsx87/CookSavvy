@@ -8,6 +8,12 @@
 import SwiftUI
 import Combine
 
+private enum SettingsViewModelConstants {
+    static let unknownValue = "Unknown"
+    static let manageSubscriptionURL = "https://apps.apple.com/account/subscriptions"
+    static let recentRecipeStatsLimit = 1000
+}
+
 @MainActor
 final class SettingsViewModel: ObservableObject {
 
@@ -32,7 +38,7 @@ final class SettingsViewModel: ObservableObject {
     let appVersion: String
     let buildNumber: String
 
-    private let userDataService: UserDataService
+    private let userDataService: UserDataServiceProtocol
     private let dbInterface: DBInterfaceProtocol
     private let subscriptionService: SubscriptionServiceProtocol
     private weak var coordinator: SettingsCoordinator?
@@ -41,7 +47,7 @@ final class SettingsViewModel: ObservableObject {
     // MARK: - Initialization
 
     init(
-        userDataService: UserDataService,
+        userDataService: UserDataServiceProtocol,
         dbInterface: DBInterfaceProtocol,
         subscriptionService: SubscriptionServiceProtocol,
         coordinator: SettingsCoordinator?
@@ -55,13 +61,13 @@ final class SettingsViewModel: ObservableObject {
         if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
             self.appVersion = version
         } else {
-            self.appVersion = "Unknown"
+            self.appVersion = SettingsViewModelConstants.unknownValue
         }
 
         if let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
             self.buildNumber = build
         } else {
-            self.buildNumber = "Unknown"
+            self.buildNumber = SettingsViewModelConstants.unknownValue
         }
         
         subscriptionService.currentPlanPublisher
@@ -144,7 +150,7 @@ final class SettingsViewModel: ObservableObject {
 
     // TODO: check the link
     func openManageSubscriptions() {
-        if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+        if let url = URL(string: SettingsViewModelConstants.manageSubscriptionURL) {
             UIApplication.shared.open(url)
         }
     }
@@ -203,7 +209,7 @@ final class SettingsViewModel: ObservableObject {
     }
 
     private func getRecentRecipeCount() async throws -> Int {
-        let recent = try await userDataService.getRecentRecipes(limit: 1000)
+        let recent = try await userDataService.getRecentRecipes(limit: SettingsViewModelConstants.recentRecipeStatsLimit)
         return recent.count
     }
 }

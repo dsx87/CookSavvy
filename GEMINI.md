@@ -42,7 +42,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 - **Localization** — `Localizable.xcstrings` String Catalog (Xcode 15+)
 - **Models** — `Recipe.Step` (text + timerMinutes), `IngredientCategory`, `CookingSession`, `Achievement`, `IngredientEmojiProvider`
 - **Two ratings** — `userRating` + `apiRating` on `Recipe`; `matchPercentage` set at search time
-- **User recipes** — `isUserCreated` flag on `Recipe`, CRUD via `UserDataService`
+- **User recipes** — `isUserCreated` flag on `Recipe`, CRUD via `UserDataServiceProtocol`
 - **Create Recipe** — `CreateRecipeViewModel` 5-step wizard (Name & Photo → Ingredients → Steps → Details → Review & Save)
 - **Single Responsibility Principle** — create services as needed
 - **SwiftUI first** — UIKit only when unavoidable
@@ -72,15 +72,17 @@ Product ID: `com.cooksavvy.subscription.premium`
 
 ## Key Services
 
-- **Data:** `RecipeService`, `IngredientsService`, `UserDataService`
-- **Infrastructure:** `ImageService`, `DatabaseInitializationService`, `DataImportService`, `CSVParser`
+- **Data:** `RecipeServiceProtocol` / `RecipeService`, `IngredientsServiceProtocol` / `IngredientsService`, `UserDataServiceProtocol` / `UserDataService`
+- **Infrastructure:** `ImageServiceProtocol` / `ImageService`, `DatabaseInitializationServiceProtocol` / `DatabaseInitializationService`, `DataImportServiceProtocol` / `DataImportService`, `CSVParser`
 - **Database:** `DBInterfaceProtocol` / `DBInterface` (GRDB)
 - **Network:** `NetworkService`, `URLBuilder`, `NetworkRequest`, `NetworkResponse`, `NetworkError`, `HTTPMethod`
 - **AI:** `AIService` → `LLMProviderProtocol` (`OpenAIProvider`, `GeminiProvider`, `MockLLMProvider`)
 - **Detection:** `IngredientDetectionServiceProtocol` → `AIIngredientDetectionAdapter`
 - **Subscriptions:** `SubscriptionServiceProtocol` → `StoreKitSubscriptionService` / `MockSubscriptionService`
 - **Mood Ranking:** `RecipeMoodRanker` (stateless recipe ranking helper)
-- **Recommendations:** `RecipeRecommendationService` — derives suggestions from favorites + rated sessions, queries offline DB after init is complete
+- **Recommendations:** `RecipeRecommendationServiceProtocol` / `RecipeRecommendationService` — derives suggestions from favorites + rated sessions, queries offline DB after init is complete
+- **Shopping List:** `ShoppingListServiceProtocol` / `ShoppingListService`
+- **Camera tracking:** `CameraScanTrackerProtocol` / `CameraScanTracker`
 - **Recipe API:** `RecipeAPIProviderProtocol` → `SpoonacularProvider` (complexSearch endpoint), `SpoonacularModels` (DTOs + mapper)
 - **API Keys:** `APIKeys.plist` (gitignored) via `APIKeyConfiguration` — `OPENAI_API_KEY`, `GEMINI_API_KEY`, `SPOONACULAR_API_KEY`
 

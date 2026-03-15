@@ -35,12 +35,12 @@ final class ShoppingListViewModel: ObservableObject {
 
     // MARK: - Private
 
-    private let shoppingListService: ShoppingListService
+    private let shoppingListService: ShoppingListServiceProtocol
     private let onDismiss: () -> Void
 
     // MARK: - Init
 
-    init(shoppingListService: ShoppingListService, onDismiss: @escaping () -> Void) {
+    init(shoppingListService: ShoppingListServiceProtocol, onDismiss: @escaping () -> Void) {
         self.shoppingListService = shoppingListService
         self.onDismiss = onDismiss
         Task { await loadItems() }

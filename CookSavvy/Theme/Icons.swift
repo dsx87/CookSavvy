@@ -15,6 +15,7 @@ enum Icons {
     enum SearchBar {
         static let camera = "camera"
         static let magnifying = "magnifyingglass"
+        static let clear = "xmark.circle.fill"
     }
 
     enum SelectedIngredient {
@@ -66,6 +67,7 @@ enum Icons {
         static let flame = "flame"
         static let person2 = "person.2"
         static let chartBar = "chart.bar"
+        static let idea = "lightbulb.fill"
     }
 
     enum Journey {
@@ -95,6 +97,10 @@ enum Icons {
         static let plus = "plus"
         static let dragHandle = "line.3.horizontal"
         static let timer = "timer"
+        static let minusFilled = "minus.circle.fill"
+        static let plusFilled = "plus.circle.fill"
+        static let list = "list.bullet"
+        static let number = "number"
     }
 
     enum ShoppingList {

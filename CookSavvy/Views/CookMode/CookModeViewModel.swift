@@ -13,13 +13,13 @@ final class CookModeViewModel: ObservableObject {
     @Published var showFeedback: Bool = false
     @Published var feedbackRating: Int = 0
 
-    private let userDataService: UserDataService
+    private let userDataService: UserDataServiceProtocol
     private let onDismiss: () -> Void
     private var timerCancellable: AnyCancellable?
     private var startDate: Date?
     private var cookDuration: TimeInterval?
 
-    init(recipe: Recipe, userDataService: UserDataService, onDismiss: @escaping () -> Void) {
+    init(recipe: Recipe, userDataService: UserDataServiceProtocol, onDismiss: @escaping () -> Void) {
         self.recipe = recipe
         self.userDataService = userDataService
         self.onDismiss = onDismiss

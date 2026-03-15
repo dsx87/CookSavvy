@@ -265,6 +265,7 @@ struct UI {
     // MARK: - Discover
 
     struct Discover {
+        static let chefEmoji = "🧑‍🍳"
         struct Mood {
             static let cozyColor = Color(red: 1.0, green: 0.55, blue: 0.20)
             static let cozyGradient = [cozyColor, Color(red: 0.85, green: 0.30, blue: 0.15)]
@@ -325,6 +326,7 @@ struct UI {
         static let cameraBadgeOffsetY: CGFloat = -6
         static let useItAllPaddingH: CGFloat = 14
         static let useItAllPaddingV: CGFloat = 8
+        static let chefEmojiSize: CGFloat = 20
 
         static func moodColor(for mood: RecipeMood) -> Color {
             switch mood {
@@ -516,6 +518,10 @@ struct UI {
     // MARK: - CreateRecipe
 
     struct CreateRecipe {
+        static let minServings = 1
+        static let maxServings = 12
+        static let cookTimeOptions = [5, 10, 15, 20, 30, 45, 60, 90]
+        static let stepTextLineLimit = 3...6
         static let horizontalPadding: CGFloat = 24
         static let topPadding: CGFloat = 24
         static let bottomScrollPadding: CGFloat = 100

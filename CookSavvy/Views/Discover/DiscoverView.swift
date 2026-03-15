@@ -74,9 +74,7 @@ struct DiscoverView: View {
             viewModel.showCamera()
         } label: {
             ZStack(alignment: .topTrailing) {
-                Image(systemName: "camera.fill")
-                    .font(UI.Fonts.iconMedium)
-                    .foregroundStyle(theme.accent)
+                cameraIcon
                 if viewModel.showScansBadge {
                     Text("\(viewModel.remainingCameraScans)")
                         .font(.system(size: UI.Discover.cameraBadgeFontSize, weight: .bold))
@@ -88,6 +86,12 @@ struct DiscoverView: View {
                 }
             }
         }
+    }
+
+    private var cameraIcon: some View {
+        Image(systemName: Icons.Camera.camera)
+            .font(UI.Fonts.iconMedium)
+            .foregroundStyle(theme.accent)
     }
 
     private var headerView: some View {
@@ -117,7 +121,7 @@ struct DiscoverView: View {
                 Button {
                     viewModel.searchText = ""
                 } label: {
-                    Image(systemName: "xmark.circle.fill")
+                    Image(systemName: Icons.SearchBar.clear)
                         .font(UI.Fonts.searchField)
                         .foregroundStyle(theme.text3)
                 }
@@ -341,8 +345,8 @@ struct DiscoverView: View {
                                        startPoint: .topLeading, endPoint: .bottomTrailing)
                     )
                     .frame(width: UI.Common.backButtonSize, height: UI.Common.backButtonSize)
-                Text("🧑‍🍳")
-                    .font(.system(size: UI.Journey.statIconSize))
+                Text(UI.Discover.chefEmoji)
+                    .font(.system(size: UI.Discover.chefEmojiSize))
             }
         }
         .padding(.top, UI.Discover.headerTopPadding)
@@ -455,7 +459,7 @@ struct DiscoverView: View {
                 matchIndicator(match: match, matchingIngredients: viewModel.matchingIngredientNames(for: recipe))
             }
             if let reason = recipe.matchReason {
-                Label(reason, systemImage: "lightbulb.fill")
+                Label(reason, systemImage: Icons.Discover.idea)
                     .font(UI.Fonts.tinyCaption)
                     .foregroundStyle(.white)
                     .padding(.horizontal, UI.Discover.matchBadgePaddingH)
@@ -502,7 +506,7 @@ struct DiscoverView: View {
                     Text(Strings.Discover.moreRecipes)
                         .sectionLabel()
                     Spacer()
-                    Text("\(viewModel.filteredRecipes.count) found")
+                    Text(String(format: Strings.Discover.resultsFound, Int64(viewModel.filteredRecipes.count)))
                         .font(UI.Fonts.captionSemibold)
                         .foregroundStyle(theme.text2)
                 }

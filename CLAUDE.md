@@ -70,19 +70,19 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 
 ### Dependency Injection
 - `AppContainer`: `@MainActor` singleton holding all shared service instances
-- Services initialized once and injected into ViewModels via coordinators
+- Services initialized once and exposed via protocol-typed dependencies in coordinators and view models
 - Maintains single source of truth for app-wide dependencies
 - TODO: refactor away from singleton pattern
 
 ### Database Layer
 - `DBInterfaceProtocol` / `DBInterface` — GRDB-based SQLite database; tables: `ingredients`, `recipes`, `recipe_ingredients`, `recent_ingredients`, `recent_recipes`, `favorite_recipes`, `recent_searches`, `cooking_sessions`, `shopping_items`
-- Used by `RecipeService`, `IngredientsService`, `UserDataService`, `DataImportService`, `DatabaseInitializationService`
+- Used by `RecipeService`, `IngredientsService`, `UserDataService`, `DataImportService`, `DatabaseInitializationService`, `ShoppingListService`, `RecipeRecommendationService`
 - `DBTestHelpers` for test support
 
 ### Service Layer
-- **Data Services**: `RecipeService`, `IngredientsService`, `UserDataService`
-- **Infrastructure**: `ImageService`, `DatabaseInitializationService`, `DataImportService`, `CSVParser`
-- **Feature Services**: `IngredientDetectionServiceProtocol` (impl: `AIIngredientDetectionAdapter`), `SubscriptionServiceProtocol` (impl: `StoreKitSubscriptionService` / `MockSubscriptionService`)
+- **Data Services**: `RecipeServiceProtocol` / `RecipeService`, `IngredientsServiceProtocol` / `IngredientsService`, `UserDataServiceProtocol` / `UserDataService`
+- **Infrastructure**: `ImageServiceProtocol` / `ImageService`, `DatabaseInitializationServiceProtocol` / `DatabaseInitializationService`, `DataImportServiceProtocol` / `DataImportService`, `CSVParser`
+- **Feature Services**: `ShoppingListServiceProtocol` / `ShoppingListService`, `RecipeRecommendationServiceProtocol` / `RecipeRecommendationService`, `CameraScanTrackerProtocol` / `CameraScanTracker`, `IngredientDetectionServiceProtocol` (impl: `AIIngredientDetectionAdapter`), `SubscriptionServiceProtocol` (impl: `StoreKitSubscriptionService` / `MockSubscriptionService`)
 - **Network Layer**: `NetworkServiceProtocol` / `NetworkService`, `NetworkConfiguration`, `URLBuilder`, `NetworkRequest`, `NetworkResponse`, `NetworkError`, `HTTPMethod`
 - **Recipe Sources** — `RecipeSourceProtocol` → `OfflineRecipeSource`, `OnlineRecipeSource` (via `RecipeAPIProviderProtocol`), `AIRecipeSource`
 - **Recipe API Providers** (`Network/RecipeAPIProvider/`):

@@ -8,7 +8,7 @@
 import Foundation
 
 /// Main service for managing recipe operations across different sources
-final class RecipeService {
+final class RecipeService: RecipeServiceProtocol {
     
     // MARK: - Properties
     

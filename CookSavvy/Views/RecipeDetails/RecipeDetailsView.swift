@@ -66,7 +66,7 @@ struct RecipeDetailsView: View {
                         .foregroundStyle(theme.gold)
                 }
                 if let author = viewModel.recipe.author {
-                    Text("by \(author)")
+                    Text(String(format: Strings.RecipeDetails.byAuthor, author))
                         .font(UI.Fonts.caption)
                         .foregroundStyle(theme.text3)
                 }
@@ -95,7 +95,7 @@ struct RecipeDetailsView: View {
 
     private var ingredientsSection: some View {
         VStack(alignment: .leading, spacing: UI.RecipeDetails.ingredientsHeaderSpacing) {
-            Text("INGREDIENTS")
+            Text(Strings.RecipeDetails.sectionIngredients)
                 .sectionLabel()
 
             VStack(spacing: 0) {
@@ -174,7 +174,7 @@ struct RecipeDetailsView: View {
 
     private var stepsSection: some View {
         VStack(alignment: .leading, spacing: UI.RecipeDetails.stepsHeaderSpacing) {
-            Text("STEPS")
+            Text(Strings.RecipeDetails.sectionSteps)
                 .sectionLabel()
 
             VStack(spacing: UI.RecipeDetails.stepsSpacing) {
@@ -207,7 +207,7 @@ struct RecipeDetailsView: View {
                     HStack(spacing: UI.Common.smallSpacing) {
                         Image(systemName: Icons.CookMode.timer)
                             .font(UI.Fonts.tinyCaption)
-                        Text("\(timer) min")
+                        Text(String(format: Strings.Common.minutesShort, Int64(timer)))
                             .font(UI.Fonts.smallCaptionSemibold)
                     }
                     .foregroundStyle(theme.accent)

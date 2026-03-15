@@ -5,29 +5,32 @@
 
 import Foundation
 
-final class CameraScanTracker {
+final class CameraScanTracker: CameraScanTrackerProtocol {
 
     static let freeWeeklyLimit = 5
 
     private let defaults = UserDefaults.standard
-    private let scansUsedKey = "camera_scans_used_this_week"
-    private let weekStartKey = "camera_scan_week_start"
+
+    private enum Keys {
+        static let scansUsed = "camera_scans_used_this_week"
+        static let weekStart = "camera_scan_week_start"
+    }
 
     private var scansUsedThisWeek: Int {
-        get { defaults.integer(forKey: scansUsedKey) }
-        set { defaults.set(newValue, forKey: scansUsedKey) }
+        get { defaults.integer(forKey: Keys.scansUsed) }
+        set { defaults.set(newValue, forKey: Keys.scansUsed) }
     }
 
     private var weekStartDate: Date {
         get {
-            if let stored = defaults.object(forKey: weekStartKey) as? Date {
+            if let stored = defaults.object(forKey: Keys.weekStart) as? Date {
                 return stored
             }
             let now = Date()
-            defaults.set(now, forKey: weekStartKey)
+            defaults.set(now, forKey: Keys.weekStart)
             return now
         }
-        set { defaults.set(newValue, forKey: weekStartKey) }
+        set { defaults.set(newValue, forKey: Keys.weekStart) }
     }
 
     private func resetIfNewWeek() {

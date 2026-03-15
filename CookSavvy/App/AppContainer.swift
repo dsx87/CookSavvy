@@ -17,19 +17,19 @@ final class AppContainer {
     
     // MARK: - Services
     let dbInterface: DBInterfaceProtocol
-    let ingredientsService: IngredientsService
-    let recipeService: RecipeService
-    let imageService: ImageService
-    let dataImportService: DataImportService
-    let userDataService: UserDataService
-    let databaseInitService: DatabaseInitializationService
+    let ingredientsService: IngredientsServiceProtocol
+    let recipeService: RecipeServiceProtocol
+    let imageService: ImageServiceProtocol
+    let dataImportService: DataImportServiceProtocol
+    let userDataService: UserDataServiceProtocol
+    let databaseInitService: DatabaseInitializationServiceProtocol
     let networkService: NetworkServiceProtocol
     let aiService: AIServiceProtocol
     let ingredientDetectionService: IngredientDetectionServiceProtocol
     let subscriptionService: SubscriptionServiceProtocol
-    let cameraScanTracker: CameraScanTracker
-    let shoppingListService: ShoppingListService
-    let recommendationService: RecipeRecommendationService
+    let cameraScanTracker: CameraScanTrackerProtocol
+    let shoppingListService: ShoppingListServiceProtocol
+    let recommendationService: RecipeRecommendationServiceProtocol
 
     // MARK: - Initialization
 

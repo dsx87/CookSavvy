@@ -7,7 +7,16 @@
 
 import Foundation
 
-final class DataImportService {
+private enum DataImportServiceConstants {
+    static let populationProbe = "a"
+    static let populationProbeLimit = 1
+    static let existingRecipeLimit = 20
+    static let datasetName = "food-ingredients-and-recipe-dataset-with-images"
+    static let datasetExtension = "zip"
+    static let datasetCSVName = "Food Ingredients and Recipe Dataset with Image Name Mapping.csv"
+}
+
+final class DataImportService: DataImportServiceProtocol {
 
     // MARK: - Properties
 
@@ -29,12 +38,19 @@ final class DataImportService {
     /// - Throws: Error if import fails
     func ensureRecipesImported() async throws {
         // Check if recipes already exist in database
-        let commonIngredients = try dbInterface.searchIngredients(matching: "a", limit: 1)
+        let commonIngredients = try dbInterface.searchIngredients(
+            matching: DataImportServiceConstants.populationProbe,
+            limit: DataImportServiceConstants.populationProbeLimit
+        )
 
         print("🔍 Checking for existing recipes...")
 
         if !commonIngredients.isEmpty {
-            let existingRecipes = try dbInterface.getRecipes(byIngredients: commonIngredients, offset: 0, limit: 20)
+            let existingRecipes = try dbInterface.getRecipes(
+                byIngredients: commonIngredients,
+                offset: 0,
+                limit: DataImportServiceConstants.existingRecipeLimit
+            )
 
             if !existingRecipes.isEmpty {
                 print("✅ Recipes already imported (\(existingRecipes.count) found)")
@@ -46,15 +62,15 @@ final class DataImportService {
         print("📥 Importing recipes from dataset...")
 
         guard let zipURL = Bundle.main.url(
-            forResource: "food-ingredients-and-recipe-dataset-with-images",
-            withExtension: "zip"
+            forResource: DataImportServiceConstants.datasetName,
+            withExtension: DataImportServiceConstants.datasetExtension
         ) else {
             throw DataImportError.datasetNotFound
         }
 
         var importedRecipes: [Recipe] = try csvReader.parseCSVFromZip(
             zipURL: zipURL,
-            csvFilename: "Food Ingredients and Recipe Dataset with Image Name Mapping.csv"
+            csvFilename: DataImportServiceConstants.datasetCSVName
         )
 
         // TODO: optimize

@@ -26,8 +26,8 @@ final class RecipeDetailsViewModel: ObservableObject {
     // MARK: - Properties
 
     let selectedIngredients: [Ingredient]
-    private let userDataService: UserDataService
-    private let shoppingListService: ShoppingListService
+    private let userDataService: UserDataServiceProtocol
+    private let shoppingListService: ShoppingListServiceProtocol
     private let subscriptionService: SubscriptionServiceProtocol
     private weak var coordinator: (any RecipeDetailsCoordinating)?
 
@@ -48,8 +48,8 @@ final class RecipeDetailsViewModel: ObservableObject {
     init(
         recipe: Recipe,
         selectedIngredients: [Ingredient] = [],
-        userDataService: UserDataService,
-        shoppingListService: ShoppingListService,
+        userDataService: UserDataServiceProtocol,
+        shoppingListService: ShoppingListServiceProtocol,
         subscriptionService: SubscriptionServiceProtocol,
         coordinator: (any RecipeDetailsCoordinating)?
     ) {
