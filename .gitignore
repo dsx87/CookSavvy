@@ -148,3 +148,6 @@ CookSavvy.xcodeproj/project.xcworkspace/xcshareddata/
 
 # API Keys
 APIKeys.plist
+
+# Claude Code
+.claude/
