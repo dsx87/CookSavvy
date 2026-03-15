@@ -270,6 +270,18 @@ CookSavvyTests/                        — Unit tests
 └── DatasetImportingTests.swift
 ```
 
+## Documentation
+
+Extended documentation lives in the `docs/` directory:
+
+| File | Contents |
+|------|----------|
+| `docs/IMAGE_SERVICE_README.md` | ImageService usage and API |
+| `docs/INGREDIENTS_SERVICE_README.md` | IngredientsService usage and API |
+| `docs/RECIPE_SERVICE_README.md` | RecipeService usage and API |
+| `docs/PRODUCT_ANALYSIS.md` | Product analysis and feature breakdown |
+| `docs/PRODUCT_AUDIT_GPT.md` | Product audit notes |
+
 ## Workflow Rules
 
 - **Ask before coding** if you need more info (unless instructed otherwise)

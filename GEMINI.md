@@ -1,6 +1,13 @@
 # CookSavvy — Gemini Instructions
 
 > For detailed project documentation, see `CLAUDE.md`
+>
+> Additional documentation lives in the `docs/` directory:
+> - `docs/IMAGE_SERVICE_README.md` — ImageService usage and API
+> - `docs/INGREDIENTS_SERVICE_README.md` — IngredientsService usage and API
+> - `docs/RECIPE_SERVICE_README.md` — RecipeService usage and API
+> - `docs/PRODUCT_ANALYSIS.md` — product analysis and feature breakdown
+> - `docs/PRODUCT_AUDIT_GPT.md` — product audit notes
 
 ## Quick Reference
 
