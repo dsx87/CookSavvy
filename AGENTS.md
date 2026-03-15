@@ -52,6 +52,9 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 - **No code duplication** — search existing code before writing new
 - Refactor only when necessary; prefer new methods over modifying existing
 - Duplication requires explicit user approval
+- **SwiftUI readability** — avoid deeply nested view bodies by extracting subviews into `private var` or `private func` computed properties
+- **No magic numbers/strings** — all layout values go in `UI` constants; all user-facing strings go in `Strings`; all SF Symbol names go in `Icons`
+- **Services always have protocols** — every new service must be defined behind a protocol so it can be mocked in tests and DEBUG builds
 
 ### Workflow
 - Ask for clarification before coding if info is missing
