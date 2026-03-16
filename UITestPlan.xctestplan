@@ -1,0 +1,51 @@
+{
+  "configurations" : [
+    {
+      "id" : "BB93F2D1-58C4-4D64-BD2F-11A8335F3E61",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:CookSavvy.xcodeproj",
+      "identifier" : "1D255FDA2DC135BB008C52B4",
+      "name" : "CookSavvy"
+    },
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:CookSavvy.xcodeproj",
+        "identifier" : "A1B2C3DD2FBD100100000001",
+        "name" : "CookSavvyUITests"
+      },
+      "options" : {
+        "commandLineArgumentEntries" : [
+          {
+            "argument" : "--uitesting",
+            "enabled" : true
+          },
+          {
+            "argument" : "--skip-onboarding",
+            "enabled" : true
+          },
+          {
+            "argument" : "--with-cooking-history",
+            "enabled" : true
+          },
+          {
+            "argument" : "--with-favorites",
+            "enabled" : true
+          }
+        ],
+        "defaultTestExecutionTimeAllowance" : 120
+      }
+    }
+  ],
+  "version" : 1
+}
