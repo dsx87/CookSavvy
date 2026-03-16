@@ -47,6 +47,7 @@ struct SettingsView: View {
                         Image(systemName: Icons.Settings.planCheckmark)
                             .foregroundStyle(theme.mint)
                     }
+                    .accessibilityIdentifier(AccessibilityID.Settings.subscriptionSection)
                     
                     if viewModel.currentPlan != .premium {
                         Button {
@@ -61,6 +62,7 @@ struct SettingsView: View {
                                     .foregroundStyle(theme.text3)
                             }
                         }
+                        .accessibilityIdentifier(AccessibilityID.Settings.upgradeButton)
                     }
                     
                     Button {
@@ -173,6 +175,7 @@ struct SettingsView: View {
                         }
                     }
                     .disabled(viewModel.isLoading || viewModel.recentRecipeCount == 0)
+                    .accessibilityIdentifier(AccessibilityID.Settings.clearRecent)
 
                     Button(role: .destructive) {
                         viewModel.showClearFavoritesAlert = true
@@ -197,6 +200,7 @@ struct SettingsView: View {
                         Text(viewModel.appVersion)
                             .foregroundStyle(theme.text2)
                     }
+                    .accessibilityIdentifier(AccessibilityID.Settings.versionLabel)
 
                     HStack {
                         Text(Strings.Settings.buildLabel)

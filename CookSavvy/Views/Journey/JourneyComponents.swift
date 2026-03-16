@@ -134,6 +134,7 @@ struct CreateRecipeCard: View {
         .frame(width: UI.V2.miniCardWidth)
         .clipShape(RoundedRectangle(cornerRadius: UI.Common.cardCornerRadius, style: .continuous))
         .frostCard(cornerRadius: UI.Common.cardCornerRadius)
+        .accessibilityIdentifier(AccessibilityID.Journey.createRecipeCard)
     }
 }
 

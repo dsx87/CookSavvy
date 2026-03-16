@@ -122,6 +122,7 @@ struct CreateRecipeView: View {
                         RoundedRectangle(cornerRadius: UI.CreateRecipe.inputCornerRadius, style: .continuous)
                             .strokeBorder(theme.divider, lineWidth: UI.Common.borderWidth)
                     )
+                    .accessibilityIdentifier(AccessibilityID.CreateRecipe.recipeName)
             }
 
             VStack(alignment: .leading, spacing: UI.CreateRecipe.fieldSpacing) {
@@ -186,6 +187,7 @@ struct CreateRecipeView: View {
                                 RoundedRectangle(cornerRadius: UI.CreateRecipe.ingredientInputCornerRadius, style: .continuous)
                                     .strokeBorder(theme.divider, lineWidth: UI.Common.borderWidth)
                             )
+                            .accessibilityIdentifier(AccessibilityID.CreateRecipe.ingredient(i))
                     }
                 }
             }
@@ -206,6 +208,7 @@ struct CreateRecipeView: View {
                 .frame(maxWidth: .infinity)
                 .background(theme.accentSoft, in: RoundedRectangle(cornerRadius: UI.CreateRecipe.addButtonCornerRadius, style: .continuous))
             }
+            .accessibilityIdentifier(AccessibilityID.CreateRecipe.addIngredient)
         }
     }
 
@@ -246,6 +249,7 @@ struct CreateRecipeView: View {
                 .frame(maxWidth: .infinity)
                 .background(theme.accentSoft, in: RoundedRectangle(cornerRadius: UI.CreateRecipe.addButtonCornerRadius, style: .continuous))
             }
+            .accessibilityIdentifier(AccessibilityID.CreateRecipe.addStep)
         }
     }
 
@@ -414,6 +418,7 @@ struct CreateRecipeView: View {
             .opacity(viewModel.isCurrentStepValid ? 1 : UI.CreateRecipe.disabledOpacity)
             .padding(.horizontal, UI.CreateRecipe.bottomPaddingH)
             .padding(.bottom, UI.CreateRecipe.bottomPaddingV)
+            .accessibilityIdentifier(viewModel.isLastStep ? AccessibilityID.CreateRecipe.saveButton : AccessibilityID.CreateRecipe.nextButton)
         }
         .background(theme.bg)
     }

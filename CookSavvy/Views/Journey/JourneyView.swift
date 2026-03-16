@@ -28,6 +28,7 @@ struct JourneyView: View {
                     Image(systemName: Icons.Journey.settings)
                         .foregroundStyle(theme.text2)
                 }
+                .accessibilityIdentifier(AccessibilityID.Journey.settingsButton)
             }
         }
         .task {
@@ -63,15 +64,18 @@ struct JourneyView: View {
     private var statsGrid: some View {
         HStack(spacing: UI.Journey.statsGridSpacing) {
             journeyStat(value: "\(viewModel.recipesCooked)", label: Strings.Journey.recipesCooked,
-                        icon: Icons.Journey.forkKnife, color: theme.accent)
+                        icon: Icons.Journey.forkKnife, color: theme.accent,
+                        accessibilityID: AccessibilityID.Journey.Stats.recipesCooked)
             journeyStat(value: "\(viewModel.dayStreak)", label: Strings.Journey.dayStreak,
-                        icon: Icons.Journey.flame, color: theme.rose)
+                        icon: Icons.Journey.flame, color: theme.rose,
+                        accessibilityID: AccessibilityID.Journey.Stats.dayStreak)
             journeyStat(value: String(format: "%.0f", viewModel.hoursCooking), label: Strings.Journey.hoursCooking,
-                        icon: Icons.Journey.clock, color: theme.mint)
+                        icon: Icons.Journey.clock, color: theme.mint,
+                        accessibilityID: AccessibilityID.Journey.Stats.hoursCooking)
         }
     }
 
-    private func journeyStat(value: String, label: String, icon: String, color: Color) -> some View {
+    private func journeyStat(value: String, label: String, icon: String, color: Color, accessibilityID: String) -> some View {
         VStack(spacing: UI.Journey.statItemSpacing) {
             Image(systemName: icon)
                 .font(.system(size: UI.Journey.statIconSize, weight: .semibold))
@@ -87,6 +91,7 @@ struct JourneyView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, UI.Journey.statItemPadding)
         .frostCard()
+        .accessibilityIdentifier(accessibilityID)
     }
 
     // MARK: - My Recipes
@@ -140,6 +145,7 @@ struct JourneyView: View {
                     .foregroundStyle(theme.text3)
             }
         }
+        .accessibilityIdentifier(AccessibilityID.Journey.myRecipes)
     }
 
     // MARK: - Weekly Activity
@@ -161,6 +167,7 @@ struct JourneyView: View {
             .padding(UI.Journey.weeklyPadding)
             .frostCard()
         }
+        .accessibilityIdentifier(AccessibilityID.Journey.weeklyActivity)
     }
 
     // MARK: - Achievements
@@ -185,6 +192,7 @@ struct JourneyView: View {
                 .padding(.horizontal, UI.Journey.achievementBadgeHorizontalPadding)
             }
         }
+        .accessibilityIdentifier(AccessibilityID.Journey.achievements)
     }
 
     private func achievementBadge(_ achievement: Achievement) -> some View {
@@ -233,6 +241,7 @@ struct JourneyView: View {
                 }
                 .frostCard(cornerRadius: UI.Common.cardCornerRadius)
             }
+            .accessibilityIdentifier(AccessibilityID.Journey.recentActivity)
         }
     }
 

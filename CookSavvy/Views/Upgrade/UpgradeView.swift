@@ -15,18 +15,7 @@ struct UpgradeView: View {
                 headerView
                 
                 ForEach(viewModel.availablePlans, id: \.self) { plan in
-                    PlanCard(
-                        plan: plan,
-                        features: viewModel.featureDescription(for: plan),
-                        priceText: viewModel.priceText(for: plan),
-                        isCurrentPlan: viewModel.currentPlan == plan,
-                        isLoading: viewModel.isLoading,
-                        onSelect: {
-                            Task {
-                                await viewModel.purchase(plan)
-                            }
-                        }
-                    )
+                    planCard(for: plan)
                 }
                 
                 Text(Strings.Upgrade.autoRenew)
@@ -74,6 +63,27 @@ struct UpgradeView: View {
                 .multilineTextAlignment(.center)
         }
         .padding(.vertical)
+    }
+
+    private func planCard(for plan: SubscriptionPlan) -> some View {
+        let card = PlanCard(
+            plan: plan,
+            features: viewModel.featureDescription(for: plan),
+            priceText: viewModel.priceText(for: plan),
+            isCurrentPlan: viewModel.currentPlan == plan,
+            isLoading: viewModel.isLoading,
+            onSelect: {
+                Task {
+                    await viewModel.purchase(plan)
+                }
+            }
+        )
+
+        if plan == .premium {
+            return AnyView(card.accessibilityIdentifier(AccessibilityID.Upgrade.premiumPlan))
+        }
+
+        return AnyView(card)
     }
 }
 
@@ -156,6 +166,7 @@ struct PlanCard: View {
                     .clipShape(RoundedRectangle(cornerRadius: UI.Upgrade.subscribeCornerRadius, style: .continuous))
                 }
                 .disabled(isLoading)
+                .accessibilityIdentifier(AccessibilityID.Upgrade.subscribeButton)
             }
         }
         .padding()

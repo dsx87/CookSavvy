@@ -67,6 +67,7 @@ struct DiscoverView: View {
         .padding(.horizontal, UI.Discover.horizontalPadding)
         .padding(.bottom, UI.Discover.findButtonBottomPadding)
         .transition(.move(edge: .bottom).combined(with: .opacity))
+        .accessibilityIdentifier(AccessibilityID.Discover.findRecipesButton)
     }
 
     private var cameraButton: some View {
@@ -83,9 +84,11 @@ struct DiscoverView: View {
                         .padding(.vertical, UI.Discover.cameraBadgePaddingV)
                         .background(viewModel.remainingCameraScans > 0 ? theme.mint : theme.rose, in: Capsule())
                         .offset(x: UI.Discover.cameraBadgeOffsetX, y: UI.Discover.cameraBadgeOffsetY)
+                        .accessibilityIdentifier(AccessibilityID.Camera.scanLimitBadge)
                 }
             }
         }
+        .accessibilityIdentifier(AccessibilityID.Discover.cameraButton)
     }
 
     private var cameraIcon: some View {
@@ -117,6 +120,7 @@ struct DiscoverView: View {
             TextField(Strings.Discover.searchPlaceholder, text: $viewModel.searchText)
                 .font(UI.Fonts.searchField)
                 .foregroundStyle(theme.text1)
+                .accessibilityIdentifier(AccessibilityID.Discover.searchField)
             if !viewModel.searchText.isEmpty {
                 Button {
                     viewModel.searchText = ""
@@ -166,10 +170,12 @@ struct DiscoverView: View {
                                     viewModel.showRecipeDetails(recipe)
                                 }
                                 .accessibilityAddTraits(.isButton)
+                                .accessibilityIdentifier(AccessibilityID.Discover.recipe(recipe.title))
                         }
                     }
                 }
             }
+            .accessibilityIdentifier(AccessibilityID.Discover.recentSection)
         }
     }
 
@@ -202,6 +208,7 @@ struct DiscoverView: View {
                                     viewModel.showRecipeDetails(recipe)
                                 }
                                 .accessibilityAddTraits(.isButton)
+                                .accessibilityIdentifier(AccessibilityID.Discover.recipe(recipe.title))
                         }
 
                         Button {
@@ -213,6 +220,7 @@ struct DiscoverView: View {
                     }
                 }
             }
+            .accessibilityIdentifier(AccessibilityID.Discover.savedSection)
         }
     }
 
@@ -239,10 +247,12 @@ struct DiscoverView: View {
                                     viewModel.showRecipeDetails(recipe)
                                 }
                                 .accessibilityAddTraits(.isButton)
+                                .accessibilityIdentifier(AccessibilityID.Discover.recipe(recipe.title))
                         }
                     }
                 }
             }
+            .accessibilityIdentifier(AccessibilityID.Discover.suggestedSection)
         }
     }
 
@@ -288,6 +298,7 @@ struct DiscoverView: View {
                 }
             }
         }
+        .accessibilityIdentifier(AccessibilityID.Discover.ingredientGrid)
     }
 
     // MARK: - State 2: Recipe Results
@@ -310,6 +321,7 @@ struct DiscoverView: View {
                 )
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier(AccessibilityID.Discover.useItAllToggle)
     }
 
     private var resultsState: some View {
@@ -396,6 +408,7 @@ struct DiscoverView: View {
                 }
             }
         }
+        .accessibilityIdentifier(AccessibilityID.Discover.selectedStrip)
     }
 
     private var moodFilter: some View {
@@ -449,7 +462,9 @@ struct DiscoverView: View {
                     including: .gesture
                 )
                 .accessibilityAddTraits(.isButton)
+                .accessibilityIdentifier(AccessibilityID.Discover.recipe(featured.title))
             }
+            .accessibilityIdentifier(AccessibilityID.Discover.bestMatch)
         }
     }
 
@@ -518,8 +533,10 @@ struct DiscoverView: View {
                             viewModel.showRecipeDetails(recipe)
                         }
                         .accessibilityAddTraits(.isButton)
+                        .accessibilityIdentifier(AccessibilityID.Discover.recipe(recipe.title))
                 }
             }
+            .accessibilityIdentifier(AccessibilityID.Discover.moreRecipes)
         }
     }
 
