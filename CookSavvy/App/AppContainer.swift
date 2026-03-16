@@ -13,7 +13,11 @@ import Foundation
 final class AppContainer {
 
     // TODO: redo this in non singleton way
+    #if DEBUG
+    static private(set) var shared: AppContainer = AppContainer()
+    #else
     static let shared: AppContainer = AppContainer()
+    #endif
     
     // MARK: - Services
     let dbInterface: DBInterfaceProtocol
@@ -91,7 +95,41 @@ final class AppContainer {
 
         databaseInitService.startInitialization()
     }
-    
+
+    #if DEBUG
+    private init(
+        dbInterface: DBInterfaceProtocol,
+        ingredientsService: IngredientsServiceProtocol,
+        recipeService: RecipeServiceProtocol,
+        imageService: ImageServiceProtocol,
+        dataImportService: DataImportServiceProtocol,
+        userDataService: UserDataServiceProtocol,
+        databaseInitService: DatabaseInitializationServiceProtocol,
+        networkService: NetworkServiceProtocol,
+        aiService: AIServiceProtocol,
+        ingredientDetectionService: IngredientDetectionServiceProtocol,
+        subscriptionService: SubscriptionServiceProtocol,
+        cameraScanTracker: CameraScanTrackerProtocol,
+        shoppingListService: ShoppingListServiceProtocol,
+        recommendationService: RecipeRecommendationServiceProtocol
+    ) {
+        self.dbInterface = dbInterface
+        self.ingredientsService = ingredientsService
+        self.recipeService = recipeService
+        self.imageService = imageService
+        self.dataImportService = dataImportService
+        self.userDataService = userDataService
+        self.databaseInitService = databaseInitService
+        self.networkService = networkService
+        self.aiService = aiService
+        self.ingredientDetectionService = ingredientDetectionService
+        self.subscriptionService = subscriptionService
+        self.cameraScanTracker = cameraScanTracker
+        self.shoppingListService = shoppingListService
+        self.recommendationService = recommendationService
+    }
+    #endif
+
     private static func createRecipeAPIProvider(networkService: NetworkServiceProtocol) -> RecipeAPIProviderProtocol? {
         guard let key = APIKeyConfiguration.spoonacularKey, !key.isEmpty else {
             return nil
@@ -99,6 +137,60 @@ final class AppContainer {
         return SpoonacularProvider(apiKey: key, networkService: networkService)
     }
     
+    #if DEBUG
+    @MainActor
+    static func configureForUITesting(_ config: UITestConfiguration) {
+        let db = DBInterface(inMemory: true)
+        let ingredients = IngredientsService(dbInterface: db)
+        let dataImport = DataImportService(dbInterface: db)
+        let network = NetworkService()
+        let userDataService = UserDataService(dbInterface: db)
+        let onlineSource = OnlineRecipeSource(provider: nil)
+        let recipeService = RecipeService(
+            dbInterface: db,
+            sources: [
+                .offline: OfflineRecipeSource(dbInterface: db),
+                .online: onlineSource,
+                .ai: AIRecipeSource()
+            ]
+        )
+        let databaseInitService = DatabaseInitializationService(
+            dbInterface: db,
+            ingredientsService: ingredients,
+            dataImportService: dataImport
+        )
+        let llmProvider: LLMProviderProtocol = MockLLMProvider()
+        let ai = AIService(provider: llmProvider)
+        let subscriptionPlan: SubscriptionPlan = config.isPremiumUser ? .premium : .free
+
+        let container = AppContainer(
+            dbInterface: db,
+            ingredientsService: ingredients,
+            recipeService: recipeService,
+            imageService: ImageService(),
+            dataImportService: dataImport,
+            userDataService: userDataService,
+            databaseInitService: databaseInitService,
+            networkService: network,
+            aiService: ai,
+            ingredientDetectionService: AIIngredientDetectionAdapter(aiService: ai),
+            subscriptionService: MockSubscriptionService(initialPlan: subscriptionPlan),
+            cameraScanTracker: CameraScanTracker(),
+            shoppingListService: ShoppingListService(dbInterface: db),
+            recommendationService: RecipeRecommendationService(
+                userDataService: userDataService,
+                dbInterface: db,
+                databaseInitService: databaseInitService
+            )
+        )
+
+        UITestDataSeeder(db: db).seed(config: config)
+        databaseInitService.markReadyForTesting()
+
+        AppContainer.shared = container
+    }
+    #endif
+
     private static func createProductionProvider(networkService: NetworkServiceProtocol) -> LLMProviderProtocol {
         if let openAIKey = APIKeyConfiguration.openAIKey, !openAIKey.isEmpty {
             return OpenAIProvider(apiKey: openAIKey, networkService: networkService)

@@ -19,17 +19,21 @@ struct CookSavvyApp: App {
 private struct ThemedAppRoot: View {
     @Environment(\.colorScheme) private var colorScheme
     @AppStorage(ThemePreference.storageKey) private var themePreferenceRawValue = ThemePreference.defaultValue.rawValue
-    @StateObject private var coordinator = AppCoordinator()
+    @StateObject private var coordinator: AppCoordinator
 
     init() {
-        // Migration: existing installs that predate the onboarding key should skip it.
-        // If the DB file already exists the app has been used before, so mark onboarding done.
-        guard UserDefaults.standard.object(forKey: "hasCompletedOnboarding") == nil else { return }
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-        let dbURL = appSupport?.appendingPathComponent("CookSavvy/db.sqlite")
-        if let dbURL, FileManager.default.fileExists(atPath: dbURL.path) {
-            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+        #if DEBUG
+        let uiTestConfig = UITestConfiguration.fromLaunchArguments()
+        if uiTestConfig.isUITesting {
+            AppContainer.configureForUITesting(uiTestConfig)
+            uiTestConfig.prepareDefaults()
+            _coordinator = StateObject(wrappedValue: AppCoordinator())
+            return
         }
+        #endif
+
+        Self.applyOnboardingMigrationIfNeeded()
+        _coordinator = StateObject(wrappedValue: AppCoordinator())
     }
 
     private var themePreference: ThemePreference {
@@ -46,5 +50,14 @@ private struct ThemedAppRoot: View {
         }
         .preferredColorScheme(themePreference.preferredColorScheme)
         .environment(\.appTheme, themePreference.resolvedTheme(for: colorScheme))
+    }
+
+    private static func applyOnboardingMigrationIfNeeded(defaults: UserDefaults = .standard) {
+        guard defaults.object(forKey: "hasCompletedOnboarding") == nil else { return }
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        let dbURL = appSupport?.appendingPathComponent("CookSavvy/db.sqlite")
+        if let dbURL, FileManager.default.fileExists(atPath: dbURL.path) {
+            defaults.set(true, forKey: "hasCompletedOnboarding")
+        }
     }
 }
