@@ -4,34 +4,10 @@
     "%lld" : {
 
     },
-    "%lld found" : {
-
-    },
-    "%lld ingredients" : {
-
-    },
-    "%lld min" : {
-
-    },
     "%lld recipes" : {
 
     },
-    "%lld steps" : {
-
-    },
-    "%lldm" : {
-
-    },
     "🧑‍🍳" : {
-
-    },
-    "Add Ingredient" : {
-
-    },
-    "Add Step" : {
-
-    },
-    "by %@" : {
 
     },
     "camera.accessDescription" : {
@@ -111,9 +87,6 @@
         }
       }
     },
-    "CHOOSE AN ICON" : {
-
-    },
     "common.cancel" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -121,6 +94,28 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Cancel"
+          }
+        }
+      }
+    },
+    "common.minutesCompact" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%lldm"
+          }
+        }
+      }
+    },
+    "common.minutesShort" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%lld min"
           }
         }
       }
@@ -135,12 +130,6 @@
           }
         }
       }
-    },
-    "COOK TIME" : {
-
-    },
-    "COOKING STEPS" : {
-
     },
     "cookMode.done" : {
       "extractionState" : "extracted_with_value",
@@ -241,6 +230,17 @@
         }
       }
     },
+    "createRecipe.addIngredient" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add Ingredient"
+          }
+        }
+      }
+    },
     "createRecipe.addIngredients" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -248,6 +248,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Add Ingredients"
+          }
+        }
+      }
+    },
+    "createRecipe.addStep" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add Step"
           }
         }
       }
@@ -281,6 +292,61 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Details"
+          }
+        }
+      }
+    },
+    "createRecipe.difficultyEasy" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Easy"
+          }
+        }
+      }
+    },
+    "createRecipe.difficultyHard" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Hard"
+          }
+        }
+      }
+    },
+    "createRecipe.difficultyMedium" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Medium"
+          }
+        }
+      }
+    },
+    "createRecipe.ingredientCount" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%lld ingredients"
+          }
+        }
+      }
+    },
+    "createRecipe.ingredientPlaceholder" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ingredient %lld"
           }
         }
       }
@@ -340,6 +406,149 @@
         }
       }
     },
+    "createRecipe.sectionChooseIcon" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "CHOOSE AN ICON"
+          }
+        }
+      }
+    },
+    "createRecipe.sectionCookTime" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "COOK TIME"
+          }
+        }
+      }
+    },
+    "createRecipe.sectionDifficulty" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "DIFFICULTY"
+          }
+        }
+      }
+    },
+    "createRecipe.sectionIngredients" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "INGREDIENTS"
+          }
+        }
+      }
+    },
+    "createRecipe.sectionRecipeName" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "RECIPE NAME"
+          }
+        }
+      }
+    },
+    "createRecipe.sectionServings" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "SERVINGS"
+          }
+        }
+      }
+    },
+    "createRecipe.sectionSteps" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "COOKING STEPS"
+          }
+        }
+      }
+    },
+    "createRecipe.sectionTagline" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "TAGLINE"
+          }
+        }
+      }
+    },
+    "createRecipe.statLevel" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Level"
+          }
+        }
+      }
+    },
+    "createRecipe.statServings" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Serve"
+          }
+        }
+      }
+    },
+    "createRecipe.statTime" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Time"
+          }
+        }
+      }
+    },
+    "createRecipe.stepCount" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%lld steps"
+          }
+        }
+      }
+    },
+    "createRecipe.stepPlaceholder" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Step %lld"
+          }
+        }
+      }
+    },
     "createRecipe.taglinePlaceholder" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -351,8 +560,16 @@
         }
       }
     },
-    "DIFFICULTY" : {
-
+    "createRecipe.untitledRecipe" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Untitled Recipe"
+          }
+        }
+      }
     },
     "discover.addYourOwn" : {
       "extractionState" : "extracted_with_value",
@@ -563,6 +780,17 @@
         }
       }
     },
+    "discover.resultsFound" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%lld found"
+          }
+        }
+      }
+    },
     "discover.savedSection" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -661,12 +889,6 @@
           }
         }
       }
-    },
-    "Ingredient %lld" : {
-
-    },
-    "INGREDIENTS" : {
-
     },
     "journey.achievements" : {
       "extractionState" : "extracted_with_value",
@@ -979,8 +1201,16 @@
         }
       }
     },
-    "RECIPE NAME" : {
-
+    "recipeDetails.byAuthor" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "by %@"
+          }
+        }
+      }
     },
     "recipeDetails.ingredientsTitle" : {
       "extractionState" : "extracted_with_value",
@@ -1000,6 +1230,28 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "🧑‍🍳 Instructions"
+          }
+        }
+      }
+    },
+    "recipeDetails.sectionIngredients" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "INGREDIENTS"
+          }
+        }
+      }
+    },
+    "recipeDetails.sectionSteps" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "STEPS"
           }
         }
       }
@@ -1058,9 +1310,6 @@
           }
         }
       }
-    },
-    "SERVINGS" : {
-
     },
     "settings.aiGeneratedRecipes" : {
       "extractionState" : "extracted_with_value",
@@ -1689,12 +1938,6 @@
         }
       }
     },
-    "Step %lld" : {
-
-    },
-    "STEPS" : {
-
-    },
     "tab.discover" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -1716,9 +1959,6 @@
           }
         }
       }
-    },
-    "TAGLINE" : {
-
     },
     "upgrade.autoRenew" : {
       "extractionState" : "extracted_with_value",

@@ -56,7 +56,7 @@ final class DiscoverViewModel: ObservableObject {
         databaseInitService: DatabaseInitializationServiceProtocol,
         cameraScanTracker: CameraScanTrackerProtocol,
         recommendationService: RecipeRecommendationServiceProtocol,
-        coordinator: DiscoverCoordinator
+        coordinator: DiscoverCoordinator? = nil
     ) {
         self.ingredientsService = ingredientsService
         self.recipeService = recipeService

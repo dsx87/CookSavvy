@@ -229,8 +229,6 @@ final class DBInterface: DBInterfaceProtocol {
                 );
                 """)
             try db.execute(sql: "CREATE INDEX IF NOT EXISTS idx_cooking_sessions_date ON cooking_sessions(cooked_at DESC);")
-            // Migration: add rating column if it doesn't exist (for existing databases)
-            try? db.execute(sql: "ALTER TABLE cooking_sessions ADD COLUMN rating INTEGER;")
 
             // 9. Shopping List
             try db.execute(sql: """

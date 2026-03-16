@@ -9,11 +9,17 @@ final class CameraScanTracker: CameraScanTrackerProtocol {
 
     static let freeWeeklyLimit = 5
 
-    private let defaults = UserDefaults.standard
+    private let defaults: UserDefaults
+    private let dateProvider: () -> Date
 
     private enum Keys {
         static let scansUsed = "camera_scans_used_this_week"
         static let weekStart = "camera_scan_week_start"
+    }
+
+    init(defaults: UserDefaults = .standard, dateProvider: @escaping () -> Date = { Date() }) {
+        self.defaults = defaults
+        self.dateProvider = dateProvider
     }
 
     private var scansUsedThisWeek: Int {
@@ -26,7 +32,7 @@ final class CameraScanTracker: CameraScanTrackerProtocol {
             if let stored = defaults.object(forKey: Keys.weekStart) as? Date {
                 return stored
             }
-            let now = Date()
+            let now = dateProvider()
             defaults.set(now, forKey: Keys.weekStart)
             return now
         }
@@ -37,12 +43,12 @@ final class CameraScanTracker: CameraScanTrackerProtocol {
         let calendar = Calendar.current
         let storedWeek = calendar.component(.weekOfYear, from: weekStartDate)
         let storedYear = calendar.component(.yearForWeekOfYear, from: weekStartDate)
-        let currentWeek = calendar.component(.weekOfYear, from: Date())
-        let currentYear = calendar.component(.yearForWeekOfYear, from: Date())
+        let currentWeek = calendar.component(.weekOfYear, from: dateProvider())
+        let currentYear = calendar.component(.yearForWeekOfYear, from: dateProvider())
 
         if currentWeek != storedWeek || currentYear != storedYear {
             scansUsedThisWeek = 0
-            weekStartDate = Date()
+            weekStartDate = dateProvider()
         }
     }
 

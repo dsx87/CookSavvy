@@ -15,7 +15,7 @@ final class JourneyViewModel: ObservableObject {
     private let userDataService: UserDataServiceProtocol
     private weak var coordinator: JourneyCoordinator?
 
-    init(userDataService: UserDataServiceProtocol, coordinator: JourneyCoordinator) {
+    init(userDataService: UserDataServiceProtocol, coordinator: JourneyCoordinator? = nil) {
         self.userDataService = userDataService
         self.coordinator = coordinator
     }

@@ -14,12 +14,11 @@ final class OfflineRecipeSourceTests: XCTestCase {
     var offlineSource: OfflineRecipeSource!
     
     override func setUpWithError() throws {
-        dbInterface = DBInterface()
+        dbInterface = DBInterface(inMemory: true)
         offlineSource = OfflineRecipeSource(dbInterface: dbInterface)
     }
-    
+
     override func tearDownWithError() throws {
-        try dbInterface.clearDatabase()
         dbInterface = nil
         offlineSource = nil
     }

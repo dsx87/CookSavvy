@@ -24,8 +24,8 @@ final class UserDataService: UserDataServiceProtocol {
     // MARK: - Properties
 
     private let dbInterface: DBInterfaceProtocol
-    private let defaults = UserDefaults.standard
-    
+    private let defaults: UserDefaults
+
     private enum Keys {
         static let enabledSources = "enabled_recipe_sources"
         static let themePreference = ThemePreference.storageKey
@@ -33,8 +33,9 @@ final class UserDataService: UserDataServiceProtocol {
 
     // MARK: - Initialization
 
-    init(dbInterface: DBInterfaceProtocol) {
+    init(dbInterface: DBInterfaceProtocol, defaults: UserDefaults = .standard) {
         self.dbInterface = dbInterface
+        self.defaults = defaults
     }
 
     // MARK: - Recent Ingredients
