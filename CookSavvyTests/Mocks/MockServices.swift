@@ -80,10 +80,12 @@ final class MockRecipeService: RecipeServiceProtocol {
         return stubbedRecipes
     }
 
-    func getRecipes(for ingredients: [Ingredient], from sourceTypes: Set<RecipeSourceType>) async throws -> [Recipe] {
+    var stubbedHadSourceFailures = false
+
+    func getRecipes(for ingredients: [Ingredient], from sourceTypes: Set<RecipeSourceType>) async throws -> (recipes: [Recipe], hadSourceFailures: Bool) {
         if let error = shouldThrow { throw error }
         getRecipesCallCount += 1
-        return stubbedRecipes
+        return (stubbedRecipes, stubbedHadSourceFailures)
     }
 
     func isSourceAvailable(_ sourceType: RecipeSourceType) async -> Bool {

@@ -56,6 +56,7 @@ enum Icons {
     }
 
     enum Discover {
+        static let error = "exclamationmark.triangle.fill"
         static let clock = "clock"
         static let bookmark = "bookmark"
         static let bookmarkFill = "bookmark.fill"

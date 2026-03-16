@@ -29,6 +29,7 @@ final class DiscoverViewModel: ObservableObject {
     @Published var savedRecipes: [Recipe] = []
     @Published var searchResultRecipes: [Recipe] = []
     @Published var isSearching = false
+    @Published var searchError: String? = nil
     @Published var isLoadingIngredients = false
     @Published var showResults = false
     @Published var useItAllFilter = false
@@ -207,6 +208,10 @@ final class DiscoverViewModel: ObservableObject {
         Task { await searchRecipes() }
     }
 
+    func retrySearch() {
+        findRecipes()
+    }
+
     func toggleMood(_ mood: RecipeMood) {
         selectedMood = selectedMood == mood ? nil : mood
     }
@@ -283,30 +288,39 @@ final class DiscoverViewModel: ObservableObject {
     private func searchRecipes() async {
         guard hasIngredients else { return }
         isSearching = true
+        searchError = nil
         do {
             let enabledSources = accessibleEnabledSources()
             if RecipeSourceType.requiresDatabaseReady(enabledSources) {
                 await databaseInitService.waitForRecipes()
             }
-            var results = try await recipeService.getRecipes(
+            let (rawResults, hadSourceFailures) = try await recipeService.getRecipes(
                 for: selectedIngredients,
                 from: enabledSources
             )
+            var results = rawResults
             let ingredients = selectedIngredients
             for index in results.indices {
-                let matching = matchingIngredientNames(for: results[index])
-                results[index].matchReason = RecipeMatchExplainer.explain(
-                    recipe: results[index],
-                    selectedIngredients: ingredients,
-                    matchingNames: matching
-                )
-                results[index].missingIngredients = RecipeMatchExplainer.missingIngredients(
+                let missing = RecipeMatchExplainer.missingIngredients(
                     recipe: results[index],
                     selectedIngredients: ingredients
                 )
+                results[index].missingIngredients = missing
+                results[index].matchReason = RecipeMatchExplainer.explain(
+                    recipe: results[index],
+                    missingIngredients: missing
+                )
             }
             searchResultRecipes = results
-        } catch {}
+            if hadSourceFailures {
+                searchError = rawResults.isEmpty
+                    ? Strings.Discover.searchFailedMessage
+                    : Strings.Discover.searchErrorMessage
+            }
+        } catch {
+            searchResultRecipes = []
+            searchError = Strings.Discover.searchFailedMessage
+        }
         isSearching = false
     }
 

@@ -48,23 +48,6 @@ final class AppContainer {
         let network = NetworkService()
         self.networkService = network
         
-        let recipeAPIProvider = Self.createRecipeAPIProvider(networkService: network)
-        let onlineSource = OnlineRecipeSource(provider: recipeAPIProvider)
-        self.recipeService = RecipeService(
-            dbInterface: db,
-            sources: [
-                .offline: OfflineRecipeSource(dbInterface: db),
-                .online: onlineSource,
-                .ai: AIRecipeSource()
-            ]
-        )
-        
-        self.databaseInitService = DatabaseInitializationService(
-            dbInterface: db,
-            ingredientsService: ingredients,
-            dataImportService: dataImport
-        )
-
         let llmProvider: LLMProviderProtocol
         #if DEBUG
         llmProvider = MockLLMProvider()
@@ -74,6 +57,23 @@ final class AppContainer {
         let ai = AIService(provider: llmProvider)
         self.aiService = ai
         self.ingredientDetectionService = AIIngredientDetectionAdapter(aiService: ai)
+
+        let recipeAPIProvider = Self.createRecipeAPIProvider(networkService: network)
+        let onlineSource = OnlineRecipeSource(provider: recipeAPIProvider)
+        self.recipeService = RecipeService(
+            dbInterface: db,
+            sources: [
+                .offline: OfflineRecipeSource(dbInterface: db),
+                .online: onlineSource,
+                .ai: AIRecipeSource(aiService: ai)
+            ]
+        )
+
+        self.databaseInitService = DatabaseInitializationService(
+            dbInterface: db,
+            ingredientsService: ingredients,
+            dataImportService: dataImport
+        )
         
         #if DEBUG
         self.subscriptionService = MockSubscriptionService(initialPlan: .free)

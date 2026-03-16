@@ -7,32 +7,22 @@
 
 import Foundation
 
-/// AI-powered recipe source that generates recipes based on ingredients
-/// This is a placeholder implementation for future development
+/// AI-powered recipe source that generates recipes using the AI service
 final class AIRecipeSource: RecipeSourceProtocol {
-    
+
     var sourceType: RecipeSourceType { .ai }
-    
-    private let modelEndpoint: String
-    private let apiKey: String?
-    
-    /// Initializes the AI source with model configuration
-    /// - Parameters:
-    ///   - modelEndpoint: The AI model endpoint URL
-    ///   - apiKey: Optional API key for authentication
-    init(modelEndpoint: String = "https://api.example.com/ai/recipes", apiKey: String? = nil) {
-        self.modelEndpoint = modelEndpoint
-        self.apiKey = apiKey
+
+    private let aiService: AIServiceProtocol
+
+    init(aiService: AIServiceProtocol) {
+        self.aiService = aiService
     }
-    
+
     func fetchRecipes(for ingredients: [Ingredient]) async throws -> [Recipe] {
-        // TODO: Implement actual AI generation when service is ready
-        // For now, throw unavailable error
-        throw RecipeSourceError.sourceUnavailable(.ai)
+        return try await aiService.generateRecipes(for: ingredients, count: 10)
     }
-    
+
     func isAvailable() async -> Bool {
-        // TODO: Implement actual availability check
-        return false
+        return true
     }
 }

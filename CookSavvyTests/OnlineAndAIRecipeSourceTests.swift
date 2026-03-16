@@ -67,48 +67,56 @@ private final class MockRecipeAPIProvider: RecipeAPIProviderProtocol {
 }
 
 final class AIRecipeSourceTests: XCTestCase {
-    
-    var aiSource: AIRecipeSource!
-    
-    override func setUpWithError() throws {
-        aiSource = AIRecipeSource()
-    }
-    
-    override func tearDownWithError() throws {
-        aiSource = nil
-    }
-    
+
     func testSourceType() {
-        XCTAssertEqual(aiSource.sourceType, .ai)
+        let source = AIRecipeSource(aiService: MockAIService())
+        XCTAssertEqual(source.sourceType, .ai)
     }
-    
-    func testIsAvailableReturnsFalse() async {
-        let available = await aiSource.isAvailable()
-        XCTAssertFalse(available, "AI source should be unavailable until implemented")
+
+    func testAIRecipeSourceIsAvailable() async {
+        let source = AIRecipeSource(aiService: MockAIService())
+        let available = await source.isAvailable()
+        XCTAssertTrue(available, "AI source should always be available")
     }
-    
-    func testFetchRecipesThrowsUnavailableError() async {
+
+    func testAIRecipeSourceFetchesFromAIService() async throws {
+        let mockService = MockAIService()
+        let source = AIRecipeSource(aiService: mockService)
         let ingredients: [Ingredient] = ["Chicken", "Rice"]
-        
+
+        let recipes = try await source.fetchRecipes(for: ingredients)
+        XCTAssertFalse(recipes.isEmpty)
+        XCTAssertTrue(mockService.generateRecipesCalled)
+    }
+
+    func testAIRecipeSourcePropagatesErrors() async {
+        let mockService = MockAIService()
+        mockService.shouldThrow = true
+        let source = AIRecipeSource(aiService: mockService)
+        let ingredients: [Ingredient] = ["Chicken", "Rice"]
+
         do {
-            _ = try await aiSource.fetchRecipes(for: ingredients)
-            XCTFail("Should throw unavailable error")
-        } catch let error as RecipeSourceError {
-            if case .sourceUnavailable(let type) = error {
-                XCTAssertEqual(type, .ai)
-            } else {
-                XCTFail("Wrong error type: \(error)")
-            }
+            _ = try await source.fetchRecipes(for: ingredients)
+            XCTFail("Should throw an error")
         } catch {
-            XCTFail("Unexpected error: \(error)")
+            // Expected — error propagated from AI service
         }
     }
-    
-    func testCustomInitialization() {
-        let customSource = AIRecipeSource(
-            modelEndpoint: "https://custom.ai.com/generate",
-            apiKey: "test-key"
-        )
-        XCTAssertEqual(customSource.sourceType, .ai)
+}
+
+private final class MockAIService: AIServiceProtocol {
+    var generateRecipesCalled = false
+    var shouldThrow = false
+
+    func detectIngredients(from imageData: Data) async throws -> [Ingredient] {
+        return []
+    }
+
+    func generateRecipes(for ingredients: [Ingredient], count: Int) async throws -> [Recipe] {
+        generateRecipesCalled = true
+        if shouldThrow {
+            throw AIServiceError.noRecipesGenerated
+        }
+        return Recipe.mocks(count: count)
     }
 }

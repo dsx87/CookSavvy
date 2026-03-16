@@ -88,12 +88,12 @@ enum Strings {
     }
 
     enum Discover {
-        static let greetingMorning = String(localized: "discover.greetingMorning", defaultValue: "Good Morning ☀️")
-        static let greetingAfternoon = String(localized: "discover.greetingAfternoon", defaultValue: "Good Afternoon 🌤️")
-        static let greetingEvening = String(localized: "discover.greetingEvening", defaultValue: "Dinner time? Let's go 🍽️")
-        static let greetingLateNight = String(localized: "discover.greetingLateNight", defaultValue: "Late night snack? 🌜")
+        static let greetingMorning = String(localized: "discover.greetingMorning", defaultValue: "What needs using up? ☀️")
+        static let greetingAfternoon = String(localized: "discover.greetingAfternoon", defaultValue: "Let's use what you've got 🌤️")
+        static let greetingEvening = String(localized: "discover.greetingEvening", defaultValue: "Dinner from what's on hand 🍽️")
+        static let greetingLateNight = String(localized: "discover.greetingLateNight", defaultValue: "Late night fridge rescue 🌜")
         static let kitchenTitle = String(localized: "discover.kitchenTitle", defaultValue: "What's for dinner?")
-        static let kitchenSubtitle = String(localized: "discover.kitchenSubtitle", defaultValue: "Add what you have — get dinner ideas in seconds")
+        static let kitchenSubtitle = String(localized: "discover.kitchenSubtitle", defaultValue: "Add what you have — we'll find recipes to use it all")
         static let recipesForYou = String(localized: "discover.recipesForYou", defaultValue: "Your dinner options")
         static let yourIngredients = String(localized: "discover.yourIngredients", defaultValue: "YOUR INGREDIENTS")
         static let edit = String(localized: "discover.edit", defaultValue: "Edit")
@@ -108,7 +108,8 @@ enum Strings {
         static let findRecipes = String(localized: "discover.findRecipes", defaultValue: "Find Dinner")
         static let scansRemaining = String(localized: "discover.scansRemaining", defaultValue: "%lld scans left")
         static let scansExhausted = String(localized: "discover.scansExhausted", defaultValue: "No scans left")
-        static let matchLabel = String(localized: "discover.matchLabel", defaultValue: "%lld%% match")
+        static let matchLabel = String(localized: "discover.matchLabel", defaultValue: "Uses %lld of %lld ingredients")
+        static let matchLabelAll = String(localized: "discover.matchLabelAll", defaultValue: "You have all the ingredients!")
         static let matchDetailsTitle = String(localized: "discover.matchDetailsTitle", defaultValue: "Matching ingredients")
         static let matchDetailsEmpty = String(localized: "discover.matchDetailsEmpty", defaultValue: "No exact ingredient matches found.")
         static let missingCount = String(localized: "discover.missingCount", defaultValue: "Missing %lld")
@@ -117,6 +118,10 @@ enum Strings {
         static let suggestedForYou = String(localized: "discover.suggestedForYou", defaultValue: "SUGGESTED FOR YOU")
         static let suggestedBecause = String(localized: "discover.suggestedBecause", defaultValue: "Based on your %@ recipes")
         static let resultsFound = String(localized: "discover.resultsFound", defaultValue: "%lld found")
+        static let searchErrorMessage = String(localized: "discover.searchErrorMessage", defaultValue: "Some recipe sources couldn't be reached — showing available results")
+        static let searchFailedMessage = String(localized: "discover.searchFailedMessage", defaultValue: "Search failed — please try again")
+        static let quickMealSuffix = String(localized: "discover.quickMealSuffix", defaultValue: " · Quick %lld-min meal")
+        static let retry = String(localized: "discover.retry", defaultValue: "Retry")
     }
 
     enum Journey {
