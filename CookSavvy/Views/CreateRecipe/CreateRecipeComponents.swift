@@ -56,6 +56,7 @@ struct StepInputRow: View {
                     RoundedRectangle(cornerRadius: UI.CreateRecipe.ingredientInputCornerRadius, style: .continuous)
                         .strokeBorder(theme.divider, lineWidth: UI.Common.borderWidth)
                 )
+                .accessibilityIdentifier(AccessibilityID.CreateRecipe.step(index))
 
             if canDelete {
                 Button {

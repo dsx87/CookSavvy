@@ -19,12 +19,14 @@ struct TabContainerView: View {
                     Image(systemName: Icons.Tab.discover)
                     Text(Strings.Tab.discover)
                 }
+                .accessibilityIdentifier(AccessibilityID.Tab.discover)
 
             coordinator.journeyCoordinator(container: container).start()
                 .tabItem {
                     Image(systemName: Icons.Tab.journey)
                     Text(Strings.Tab.journey)
                 }
+                .accessibilityIdentifier(AccessibilityID.Tab.journey)
         }
         .tint(theme.accent)
     }

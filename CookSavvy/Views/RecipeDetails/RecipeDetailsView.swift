@@ -30,6 +30,7 @@ struct RecipeDetailsView: View {
                         .foregroundStyle(viewModel.isFavorite ? theme.accent : theme.text2)
                 }
                 .disabled(viewModel.isLoadingFavorite)
+                .accessibilityIdentifier(AccessibilityID.RecipeDetails.bookmarkButton)
             }
         }
     }
@@ -53,6 +54,7 @@ struct RecipeDetailsView: View {
             Text(viewModel.recipe.title)
                 .font(UI.Fonts.largeTitle)
                 .foregroundStyle(theme.text1)
+                .accessibilityIdentifier(AccessibilityID.RecipeDetails.title)
             if let tagline = viewModel.recipe.tagline {
                 Text(tagline)
                     .font(UI.Fonts.tagline)
@@ -109,6 +111,7 @@ struct RecipeDetailsView: View {
                 addToShoppingListButton
             }
         }
+        .accessibilityIdentifier(AccessibilityID.RecipeDetails.ingredientsSection)
     }
 
     private var addToShoppingListButton: some View {
@@ -127,6 +130,7 @@ struct RecipeDetailsView: View {
             .frame(maxWidth: .infinity)
             .background(theme.accentSoft, in: RoundedRectangle(cornerRadius: UI.RecipeDetails.addToListCornerRadius, style: .continuous))
         }
+        .accessibilityIdentifier(AccessibilityID.RecipeDetails.addToShoppingList)
     }
 
     private func ingredientRow(at index: Int) -> some View {
@@ -183,6 +187,7 @@ struct RecipeDetailsView: View {
                 }
             }
         }
+        .accessibilityIdentifier(AccessibilityID.RecipeDetails.stepsSection)
     }
 
     private func stepCard(index: Int, step: Recipe.Step) -> some View {
@@ -253,6 +258,7 @@ struct RecipeDetailsView: View {
                 .frame(height: UI.RecipeDetails.gradientHeight)
                 .allowsHitTesting(false)
         }
+        .accessibilityIdentifier(AccessibilityID.RecipeDetails.startCookingButton)
     }
 
     // MARK: - Helpers

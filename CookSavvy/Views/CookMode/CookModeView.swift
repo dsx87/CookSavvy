@@ -40,6 +40,7 @@ struct CookModeView: View {
                     .frame(width: UI.CookMode.closeButtonSize, height: UI.CookMode.closeButtonSize)
                     .background(theme.surface, in: Circle())
             }
+            .accessibilityIdentifier(AccessibilityID.CookMode.closeButton)
 
             Spacer()
 
@@ -87,6 +88,7 @@ struct CookModeView: View {
         }
         .padding(.horizontal, UI.CookMode.horizontalPadding)
         .padding(.top, UI.CookMode.dotsTopPadding)
+        .accessibilityIdentifier(AccessibilityID.CookMode.stepProgress)
     }
 
     // MARK: - Step Content
@@ -103,6 +105,7 @@ struct CookModeView: View {
                     insertion: .move(edge: .trailing).combined(with: .opacity),
                     removal: .move(edge: .leading).combined(with: .opacity)
                 ))
+                .accessibilityIdentifier(AccessibilityID.CookMode.stepText)
 
             if let timerMin = viewModel.currentStepTimer {
                 timerView(minutes: timerMin)
@@ -158,6 +161,7 @@ struct CookModeView: View {
             feedbackCard
                 .padding(.horizontal, UI.CookMode.feedbackCardHorizontalPadding)
         }
+        .accessibilityIdentifier(AccessibilityID.CookMode.feedbackOverlay)
     }
 
     private var feedbackCard: some View {
@@ -183,6 +187,7 @@ struct CookModeView: View {
                         .foregroundStyle(star <= viewModel.feedbackRating ? theme.gold : theme.text3)
                 }
                 .animation(UI.Anim.springDefault, value: viewModel.feedbackRating)
+                .accessibilityIdentifier(AccessibilityID.CookMode.star(star - 1))
             }
         }
     }
@@ -197,6 +202,7 @@ struct CookModeView: View {
                     .frame(height: UI.CookMode.feedbackButtonHeight)
                     .background(theme.surface, in: Capsule())
             }
+            .accessibilityIdentifier(AccessibilityID.CookMode.skipRating)
             Button { viewModel.submitFeedback() } label: {
                 Text(Strings.CookMode.submit)
                     .font(UI.Fonts.buttonLabel)
@@ -208,6 +214,7 @@ struct CookModeView: View {
                         in: Capsule()
                     )
             }
+            .accessibilityIdentifier(AccessibilityID.CookMode.submitButton)
         }
     }
 
@@ -227,6 +234,7 @@ struct CookModeView: View {
                     .background(theme.surface, in: Circle())
             }
             .disabled(viewModel.isFirstStep)
+            .accessibilityIdentifier(AccessibilityID.CookMode.previousButton)
 
             Button {
                 withAnimation(UI.Anim.springDefault) {
@@ -253,6 +261,7 @@ struct CookModeView: View {
                 )
                 .neonGlow(theme.accent, radius: UI.Common.neonRadiusSmall)
             }
+            .accessibilityIdentifier(AccessibilityID.CookMode.doneButton)
 
             Button {
                 withAnimation(UI.Anim.springNav) {
@@ -266,6 +275,7 @@ struct CookModeView: View {
                     .background(theme.surface, in: Circle())
             }
             .disabled(viewModel.isLastStep)
+            .accessibilityIdentifier(AccessibilityID.CookMode.nextButton)
         }
         .padding(.horizontal, UI.CookMode.horizontalPadding)
         .padding(.bottom, UI.CookMode.bottomPadding)

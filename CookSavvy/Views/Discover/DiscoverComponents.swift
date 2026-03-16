@@ -21,6 +21,7 @@ struct CategoryChip: View {
         .overlay(
             Capsule().strokeBorder(isSelected ? Color.clear : theme.divider, lineWidth: UI.Common.borderWidth)
         )
+        .accessibilityIdentifier(AccessibilityID.Discover.category(category.rawValue))
     }
 
     private var categoryColor: Color {
@@ -61,6 +62,7 @@ struct IngredientBubble: View {
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
+        .accessibilityIdentifier(AccessibilityID.Discover.ingredient(ingredient.name))
     }
 }
 
@@ -120,6 +122,7 @@ struct MoodPill: View {
                 .strokeBorder(isSelected ? Color.clear : color.opacity(UI.Components.moodPillBorderOpacity), lineWidth: UI.Common.borderWidth)
         )
         .neonGlow(isSelected ? color : .clear, radius: isSelected ? UI.Components.moodPillGlowRadius : 0)
+        .accessibilityIdentifier(AccessibilityID.Discover.mood(name))
     }
 }
 

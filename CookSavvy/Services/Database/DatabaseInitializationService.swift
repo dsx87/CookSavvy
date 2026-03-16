@@ -117,4 +117,12 @@ final class DatabaseInitializationService: ObservableObject, DatabaseInitializat
             try? await Task.sleep(nanoseconds: 50_000_000)
         }
     }
+
+    #if DEBUG
+    func markReadyForTesting() {
+        initializationTask?.cancel()
+        initializationTask = nil
+        state = .ready
+    }
+    #endif
 }

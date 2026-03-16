@@ -26,6 +26,7 @@ struct ShoppingListView: View {
                             }
                             .foregroundStyle(theme.rose)
                             .font(UI.Fonts.captionSemibold)
+                            .accessibilityIdentifier(AccessibilityID.ShoppingList.clearDone)
                         }
                     }
                 }
@@ -84,6 +85,7 @@ struct ShoppingListView: View {
                     .frame(width: UI.ShoppingList.checkboxSize, height: UI.ShoppingList.checkboxSize)
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier(AccessibilityID.ShoppingList.checkbox(item.name))
 
             Text(item.name)
                 .font(UI.Fonts.body)
@@ -99,6 +101,7 @@ struct ShoppingListView: View {
                 Image(systemName: Icons.ShoppingList.trash)
             }
         }
+        .accessibilityIdentifier(AccessibilityID.ShoppingList.item(item.name))
     }
 
     // MARK: - Empty State
@@ -117,5 +120,6 @@ struct ShoppingListView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, UI.ShoppingList.horizontalPadding)
         }
+        .accessibilityIdentifier(AccessibilityID.ShoppingList.emptyState)
     }
 }

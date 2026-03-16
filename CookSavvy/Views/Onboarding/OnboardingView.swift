@@ -17,6 +17,7 @@ struct OnboardingView: View {
                 ForEach(Array(viewModel.pages.enumerated()), id: \.offset) { index, page in
                     pageView(page)
                         .tag(index)
+                        .accessibilityIdentifier(AccessibilityID.Onboarding.page(index))
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
@@ -38,6 +39,7 @@ struct OnboardingView: View {
                             .neonGlow(theme.accent, radius: UI.Common.neonRadiusDefault)
                     }
                     .padding(.horizontal, 32)
+                    .accessibilityIdentifier(AccessibilityID.Onboarding.getStartedButton)
                 } else {
                     Button {
                         withAnimation {
@@ -53,6 +55,7 @@ struct OnboardingView: View {
                             .neonGlow(theme.accent, radius: UI.Common.neonRadiusDefault)
                     }
                     .padding(.horizontal, 32)
+                    .accessibilityIdentifier(AccessibilityID.Onboarding.getStartedButton)
                 }
             }
             .padding(.bottom, 48)
@@ -64,6 +67,7 @@ struct OnboardingView: View {
             .font(UI.Fonts.captionSemibold)
             .foregroundStyle(theme.text2)
             .padding()
+            .accessibilityIdentifier(AccessibilityID.Onboarding.skipButton)
         }
     }
 
