@@ -8,6 +8,7 @@
 > - `docs/RECIPE_SERVICE_README.md` — RecipeService usage and API
 > - `docs/PRODUCT_ANALYSIS.md` — product analysis and feature breakdown
 > - `docs/PRODUCT_AUDIT_GPT.md` — product audit notes
+> - `docs/MANUAL_QA_CHECKLIST.md` — scenarios that remain manual after UI test automation
 
 ## Quick Reference
 
@@ -23,6 +24,18 @@ To build for any iOS Simulator (avoiding version errors):
 ```bash
 xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 ```
+
+To run only the UI tests:
+
+```bash
+xcodebuild test -scheme CookSavvy -destination 'platform=iOS Simulator,name=iPhone 16' -testPlan UITestPlan
+```
+
+## UI Test Notes
+
+- UI tests live in `CookSavvyUITests/`
+- Deterministic UI test data is configured through `CookSavvy/App/UITestConfiguration.swift` and `CookSavvy/App/UITestDataSeeder.swift`
+- Supported launch arguments include `--uitesting`, `--fresh-install`, `--premium-user`, `--with-cooking-history`, `--with-favorites`, `--with-shopping-items`, `--empty-db`, `--large-dataset`, and `--camera-limit-reached`
 
 ## Must Follow
 

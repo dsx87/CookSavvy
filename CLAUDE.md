@@ -18,6 +18,25 @@ To build the app for any available iOS Simulator (avoiding specific version issu
 xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 ```
 
+To run only the UI tests, use:
+
+```bash
+xcodebuild test -scheme CookSavvy -destination 'platform=iOS Simulator,name=iPhone 16' -testPlan UITestPlan
+```
+
+## UI Test Launch Arguments
+
+- `--uitesting` — enables deterministic UI-test bootstrapping
+- `--skip-onboarding` — skips onboarding unless paired with `--fresh-install`
+- `--fresh-install` — forces first-launch onboarding
+- `--premium-user` — boots with premium entitlements via `MockSubscriptionService`
+- `--with-cooking-history` — seeds deterministic cooking sessions
+- `--with-favorites` — seeds favorite recipes
+- `--with-shopping-items` — seeds shopping list rows
+- `--empty-db` — skips DB seeding for empty-state coverage
+- `--large-dataset` — adds a larger deterministic recipe set
+- `--camera-limit-reached` — preloads free-tier camera usage to the weekly cap
+
 ## Subscription Tiers
 
 | Tier | Display Name | Recipe Source | Ingredient Detection |
@@ -45,6 +64,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 | **Onboarding** | 3-screen first-launch walkthrough (fork.knife.circle → camera.viewfinder → timer); gated by `hasCompletedOnboarding` AppStorage |
 | **Shopping List** | Premium checklist of missing ingredients grouped by recipe; swipe-to-delete, toggle checked, clear done; sheet from Recipe Details or Journey |
 | **Tab Container** | Root tab bar with 2 tabs: Discover + Journey |
+| **UI Tests** | XCUITest target under `CookSavvyUITests/` with launch-argument driven app setup and feature-focused suites |
 
 > All screens are subject to extension and modification.
 
@@ -155,6 +175,8 @@ CookSavvy/
 ├── App/
 │   ├── CookSavvyApp.swift           — App entry point
 │   ├── AppContainer.swift            — DI container (singleton)
+│   ├── UITestConfiguration.swift     — DEBUG-only UI test launch-argument parsing
+│   ├── UITestDataSeeder.swift        — DEBUG-only deterministic UI test data seeding
 │   └── APIKeyConfiguration.swift     — API key reading from plist
 ├── Models/
 │   ├── ShoppingItem.swift            — Shopping list item (id, name, isChecked, addedAt, recipeTitle)
@@ -249,6 +271,12 @@ CookSavvy/
 ├── Extensions/
 │   ├── Character+Extensions.swift
 │   └── String+Extensions.swift
+├── CookSavvyUITests/
+│   ├── Helpers/
+│   │   ├── AccessibilityID.swift     — shared UI test identifiers
+│   │   ├── BaseUITest.swift          — base classes for common launch configurations
+│   │   └── XCUIApplication+Helpers.swift
+│   └── *.swift                       — feature-oriented XCUITest suites
 ├── Theme/
 │   ├── UIConstants.swift              — Layout constants (nested `UI` struct + `UI.V2`)
 │   ├── AppTheme.swift                 — Theme protocol + LightTheme + DarkTheme + SystemTheme
@@ -307,6 +335,7 @@ Extended documentation lives in the `docs/` directory:
 | `docs/RECIPE_SERVICE_README.md` | RecipeService usage and API |
 | `docs/PRODUCT_ANALYSIS.md` | Product analysis and feature breakdown |
 | `docs/PRODUCT_AUDIT_GPT.md` | Product audit notes |
+| `docs/MANUAL_QA_CHECKLIST.md` | Scenarios that remain manual after UI test automation |
 
 ## Workflow Rules
 
