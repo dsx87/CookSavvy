@@ -1,0 +1,36 @@
+{
+  "configurations" : [
+    {
+      "id" : "B2C3D4E5-F6A7-8901-BCDE-F12345678901",
+      "name" : "Integration Tests",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : false,
+      "selectedTests" : [
+        "CookSavvyTests/CookSavvyTests",
+        "CookSavvyTests/DatasetImportingTests",
+        "CookSavvyTests/ImageServiceTests",
+        "CookSavvyTests/IngredientsServiceTests",
+        "CookSavvyTests/OfflineRecipeSourceTests",
+        "CookSavvyTests/RecipeRecommendationServiceTests",
+        "CookSavvyTests/RecipeServiceTests",
+        "CookSavvyTests/ShoppingListServiceTests",
+        "CookSavvyTests/UserDataServiceTests"
+      ],
+      "target" : {
+        "containerPath" : "container:CookSavvy.xcodeproj",
+        "identifier" : "1DE9DF152E623A380077DD75",
+        "name" : "CookSavvyTests"
+      }
+    }
+  ],
+  "version" : 1
+}

@@ -1,0 +1,44 @@
+{
+  "configurations" : [
+    {
+      "id" : "A1B2C3D4-E5F6-7890-ABCD-EF1234567890",
+      "name" : "Unit Tests",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "selectedTests" : [
+        "CookSavvyTests/AchievementEvaluatorTests",
+        "CookSavvyTests/CameraScanTrackerTests",
+        "CookSavvyTests/CookModeViewModelTests",
+        "CookSavvyTests/CreateRecipeViewModelTests",
+        "CookSavvyTests/CVSDecoderTests",
+        "CookSavvyTests/DiscoverViewModelTests",
+        "CookSavvyTests/IngredientTests",
+        "CookSavvyTests/JourneyViewModelTests",
+        "CookSavvyTests/NetworkServiceTests",
+        "CookSavvyTests/OnlineAndAIRecipeSourceTests",
+        "CookSavvyTests/RecipeDetailsViewModelTests",
+        "CookSavvyTests/RecipeMoodRankerTests",
+        "CookSavvyTests/RecipeModelTests",
+        "CookSavvyTests/RecipeSourceTests",
+        "CookSavvyTests/ShoppingListViewModelTests",
+        "CookSavvyTests/SpoonacularMapperTests",
+        "CookSavvyTests/URLBuilderTests"
+      ],
+      "target" : {
+        "containerPath" : "container:CookSavvy.xcodeproj",
+        "identifier" : "1DE9DF152E623A380077DD75",
+        "name" : "CookSavvyTests"
+      }
+    }
+  ],
+  "version" : 1
+}
