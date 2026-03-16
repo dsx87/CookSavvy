@@ -20,7 +20,54 @@ This document defines the unit test plan for CookSavvy. It covers services, View
 
 ---
 
-## 1. RecipeMoodRanker Tests
+## Implementation Status
+
+### Unit Tests (fast, mocks only — `UnitTestPlan.xctestplan`)
+
+| # | Test File | Status | Tests |
+|---|-----------|--------|-------|
+| 1 | `RecipeMoodRankerTests.swift` | ✅ Done | 7 |
+| 2 | `AchievementEvaluatorTests.swift` | ✅ Done | 6 |
+| 3 | `CameraScanTrackerTests.swift` | ✅ Done | 6 |
+| 4 | `URLBuilderTests.swift` | ✅ Done | 5 |
+| 5 | `SpoonacularMapperTests.swift` | ✅ Done | 4 |
+| 6 | `IngredientTests.swift` | ✅ Done | 4 |
+| 7 | `RecipeModelTests.swift` | ✅ Done | 4 |
+| 8 | `DiscoverViewModelTests.swift` | ✅ Done | 9 |
+| 9 | `JourneyViewModelTests.swift` | ✅ Done | 7 |
+| 10 | `CookModeViewModelTests.swift` | ✅ Done | 10 |
+| 11 | `CreateRecipeViewModelTests.swift` | ✅ Done | 11 |
+| 12 | `ShoppingListViewModelTests.swift` | ✅ Done | 4 |
+| 13 | `RecipeDetailsViewModelTests.swift` | ✅ Done | 9 |
+| 14 | `RecipeSourceTests.swift` | ✅ Done | 7 |
+| 15 | `OnlineAndAIRecipeSourceTests.swift` | ✅ Done | 9 |
+| 16 | `CVSDecoderTests.swift` | ✅ Done | 1 |
+
+**Unit test total:** ~103
+
+### Integration Tests (real DB or network — `IntegrationTestPlan.xctestplan`)
+
+| # | Test File | Status | Tests |
+|---|-----------|--------|-------|
+| 1 | `CookSavvyTests.swift` (DBInterface) | ✅ Done | 27 |
+| 2 | `UserDataServiceTests.swift` | ✅ Done | 10 |
+| 3 | `ShoppingListServiceTests.swift` | ✅ Done | 7 |
+| 4 | `RecipeRecommendationServiceTests.swift` | ✅ Done | 5 |
+| 5 | `IngredientsServiceTests.swift` | ✅ Done | 24 |
+| 6 | `RecipeServiceTests.swift` | ✅ Done | 17 |
+| 7 | `ImageServiceTests.swift` | ✅ Done | 22 |
+| 8 | `OfflineRecipeSourceTests.swift` | ✅ Done | 10 |
+| 9 | `NetworkServiceTests.swift` | ✅ Done | 3 |
+| 10 | `DatasetImportingTests.swift` | ⚠️ Stubbed | 0 |
+| — | `DatabaseInitializationServiceTests.swift` | ❌ Not started | — |
+
+**Integration test total:** ~125
+
+**Grand total:** ~228 tests across 25 test files
+
+---
+
+## 1. RecipeMoodRanker Tests ✅
 
 **File:** `RecipeMoodRankerTests.swift`
 **What it does:** Scores and sorts recipes based on mood (cozy, fresh, bold, comfort, quick) using keyword matching, cook time, and complexity.
@@ -43,7 +90,7 @@ This document defines the unit test plan for CookSavvy. It covers services, View
 
 ---
 
-## 2. RecipeRecommendationService Tests
+## 2. RecipeRecommendationService Tests ✅
 
 **File:** `RecipeRecommendationServiceTests.swift`
 **What it does:** Suggests recipes based on user favorites and cooking history. Weights ingredients from favorites (2x) and highly-rated sessions (2x), picks top ingredient, queries DB, filters out recently cooked.
@@ -55,8 +102,9 @@ This document defines the unit test plan for CookSavvy. It covers services, View
 - **Highly-rated sessions boost weight:** Mock sessions where 4+ star ratings exist for salmon recipes. Verify salmon surfaces as top ingredient over a less-rated one.
 - **Recently cooked filtering:** Mock 3 candidate recipes, 2 of which are in recent sessions. Verify those 2 are filtered out from results.
 - **Empty history returns empty:** No favorites, no sessions. Verify `([], nil)` is returned.
-- **No matching known ingredients:** Favorites with ingredients not in `knownIngredients` list. Verify empty result (no crash, no random suggestion).
 - **Limit parameter:** Request limit of 2 when 5 candidates exist. Verify only 2 returned.
+
+> Note: `testNoMatchingKnownIngredients` case was not implemented — the service's `knownIngredients` list is hardcoded and hard to avoid when constructing test data.
 
 **Implementation hints:**
 - Needs mocks for: `UserDataServiceProtocol`, `DBInterfaceProtocol`, `DatabaseInitializationServiceProtocol`.
@@ -67,7 +115,7 @@ This document defines the unit test plan for CookSavvy. It covers services, View
 
 ---
 
-## 3. CameraScanTracker Tests
+## 3. CameraScanTracker Tests ✅
 
 **File:** `CameraScanTrackerTests.swift`
 **What it does:** Tracks weekly camera scan usage via UserDefaults. Resets on new calendar week. Free tier limited to 5/week.
@@ -89,7 +137,7 @@ This document defines the unit test plan for CookSavvy. It covers services, View
 
 ---
 
-## 4. ShoppingListService Tests
+## 4. ShoppingListService Tests ✅
 
 **File:** `ShoppingListServiceTests.swift`
 **What it does:** CRUD for shopping items — add, toggle checked, remove, clear completed. Thin wrapper around `DBInterfaceProtocol`.
@@ -111,7 +159,7 @@ This document defines the unit test plan for CookSavvy. It covers services, View
 
 ---
 
-## 5. AchievementEvaluator Tests
+## 5. AchievementEvaluator Tests ✅
 
 **File:** `AchievementEvaluatorTests.swift`
 **What it does:** Maps cooking metrics to achievement progress. Pure function: metrics in, achievements out.
@@ -123,10 +171,10 @@ This document defines the unit test plan for CookSavvy. It covers services, View
 - **First cook unlocked:** Pass `recipesCooked: 1`. Verify "first_cook" is unlocked. Verify others remain locked.
 - **Week streak threshold:** Pass `dayStreak: 7`. Verify "week_streak" unlocked. Pass `dayStreak: 6`, verify still locked.
 - **Recipe creator from user recipes:** Pass `userRecipeCount: 1`. Verify "recipe_creator" unlocked. Pass `userRecipeCount: 5`, verify "five_created" also unlocked.
-- **Distinct recipes for "ten_recipes" and "fifty_recipes":** Pass `distinctRecipesCooked: 10`. Verify "ten_recipes" unlocked, "fifty_recipes" still locked (needs 50). Pass 50, verify both unlocked.
-- **Hour cooking:** Pass `totalCookingHours: 10.5`. Verify "hour_cooking" unlocked (rounds down to 10, threshold is 10).
 - **Progress capped at maxProgress:** Pass `recipesCooked: 999`. Verify "first_cook" has `currentProgress == 1` (maxProgress), not 999.
 - **UnlockedAt date:** Pass a fixed reference date. Verify unlocked achievements have that date, locked ones have nil.
+
+> Note: `testDistinctRecipesForTenAndFiftyRecipes` and `testHourCooking` cases were not implemented.
 
 **Implementation hints:**
 - `AchievementEvaluator.evaluate(metrics:referenceDate:)` is static, pure function.
@@ -135,234 +183,213 @@ This document defines the unit test plan for CookSavvy. It covers services, View
 
 ---
 
-## 6. ViewModel Tests
+## 6. ViewModel Tests ✅
 
-### 6.1 DiscoverViewModel Tests
+### 6.1 DiscoverViewModel Tests ✅
 
-**File:** `DiscoverViewModelTests.swift` (expand existing)
+**File:** `DiscoverViewModelTests.swift`
 **What it does:** Manages ingredient selection, search, recipe results, mood filtering, suggestions.
 **Why test it:** Central user-facing state machine. Two-state flow (selection ↔ results) is the core UX.
 
-#### Test cases:
+#### Implemented test cases:
 
-- **Adding/removing ingredients updates state:** Add ingredient, verify `selectedIngredients` contains it. Remove, verify it doesn't.
-- **Search triggers recipe fetch:** Set selected ingredients, trigger search. Verify `searchResultRecipes` is populated from mock service. Verify `showResults` flips to true.
-- **Mood filter applies ranking:** Set recipes and mood. Verify recipes are re-ranked via `RecipeMoodRanker` (order changes for relevant mood).
-- **Source accessibility filtering by subscription:** Free user — verify only `.offline` source accessible. Premium — verify `.offline`, `.online`, `.ai` accessible.
-- **Database not ready blocks search:** Mock `databaseInitService` as not ready. Verify search doesn't proceed or shows appropriate state.
-- **Suggestion loading:** Mock `RecipeRecommendationService` to return suggestions. Verify `suggestedRecipes` is populated on load.
+- **Toggle ingredient:** Add/remove ingredient, verify `selectedIngredients` state.
+- **Find recipes populates results:** Trigger search, verify `searchResultRecipes` populated, `showResults` flips to true.
+- **Mood filter ranking:** Set mood, verify recipes are re-ranked via `RecipeMoodRanker`.
+- **Clear ingredients resets:** Verify state reset when ingredients cleared.
+- **Camera free user with scans:** Free user with remaining scans — camera permitted.
+- **Camera free user no scans:** Free user at limit — camera blocked.
+- **Source accessibility filtering:** Free user removes premium sources; premium user keeps all.
+- **Database ready flag for offline-only:** Verify DB readiness check applies only when offline source is needed.
+
+> Note: suggestion loading test not implemented.
 
 **Implementation hints:**
 - ViewModel is `@MainActor`. Use `@MainActor` on test class or `await MainActor.run {}`.
 - Needs mocks for: `IngredientsServiceProtocol`, `RecipeServiceProtocol`, `UserDataServiceProtocol`, `SubscriptionServiceProtocol`, `CameraScanTrackerProtocol`, `RecipeRecommendationServiceProtocol`, `DatabaseInitializationServiceProtocol`, `ImageServiceProtocol`.
-- The ViewModel is created by coordinators. For tests, construct it directly with mocks.
-- Check the ViewModel's `init` signature and required dependencies by reading `DiscoverViewModel.swift`.
 
-### 6.2 JourneyViewModel Tests
+### 6.2 JourneyViewModel Tests ✅
 
-**File:** `JourneyViewModelTests.swift` (expand existing)
+**File:** `JourneyViewModelTests.swift`
 **What it does:** Loads and displays user stats, achievements, user recipes, weekly calendar, recent sessions.
 
-#### Test cases:
+#### Implemented test cases:
 
-- **Stats loaded from UserDataService:** Mock returns `recipesCooked: 5`, `dayStreak: 3`, `totalCookingTime: 7200`. Verify ViewModel properties match.
-- **Achievements evaluated correctly:** Mock returns cooking metrics. Verify `achievements` array has correct unlock states (delegates to `AchievementEvaluator`).
+- **Stats loaded from UserDataService:** Verify ViewModel properties match mocked stats.
 - **User recipes loaded:** Mock returns 3 user-created recipes. Verify `userRecipes` has count 3.
-- **Week cooking dates:** Mock returns sessions on Monday and Wednesday. Verify `weekCookingDates` set contains those day indices.
-- **Empty state:** All mocks return empty. Verify all stats are 0, no crashes.
+- **Achievements evaluated correctly:** Mock cooking metrics. Verify achievement unlock states.
+- **Week cooking dates:** Mock sessions on specific days. Verify `weekCookingDates` set.
+- **Empty state:** All mocks return empty. Verify no crashes.
+- **Integration: buildAchievements uses loaded metrics.**
+- **Integration: incomplete milestones remain locked.**
 
-**Implementation hints:**
-- Similar mocking approach to DiscoverViewModel.
-- The ViewModel loads data in an `onAppear`-triggered method — find it and call it in tests.
-
-### 6.3 CookModeViewModel Tests
+### 6.3 CookModeViewModel Tests ✅
 
 **File:** `CookModeViewModelTests.swift`
 **What it does:** Manages step-by-step cooking navigation, progress tracking, timer, and session recording.
-**Why test it:** Step navigation logic and session recording are testable and important.
 
-#### Test cases:
+#### Implemented test cases:
 
-- **Step navigation:** Init with a 5-step recipe. Verify `currentStep` is 0. Call next, verify 1. Call previous from 0, verify stays at 0. Navigate to last step, call next, verify doesn't go past.
-- **Progress calculation:** At step 2 of 5, verify progress fraction is ~0.4.
-- **Session recording on completion:** Complete all steps. Verify `UserDataService.markAsCooked()` was called with correct recipe.
-- **Timer presence:** Step with `timerMinutes` set — verify timer-related state is available. Step without — verify no timer.
+- **Initial state:** Verify `currentStep` starts at 0.
+- **Go next advances step:** Verify step increments.
+- **Go previous from zero stays:** Verify can't go below 0.
+- **Go next at last step stays:** Verify can't go past last step.
+- **Progress calculation:** Verify fraction at step 2/5 ≈ 0.4.
+- **Finish shows feedback:** Completing all steps shows feedback prompt.
+- **Submit feedback calls service and dismisses.**
+- **Skip feedback calls service and dismisses.**
+- **Timer reset on step change.**
+- **Dismiss stops timer and calls onDismiss.**
 
-**Implementation hints:**
-- Read `CookModeViewModel.swift` to understand the exact step navigation methods and published properties.
-- Mock `UserDataServiceProtocol` to verify session recording.
-
-### 6.4 CreateRecipeViewModel Tests
+### 6.4 CreateRecipeViewModel Tests ✅
 
 **File:** `CreateRecipeViewModelTests.swift`
 **What it does:** Manages 5-step wizard state for recipe creation.
 
-#### Test cases:
+#### Implemented test cases:
 
-- **Step progression:** Verify initial step is 0. Advance through steps 0→4. Verify can't go past step 4 or below step 0.
-- **Validation per step:** Step 1 — empty name blocks advancement. Step 2 — no ingredients blocks. Step 3 — no steps blocks.
-- **Save creates recipe:** Fill all fields, save. Verify `UserDataService.saveUserRecipe()` called with correct data.
-- **Data persistence across steps:** Set name in step 1, add ingredients in step 2, go back to step 1, verify name still there.
+- **Initial step:** Verify wizard starts at step 0.
+- **Go next advances step.**
+- **Blocked when invalid:** Cannot advance past invalid step.
+- **Go back from first stays.**
+- **Validation per step:** Name empty blocks step 1; no ingredients blocks step 2; no steps blocks step 3.
+- **Save calls service:** Verify `UserDataService.saveUserRecipe()` called with correct data.
+- **Data persists across steps.**
+- **Blank ingredient rows trimmed.**
+- **Blank step rows trimmed.**
+- **Emoji/tagline/cuisine saved.**
+- **Save failure sets error.**
 
-**Implementation hints:**
-- Read `CreateRecipeViewModel.swift` to understand the wizard step model and validation logic.
-
-### 6.5 ShoppingListViewModel Tests
+### 6.5 ShoppingListViewModel Tests ✅
 
 **File:** `ShoppingListViewModelTests.swift`
 **What it does:** CRUD wrapper for shopping list UI state.
 
-#### Test cases:
+#### Implemented test cases:
 
-- **Load items on appear:** Mock service returns 3 items. Verify `items` is populated.
-- **Toggle updates local state:** Toggle an item. Verify `isChecked` state updates without full reload.
-- **Delete removes item:** Delete item. Verify removed from `items` array.
-- **Clear completed:** 2 checked, 1 unchecked. Clear. Verify 1 item remains.
-- **Premium gate check:** Free user — verify `canAccess` is false (ViewModel should check subscription).
+- **Load items on appear:** Mock returns 3 items. Verify `items` populated.
+- **Toggle updates local state:** Toggle item, verify `isChecked` state updates.
+- **Delete removes item.**
+- **Clear completed:** 2 checked, 1 unchecked → 1 remains.
 
-**Implementation hints:**
-- Mock `ShoppingListServiceProtocol` and `SubscriptionServiceProtocol`.
+> Note: premium gate check test not implemented.
 
-### 6.6 RecipeDetailsViewModel Tests
+### 6.6 RecipeDetailsViewModel Tests ✅
 
 **File:** `RecipeDetailsViewModelTests.swift`
 **What it does:** Manages favorite toggle, missing ingredients computation, shopping list access.
 
-#### Test cases:
+#### Implemented test cases:
 
-- **Favorite toggle:** Toggle favorite on. Verify `isFavorite` is true. Toggle off. Verify false. Verify `UserDataService.toggleFavorite()` called.
-- **Missing ingredients calculation:** Recipe needs [A, B, C], user selected [A, C]. Verify missing = [B].
-- **Shopping list premium gate:** Free user taps add to list. Verify upgrade is triggered (coordinator method called or state set).
-
-**Implementation hints:**
-- The ViewModel takes a `Recipe` and selected ingredients. Check its init signature.
-- Mock `UserDataServiceProtocol` for favorite operations.
+- **Favorite toggle:** Toggle on/off. Verify `isFavorite` state and `UserDataService.toggleFavorite()` called.
+- **Missing ingredients calculation:** Recipe [A, B, C], selected [A, C] → missing = [B].
+- **Missing empty when no selection.**
+- **Add to list premium gate:** Free user triggers upgrade.
+- **Add to list for premium user:** Succeeds.
+- **Record recipe view on init.**
+- **Missing falls back to precomputed missing.**
+- **Coordinator routing: add to list shows shopping list.**
+- **Coordinator routing: add to list shows upgrade for free user.**
 
 ---
 
-## 7. Network Layer Tests
+## 7. Network Layer Tests ✅
 
-### 7.1 URLBuilder Tests
+### 7.1 URLBuilder Tests ✅
 
 **File:** `URLBuilderTests.swift`
-**What it does:** Constructs URLs with query parameters.
-**Why test it:** Wrong URL = wrong API calls. Pure logic, trivial to test.
 
-#### Test cases:
+#### Implemented test cases:
 
-- **Base URL construction:** Verify correct URL from base + path.
-- **Query parameter encoding:** Add params with special characters. Verify percent-encoding.
-- **Multiple query params:** Add 3 params. Verify all present in output URL.
-- **Empty params:** No params added. Verify clean URL without `?`.
+- Base URL construction with path.
+- Appending additional path segment.
+- Query parameter encoding (special characters → percent-encoded).
+- Multiple query params all present in output URL.
+- Empty params → no `?` in URL.
 
-**Implementation hints:**
-- Read `URLBuilder.swift` for the exact API. Likely a builder pattern with `addQueryItem` / `build` methods.
-
-### 7.2 NetworkService Tests
+### 7.2 NetworkService Tests ✅
 
 **File:** `NetworkServiceTests.swift`
-**What it does:** Executes HTTP requests and decodes responses.
-**Why test it:** Verify request construction, error mapping, decoding.
 
-#### Test cases:
+#### Implemented test cases:
 
-- **Successful decode:** Use `URLProtocol` mock to return valid JSON. Verify decoded object matches.
-- **Bad status code:** Mock returns 404. Verify `NetworkError.badStatusCode` thrown.
-- **Decoding error:** Mock returns invalid JSON. Verify `NetworkError.decodingError` thrown.
-- **Invalid URL:** Construct request with garbage URL. Verify `NetworkError.invalidURL` thrown.
+- **Successful response:** Mock `URLProtocol` returns valid JSON. Verify decoded object matches.
+- **HTTP error throws:** Mock returns 404. Verify `NetworkError.badStatusCode` thrown.
+- **Timeout throws.**
+
+> Note: `testDecodingError` and `testInvalidURL` cases were not implemented.
 
 **Implementation hints:**
-- Use a custom `URLProtocol` subclass to intercept requests. Register it on a custom `URLSession` and inject that session into `NetworkService` (or via `NetworkConfiguration`).
-- This is a standard iOS testing pattern — search for "URLProtocol mock testing" for reference.
-- If `NetworkService` doesn't support session injection, a small refactor to its init may be needed. Document this as a prerequisite.
+- Uses a custom `MockURLProtocol` subclass to intercept requests.
 
 ---
 
-## 8. SpoonacularProvider Tests
+## 8. SpoonacularMapper Tests ✅
 
-**File:** `SpoonacularProviderTests.swift`
-**What it does:** Calls Spoonacular API, maps response DTOs to `Recipe` models.
-**Why test it:** DTO → model mapping is error-prone. Test the mapping, not the network call.
+**File:** `SpoonacularMapperTests.swift`
+**What it does:** DTO → `Recipe` model mapping.
 
-### Test cases:
+### Implemented test cases:
 
-- **DTO to Recipe mapping:** Create a `SpoonacularModels` response DTO manually. Verify the mapper produces correct `Recipe` (title, ingredients, image URL, etc.).
-- **Missing fields handling:** DTO with nil optional fields. Verify no crash, graceful defaults.
-- **Empty results:** Response with empty results array. Verify `RecipeAPIProviderError.noResults` thrown.
-
-**Implementation hints:**
-- Read `SpoonacularModels.swift` for the DTO structure and any `toRecipe()` or mapping functions.
-- These tests should NOT hit the real API — test only the mapping/parsing logic.
-- If the provider doesn't separate mapping from network call, test by feeding it mock JSON through the `URLProtocol` approach.
+- **Full DTO mapping:** Verify title, ingredients, image URL in output `Recipe`.
+- **Missing optional fields:** Nil optional fields → graceful defaults, no crash.
+- **Complexity mapping.**
+- **Empty results:** Verify `RecipeAPIProviderError.noResults` thrown.
 
 ---
 
-## 9. Model Tests
+## 9. Model Tests ✅
 
-### 9.1 Ingredient Category Mapping
+### 9.1 Ingredient Category Mapping ✅
 
 **File:** `IngredientTests.swift`
-**What it does:** `Ingredient.category` is a computed property mapping `foodGroup` strings to `IngredientCategory` enum.
-**Why test it:** Category determines which filter section an ingredient appears in. Wrong mapping = ingredient in wrong category.
 
-#### Test cases:
+#### Implemented test cases:
 
-- **Known food groups:** "Meat" → `.proteins`, "Vegetables" → `.veggies`, "Dairy" → `.dairy`, etc. Test each major mapping.
-- **Nil food group:** Verify falls to `.other`.
-- **Unknown food group:** Random string → `.other`.
-- **Case sensitivity:** Verify mapping handles capitalization as implemented.
+- Known food group mappings (Meat → `.proteins`, Vegetables → `.veggies`, etc.).
+- Nil food group → `.other`.
+- Unknown food group → `.other`.
+- Case sensitivity handling.
 
-**Implementation hints:**
-- Read the `category` computed property in `Ingredient.swift` for exact mapping logic.
-- `ExpressibleByStringLiteral` conformance means you can create test ingredients with just string literals — but for category tests, use full init with `foodGroup` parameter.
-
-### 9.2 Recipe Model Tests
+### 9.2 Recipe Model Tests ✅
 
 **File:** `RecipeModelTests.swift`
-**What it does:** Recipe has Codable conformance, step timer parsing, additional info handling.
 
-#### Test cases:
+#### Implemented test cases:
 
-- **Codable round-trip:** Encode a Recipe to JSON, decode back. Verify equality.
-- **Step timer parsing:** Step with `timerMinutes: 5` — verify it's correctly stored. Step without timer — verify nil.
-- **AdditionalInfo construction:** Verify `.time("30 min")`, `.servings("4")`, `.complexity("Easy")`, `.calories("350")` all round-trip.
-- **Mock factory validity:** `Recipe.mocks(count: n)` — verify returned array has n recipes, all with non-empty titles and ingredients.
+- Step timer minutes correctly stored.
+- `AdditionalInfo` construction (`.time`, `.servings`, `.complexity`, `.calories`).
+- Ingredient `ExpressibleByStringLiteral` init.
+- Ingredient equality by name.
 
-**Implementation hints:**
-- `Recipe` already has `.mocks(count:)` factory — use it as baseline, extend for edge cases.
+> Note: Codable round-trip and `Recipe.mocks(count:)` factory tests were not implemented.
 
 ---
 
-## 10. UserDataService Integration Tests
+## 10. UserDataService Integration Tests ✅
 
 **File:** `UserDataServiceTests.swift`
-**What it does:** CRUD for favorites, recents, cooking sessions, user recipes, preferences — all via DB.
-**Why test it:** Central user data layer. All Journey stats depend on it.
 
-### Test cases:
+### Implemented test cases:
 
-- **Record and retrieve recent ingredients:** Record 3 ingredients. Verify `getRecentIngredients(limit: 10)` returns them.
-- **Record and retrieve recent recipes:** View 2 recipes. Verify `getRecentRecipes(limit: 10)` returns them.
-- **Favorite toggle cycle:** Toggle recipe as favorite. Verify `isFavorite` true. Toggle again, verify false.
-- **Get favorites list:** Favorite 3 recipes. Verify `getFavorites()` returns 3.
-- **Cooking session recording:** Mark recipe as cooked. Verify `getCookingSessions(limit: 10)` returns the session. Verify `recipesCooked()` increments.
-- **Day streak calculation:** Record sessions on consecutive days. Verify `currentStreak()` returns correct count.
-- **Week cooking dates:** Record sessions on specific dates. Verify `getWeekCookingDates()` returns correct day indices.
-- **User recipe CRUD:** Save user recipe, retrieve it, update title, verify update persists, delete, verify gone.
-- **Clear recent data:** Record data, call `clearRecentData()`. Verify recents are empty. Verify favorites/sessions are NOT cleared.
-- **Theme preference persistence:** Set theme, retrieve. Verify match.
+- **Record and retrieve recent ingredients.**
+- **Record and retrieve recent recipes.**
+- **Favorite toggle cycle:** Toggle on → isFavorite true. Toggle again → false.
+- **Get favorites list.**
+- **Cooking session recording.**
+- **Recipes cooked count increments.**
+- **User recipe CRUD:** Save, retrieve, update, delete.
+- **Clear recent preserves favorites.**
+- **Theme preference persistence.**
+- **Enabled sources preference.**
 
-**Implementation hints:**
-- Use `DBInterface(inMemory: true)` and construct `UserDataService` with it.
-- This is an integration test (real DB, real service) — appropriate because the service is mostly DB pass-through.
-- For streak/date tests, you'll need to insert cooking sessions with specific dates. Check if `DBInterface` has methods to insert sessions with custom dates, or use direct GRDB access.
-- Place in `IntegrationTestPlan.xctestplan`.
+> Note: Day streak and week cooking dates tests not implemented (require date injection).
 
 ---
 
-## 11. DatabaseInitializationService Tests
+## 11. DatabaseInitializationService Tests ❌
 
-**File:** `DatabaseInitializationServiceTests.swift`
+**File:** `DatabaseInitializationServiceTests.swift` — **not yet created**
 **What it does:** Coordinates ingredient loading and dataset import. Signals when DB is ready.
 **Why test it:** App won't function if DB init fails silently.
 
@@ -383,38 +410,30 @@ This document defines the unit test plan for CookSavvy. It covers services, View
 
 | Test Plan | Contents | Speed |
 |-----------|----------|-------|
-| `UnitTestPlan.xctestplan` | RecipeMoodRanker, AchievementEvaluator, URLBuilder, Model tests, ViewModel tests, CameraScanTracker, SpoonacularProvider mapping | Fast (<10s) |
+| `UnitTestPlan.xctestplan` | RecipeMoodRanker, AchievementEvaluator, URLBuilder, Model tests, ViewModel tests, CameraScanTracker, SpoonacularMapper mapping | Fast (<10s) |
 | `IntegrationTestPlan.xctestplan` | DBInterface, UserDataService, ShoppingListService, RecipeRecommendationService, IngredientsService, NetworkService, DatabaseInitializationService | Medium (<30s) |
 | `DefaultTestPlan.xctestplan` | Both of the above | All |
 
 ## Mock Inventory
 
-These mocks will be needed across multiple test files. Create them in `CookSavvyTests/Mocks/`:
+Shared mocks in `CookSavvyTests/Mocks/`:
 
-| Mock | Protocol | Key behaviors to mock |
-|------|----------|----------------------|
-| `MockUserDataService` | `UserDataServiceProtocol` | Return configurable favorites, sessions, metrics. Track method calls. |
-| `MockDBInterface` | `DBInterfaceProtocol` | Return configurable recipes/ingredients. In-memory storage or stubbed returns. |
-| `MockRecipeService` | `RecipeServiceProtocol` | Return configurable recipes. Track source requests. |
-| `MockIngredientsService` | `IngredientsServiceProtocol` | Return configurable search results. |
-| `MockSubscriptionService` | `SubscriptionServiceProtocol` | Already exists — `MockSubscriptionService` in main target. Reuse or mirror for tests. |
-| `MockImageService` | `ImageServiceProtocol` | Return nil or placeholder images. |
-| `MockCameraScanTracker` | `CameraScanTrackerProtocol` | Configurable `canScan` / `remainingScans`. |
-| `MockDatabaseInitService` | `DatabaseInitializationServiceProtocol` | `waitForRecipes()` returns immediately. |
-| `MockShoppingListService` | `ShoppingListServiceProtocol` | In-memory item storage. |
-| `MockRecommendationService` | `RecipeRecommendationServiceProtocol` | Return configurable suggestions. |
-| `MockNetworkService` | `NetworkServiceProtocol` | Return configurable responses or throw errors. |
+| Mock | Protocol | File | Status |
+|------|----------|------|--------|
+| `MockUserDataService` | `UserDataServiceProtocol` | `Mocks/MockUserDataService.swift` | ✅ Created |
+| `MockShoppingListService` | `ShoppingListServiceProtocol` | `Mocks/MockShoppingListService.swift` | ✅ Created |
+| `MockDatabaseInitService` | `DatabaseInitializationServiceProtocol` | `Mocks/MockServices.swift` | ✅ Created |
+| `MockIngredientsService` | `IngredientsServiceProtocol` | `Mocks/MockServices.swift` | ✅ Created |
+| `MockRecipeService` | `RecipeServiceProtocol` | `Mocks/MockServices.swift` | ✅ Created |
+| `MockRecommendationService` | `RecipeRecommendationServiceProtocol` | `Mocks/MockServices.swift` | ✅ Created |
+| `MockCameraScanTracker` | `CameraScanTrackerProtocol` | `Mocks/MockServices.swift` | ✅ Created |
+| `MockImageService` | `ImageServiceProtocol` | `Mocks/MockServices.swift` | ✅ Created |
+| `MockSubscriptionService` | `SubscriptionServiceProtocol` | Main target (reused in tests) | ✅ Exists |
+| `MockDBInterface` | `DBInterfaceProtocol` | Inline in test files | ✅ Exists |
+| `MockNetworkService` | `NetworkServiceProtocol` | `MockURLProtocol` in `NetworkServiceTests.swift` | ✅ Created |
 
 ## Priority Order for Implementation
 
-If implementing incrementally, this order maximizes value:
+Remaining work:
 
-1. **AchievementEvaluator** + **RecipeMoodRanker** — pure logic, zero mocks, highest confidence gain
-2. **CameraScanTracker** — paywall gate, small refactor + tests
-3. **ShoppingListService** — CRUD against in-memory DB, straightforward
-4. **UserDataService integration** — covers the biggest surface area
-5. **ViewModel tests** (Discover, CookMode, CreateRecipe) — most complex but most valuable for catching regressions
-6. **Network layer** (URLBuilder, NetworkService, SpoonacularProvider mapping)
-7. **RecipeRecommendationService** — depends on mocks from #4
-8. **Model tests** — lower priority, mostly Codable round-trips
-9. **DatabaseInitializationService** — async coordination, test last
+1. **DatabaseInitializationService** — async coordination, last piece of service coverage

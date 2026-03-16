@@ -263,8 +263,12 @@ CookSavvy/
     ├── Assets/                        — Asset catalogs
     └── Preview Content/
 
-CookSavvyTests/                        — Unit tests
-├── CookSavvyTests.swift
+CookSavvyTests/                        — Unit + integration tests
+├── Mocks/
+│   ├── MockServices.swift              — MockDatabaseInitService, MockIngredientsService, MockRecipeService, MockRecommendationService, MockCameraScanTracker, MockImageService
+│   ├── MockUserDataService.swift
+│   └── MockShoppingListService.swift
+├── CookSavvyTests.swift                — DBInterface integration tests
 ├── IngredientsServiceTests.swift
 ├── RecipeServiceTests.swift
 ├── ImageServiceTests.swift
@@ -272,7 +276,24 @@ CookSavvyTests/                        — Unit tests
 ├── OnlineAndAIRecipeSourceTests.swift
 ├── RecipeSourceTests.swift
 ├── CVSDecoderTests.swift
-└── DatasetImportingTests.swift
+├── DatasetImportingTests.swift
+├── RecipeMoodRankerTests.swift
+├── RecipeRecommendationServiceTests.swift
+├── CameraScanTrackerTests.swift
+├── ShoppingListServiceTests.swift
+├── AchievementEvaluatorTests.swift
+├── URLBuilderTests.swift
+├── NetworkServiceTests.swift
+├── SpoonacularMapperTests.swift
+├── IngredientTests.swift
+├── RecipeModelTests.swift
+├── UserDataServiceTests.swift
+├── DiscoverViewModelTests.swift
+├── JourneyViewModelTests.swift
+├── CookModeViewModelTests.swift
+├── CreateRecipeViewModelTests.swift
+├── ShoppingListViewModelTests.swift
+└── RecipeDetailsViewModelTests.swift
 ```
 
 ## Documentation
