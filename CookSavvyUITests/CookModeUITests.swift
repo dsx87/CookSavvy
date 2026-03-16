@@ -4,15 +4,22 @@ final class CookModeUITests: FreeUserUITest {
     func testStepNavigation() {
         openCookMode()
 
-        let firstStep = app.staticTexts[AccessibilityID.CookMode.stepText]
-        XCTAssertTrue(firstStep.waitForExistence(timeout: 5))
-        XCTAssertTrue(firstStep.label.contains("Boil pasta"))
+        XCTAssertTrue(app.waitForElement(
+            app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Boil pasta'")).element,
+            timeout: 5
+        ))
 
         app.tapElement(withIdentifier: AccessibilityID.CookMode.nextButton)
-        XCTAssertTrue(firstStep.label.contains("Sauté minced garlic"))
+        XCTAssertTrue(app.waitForElement(
+            app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Sauté minced garlic'")).element,
+            timeout: 5
+        ))
 
         app.tapElement(withIdentifier: AccessibilityID.CookMode.previousButton)
-        XCTAssertTrue(firstStep.label.contains("Boil pasta"))
+        XCTAssertTrue(app.waitForElement(
+            app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Boil pasta'")).element,
+            timeout: 5
+        ))
     }
 
     func testCompletion() {

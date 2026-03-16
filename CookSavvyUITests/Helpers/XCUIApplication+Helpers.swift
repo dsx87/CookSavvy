@@ -68,12 +68,8 @@ extension XCUIApplication {
 
     func openRecipeResult(_ title: String) {
         let recipeElement = firstMatch(for: AccessibilityID.Discover.recipe(title))
-        if waitForElement(recipeElement, timeout: 5) {
-            recipeElement.tap()
-            return
-        }
-
-        tapElement(withIdentifier: AccessibilityID.Discover.bestMatch, timeout: 10)
+        XCTAssertTrue(waitForElement(recipeElement, timeout: 10), "Recipe '\(title)' not found in results")
+        recipeElement.tap()
     }
 
     func navigateToRecipeDetail(ingredients: [String], recipeTitle: String) {
