@@ -23,6 +23,9 @@ struct UITestConfiguration {
     let withCookingHistory: Bool
     let withFavorites: Bool
     let withShoppingItems: Bool
+    let isEmptyDatabase: Bool
+    let withLargeDataset: Bool
+    let hasReachedCameraLimit: Bool
 
     static func fromLaunchArguments() -> UITestConfiguration {
         fromArguments(ProcessInfo.processInfo.arguments)
@@ -38,7 +41,10 @@ struct UITestConfiguration {
             skipOnboarding: args.contains("--skip-onboarding") || (isUITesting && !isFreshInstall),
             withCookingHistory: args.contains("--with-cooking-history"),
             withFavorites: args.contains("--with-favorites"),
-            withShoppingItems: args.contains("--with-shopping-items")
+            withShoppingItems: args.contains("--with-shopping-items"),
+            isEmptyDatabase: args.contains("--empty-db"),
+            withLargeDataset: args.contains("--large-dataset"),
+            hasReachedCameraLimit: args.contains("--camera-limit-reached")
         )
     }
 
@@ -55,6 +61,11 @@ struct UITestConfiguration {
         ].forEach { defaults.removeObject(forKey: $0) }
 
         defaults.set(!isFreshInstall || skipOnboarding, forKey: Keys.hasCompletedOnboarding)
+
+        if hasReachedCameraLimit {
+            defaults.set(CameraScanTracker.freeWeeklyLimit, forKey: Keys.cameraScansUsedThisWeek)
+            defaults.set(Date(), forKey: Keys.cameraScanWeekStart)
+        }
     }
 }
 #endif

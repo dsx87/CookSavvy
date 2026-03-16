@@ -19,11 +19,16 @@ struct UITestDataSeeder {
     }
 
     func seed(config: UITestConfiguration) {
+        guard !config.isEmptyDatabase else { return }
+
         do {
             let ingredients = Self.makeIngredients()
             try db.insertIngredients(ingredients)
 
-            let recipes = Self.makeRecipes(ingredients: ingredients)
+            var recipes = Self.makeRecipes(ingredients: ingredients)
+            if config.withLargeDataset {
+                recipes.append(contentsOf: Self.makeLargeDatasetRecipes(ingredients: ingredients))
+            }
             try db.insertRecipes(recipes)
 
             if config.withCookingHistory {
@@ -155,6 +160,64 @@ struct UITestDataSeeder {
                 emoji: "🍛"
             ),
         ]
+    }
+
+    private static func makeLargeDatasetRecipes(ingredients: [Ingredient]) -> [Recipe] {
+        let byName: (String) -> Ingredient = { name in
+            ingredients.first(where: { $0.name == name }) ?? Ingredient(name: name)
+        }
+
+        let recipeBlueprints: [(String, [String], [Recipe.Step], String, String, String)] = [
+            ("Large Test Garlic Skillet", ["Garlic", "Onion", "Bell Pepper", "Rice"], [
+                Recipe.Step(text: "Toast the rice in a skillet for two minutes."),
+                Recipe.Step(text: "Add onion, garlic and bell pepper, then cook until fragrant.", timerMinutes: 6),
+                Recipe.Step(text: "Stir in water and simmer until tender.", timerMinutes: 14),
+            ], "28 min", "Easy", "Quick skillet rice with garlic."),
+            ("Large Test Protein Bowl", ["Chicken Breast", "Rice", "Spinach", "Lemon"], [
+                Recipe.Step(text: "Cook the rice until fluffy.", timerMinutes: 15),
+                Recipe.Step(text: "Pan-sear the chicken until cooked through.", timerMinutes: 10),
+                Recipe.Step(text: "Assemble with spinach and lemon."),
+            ], "30 min", "Easy", "Balanced protein bowl."),
+            ("Large Test Garden Pasta", ["Pasta", "Tomato", "Basil", "Garlic"], [
+                Recipe.Step(text: "Boil the pasta until tender.", timerMinutes: 10),
+                Recipe.Step(text: "Cook tomato and garlic into a quick sauce.", timerMinutes: 8),
+                Recipe.Step(text: "Toss with pasta and basil."),
+            ], "24 min", "Easy", "Bright garden pasta."),
+            ("Large Test Salmon Plate", ["Salmon", "Rice", "Lemon", "Spinach"], [
+                Recipe.Step(text: "Cook rice and keep warm.", timerMinutes: 15),
+                Recipe.Step(text: "Roast salmon until just flaky.", timerMinutes: 12),
+                Recipe.Step(text: "Serve over spinach with lemon."),
+            ], "32 min", "Medium", "Roasted salmon with rice."),
+            ("Large Test Curry Pot", ["Tofu", "Tomato", "Onion", "Garlic", "Rice"], [
+                Recipe.Step(text: "Brown the tofu on all sides.", timerMinutes: 8),
+                Recipe.Step(text: "Cook onion, garlic and tomato into a sauce.", timerMinutes: 10),
+                Recipe.Step(text: "Simmer with tofu and serve over rice.", timerMinutes: 12),
+            ], "35 min", "Medium", "Warm curry pot."),
+        ]
+
+        return (1...25).flatMap { index in
+            recipeBlueprints.enumerated().map { blueprintIndex, blueprint in
+                let (baseTitle, ingredientNames, steps, time, complexity, tagline) = blueprint
+                let title = "\(baseTitle) \(index)-\(blueprintIndex + 1)"
+                let recipeIngredients = ingredientNames.map(byName)
+                return Recipe(
+                    title: title,
+                    ingredients: recipeIngredients,
+                    instructions: steps,
+                    image: "recipe_placeholder",
+                    cleanedIngredients: recipeIngredients,
+                    additionalInfo: Recipe.AdditionalInfo(
+                        time: time,
+                        servings: 2 + (index % 3),
+                        complexity: complexity,
+                        calories: 320 + (index * 7)
+                    ),
+                    source: .offline,
+                    tagline: tagline,
+                    emoji: blueprintIndex.isMultiple(of: 2) ? "🍲" : "🥗"
+                )
+            }
+        }
     }
 
     // MARK: - Cooking History
