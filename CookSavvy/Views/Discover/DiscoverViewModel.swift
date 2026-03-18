@@ -36,6 +36,8 @@ final class DiscoverViewModel: ObservableObject {
     @Published var suggestedRecipes: [Recipe] = []
     @Published var suggestionReason: String? = nil
     @Published var activeDietaryRestrictions: Set<DietaryRestriction> = []
+    @Published var collections: [CuratedCollection] = []
+    @Published var loadingCollectionID: String? = nil
 
     // MARK: - Dependencies
 
@@ -48,6 +50,7 @@ final class DiscoverViewModel: ObservableObject {
     private let recommendationService: RecipeRecommendationServiceProtocol
     private let analyticsService: AnalyticsServiceProtocol
     private let dietaryPreferences: DietaryPreferencesProtocol
+    private let curatedCollectionService: CuratedCollectionServiceProtocol
     private weak var coordinator: DiscoverCoordinator?
 
     // MARK: - Init
@@ -62,6 +65,7 @@ final class DiscoverViewModel: ObservableObject {
         recommendationService: RecipeRecommendationServiceProtocol,
         analyticsService: AnalyticsServiceProtocol,
         dietaryPreferences: DietaryPreferencesProtocol,
+        curatedCollectionService: CuratedCollectionServiceProtocol,
         coordinator: DiscoverCoordinator? = nil
     ) {
         self.ingredientsService = ingredientsService
@@ -73,6 +77,7 @@ final class DiscoverViewModel: ObservableObject {
         self.recommendationService = recommendationService
         self.analyticsService = analyticsService
         self.dietaryPreferences = dietaryPreferences
+        self.curatedCollectionService = curatedCollectionService
         self.coordinator = coordinator
     }
 
@@ -173,6 +178,7 @@ final class DiscoverViewModel: ObservableObject {
 
     func loadInitialData() async {
         isLoadingIngredients = true
+        loadCollections()
         async let ingredientsTask: () = loadIngredients()
         async let recentTask: () = loadRecentRecipes()
         async let savedTask: () = loadSavedRecipes()
@@ -250,6 +256,16 @@ final class DiscoverViewModel: ObservableObject {
         coordinator?.showRecipeList(title: title, recipes: recipes)
     }
 
+    func showCollection(_ collection: CuratedCollection) {
+        guard loadingCollectionID == nil else { return }
+        loadingCollectionID = collection.id
+        Task {
+            defer { loadingCollectionID = nil }
+            let recipes = (try? await curatedCollectionService.getRecipes(for: collection)) ?? []
+            coordinator?.showRecipeList(title: collection.title, recipes: recipes)
+        }
+    }
+
     func showCreateRecipe() {
         coordinator?.showCreateRecipe()
     }
@@ -289,6 +305,11 @@ final class DiscoverViewModel: ObservableObject {
     }
 
     // MARK: - Private
+
+    private func loadCollections() {
+        let isPremium = subscriptionService.canAccessFeature(.onlineRecipes)
+        collections = curatedCollectionService.getCollectionsForThisWeek(isPremium: isPremium)
+    }
 
     private func loadIngredients() async {
         do {

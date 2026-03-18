@@ -328,6 +328,28 @@ struct UI {
         static let useItAllPaddingV: CGFloat = 8
         static let chefEmojiSize: CGFloat = 20
 
+        struct Collection {
+            static let cardWidth: CGFloat = 140
+            static let cardHeight: CGFloat = 100
+            static let emojiFontSize: CGFloat = 30
+            static let titleOpacity: Double = 1.0
+            static let subtitleOpacity: Double = 0.8
+            static let cornerRadius: CGFloat = 20
+            // Gradient colour pairs for collection cards
+            static let mintStart = Color(red: 0.18, green: 0.62, blue: 0.53)
+            static let mintEnd = Color(red: 0.25, green: 0.82, blue: 0.70)
+            static let skyStart = Color(red: 0.25, green: 0.55, blue: 0.96)
+            static let skyEnd = Color(red: 0.40, green: 0.72, blue: 1.0)
+            static let roseStart = Color(red: 0.85, green: 0.38, blue: 0.47)
+            static let roseEnd = Color(red: 1.0, green: 0.56, blue: 0.62)
+            static let goldStart = Color(red: 0.88, green: 0.62, blue: 0.12)
+            static let goldEnd = Color(red: 1.0, green: 0.78, blue: 0.30)
+            static let lavenderStart = Color(red: 0.50, green: 0.42, blue: 0.85)
+            static let lavenderEnd = Color(red: 0.68, green: 0.58, blue: 1.0)
+            static let freshStart = Color(red: 0.30, green: 0.72, blue: 0.48)
+            static let freshEnd = Color(red: 0.50, green: 0.90, blue: 0.62)
+        }
+
         static func moodColor(for mood: RecipeMood) -> Color {
             switch mood {
             case .cozy:

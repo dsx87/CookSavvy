@@ -36,6 +36,7 @@ final class AppContainer {
     let recommendationService: RecipeRecommendationServiceProtocol
     let analyticsService: AnalyticsServiceProtocol
     let dietaryPreferences: DietaryPreferences
+    let curatedCollectionService: CuratedCollectionServiceProtocol
 
     // MARK: - Initialization
 
@@ -103,6 +104,7 @@ final class AppContainer {
         self.analyticsService = AnalyticsService()
         #endif
         self.dietaryPreferences = DietaryPreferences()
+        self.curatedCollectionService = CuratedCollectionService(dbInterface: db)
     }
 
     #if DEBUG
@@ -138,6 +140,7 @@ final class AppContainer {
         self.recommendationService = recommendationService
         self.analyticsService = MockAnalyticsService()
         self.dietaryPreferences = DietaryPreferences()
+        self.curatedCollectionService = CuratedCollectionService(dbInterface: dbInterface)
     }
     #endif
 

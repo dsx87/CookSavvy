@@ -50,6 +50,7 @@ final class MockDBInterfaceForIngredients: DBInterfaceProtocol {
     
     // Unused protocol methods
     func getRecipes(byIngredients: [Ingredient], offset: Int, limit: Int) throws -> [Recipe] { [] }
+    func getAllRecipes(offset: Int, limit: Int) throws -> [Recipe] { [] }
     func getRecipeId(byTitle title: String) throws -> Int? { nil }
     func insertRecipes(_ recipes: [Recipe]) throws {}
     func removeIngredients(_ ingredients: [Ingredient]) throws {}

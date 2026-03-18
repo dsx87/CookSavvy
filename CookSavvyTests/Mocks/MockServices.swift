@@ -150,6 +150,21 @@ final class MockCameraScanTracker: CameraScanTrackerProtocol {
     }
 }
 
+// MARK: - MockCuratedCollectionService
+
+final class MockCuratedCollectionService: CuratedCollectionServiceProtocol {
+    var stubbedCollections: [CuratedCollection] = []
+    var stubbedRecipes: [Recipe] = []
+
+    func getCollectionsForThisWeek(isPremium: Bool) -> [CuratedCollection] {
+        stubbedCollections
+    }
+
+    func getRecipes(for collection: CuratedCollection) async throws -> [Recipe] {
+        stubbedRecipes
+    }
+}
+
 // MARK: - MockImageService
 
 final class MockImageService: ImageServiceProtocol {

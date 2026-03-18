@@ -780,6 +780,149 @@
         }
       }
     },
+    "discover.collection5Ingredient" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "5-Ingredient Dinners"
+          }
+        }
+      }
+    },
+    "discover.collection5IngredientSubtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Simple meals, big flavour"
+          }
+        }
+      }
+    },
+    "discover.collection30Min" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "30-Minute Meals"
+          }
+        }
+      }
+    },
+    "discover.collection30MinSubtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "On the table, fast"
+          }
+        }
+      }
+    },
+    "discover.collectionBudget" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Budget Friendly"
+          }
+        }
+      }
+    },
+    "discover.collectionBudgetSubtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Big taste, small cost"
+          }
+        }
+      }
+    },
+    "discover.collectionComfort" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Comfort Classics"
+          }
+        }
+      }
+    },
+    "discover.collectionComfortSubtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tried and trusted favourites"
+          }
+        }
+      }
+    },
+    "discover.collectionLight" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Light & Fresh"
+          }
+        }
+      }
+    },
+    "discover.collectionLightSubtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clean and vibrant eats"
+          }
+        }
+      }
+    },
+    "discover.collectionOnePot" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "One-Pot Wonders"
+          }
+        }
+      }
+    },
+    "discover.collectionOnePotSubtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Less washing up"
+          }
+        }
+      }
+    },
+    "discover.collectionsSection" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "THIS WEEK'S COLLECTIONS"
+          }
+        }
+      }
+    },
     "discover.edit" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {

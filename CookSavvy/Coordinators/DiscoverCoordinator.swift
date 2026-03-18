@@ -83,6 +83,7 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating {
             recommendationService: container.recommendationService,
             analyticsService: container.analyticsService,
             dietaryPreferences: container.dietaryPreferences,
+            curatedCollectionService: container.curatedCollectionService,
             coordinator: self
         )
     }

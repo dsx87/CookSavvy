@@ -122,6 +122,19 @@ enum Strings {
         static let searchFailedMessage = String(localized: "discover.searchFailedMessage", defaultValue: "Search failed — please try again")
         static let quickMealSuffix = String(localized: "discover.quickMealSuffix", defaultValue: " · Quick %lld-min meal")
         static let retry = String(localized: "discover.retry", defaultValue: "Retry")
+        static let collectionsSection = String(localized: "discover.collectionsSection", defaultValue: "THIS WEEK'S COLLECTIONS")
+        static let collection5Ingredient = String(localized: "discover.collection5Ingredient", defaultValue: "5-Ingredient Dinners")
+        static let collection5IngredientSubtitle = String(localized: "discover.collection5IngredientSubtitle", defaultValue: "Simple meals, big flavour")
+        static let collection30Min = String(localized: "discover.collection30Min", defaultValue: "30-Minute Meals")
+        static let collection30MinSubtitle = String(localized: "discover.collection30MinSubtitle", defaultValue: "On the table, fast")
+        static let collectionOnePot = String(localized: "discover.collectionOnePot", defaultValue: "One-Pot Wonders")
+        static let collectionOnePotSubtitle = String(localized: "discover.collectionOnePotSubtitle", defaultValue: "Less washing up")
+        static let collectionBudget = String(localized: "discover.collectionBudget", defaultValue: "Budget Friendly")
+        static let collectionBudgetSubtitle = String(localized: "discover.collectionBudgetSubtitle", defaultValue: "Big taste, small cost")
+        static let collectionComfort = String(localized: "discover.collectionComfort", defaultValue: "Comfort Classics")
+        static let collectionComfortSubtitle = String(localized: "discover.collectionComfortSubtitle", defaultValue: "Tried and trusted favourites")
+        static let collectionLight = String(localized: "discover.collectionLight", defaultValue: "Light & Fresh")
+        static let collectionLightSubtitle = String(localized: "discover.collectionLightSubtitle", defaultValue: "Clean and vibrant eats")
     }
 
     enum Journey {

@@ -38,6 +38,7 @@ struct DiscoverView: View {
                         recentSection
                         savedSection
                         suggestedSection
+                        collectionsSection
                         categoryFilter
                         ingredientGrid
                         Spacer(minLength: UI.Discover.bottomSpacerMinLength + UI.Discover.findButtonHeight)
@@ -256,6 +257,30 @@ struct DiscoverView: View {
                 }
             }
             .accessibilityIdentifier(AccessibilityID.Discover.suggestedSection)
+        }
+    }
+
+    @ViewBuilder
+    private var collectionsSection: some View {
+        if !viewModel.collections.isEmpty {
+            VStack(alignment: .leading, spacing: UI.Discover.sectionContentSpacing) {
+                Text(Strings.Discover.collectionsSection)
+                    .sectionLabel()
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: UI.Discover.sectionContentSpacing) {
+                        ForEach(viewModel.collections) { collection in
+                            CollectionCard(
+                                collection: collection,
+                                isLoading: viewModel.loadingCollectionID == collection.id
+                            )
+                            .onTapGesture {
+                                viewModel.showCollection(collection)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -644,6 +669,49 @@ struct DiscoverView: View {
         .padding(.horizontal, UI.Discover.matchBadgePaddingH)
         .padding(.vertical, UI.Discover.matchBadgePaddingV)
         .background(theme.mint.opacity(UI.RecipeDetails.matchBadgeOpacity), in: Capsule())
+    }
+}
+
+private struct CollectionCard: View {
+    @Environment(\.appTheme) private var theme
+    let collection: CuratedCollection
+    let isLoading: Bool
+
+    var body: some View {
+        ZStack(alignment: .bottomLeading) {
+            LinearGradient(
+                colors: [collection.gradientColors.0, collection.gradientColors.1],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            VStack(alignment: .leading, spacing: UI.Common.smallSpacing) {
+                Text(collection.emoji)
+                    .font(.system(size: UI.Discover.Collection.emojiFontSize))
+                Spacer()
+                Text(collection.title)
+                    .font(UI.Fonts.captionBold)
+                    .foregroundStyle(.white.opacity(UI.Discover.Collection.titleOpacity))
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(collection.subtitle)
+                    .font(UI.Fonts.tinyCaption)
+                    .foregroundStyle(.white.opacity(UI.Discover.Collection.subtitleOpacity))
+                    .lineLimit(1)
+            }
+            .padding(UI.Common.largeSpacing)
+
+            if isLoading {
+                Color.black.opacity(0.3)
+                ProgressView()
+                    .tint(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .frame(width: UI.Discover.Collection.cardWidth, height: UI.Discover.Collection.cardHeight)
+        .clipShape(RoundedRectangle(cornerRadius: UI.Discover.Collection.cornerRadius, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: UI.Discover.Collection.cornerRadius, style: .continuous))
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(collection.title)
     }
 }
 

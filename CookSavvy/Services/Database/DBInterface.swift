@@ -346,6 +346,31 @@ final class DBInterface: DBInterfaceProtocol {
         return results
     }
     
+    func getAllRecipes(offset: Int = 0, limit: Int = 50) throws -> [Recipe] {
+        let sql = """
+            SELECT \(Self.recipeColumns)
+            FROM recipes r
+            ORDER BY r.id ASC
+            LIMIT ? OFFSET ?;
+        """
+        let rows: [Row] = try dbWriter.read { db in
+            try Row.fetchAll(db, sql: sql, arguments: [limit, offset])
+        }
+        var results: [Recipe] = []
+        results.reserveCapacity(rows.count)
+        for row in rows {
+            let title: String = row["title"]
+            if let cached = recipeCache[title] {
+                results.append(cached)
+                continue
+            }
+            let recipe = try decodeRecipe(from: row)
+            cacheRecipe(recipe)
+            results.append(recipe)
+        }
+        return results
+    }
+
     // MARK: - Private Recipe Caching Methods
     
     private func cacheRecipe(_ recipe: Recipe) {

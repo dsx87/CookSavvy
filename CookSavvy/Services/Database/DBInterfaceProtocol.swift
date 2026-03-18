@@ -41,6 +41,7 @@ protocol DBInterfaceProtocol {
 
     // MARK: - Recipes
     func getRecipes(byIngredients: [Ingredient], offset: Int, limit: Int) throws -> [Recipe]
+    func getAllRecipes(offset: Int, limit: Int) throws -> [Recipe]
     func getRecipeId(byTitle title: String) throws -> Int?
     func insertRecipes(_ recipes: [Recipe]) throws
     func removeRecipes(_ recipes: [Recipe]) throws
