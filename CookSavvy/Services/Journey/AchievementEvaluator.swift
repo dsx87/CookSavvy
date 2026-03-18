@@ -6,6 +6,9 @@ struct AchievementMetrics {
     let totalCookingHours: Double
     let userRecipeCount: Int
     let distinctRecipesCooked: Int
+    let highMatchRecipesCooked: Int
+    let uniqueIngredientsUsed: Int
+    let totalCameraScans: Int
 }
 
 enum AchievementEvaluator {
@@ -20,7 +23,10 @@ enum AchievementEvaluator {
             "ten_recipes": metrics.distinctRecipesCooked,
             "five_created": metrics.userRecipeCount,
             "fifty_recipes": metrics.distinctRecipesCooked,
-            "hour_cooking": Int(metrics.totalCookingHours.rounded(.down))
+            "hour_cooking": Int(metrics.totalCookingHours.rounded(.down)),
+            "fridge_cleaner": metrics.highMatchRecipesCooked,
+            "ingredient_master": metrics.uniqueIngredientsUsed,
+            "scan_pro": metrics.totalCameraScans
         ]
 
         return Achievement.allAchievements.map { achievement in

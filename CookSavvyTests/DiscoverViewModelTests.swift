@@ -45,6 +45,8 @@ final class DiscoverViewModelTests: XCTestCase {
             databaseInitService: mockDBInitService,
             cameraScanTracker: mockCameraScanTracker,
             recommendationService: mockRecommendationService,
+            analyticsService: MockAnalyticsService(),
+            dietaryPreferences: DietaryPreferences(defaults: UserDefaults()),
             coordinator: nil
         )
     }

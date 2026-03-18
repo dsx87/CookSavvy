@@ -38,6 +38,7 @@ struct UpgradeView: View {
             }
         }
         .task {
+            viewModel.trackScreenViewed()
             await viewModel.loadPrices()
         }
         .alert(Strings.Upgrade.purchaseFailed, isPresented: $viewModel.showErrorAlert) {
@@ -181,6 +182,7 @@ struct PlanCard: View {
     UpgradeView(
         viewModel: UpgradeViewModel(
             subscriptionService: MockSubscriptionService(),
+            analyticsService: MockAnalyticsService(),
             onDismiss: {}
         )
     )

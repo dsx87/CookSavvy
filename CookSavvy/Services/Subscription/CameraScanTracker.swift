@@ -15,6 +15,7 @@ final class CameraScanTracker: CameraScanTrackerProtocol {
     private enum Keys {
         static let scansUsed = "camera_scans_used_this_week"
         static let weekStart = "camera_scan_week_start"
+        static let totalScans = "camera_scans_total"
     }
 
     init(defaults: UserDefaults = .standard, dateProvider: @escaping () -> Date = { Date() }) {
@@ -60,6 +61,15 @@ final class CameraScanTracker: CameraScanTrackerProtocol {
     func recordScan() {
         resetIfNewWeek()
         scansUsedThisWeek += 1
+        defaults.set(defaults.integer(forKey: Keys.totalScans) + 1, forKey: Keys.totalScans)
+    }
+
+    func recordScanWithoutQuota() {
+        defaults.set(defaults.integer(forKey: Keys.totalScans) + 1, forKey: Keys.totalScans)
+    }
+
+    func totalScansRecorded() -> Int {
+        defaults.integer(forKey: Keys.totalScans)
     }
 
     func remainingScans(limit: Int = freeWeeklyLimit) -> Int {

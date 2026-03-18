@@ -25,6 +25,7 @@ final class SettingsCoordinator: ObservableObject {
             userDataService: container.userDataService,
             dbInterface: container.dbInterface,
             subscriptionService: container.subscriptionService,
+            dietaryPreferences: container.dietaryPreferences,
             coordinator: self
         )
     }
@@ -40,6 +41,7 @@ final class SettingsCoordinator: ObservableObject {
     func makeUpgradeViewModel() -> UpgradeViewModel {
         UpgradeViewModel(
             subscriptionService: container.subscriptionService,
+            analyticsService: container.analyticsService,
             onDismiss: { [weak self] in
                 self?.dismissSheet()
             }

@@ -29,11 +29,13 @@ final class DiscoverViewModel: ObservableObject {
     @Published var savedRecipes: [Recipe] = []
     @Published var searchResultRecipes: [Recipe] = []
     @Published var isSearching = false
+    @Published var searchError: String? = nil
     @Published var isLoadingIngredients = false
     @Published var showResults = false
     @Published var useItAllFilter = false
     @Published var suggestedRecipes: [Recipe] = []
     @Published var suggestionReason: String? = nil
+    @Published var activeDietaryRestrictions: Set<DietaryRestriction> = []
 
     // MARK: - Dependencies
 
@@ -44,6 +46,8 @@ final class DiscoverViewModel: ObservableObject {
     private let databaseInitService: DatabaseInitializationServiceProtocol
     private let cameraScanTracker: CameraScanTrackerProtocol
     private let recommendationService: RecipeRecommendationServiceProtocol
+    private let analyticsService: AnalyticsServiceProtocol
+    private let dietaryPreferences: DietaryPreferencesProtocol
     private weak var coordinator: DiscoverCoordinator?
 
     // MARK: - Init
@@ -56,6 +60,8 @@ final class DiscoverViewModel: ObservableObject {
         databaseInitService: DatabaseInitializationServiceProtocol,
         cameraScanTracker: CameraScanTrackerProtocol,
         recommendationService: RecipeRecommendationServiceProtocol,
+        analyticsService: AnalyticsServiceProtocol,
+        dietaryPreferences: DietaryPreferencesProtocol,
         coordinator: DiscoverCoordinator? = nil
     ) {
         self.ingredientsService = ingredientsService
@@ -65,6 +71,8 @@ final class DiscoverViewModel: ObservableObject {
         self.databaseInitService = databaseInitService
         self.cameraScanTracker = cameraScanTracker
         self.recommendationService = recommendationService
+        self.analyticsService = analyticsService
+        self.dietaryPreferences = dietaryPreferences
         self.coordinator = coordinator
     }
 
@@ -99,12 +107,24 @@ final class DiscoverViewModel: ObservableObject {
             moodFiltered = searchResultRecipes
         }
 
-        guard useItAllFilter else { return moodFiltered }
+        let dietFiltered: [Recipe]
+        if activeDietaryRestrictions.isEmpty {
+            dietFiltered = moodFiltered
+        } else {
+            let blockedKeywords = activeDietaryRestrictions.flatMap { $0.filterKeywords }
+            dietFiltered = moodFiltered.filter { recipe in
+                let ingredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
+                let ingredientText = ingredients.map { $0.name.lowercased() }.joined(separator: " ")
+                return !blockedKeywords.contains { ingredientText.contains($0) }
+            }
+        }
 
-        let perfect = moodFiltered.filter { $0.missingIngredients?.isEmpty == true }
+        guard useItAllFilter else { return dietFiltered }
+
+        let perfect = dietFiltered.filter { $0.missingIngredients?.isEmpty == true }
         if !perfect.isEmpty { return perfect }
 
-        return moodFiltered.sorted {
+        return dietFiltered.sorted {
             ($0.missingIngredients?.count ?? Int.max) < ($1.missingIngredients?.count ?? Int.max)
         }
     }
@@ -203,8 +223,13 @@ final class DiscoverViewModel: ObservableObject {
 
     func findRecipes() {
         guard hasIngredients else { return }
+        analyticsService.track(.recipeSearchPerformed)
         showResults = true
         Task { await searchRecipes() }
+    }
+
+    func retrySearch() {
+        findRecipes()
     }
 
     func toggleMood(_ mood: RecipeMood) {
@@ -239,15 +264,28 @@ final class DiscoverViewModel: ObservableObject {
 
     func showCamera() {
         if subscriptionService.canAccessFeature(.cameraIngredientDetection) {
+            analyticsService.track(.cameraScanStarted)
+            cameraScanTracker.recordScanWithoutQuota()
             coordinator?.showCamera()
         } else if cameraScanTracker.canScan() {
+            analyticsService.track(.cameraScanStarted)
             // Deduct the scan when the camera opens — the attempt is consumed
             // regardless of whether detection returns results.
             cameraScanTracker.recordScan()
             coordinator?.showCamera()
         } else {
+            analyticsService.track(.scanLimitHit)
             coordinator?.showUpgrade()
         }
+    }
+
+    func refreshDietaryRestrictions() {
+        activeDietaryRestrictions = dietaryPreferences.activeRestrictions()
+    }
+
+    func removeDietaryRestriction(_ restriction: DietaryRestriction) {
+        dietaryPreferences.toggle(restriction)
+        activeDietaryRestrictions = dietaryPreferences.activeRestrictions()
     }
 
     // MARK: - Private
@@ -283,30 +321,39 @@ final class DiscoverViewModel: ObservableObject {
     private func searchRecipes() async {
         guard hasIngredients else { return }
         isSearching = true
+        searchError = nil
         do {
             let enabledSources = accessibleEnabledSources()
             if RecipeSourceType.requiresDatabaseReady(enabledSources) {
                 await databaseInitService.waitForRecipes()
             }
-            var results = try await recipeService.getRecipes(
+            let (rawResults, hadSourceFailures) = try await recipeService.getRecipes(
                 for: selectedIngredients,
                 from: enabledSources
             )
+            var results = rawResults
             let ingredients = selectedIngredients
             for index in results.indices {
-                let matching = matchingIngredientNames(for: results[index])
-                results[index].matchReason = RecipeMatchExplainer.explain(
-                    recipe: results[index],
-                    selectedIngredients: ingredients,
-                    matchingNames: matching
-                )
-                results[index].missingIngredients = RecipeMatchExplainer.missingIngredients(
+                let missing = RecipeMatchExplainer.missingIngredients(
                     recipe: results[index],
                     selectedIngredients: ingredients
                 )
+                results[index].missingIngredients = missing
+                results[index].matchReason = RecipeMatchExplainer.explain(
+                    recipe: results[index],
+                    missingIngredients: missing
+                )
             }
             searchResultRecipes = results
-        } catch {}
+            if hadSourceFailures {
+                searchError = rawResults.isEmpty
+                    ? Strings.Discover.searchFailedMessage
+                    : Strings.Discover.searchErrorMessage
+            }
+        } catch {
+            searchResultRecipes = []
+            searchError = Strings.Discover.searchFailedMessage
+        }
         isSearching = false
     }
 

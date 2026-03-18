@@ -34,9 +34,11 @@ final class OnboardingViewModel: ObservableObject {
 
     @Published var currentPage: Int = 0
 
+    private let analyticsService: AnalyticsServiceProtocol
     private let onComplete: () -> Void
 
-    init(onComplete: @escaping () -> Void) {
+    init(analyticsService: AnalyticsServiceProtocol, onComplete: @escaping () -> Void) {
+        self.analyticsService = analyticsService
         self.onComplete = onComplete
     }
 
@@ -44,11 +46,13 @@ final class OnboardingViewModel: ObservableObject {
         if currentPage < pages.count - 1 {
             currentPage += 1
         } else {
+            analyticsService.track(.onboardingCompleted)
             complete()
         }
     }
 
     func skip() {
+        analyticsService.track(.onboardingSkipped)
         complete()
     }
 

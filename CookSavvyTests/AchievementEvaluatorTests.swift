@@ -8,20 +8,26 @@ final class AchievementEvaluatorTests: XCTestCase {
         dayStreak: Int = 0,
         totalCookingHours: Double = 0,
         userRecipeCount: Int = 0,
-        distinctRecipesCooked: Int = 0
+        distinctRecipesCooked: Int = 0,
+        highMatchRecipesCooked: Int = 0,
+        uniqueIngredientsUsed: Int = 0,
+        totalCameraScans: Int = 0
     ) -> AchievementMetrics {
         AchievementMetrics(
             recipesCooked: recipesCooked,
             dayStreak: dayStreak,
             totalCookingHours: totalCookingHours,
             userRecipeCount: userRecipeCount,
-            distinctRecipesCooked: distinctRecipesCooked
+            distinctRecipesCooked: distinctRecipesCooked,
+            highMatchRecipesCooked: highMatchRecipesCooked,
+            uniqueIngredientsUsed: uniqueIngredientsUsed,
+            totalCameraScans: totalCameraScans
         )
     }
 
     func testZeroMetricsAllLocked() {
         let results = AchievementEvaluator.evaluate(metrics: metrics())
-        XCTAssertEqual(results.count, 7)
+        XCTAssertEqual(results.count, 10)
         XCTAssertTrue(results.allSatisfy { !$0.isUnlocked })
         XCTAssertTrue(results.allSatisfy { $0.currentProgress == 0 })
     }

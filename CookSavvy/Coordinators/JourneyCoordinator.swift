@@ -31,6 +31,7 @@ final class JourneyCoordinator: ObservableObject, RecipeDetailsCoordinating {
             userDataService: container.userDataService,
             shoppingListService: container.shoppingListService,
             subscriptionService: container.subscriptionService,
+            analyticsService: container.analyticsService,
             coordinator: self
         )
     }
@@ -45,6 +46,7 @@ final class JourneyCoordinator: ObservableObject, RecipeDetailsCoordinating {
     func makeUpgradeViewModel() -> UpgradeViewModel {
         UpgradeViewModel(
             subscriptionService: container.subscriptionService,
+            analyticsService: container.analyticsService,
             onDismiss: { [weak self] in
                 self?.dismissSheet()
             }
@@ -63,6 +65,8 @@ final class JourneyCoordinator: ObservableObject, RecipeDetailsCoordinating {
     func makeJourneyViewModel() -> JourneyViewModel {
         JourneyViewModel(
             userDataService: container.userDataService,
+            cameraScanTracker: container.cameraScanTracker,
+            analyticsService: container.analyticsService,
             coordinator: self
         )
     }
@@ -79,6 +83,7 @@ final class JourneyCoordinator: ObservableObject, RecipeDetailsCoordinating {
         CookModeViewModel(
             recipe: recipe,
             userDataService: container.userDataService,
+            analyticsService: container.analyticsService,
             onDismiss: { [weak self] in
                 self?.dismissFullScreenCover()
             }

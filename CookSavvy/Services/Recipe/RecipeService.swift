@@ -38,7 +38,8 @@ final class RecipeService: RecipeServiceProtocol {
         self.shouldStoreRecipes = shouldStoreRecipes
     }
     
-    /// Convenience initializer with default sources
+    #if DEBUG
+    /// Convenience initializer with default sources — DEBUG only (uses MockLLMProvider)
     /// - Parameters:
     ///   - dbInterface: Database interface for storing recipes (default: new DBInterface)
     ///   - shouldStoreRecipes: Whether to automatically store fetched recipes in DB (default: true)
@@ -48,20 +49,21 @@ final class RecipeService: RecipeServiceProtocol {
     ) {
         let offlineSource = OfflineRecipeSource(dbInterface: dbInterface)
         let onlineSource = OnlineRecipeSource()
-        let aiSource = AIRecipeSource()
-        
+        let aiSource = AIRecipeSource(aiService: AIService(provider: MockLLMProvider()))
+
         let sources: [RecipeSourceType: RecipeSourceProtocol] = [
             .offline: offlineSource,
             .online: onlineSource,
             .ai: aiSource
         ]
-        
+
         self.init(
             dbInterface: dbInterface,
             sources: sources,
             shouldStoreRecipes: shouldStoreRecipes
         )
     }
+    #endif
     
     // MARK: - Public Methods
     
@@ -145,16 +147,17 @@ final class RecipeService: RecipeServiceProtocol {
     ///   - ingredients: List of ingredients to search for
     ///   - sourceTypes: Set of sources to query
     /// - Returns: Array of merged recipes from all sources
-    func getRecipes(for ingredients: [Ingredient], from sourceTypes: Set<RecipeSourceType>) async throws -> [Recipe] {
+    func getRecipes(for ingredients: [Ingredient], from sourceTypes: Set<RecipeSourceType>) async throws -> (recipes: [Recipe], hadSourceFailures: Bool) {
         var allRecipes: [Recipe] = []
         var seenTitles: Set<String> = []
-        
+        var hadSourceFailures = false
+
         for sourceType in sourceTypes.sorted(by: { $0.rawValue < $1.rawValue }) {
             guard let source = sources[sourceType],
                   await source.isAvailable() else {
                 continue
             }
-            
+
             do {
                 let recipes = try await source.fetchRecipes(for: ingredients)
                 for var recipe in recipes {
@@ -164,18 +167,25 @@ final class RecipeService: RecipeServiceProtocol {
                         allRecipes.append(recipe)
                     }
                 }
+            } catch RecipeSourceError.noRecipesFound {
+                // Source worked but found nothing — not a failure
             } catch {
+                hadSourceFailures = true
                 print("⚠️ Source \(sourceType) failed: \(error)")
             }
         }
-        
+
         if shouldStoreRecipes {
             let nonOfflineRecipes = allRecipes.filter { $0.source != .offline }
             if !nonOfflineRecipes.isEmpty {
-                try storeRecipes(nonOfflineRecipes)
+                do {
+                    try storeRecipes(nonOfflineRecipes)
+                } catch {
+                    print("⚠️ Failed to cache recipes: \(error)")
+                }
             }
         }
-        
-        return allRecipes
+
+        return (allRecipes, hadSourceFailures)
     }
 }

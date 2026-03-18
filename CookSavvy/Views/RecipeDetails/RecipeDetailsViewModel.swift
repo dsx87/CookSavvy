@@ -29,6 +29,7 @@ final class RecipeDetailsViewModel: ObservableObject {
     private let userDataService: UserDataServiceProtocol
     private let shoppingListService: ShoppingListServiceProtocol
     private let subscriptionService: SubscriptionServiceProtocol
+    private let analyticsService: AnalyticsServiceProtocol
     private weak var coordinator: (any RecipeDetailsCoordinating)?
 
     // MARK: - Computed
@@ -51,6 +52,7 @@ final class RecipeDetailsViewModel: ObservableObject {
         userDataService: UserDataServiceProtocol,
         shoppingListService: ShoppingListServiceProtocol,
         subscriptionService: SubscriptionServiceProtocol,
+        analyticsService: AnalyticsServiceProtocol,
         coordinator: (any RecipeDetailsCoordinating)?
     ) {
         self.recipe = recipe
@@ -58,6 +60,7 @@ final class RecipeDetailsViewModel: ObservableObject {
         self.userDataService = userDataService
         self.shoppingListService = shoppingListService
         self.subscriptionService = subscriptionService
+        self.analyticsService = analyticsService
         self.coordinator = coordinator
 
         // Load data on init
@@ -79,6 +82,9 @@ final class RecipeDetailsViewModel: ObservableObject {
 
         do {
             isFavorite = try await userDataService.toggleFavorite(recipe)
+            if isFavorite {
+                analyticsService.track(.recipeFavorited)
+            }
         } catch {
             print("❌ Failed to toggle favorite: \(error)")
         }
@@ -135,6 +141,7 @@ final class RecipeDetailsViewModel: ObservableObject {
     }
 
     private func recordView() async {
+        analyticsService.track(.recipeViewed)
         do {
             try await userDataService.recordRecipeView(recipe)
         } catch {

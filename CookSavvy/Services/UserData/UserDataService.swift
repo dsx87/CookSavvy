@@ -238,6 +238,10 @@ final class UserDataService: UserDataServiceProtocol {
         return try dbInterface.getUserCreatedRecipeCount()
     }
 
+    func getDistinctIngredientsUsedCount() async throws -> Int {
+        return try dbInterface.getDistinctCookedIngredientCount()
+    }
+
     func getThemePreference() -> ThemePreference {
         ThemePreference.from(rawValue: defaults.string(forKey: Keys.themePreference))
     }

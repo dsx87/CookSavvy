@@ -20,6 +20,9 @@ struct DiscoverView: View {
         .task {
             await viewModel.loadInitialData()
         }
+        .onAppear {
+            viewModel.refreshDietaryRestrictions()
+        }
     }
 
     // MARK: - State 1: Ingredient Selection
@@ -331,11 +334,67 @@ struct DiscoverView: View {
                 selectedIngredientsStrip
                 moodFilter
                 useItAllToggle
+                dietaryFilterPills
+                if viewModel.searchError != nil {
+                    errorBanner
+                }
                 bestMatchSection
                 moreRecipesSection
             }
             .padding(.horizontal, UI.Discover.horizontalPadding)
             .padding(.bottom, UI.Discover.findButtonBottomPadding)
+        }
+    }
+
+    @ViewBuilder
+    private var dietaryFilterPills: some View {
+        if !viewModel.activeDietaryRestrictions.isEmpty {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: UI.Discover.categoryChipSpacing) {
+                    ForEach(Array(viewModel.activeDietaryRestrictions), id: \.self) { restriction in
+                        Button {
+                            withAnimation(UI.Anim.springQuick) {
+                                viewModel.removeDietaryRestriction(restriction)
+                            }
+                        } label: {
+                            Label(restriction.displayName, systemImage: restriction.icon)
+                                .font(UI.Fonts.captionSemibold)
+                                .foregroundStyle(theme.mint)
+                                .padding(.horizontal, UI.Discover.useItAllPaddingH)
+                                .padding(.vertical, UI.Discover.useItAllPaddingV)
+                                .background(theme.mintSoft, in: Capsule())
+                                .overlay(
+                                    Capsule().strokeBorder(theme.mint.opacity(0.3), lineWidth: UI.Common.borderWidth)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var errorBanner: some View {
+        if let errorMessage = viewModel.searchError {
+            HStack(spacing: UI.Common.smallSpacing) {
+                Image(systemName: Icons.Discover.error)
+                    .foregroundStyle(theme.gold)
+                Text(errorMessage)
+                    .font(UI.Fonts.caption)
+                    .foregroundStyle(theme.text2)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer()
+                Button {
+                    viewModel.retrySearch()
+                } label: {
+                    Text(Strings.Discover.retry)
+                        .font(UI.Fonts.captionSemibold)
+                        .foregroundStyle(theme.accent)
+                }
+            }
+            .padding(UI.Common.horizontalPadding)
+            .frostCard()
         }
     }
 
@@ -470,8 +529,8 @@ struct DiscoverView: View {
 
     private func featuredHeroOverlay(for recipe: Recipe) -> some View {
         VStack(alignment: .leading, spacing: UI.Discover.featuredInfoSpacing) {
-            if let match = recipe.matchPercentage {
-                matchIndicator(match: match, matchingIngredients: viewModel.matchingIngredientNames(for: recipe))
+            if recipe.missingIngredients != nil || recipe.matchPercentage != nil {
+                matchIndicator(recipe: recipe, matchingIngredients: viewModel.matchingIngredientNames(for: recipe))
             }
             if let reason = recipe.matchReason {
                 Label(reason, systemImage: Icons.Discover.idea)
@@ -556,11 +615,18 @@ struct DiscoverView: View {
         return nil
     }
 
-    private func matchIndicator(match: Double, matchingIngredients: [String]) -> some View {
-        HStack(spacing: UI.Discover.matchBadgeSpacing) {
+    private func matchIndicator(recipe: Recipe, matchingIngredients: [String]) -> some View {
+        let total = recipe.cleanedIngredients.isEmpty ? recipe.ingredients.count : recipe.cleanedIngredients.count
+        let missing = recipe.missingIngredients?.count ?? 0
+        let matched = max(0, total - missing)
+        let label: String = recipe.missingIngredients?.isEmpty == true
+            ? Strings.Discover.matchLabelAll
+            : String(format: Strings.Discover.matchLabel, Int64(matched), Int64(total))
+
+        return HStack(spacing: UI.Discover.matchBadgeSpacing) {
             Image(systemName: Icons.Discover.matchBadge)
                 .font(UI.Fonts.tinyCaption)
-            Text(String(format: Strings.Discover.matchLabel, Int64(Int(match))))
+            Text(label)
                 .font(UI.Fonts.smallCaptionBold)
             Button {
                 isMatchInfoPopoverPresented = true

@@ -6,6 +6,7 @@ final class JourneyViewModel: ObservableObject {
     @Published var recipesCooked: Int = 0
     @Published var dayStreak: Int = 0
     @Published var hoursCooking: Double = 0
+    @Published var uniqueIngredientsUsed: Int = 0
     @Published var userRecipes: [Recipe] = []
     @Published var weekCookingDates: Set<Int> = []
     @Published var achievements: [Achievement] = Achievement.allAchievements
@@ -13,10 +14,19 @@ final class JourneyViewModel: ObservableObject {
     @Published var isLoading = false
 
     private let userDataService: UserDataServiceProtocol
+    private let cameraScanTracker: CameraScanTrackerProtocol
+    private let analyticsService: AnalyticsServiceProtocol
     private weak var coordinator: JourneyCoordinator?
 
-    init(userDataService: UserDataServiceProtocol, coordinator: JourneyCoordinator? = nil) {
+    init(
+        userDataService: UserDataServiceProtocol,
+        cameraScanTracker: CameraScanTrackerProtocol,
+        analyticsService: AnalyticsServiceProtocol,
+        coordinator: JourneyCoordinator? = nil
+    ) {
         self.userDataService = userDataService
+        self.cameraScanTracker = cameraScanTracker
+        self.analyticsService = analyticsService
         self.coordinator = coordinator
     }
 
@@ -77,13 +87,18 @@ final class JourneyViewModel: ObservableObject {
             dayStreak = try await userDataService.currentStreak()
             let totalSeconds = try await userDataService.totalCookingTime()
             hoursCooking = totalSeconds / 3600.0
-        } catch {}
+            uniqueIngredientsUsed = try await userDataService.getDistinctIngredientsUsedCount()
+        } catch {
+            print("❌ Failed to load journey stats: \(error)")
+        }
     }
 
     private func loadUserRecipes() async {
         do {
             userRecipes = try await userDataService.getUserRecipes()
-        } catch {}
+        } catch {
+            print("❌ Failed to load user recipes: \(error)")
+        }
     }
 
     private func loadWeekActivity() async {
@@ -107,6 +122,8 @@ final class JourneyViewModel: ObservableObject {
     }
 
     private func refreshAchievements() async {
+        let highMatchCooks = UserDefaults.standard.integer(forKey: "high_match_cooks_count")
+        let totalScans = cameraScanTracker.totalScansRecorded()
         do {
             let allSessions = try await userDataService.getCookingSessions(limit: max(recipesCooked, 50))
             let distinctRecipesCooked = Set(allSessions.map(\.recipeId)).count
@@ -116,7 +133,10 @@ final class JourneyViewModel: ObservableObject {
                     dayStreak: dayStreak,
                     totalCookingHours: hoursCooking,
                     userRecipeCount: userRecipes.count,
-                    distinctRecipesCooked: distinctRecipesCooked
+                    distinctRecipesCooked: distinctRecipesCooked,
+                    highMatchRecipesCooked: highMatchCooks,
+                    uniqueIngredientsUsed: uniqueIngredientsUsed,
+                    totalCameraScans: totalScans
                 )
             )
         } catch {
@@ -126,7 +146,10 @@ final class JourneyViewModel: ObservableObject {
                     dayStreak: dayStreak,
                     totalCookingHours: hoursCooking,
                     userRecipeCount: userRecipes.count,
-                    distinctRecipesCooked: 0
+                    distinctRecipesCooked: 0,
+                    highMatchRecipesCooked: highMatchCooks,
+                    uniqueIngredientsUsed: uniqueIngredientsUsed,
+                    totalCameraScans: totalScans
                 )
             )
         }

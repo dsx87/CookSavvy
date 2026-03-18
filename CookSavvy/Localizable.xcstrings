@@ -731,7 +731,18 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "%lld%% match"
+            "value" : "Uses %lld of %lld ingredients"
+          }
+        }
+      }
+    },
+    "discover.matchLabelAll" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You have all the ingredients!"
           }
         }
       }
@@ -791,6 +802,17 @@
         }
       }
     },
+    "discover.retry" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Retry"
+          }
+        }
+      }
+    },
     "discover.savedSection" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -820,6 +842,39 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%lld scans left"
+          }
+        }
+      }
+    },
+    "discover.searchFailedMessage" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Search failed — please try again"
+          }
+        }
+      }
+    },
+    "discover.searchErrorMessage" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Some recipe sources couldn't be reached — showing available results"
+          }
+        }
+      }
+    },
+    "discover.quickMealSuffix" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : " · Quick %lld-min meal"
           }
         }
       }

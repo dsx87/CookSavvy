@@ -66,9 +66,9 @@ struct JourneyView: View {
             journeyStat(value: "\(viewModel.recipesCooked)", label: Strings.Journey.recipesCooked,
                         icon: Icons.Journey.forkKnife, color: theme.accent,
                         accessibilityID: AccessibilityID.Journey.Stats.recipesCooked)
-            journeyStat(value: "\(viewModel.dayStreak)", label: Strings.Journey.dayStreak,
-                        icon: Icons.Journey.flame, color: theme.rose,
-                        accessibilityID: AccessibilityID.Journey.Stats.dayStreak)
+            journeyStat(value: "\(viewModel.uniqueIngredientsUsed)", label: Strings.Journey.ingredientsRescued,
+                        icon: Icons.Journey.leaf, color: theme.mint,
+                        accessibilityID: AccessibilityID.Journey.Stats.ingredientsRescued)
             journeyStat(value: String(format: "%.0f", viewModel.hoursCooking), label: Strings.Journey.hoursCooking,
                         icon: Icons.Journey.clock, color: theme.mint,
                         accessibilityID: AccessibilityID.Journey.Stats.hoursCooking)

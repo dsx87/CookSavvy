@@ -28,7 +28,7 @@ struct OnboardingView: View {
 
                 if viewModel.isLastPage {
                     Button {
-                        viewModel.complete()
+                        viewModel.nextPage()
                     } label: {
                         Text(Strings.Onboarding.getStarted)
                             .font(UI.Fonts.buttonLabel)
@@ -118,5 +118,5 @@ struct OnboardingView: View {
 }
 
 #Preview {
-    OnboardingView(viewModel: OnboardingViewModel(onComplete: {}))
+    OnboardingView(viewModel: OnboardingViewModel(analyticsService: MockAnalyticsService(), onComplete: {}))
 }

@@ -14,14 +14,21 @@ final class CookModeViewModel: ObservableObject {
     @Published var feedbackRating: Int = 0
 
     private let userDataService: UserDataServiceProtocol
+    private let analyticsService: AnalyticsServiceProtocol
     private let onDismiss: () -> Void
     private var timerCancellable: AnyCancellable?
     private var startDate: Date?
     private var cookDuration: TimeInterval?
 
-    init(recipe: Recipe, userDataService: UserDataServiceProtocol, onDismiss: @escaping () -> Void) {
+    init(
+        recipe: Recipe,
+        userDataService: UserDataServiceProtocol,
+        analyticsService: AnalyticsServiceProtocol,
+        onDismiss: @escaping () -> Void
+    ) {
         self.recipe = recipe
         self.userDataService = userDataService
+        self.analyticsService = analyticsService
         self.onDismiss = onDismiss
         self.startDate = Date()
     }
@@ -95,16 +102,36 @@ final class CookModeViewModel: ObservableObject {
     func submitFeedback() {
         let rating = feedbackRating > 0 ? feedbackRating : nil
         let duration = cookDuration
+        let isPerfectMatch = recipe.missingIngredients?.isEmpty == true
+        analyticsService.track(.recipeCooked)
         Task {
-            try? await userDataService.markAsCooked(recipe: recipe, duration: duration, rating: rating)
+            do {
+                try await userDataService.markAsCooked(recipe: recipe, duration: duration, rating: rating)
+            } catch {
+                print("❌ Failed to mark recipe as cooked: \(error)")
+            }
+        }
+        if isPerfectMatch {
+            let current = UserDefaults.standard.integer(forKey: "high_match_cooks_count")
+            UserDefaults.standard.set(current + 1, forKey: "high_match_cooks_count")
         }
         onDismiss()
     }
 
     func skipFeedback() {
         let duration = cookDuration
+        let isPerfectMatch = recipe.missingIngredients?.isEmpty == true
+        analyticsService.track(.recipeCooked)
         Task {
-            try? await userDataService.markAsCooked(recipe: recipe, duration: duration)
+            do {
+                try await userDataService.markAsCooked(recipe: recipe, duration: duration)
+            } catch {
+                print("❌ Failed to mark recipe as cooked: \(error)")
+            }
+        }
+        if isPerfectMatch {
+            let current = UserDefaults.standard.integer(forKey: "high_match_cooks_count")
+            UserDefaults.standard.set(current + 1, forKey: "high_match_cooks_count")
         }
         onDismiss()
     }

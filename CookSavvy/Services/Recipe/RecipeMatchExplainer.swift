@@ -4,21 +4,21 @@ enum RecipeMatchExplainer {
 
     static func explain(
         recipe: Recipe,
-        selectedIngredients: [Ingredient],
-        matchingNames: [String]
+        missingIngredients: [String]
     ) -> String {
-        let totalSelected = selectedIngredients.count
-        let matchCount = matchingNames.count
+        let recipeIngredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
+        let total = recipeIngredients.count
+        let matched = max(0, total - missingIngredients.count)
 
         var reason: String
-        if totalSelected > 0 && matchCount >= totalSelected {
-            reason = "Uses all your ingredients!"
+        if missingIngredients.isEmpty {
+            reason = Strings.Discover.matchLabelAll
         } else {
-            reason = "Uses \(matchCount) of \(totalSelected) ingredients"
+            reason = String(format: Strings.Discover.matchLabel, Int64(matched), Int64(total))
         }
 
         if let minutes = cookTimeMinutes(recipe), minutes > 0 && minutes < 30 {
-            reason += " · Quick \(minutes)-min meal"
+            reason += String(format: Strings.Discover.quickMealSuffix, Int64(minutes))
         }
 
         return reason
