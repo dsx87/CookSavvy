@@ -342,3 +342,5 @@ Extended documentation lives in the `docs/` directory:
 - **Ask before coding** if you need more info (unless instructed otherwise)
 - **Comments:** Default is `none`. Levels: `none` | `needed only` | `every line` — wait for instruction
 - **Documentation maintenance:** After introducing structural changes (new services, screens, coordinators, architecture shifts, or dependency changes), check `CLAUDE.md`, `AGENTS.md` and `GEMINI.md` and update them to reflect the current state of the project
+- **Build check:** After each finished request, verify the project builds using `xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build` — always target generic iOS Simulator, never a specific simulator version (unless explicitly requested)
+- **Unit tests:** After significant logic changes, run the unit tests test plan: `xcodebuild test -scheme CookSavvy -destination 'platform=iOS Simulator,name=iPhone 16' -testPlan UnitTests` — do not run the default test plan (which includes everything) unless explicitly requested
