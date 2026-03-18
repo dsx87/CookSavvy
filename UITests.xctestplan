@@ -1,7 +1,7 @@
 {
   "configurations" : [
     {
-      "id" : "DC2859A3-2A39-4B78-A003-425D7296FB27",
+      "id" : "25B9A8E0-0F38-4317-B272-093E073F067E",
       "name" : "Configuration 1",
       "options" : {
 
@@ -12,14 +12,6 @@
     "testTimeoutsEnabled" : true
   },
   "testTargets" : [
-    {
-      "parallelizable" : false,
-      "target" : {
-        "containerPath" : "container:CookSavvy.xcodeproj",
-        "identifier" : "1DE9DF152E623A380077DD75",
-        "name" : "CookSavvyTests"
-      }
-    },
     {
       "target" : {
         "containerPath" : "container:CookSavvy.xcodeproj",
