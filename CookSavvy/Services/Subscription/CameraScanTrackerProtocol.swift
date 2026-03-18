@@ -3,7 +3,9 @@ import Foundation
 protocol CameraScanTrackerProtocol: AnyObject {
     func canScan(limit: Int) -> Bool
     func recordScan()
+    func recordScanWithoutQuota()
     func remainingScans(limit: Int) -> Int
+    func totalScansRecorded() -> Int
 }
 
 extension CameraScanTrackerProtocol {

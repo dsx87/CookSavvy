@@ -68,6 +68,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
             userDataService: mockUserDataService,
             shoppingListService: mockShoppingListService,
             subscriptionService: subscription ?? freeSubscription,
+            analyticsService: MockAnalyticsService(),
             coordinator: nil
         )
     }
@@ -170,6 +171,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
             userDataService: mockUserDataService,
             shoppingListService: mockShoppingListService,
             subscriptionService: premiumSubscription,
+            analyticsService: MockAnalyticsService(),
             coordinator: spy
         )
 
@@ -188,6 +190,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
             userDataService: mockUserDataService,
             shoppingListService: mockShoppingListService,
             subscriptionService: freeSubscription,
+            analyticsService: MockAnalyticsService(),
             coordinator: spy
         )
 

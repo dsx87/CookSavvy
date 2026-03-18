@@ -30,6 +30,7 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating {
             userDataService: container.userDataService,
             shoppingListService: container.shoppingListService,
             subscriptionService: container.subscriptionService,
+            analyticsService: container.analyticsService,
             coordinator: self
         )
     }
@@ -55,6 +56,7 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating {
     func makeUpgradeViewModel() -> UpgradeViewModel {
         UpgradeViewModel(
             subscriptionService: container.subscriptionService,
+            analyticsService: container.analyticsService,
             onDismiss: { [weak self] in
                 self?.dismissSheet()
             }
@@ -79,6 +81,8 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating {
             databaseInitService: container.databaseInitService,
             cameraScanTracker: container.cameraScanTracker,
             recommendationService: container.recommendationService,
+            analyticsService: container.analyticsService,
+            dietaryPreferences: container.dietaryPreferences,
             coordinator: self
         )
     }
@@ -95,6 +99,7 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating {
         CookModeViewModel(
             recipe: recipe,
             userDataService: container.userDataService,
+            analyticsService: container.analyticsService,
             onDismiss: { [weak self] in
                 self?.dismissFullScreenCover()
             }

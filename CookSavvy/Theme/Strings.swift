@@ -129,6 +129,7 @@ enum Strings {
         static let homeChef = String(localized: "journey.homeChef", defaultValue: "Home Chef")
         static let recipesCooked = String(localized: "journey.recipesCooked", defaultValue: "Recipes\nCooked")
         static let dayStreak = String(localized: "journey.dayStreak", defaultValue: "Day\nStreak")
+        static let ingredientsRescued = String(localized: "journey.ingredientsRescued", defaultValue: "Ingredients\nRescued")
         static let hoursCooking = String(localized: "journey.hoursCooking", defaultValue: "Hours\nCooking")
         static let myRecipes = String(localized: "journey.myRecipes", defaultValue: "MY RECIPES")
         static let addRecipe = String(localized: "journey.addRecipe", defaultValue: "Add Recipe")
@@ -227,6 +228,25 @@ enum Strings {
         static let emptySubtitle = String(localized: "shoppingList.emptySubtitle", defaultValue: "Add missing ingredients from recipe details")
         static let addMissingToList = String(localized: "shoppingList.addMissingToList", defaultValue: "Add %lld Missing to List")
         static let otherGroup = String(localized: "shoppingList.otherGroup", defaultValue: "Other")
+    }
+
+    enum Dietary {
+        static let sectionTitle = String(localized: "dietary.sectionTitle", defaultValue: "Dietary Preferences")
+        static let vegetarian = String(localized: "dietary.vegetarian", defaultValue: "Vegetarian")
+        static let vegetarianDescription = String(localized: "dietary.vegetarianDescription", defaultValue: "No meat or fish")
+        static let vegan = String(localized: "dietary.vegan", defaultValue: "Vegan")
+        static let veganDescription = String(localized: "dietary.veganDescription", defaultValue: "No animal products")
+        static let glutenFree = String(localized: "dietary.glutenFree", defaultValue: "Gluten Free")
+        static let glutenFreeDescription = String(localized: "dietary.glutenFreeDescription", defaultValue: "No wheat, barley, or rye")
+        static let dairyFree = String(localized: "dietary.dairyFree", defaultValue: "Dairy Free")
+        static let dairyFreeDescription = String(localized: "dietary.dairyFreeDescription", defaultValue: "No milk or dairy products")
+        static let nutFree = String(localized: "dietary.nutFree", defaultValue: "Nut Free")
+        static let nutFreeDescription = String(localized: "dietary.nutFreeDescription", defaultValue: "No nuts or peanuts")
+        static let halal = String(localized: "dietary.halal", defaultValue: "Halal")
+        static let halalDescription = String(localized: "dietary.halalDescription", defaultValue: "No pork or alcohol")
+        static let kosher = String(localized: "dietary.kosher", defaultValue: "Kosher")
+        static let kosherDescription = String(localized: "dietary.kosherDescription", defaultValue: "No pork or shellfish")
+        static let sectionFooter = String(localized: "dietary.sectionFooter", defaultValue: "Active filters are applied to recipe search results.")
     }
 
     enum MoodFilter {

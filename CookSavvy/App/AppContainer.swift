@@ -30,6 +30,8 @@ final class AppContainer {
     let cameraScanTracker: CameraScanTrackerProtocol
     let shoppingListService: ShoppingListServiceProtocol
     let recommendationService: RecipeRecommendationServiceProtocol
+    let analyticsService: AnalyticsServiceProtocol
+    let dietaryPreferences: DietaryPreferences
 
     // MARK: - Initialization
 
@@ -90,6 +92,13 @@ final class AppContainer {
         )
 
         databaseInitService.startInitialization()
+
+        #if DEBUG
+        self.analyticsService = MockAnalyticsService()
+        #else
+        self.analyticsService = AnalyticsService()
+        #endif
+        self.dietaryPreferences = DietaryPreferences()
     }
     
     private static func createRecipeAPIProvider(networkService: NetworkServiceProtocol) -> RecipeAPIProviderProtocol? {

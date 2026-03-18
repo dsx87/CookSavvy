@@ -20,6 +20,7 @@ protocol UserDataServiceProtocol: AnyObject {
     func recipesCooked() async throws -> Int
     func getUserRecipes() async throws -> [Recipe]
     func getUserRecipeCount() async throws -> Int
+    func getDistinctIngredientsUsedCount() async throws -> Int
     func getThemePreference() -> ThemePreference
     func setThemePreference(_ themePreference: ThemePreference)
     func saveUserRecipe(_ recipe: Recipe) async throws

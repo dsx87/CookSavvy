@@ -16,6 +16,7 @@ final class UpgradeViewModel: ObservableObject {
     @Published private(set) var priceByPlan: [SubscriptionPlan: String] = [:]
     
     private let subscriptionService: SubscriptionServiceProtocol
+    private let analyticsService: AnalyticsServiceProtocol
     private let onDismiss: () -> Void
     private var cancellables = Set<AnyCancellable>()
     
@@ -23,9 +24,11 @@ final class UpgradeViewModel: ObservableObject {
     
     init(
         subscriptionService: SubscriptionServiceProtocol,
+        analyticsService: AnalyticsServiceProtocol,
         onDismiss: @escaping () -> Void
     ) {
         self.subscriptionService = subscriptionService
+        self.analyticsService = analyticsService
         self.onDismiss = onDismiss
         self.currentPlan = subscriptionService.currentPlan
         
@@ -41,6 +44,10 @@ final class UpgradeViewModel: ObservableObject {
         
     }
     
+    func trackScreenViewed() {
+        analyticsService.track(.upgradeScreenViewed)
+    }
+
     func purchase(_ plan: SubscriptionPlan) async {
         isLoading = true
         purchaseError = nil
@@ -48,6 +55,7 @@ final class UpgradeViewModel: ObservableObject {
         
         do {
             try await subscriptionService.purchase(plan)
+            analyticsService.track(.upgradePurchased)
             onDismiss()
         } catch let error as SubscriptionError {
             if case .userCancelled = error {
@@ -74,6 +82,7 @@ final class UpgradeViewModel: ObservableObject {
     }
 
     func dismiss() {
+        analyticsService.track(.upgradeDismissed)
         onDismiss()
     }
 

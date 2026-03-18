@@ -64,8 +64,8 @@ struct JourneyView: View {
         HStack(spacing: UI.Journey.statsGridSpacing) {
             journeyStat(value: "\(viewModel.recipesCooked)", label: Strings.Journey.recipesCooked,
                         icon: Icons.Journey.forkKnife, color: theme.accent)
-            journeyStat(value: "\(viewModel.dayStreak)", label: Strings.Journey.dayStreak,
-                        icon: Icons.Journey.flame, color: theme.rose)
+            journeyStat(value: "\(viewModel.uniqueIngredientsUsed)", label: Strings.Journey.ingredientsRescued,
+                        icon: Icons.Journey.leaf, color: theme.mint)
             journeyStat(value: String(format: "%.0f", viewModel.hoursCooking), label: Strings.Journey.hoursCooking,
                         icon: Icons.Journey.clock, color: theme.mint)
         }

@@ -137,8 +137,16 @@ final class MockCameraScanTracker: CameraScanTrackerProtocol {
         recordScanCallCount += 1
     }
 
+    func recordScanWithoutQuota() {
+        recordScanCallCount += 1
+    }
+
     func remainingScans(limit: Int) -> Int {
         stubbedRemainingScans
+    }
+
+    func totalScansRecorded() -> Int {
+        recordScanCallCount
     }
 }
 

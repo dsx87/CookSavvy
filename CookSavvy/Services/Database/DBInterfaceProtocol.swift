@@ -96,4 +96,5 @@ protocol DBInterfaceProtocol {
 
     // MARK: - Statistics
     func getRecipeCount() throws -> Int
+    func getDistinctCookedIngredientCount() throws -> Int
 }

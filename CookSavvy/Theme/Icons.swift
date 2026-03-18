@@ -80,6 +80,7 @@ enum Icons {
         static let pencil = "pencil"
         static let checkmark = "checkmark"
         static let star = "star.fill"
+        static let leaf = "leaf.fill"
     }
 
     enum CookMode {
@@ -110,6 +111,16 @@ enum Icons {
         static let checkCircleFill = "checkmark.circle.fill"
         static let circle = "circle"
         static let trash = "trash"
+    }
+
+    enum Dietary {
+        static let vegetarian = "leaf.fill"
+        static let vegan = "leaf.circle.fill"
+        static let glutenFree = "xmark.circle.fill"
+        static let dairyFree = "drop.fill"
+        static let nutFree = "exclamationmark.triangle.fill"
+        static let halal = "checkmark.seal.fill"
+        static let kosher = "star.circle.fill"
     }
 
     enum Mood {

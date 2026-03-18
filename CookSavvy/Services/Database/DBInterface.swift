@@ -926,6 +926,17 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    func getDistinctCookedIngredientCount() throws -> Int {
+        return try dbWriter.read { db in
+            let sql = """
+                SELECT COUNT(DISTINCT ri.ingredient_name)
+                FROM recipe_ingredients ri
+                INNER JOIN cooking_sessions cs ON ri.recipe_id = cs.recipe_id;
+            """
+            return try Int.fetchOne(db, sql: sql) ?? 0
+        }
+    }
+
     // MARK: - Private Helpers
 
     private func decodeRecipe(from row: Row) throws -> Recipe {

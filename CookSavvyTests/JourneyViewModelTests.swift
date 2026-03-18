@@ -19,7 +19,12 @@ final class JourneyViewModelTests: XCTestCase {
     }
 
     private func makeViewModel() -> JourneyViewModel {
-        JourneyViewModel(userDataService: mockUserDataService, coordinator: nil)
+        JourneyViewModel(
+            userDataService: mockUserDataService,
+            cameraScanTracker: MockCameraScanTracker(),
+            analyticsService: MockAnalyticsService(),
+            coordinator: nil
+        )
     }
 
     func testStatsLoadedFromService() async {
@@ -92,7 +97,10 @@ final class JourneyAchievementIntegrationTests: XCTestCase {
                 dayStreak: 7,
                 totalCookingHours: 10.4,
                 userRecipeCount: 5,
-                distinctRecipesCooked: 12
+                distinctRecipesCooked: 12,
+                highMatchRecipesCooked: 0,
+                uniqueIngredientsUsed: 0,
+                totalCameraScans: 0
             ),
             referenceDate: Date(timeIntervalSince1970: 123)
         )
@@ -116,7 +124,10 @@ final class JourneyAchievementIntegrationTests: XCTestCase {
                 dayStreak: 3,
                 totalCookingHours: 2.9,
                 userRecipeCount: 1,
-                distinctRecipesCooked: 4
+                distinctRecipesCooked: 4,
+                highMatchRecipesCooked: 0,
+                uniqueIngredientsUsed: 0,
+                totalCameraScans: 0
             ),
             referenceDate: Date(timeIntervalSince1970: 123)
         )

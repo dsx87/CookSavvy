@@ -37,9 +37,12 @@ final class AppCoordinator: ObservableObject {
     }
     
     func makeOnboardingViewModel() -> OnboardingViewModel {
-        OnboardingViewModel(onComplete: { [weak self] in
-            self?.hasCompletedOnboarding = true
-        })
+        OnboardingViewModel(
+            analyticsService: AppContainer.shared.analyticsService,
+            onComplete: { [weak self] in
+                self?.hasCompletedOnboarding = true
+            }
+        )
     }
 
     func start() -> some View {

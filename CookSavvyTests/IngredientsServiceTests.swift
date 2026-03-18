@@ -91,6 +91,7 @@ final class MockDBInterfaceForIngredients: DBInterfaceProtocol {
     func toggleShoppingItem(id: Int) throws -> Bool { false }
     func removeShoppingItem(id: Int) throws {}
     func clearCheckedShoppingItems() throws {}
+    func getDistinctCookedIngredientCount() throws -> Int { 0 }
 }
 
 // MARK: - IngredientsService Tests

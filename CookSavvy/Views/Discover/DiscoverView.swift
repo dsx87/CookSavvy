@@ -20,6 +20,9 @@ struct DiscoverView: View {
         .task {
             await viewModel.loadInitialData()
         }
+        .onAppear {
+            viewModel.refreshDietaryRestrictions()
+        }
     }
 
     // MARK: - State 1: Ingredient Selection
@@ -319,6 +322,7 @@ struct DiscoverView: View {
                 selectedIngredientsStrip
                 moodFilter
                 useItAllToggle
+                dietaryFilterPills
                 if viewModel.searchError != nil {
                     errorBanner
                 }
@@ -327,6 +331,34 @@ struct DiscoverView: View {
             }
             .padding(.horizontal, UI.Discover.horizontalPadding)
             .padding(.bottom, UI.Discover.findButtonBottomPadding)
+        }
+    }
+
+    @ViewBuilder
+    private var dietaryFilterPills: some View {
+        if !viewModel.activeDietaryRestrictions.isEmpty {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: UI.Discover.categoryChipSpacing) {
+                    ForEach(Array(viewModel.activeDietaryRestrictions), id: \.self) { restriction in
+                        Button {
+                            withAnimation(UI.Anim.springQuick) {
+                                viewModel.removeDietaryRestriction(restriction)
+                            }
+                        } label: {
+                            Label(restriction.displayName, systemImage: restriction.icon)
+                                .font(UI.Fonts.captionSemibold)
+                                .foregroundStyle(theme.mint)
+                                .padding(.horizontal, UI.Discover.useItAllPaddingH)
+                                .padding(.vertical, UI.Discover.useItAllPaddingV)
+                                .background(theme.mintSoft, in: Capsule())
+                                .overlay(
+                                    Capsule().strokeBorder(theme.mint.opacity(0.3), lineWidth: UI.Common.borderWidth)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
         }
     }
 

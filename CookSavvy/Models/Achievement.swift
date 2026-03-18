@@ -95,5 +95,35 @@ struct Achievement: Identifiable, Hashable {
             currentProgress: 0,
             isUnlocked: false
         ),
+        Achievement(
+            id: "fridge_cleaner",
+            title: "Fridge Cleaner",
+            description: "Cook 5 recipes using 90%+ of your ingredients",
+            emoji: "♻️",
+            colorHex: "#34C759",
+            maxProgress: 5,
+            currentProgress: 0,
+            isUnlocked: false
+        ),
+        Achievement(
+            id: "ingredient_master",
+            title: "Ingredient Master",
+            description: "Use 50 unique ingredients",
+            emoji: "🧑‍🍳",
+            colorHex: "#5856D6",
+            maxProgress: 50,
+            currentProgress: 0,
+            isUnlocked: false
+        ),
+        Achievement(
+            id: "scan_pro",
+            title: "Scan Pro",
+            description: "Scan ingredients 20 times",
+            emoji: "📸",
+            colorHex: "#007AFF",
+            maxProgress: 20,
+            currentProgress: 0,
+            isUnlocked: false
+        ),
     ]
 }

@@ -41,6 +41,7 @@ final class SettingsViewModel: ObservableObject {
     private let userDataService: UserDataServiceProtocol
     private let dbInterface: DBInterfaceProtocol
     private let subscriptionService: SubscriptionServiceProtocol
+    private let dietaryPreferences: DietaryPreferencesProtocol
     private weak var coordinator: SettingsCoordinator?
     private var cancellables = Set<AnyCancellable>()
 
@@ -50,11 +51,13 @@ final class SettingsViewModel: ObservableObject {
         userDataService: UserDataServiceProtocol,
         dbInterface: DBInterfaceProtocol,
         subscriptionService: SubscriptionServiceProtocol,
+        dietaryPreferences: DietaryPreferencesProtocol,
         coordinator: SettingsCoordinator?
     ) {
         self.userDataService = userDataService
         self.dbInterface = dbInterface
         self.subscriptionService = subscriptionService
+        self.dietaryPreferences = dietaryPreferences
         self.coordinator = coordinator
 
         // Get app version info
@@ -146,6 +149,14 @@ final class SettingsViewModel: ObservableObject {
         guard self.themePreference != themePreference else { return }
         self.themePreference = themePreference
         userDataService.setThemePreference(themePreference)
+    }
+
+    func isDietaryRestrictionActive(_ restriction: DietaryRestriction) -> Bool {
+        dietaryPreferences.isActive(restriction)
+    }
+
+    func toggleDietaryRestriction(_ restriction: DietaryRestriction) {
+        dietaryPreferences.toggle(restriction)
     }
 
     // TODO: check the link

@@ -41,6 +41,7 @@ final class CookModeViewModelTests: XCTestCase {
         CookModeViewModel(
             recipe: makeRecipe(stepCount: stepCount),
             userDataService: mockUserDataService,
+            analyticsService: MockAnalyticsService(),
             onDismiss: { [weak self] in self?.dismissCallCount += 1 }
         )
     }
