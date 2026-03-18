@@ -64,4 +64,8 @@ final class OnboardingViewModel: ObservableObject {
     var isLastPage: Bool {
         currentPage == pages.count - 1
     }
+
+    var pageIndicatorAccessibilityLabel: String {
+        String(format: Strings.Accessibility.onboardingPage, currentPage + 1, pages.count)
+    }
 }

@@ -23,6 +23,7 @@ struct RecipeDetailsView: View {
                     Image(systemName: Icons.RecipeDetails.share)
                         .foregroundStyle(theme.text2)
                 }
+                .accessibilityLabel(Strings.Accessibility.shareRecipe)
                 Button {
                     Task { await viewModel.toggleFavorite() }
                 } label: {
@@ -31,6 +32,7 @@ struct RecipeDetailsView: View {
                 }
                 .disabled(viewModel.isLoadingFavorite)
                 .accessibilityIdentifier(AccessibilityID.RecipeDetails.bookmarkButton)
+                .accessibilityLabel(viewModel.isFavorite ? Strings.Accessibility.removeFromFavorites : Strings.Accessibility.addToFavorites)
             }
         }
     }
@@ -99,6 +101,7 @@ struct RecipeDetailsView: View {
         VStack(alignment: .leading, spacing: UI.RecipeDetails.ingredientsHeaderSpacing) {
             Text(Strings.RecipeDetails.sectionIngredients)
                 .sectionLabel()
+                .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 0) {
                 ForEach(Array(viewModel.recipe.ingredients.indices), id: \.self) { i in
@@ -143,7 +146,7 @@ struct RecipeDetailsView: View {
                     .frame(width: UI.RecipeDetails.ingredientDotSize, height: UI.RecipeDetails.ingredientDotSize)
                     .accessibilityLabel(ingredientDotAccessibilityLabel(for: status))
                 Text(ingredient.name)
-                    .font(UI.Fonts.body)
+                    .font(UI.Fonts.bodyScaled)
                     .foregroundStyle(theme.text1)
                 Spacer()
             }
@@ -180,6 +183,7 @@ struct RecipeDetailsView: View {
         VStack(alignment: .leading, spacing: UI.RecipeDetails.stepsHeaderSpacing) {
             Text(Strings.RecipeDetails.sectionSteps)
                 .sectionLabel()
+                .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: UI.RecipeDetails.stepsSpacing) {
                 ForEach(Array(viewModel.recipe.instructions.enumerated()), id: \.offset) { index, step in
@@ -204,7 +208,7 @@ struct RecipeDetailsView: View {
 
             VStack(alignment: .leading, spacing: UI.Common.smallSpacing) {
                 Text(step.text)
-                    .font(UI.Fonts.body)
+                    .font(UI.Fonts.bodyScaled)
                     .foregroundStyle(theme.text1)
                     .fixedSize(horizontal: false, vertical: true)
 

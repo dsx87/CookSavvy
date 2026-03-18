@@ -15,6 +15,9 @@ struct UI {
         static let body: Font = .system(size: 15)
         static let bodyRounded: Font = .system(size: 15, design: .rounded)
         static let bodySemibold: Font = .system(size: 15, weight: .semibold, design: .rounded)
+        // Accessibility-scaled: use semantic system fonts so Dynamic Type applies
+        static let bodyScaled: Font = .body
+        static let stepContent: Font = .title2
         // Captions
         static let caption: Font = .system(size: 13)
         static let captionSemibold: Font = .system(size: 13, weight: .semibold, design: .rounded)

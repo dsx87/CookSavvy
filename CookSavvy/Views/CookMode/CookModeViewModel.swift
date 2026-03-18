@@ -53,6 +53,10 @@ final class CookModeViewModel: ObservableObject {
     var isFirstStep: Bool { currentStep == 0 }
     var isLastStep: Bool { currentStep == stepCount - 1 }
 
+    var stepAccessibilityLabel: String {
+        String(format: Strings.Accessibility.stepOf, currentStep + 1, stepCount)
+    }
+
     func timerDisplayText() -> String {
         guard let timerMin = currentStepTimer else { return "" }
         let remaining = timerRunning ? max(timerMin * 60 - timerSeconds, 0) : timerMin * 60

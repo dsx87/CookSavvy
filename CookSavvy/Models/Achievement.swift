@@ -19,6 +19,14 @@ struct Achievement: Identifiable, Hashable {
         hasher.combine(id)
     }
 
+    var accessibilityLabel: String {
+        if isUnlocked {
+            return String(format: Strings.Accessibility.achievementUnlocked, title)
+        } else {
+            return String(format: Strings.Accessibility.achievementProgress, title, currentProgress, maxProgress)
+        }
+    }
+
     var progressFraction: Double {
         guard maxProgress > 0 else { return 0 }
         return min(Double(currentProgress) / Double(maxProgress), 1.0)

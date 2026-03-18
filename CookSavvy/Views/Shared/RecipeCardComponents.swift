@@ -105,6 +105,8 @@ struct MiniRecipeCard: View {
         .frame(width: UI.V2.miniCardWidth)
         .clipShape(RoundedRectangle(cornerRadius: UI.Common.cardCornerRadius, style: .continuous))
         .frostCard(cornerRadius: UI.Common.cardCornerRadius)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(cookTimeText.isEmpty ? recipe.title : "\(recipe.title), \(cookTimeText)")
     }
 
     private var cookTimeText: String {

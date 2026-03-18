@@ -22,6 +22,10 @@ struct CategoryChip: View {
             Capsule().strokeBorder(isSelected ? Color.clear : theme.divider, lineWidth: UI.Common.borderWidth)
         )
         .accessibilityIdentifier(AccessibilityID.Discover.category(category.rawValue))
+        .accessibilityLabel(isSelected
+            ? String(format: Strings.Accessibility.categorySelected, category.rawValue.capitalized)
+            : String(format: Strings.Accessibility.categoryNotSelected, category.rawValue.capitalized))
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 
     private var categoryColor: Color {
@@ -39,6 +43,7 @@ struct CategoryChip: View {
 
 struct IngredientBubble: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let ingredient: Ingredient
     let isSelected: Bool
 
@@ -54,7 +59,7 @@ struct IngredientBubble: View {
                 Text(ingredient.emoji ?? IngredientEmojiProvider.emoji(for: ingredient.name, foodGroup: ingredient.foodGroup))
                     .font(.system(size: UI.Components.bubbleEmojiSize))
             }
-            .scaleEffect(isSelected ? UI.Components.bubbleSelectedScale : 1.0)
+            .scaleEffect(reduceMotion ? 1.0 : (isSelected ? UI.Components.bubbleSelectedScale : 1.0))
 
             Text(ingredient.name)
                 .font(.system(size: 11, weight: isSelected ? .bold : .medium, design: .rounded))
@@ -63,6 +68,10 @@ struct IngredientBubble: View {
         }
         .frame(maxWidth: .infinity)
         .accessibilityIdentifier(AccessibilityID.Discover.ingredient(ingredient.name))
+        .accessibilityLabel(isSelected
+            ? String(format: Strings.Accessibility.ingredientSelected, ingredient.name)
+            : String(format: Strings.Accessibility.ingredientNotSelected, ingredient.name))
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 }
 
@@ -83,6 +92,7 @@ struct SelectedChip: View {
                     .font(UI.Fonts.microBold)
                     .foregroundStyle(theme.text3)
             }
+            .accessibilityLabel(String(format: Strings.Accessibility.removeIngredient, ingredient.name))
         }
         .padding(.horizontal, UI.Components.selectedChipPaddingH)
         .padding(.vertical, UI.Components.selectedChipPaddingV)
@@ -123,6 +133,10 @@ struct MoodPill: View {
         )
         .neonGlow(isSelected ? color : .clear, radius: isSelected ? UI.Components.moodPillGlowRadius : 0)
         .accessibilityIdentifier(AccessibilityID.Discover.mood(name))
+        .accessibilityLabel(isSelected
+            ? String(format: Strings.Accessibility.moodSelected, name)
+            : String(format: Strings.Accessibility.moodNotSelected, name))
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 }
 

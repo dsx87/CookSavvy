@@ -10,6 +10,347 @@
     "🧑‍🍳" : {
 
     },
+    "accessibility.achievementProgress" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ achievement, %lld of %lld progress"
+          }
+        }
+      }
+    },
+    "accessibility.achievementUnlocked" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ achievement, unlocked"
+          }
+        }
+      }
+    },
+    "accessibility.addMoreIngredients" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add more ingredients"
+          }
+        }
+      }
+    },
+    "accessibility.addToFavorites" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add to favorites"
+          }
+        }
+      }
+    },
+    "accessibility.categoryNotSelected" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ category"
+          }
+        }
+      }
+    },
+    "accessibility.categorySelected" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ category, selected"
+          }
+        }
+      }
+    },
+    "accessibility.checkItem" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Check %@"
+          }
+        }
+      }
+    },
+    "accessibility.clearSearch" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear search"
+          }
+        }
+      }
+    },
+    "accessibility.closeButton" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Close"
+          }
+        }
+      }
+    },
+    "accessibility.createRecipe" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Create new recipe"
+          }
+        }
+      }
+    },
+    "accessibility.ingredientNotSelected" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@, double tap to add"
+          }
+        }
+      }
+    },
+    "accessibility.ingredientSelected" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@, selected"
+          }
+        }
+      }
+    },
+    "accessibility.moodNotSelected" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ mood, double tap to filter"
+          }
+        }
+      }
+    },
+    "accessibility.moodSelected" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ mood, selected"
+          }
+        }
+      }
+    },
+    "accessibility.nextStep" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Next step"
+          }
+        }
+      }
+    },
+    "accessibility.onboardingPage" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Page %lld of %lld"
+          }
+        }
+      }
+    },
+    "accessibility.previousStep" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Previous step"
+          }
+        }
+      }
+    },
+    "accessibility.rating" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Rating: %@ out of 5 stars"
+          }
+        }
+      }
+    },
+    "accessibility.removeDietaryRestriction" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove %@ filter"
+          }
+        }
+      }
+    },
+    "accessibility.removeFromFavorites" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove from favorites"
+          }
+        }
+      }
+    },
+    "accessibility.removeIngredient" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove %@"
+          }
+        }
+      }
+    },
+    "accessibility.scanCamera" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Scan ingredients with camera"
+          }
+        }
+      }
+    },
+    "accessibility.settingsButton" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Settings"
+          }
+        }
+      }
+    },
+    "accessibility.shareRecipe" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Share recipe"
+          }
+        }
+      }
+    },
+    "accessibility.stepOf" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Step %lld of %lld"
+          }
+        }
+      }
+    },
+    "accessibility.timerRemaining" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Timer: %@ remaining"
+          }
+        }
+      }
+    },
+    "accessibility.uncheckItem" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Uncheck %@"
+          }
+        }
+      }
+    },
+    "accessibility.useItAllActive" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Use It All filter, active"
+          }
+        }
+      }
+    },
+    "accessibility.useItAllInactive" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Use It All filter, inactive"
+          }
+        }
+      }
+    },
+    "accessibility.weekdayActive" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@, cooked"
+          }
+        }
+      }
+    },
+    "accessibility.weekdayInactive" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@, no activity"
+          }
+        }
+      }
+    },
     "camera.accessDescription" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {

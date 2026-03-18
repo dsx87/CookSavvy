@@ -155,6 +155,13 @@ struct StarRating: View {
                     .foregroundStyle(theme.gold)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(String(format: Strings.Accessibility.rating, ratingString))
+    }
+
+    private var ratingString: String {
+        let floored = min(max(floor(rating * 2) / 2, 0), 5)
+        return floored == floored.rounded() ? "\(Int(floored))" : String(format: "%.1f", floored)
     }
 }
 
@@ -179,5 +186,7 @@ struct StatPill: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, UI.Components.statPillPadding)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label.replacingOccurrences(of: "\n", with: " ")): \(value)")
     }
 }

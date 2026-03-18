@@ -87,6 +87,12 @@ final class ShoppingListViewModel: ObservableObject {
         }
     }
 
+    func checkboxAccessibilityLabel(for item: ShoppingItem) -> String {
+        item.isChecked
+            ? String(format: Strings.Accessibility.uncheckItem, item.name)
+            : String(format: Strings.Accessibility.checkItem, item.name)
+    }
+
     func dismiss() {
         onDismiss()
     }

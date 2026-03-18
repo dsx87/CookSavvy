@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CookModeView: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @StateObject var viewModel: CookModeViewModel
 
     var body: some View {
@@ -23,10 +24,10 @@ struct CookModeView: View {
 
             if viewModel.showFeedback {
                 feedbackOverlay
-                    .transition(.scale.combined(with: .opacity))
+                    .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
             }
         }
-        .animation(UI.Anim.easeDefault, value: viewModel.showFeedback)
+        .animation(reduceMotion ? .none : UI.Anim.easeDefault, value: viewModel.showFeedback)
     }
 
     // MARK: - Top Bar
@@ -41,6 +42,7 @@ struct CookModeView: View {
                     .background(theme.surface, in: Circle())
             }
             .accessibilityIdentifier(AccessibilityID.CookMode.closeButton)
+            .accessibilityLabel(Strings.Accessibility.closeButton)
 
             Spacer()
 
@@ -51,6 +53,7 @@ struct CookModeView: View {
                 Text(String(format: Strings.CookMode.stepOf, viewModel.currentStep + 1, viewModel.stepCount))
                     .font(UI.Fonts.smallCaption)
                     .foregroundStyle(theme.text2)
+                    .accessibilityLabel(viewModel.stepAccessibilityLabel)
             }
 
             Spacer()
@@ -83,12 +86,13 @@ struct CookModeView: View {
                             (viewModel.completedSteps.contains(i) ? theme.mint : theme.surfaceLight))
                     .frame(height: UI.Common.dotHeight)
                     .frame(maxWidth: i == viewModel.currentStep ? .infinity : UI.Common.dotInactiveWidth)
-                    .animation(UI.Anim.springDefault, value: viewModel.currentStep)
+                    .animation(reduceMotion ? nil : UI.Anim.springDefault, value: viewModel.currentStep)
             }
         }
         .padding(.horizontal, UI.CookMode.horizontalPadding)
         .padding(.top, UI.CookMode.dotsTopPadding)
         .accessibilityIdentifier(AccessibilityID.CookMode.stepProgress)
+        .accessibilityHidden(true)
     }
 
     // MARK: - Step Content
@@ -96,12 +100,12 @@ struct CookModeView: View {
     private var stepContent: some View {
         VStack(spacing: UI.CookMode.contentSpacing) {
             Text(viewModel.currentStepText)
-                .font(UI.Fonts.largeTitle)
+                .font(UI.Fonts.stepContent)
                 .foregroundStyle(theme.text1)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, UI.CookMode.horizontalPadding)
                 .id(viewModel.currentStep)
-                .transition(.asymmetric(
+                .transition(reduceMotion ? .opacity : .asymmetric(
                     insertion: .move(edge: .trailing).combined(with: .opacity),
                     removal: .move(edge: .leading).combined(with: .opacity)
                 ))
@@ -130,9 +134,11 @@ struct CookModeView: View {
                     Text(viewModel.timerDisplayText())
                         .font(UI.Fonts.timerDisplay)
                         .foregroundStyle(theme.text1)
+                        .accessibilityLabel(String(format: Strings.Accessibility.timerRemaining, viewModel.timerDisplayText()))
                     Text("minutes")
                         .font(UI.Fonts.tinyCaption)
                         .foregroundStyle(theme.text3)
+                        .accessibilityHidden(true)
                 }
             }
 
@@ -235,6 +241,7 @@ struct CookModeView: View {
             }
             .disabled(viewModel.isFirstStep)
             .accessibilityIdentifier(AccessibilityID.CookMode.previousButton)
+            .accessibilityLabel(Strings.Accessibility.previousStep)
 
             Button {
                 withAnimation(UI.Anim.springDefault) {
@@ -276,6 +283,7 @@ struct CookModeView: View {
             }
             .disabled(viewModel.isLastStep)
             .accessibilityIdentifier(AccessibilityID.CookMode.nextButton)
+            .accessibilityLabel(Strings.Accessibility.nextStep)
         }
         .padding(.horizontal, UI.CookMode.horizontalPadding)
         .padding(.bottom, UI.CookMode.bottomPadding)

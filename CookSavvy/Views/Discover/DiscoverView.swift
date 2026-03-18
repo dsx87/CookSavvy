@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DiscoverView: View {
     @Environment(\.appTheme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @StateObject var viewModel: DiscoverViewModel
     @State private var isMatchInfoPopoverPresented = false
 
@@ -9,14 +10,14 @@ struct DiscoverView: View {
         ZStack(alignment: .bottom) {
             if viewModel.showResults {
                 resultsState
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                    .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
             } else {
                 ingredientSelectionState
-                    .transition(.move(edge: .leading).combined(with: .opacity))
+                    .transition(reduceMotion ? .opacity : .move(edge: .leading).combined(with: .opacity))
             }
         }
         .background(theme.bg)
-        .animation(UI.Anim.springSmooth, value: viewModel.showResults)
+        .animation(reduceMotion ? .easeInOut(duration: 0.15) : UI.Anim.springSmooth, value: viewModel.showResults)
         .task {
             await viewModel.loadInitialData()
         }
@@ -89,10 +90,12 @@ struct DiscoverView: View {
                         .background(viewModel.remainingCameraScans > 0 ? theme.mint : theme.rose, in: Capsule())
                         .offset(x: UI.Discover.cameraBadgeOffsetX, y: UI.Discover.cameraBadgeOffsetY)
                         .accessibilityIdentifier(AccessibilityID.Camera.scanLimitBadge)
+                        .accessibilityHidden(true)
                 }
             }
         }
         .accessibilityIdentifier(AccessibilityID.Discover.cameraButton)
+        .accessibilityLabel(Strings.Accessibility.scanCamera)
     }
 
     private var cameraIcon: some View {
@@ -133,6 +136,7 @@ struct DiscoverView: View {
                         .font(UI.Fonts.searchField)
                         .foregroundStyle(theme.text3)
                 }
+                .accessibilityLabel(Strings.Accessibility.clearSearch)
             }
             cameraButton
         }
@@ -152,6 +156,7 @@ struct DiscoverView: View {
                 HStack {
                     Text(Strings.Discover.recentSection)
                         .sectionLabel()
+                        .accessibilityAddTraits(.isHeader)
                     Spacer()
                     Button {
                         viewModel.showRecipeList(
@@ -190,6 +195,7 @@ struct DiscoverView: View {
                 HStack {
                     Text(Strings.Discover.savedSection)
                         .sectionLabel()
+                        .accessibilityAddTraits(.isHeader)
                     Spacer()
                     Button {
                         viewModel.showRecipeList(
@@ -235,6 +241,7 @@ struct DiscoverView: View {
                 VStack(alignment: .leading, spacing: UI.Common.smallSpacing) {
                     Text(Strings.Discover.suggestedForYou)
                         .sectionLabel()
+                        .accessibilityAddTraits(.isHeader)
                     if let reason = viewModel.suggestionReason {
                         Text(reason)
                             .font(UI.Fonts.caption)
@@ -266,6 +273,7 @@ struct DiscoverView: View {
             VStack(alignment: .leading, spacing: UI.Discover.sectionContentSpacing) {
                 Text(Strings.Discover.collectionsSection)
                     .sectionLabel()
+                    .accessibilityAddTraits(.isHeader)
 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: UI.Discover.sectionContentSpacing) {
@@ -305,6 +313,7 @@ struct DiscoverView: View {
         VStack(alignment: .leading, spacing: UI.Discover.ingredientGridHeaderSpacing) {
             Text(viewModel.ingredientGridLabel)
                 .sectionLabel()
+                .accessibilityAddTraits(.isHeader)
 
             if viewModel.isLoadingIngredients {
                 ProgressView()
@@ -350,6 +359,7 @@ struct DiscoverView: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier(AccessibilityID.Discover.useItAllToggle)
+        .accessibilityLabel(viewModel.useItAllFilter ? Strings.Accessibility.useItAllActive : Strings.Accessibility.useItAllInactive)
     }
 
     private var resultsState: some View {
@@ -393,6 +403,7 @@ struct DiscoverView: View {
                                 )
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(String(format: Strings.Accessibility.removeDietaryRestriction, restriction.displayName))
                     }
                 }
             }
@@ -488,6 +499,7 @@ struct DiscoverView: View {
                                 .frame(width: UI.Discover.addButtonSize, height: UI.Discover.addButtonSize)
                                 .background(theme.accentSoft, in: Circle())
                         }
+                        .accessibilityLabel(Strings.Accessibility.addMoreIngredients)
                     }
                 }
             }
@@ -499,6 +511,7 @@ struct DiscoverView: View {
         VStack(alignment: .leading, spacing: UI.Discover.moodPillSpacing) {
             Text(Strings.MoodFilter.refineByMood)
                 .sectionLabel()
+                .accessibilityAddTraits(.isHeader)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: UI.Discover.moodPillSpacing) {
@@ -531,6 +544,7 @@ struct DiscoverView: View {
             VStack(alignment: .leading, spacing: UI.Discover.bestMatchSpacing) {
                 Text(Strings.Discover.bestMatch)
                     .sectionLabel()
+                    .accessibilityAddTraits(.isHeader)
 
                 ZStack(alignment: .bottomLeading) {
                     RecipeImage(recipe: featured, height: UI.Discover.recipeImageHeight)
@@ -604,6 +618,7 @@ struct DiscoverView: View {
                 HStack {
                     Text(Strings.Discover.moreRecipes)
                         .sectionLabel()
+                        .accessibilityAddTraits(.isHeader)
                     Spacer()
                     Text(String(format: Strings.Discover.resultsFound, Int64(viewModel.filteredRecipes.count)))
                         .font(UI.Fonts.captionSemibold)

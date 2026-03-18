@@ -114,6 +114,8 @@ struct OnboardingView: View {
                     .animation(.spring(response: 0.3, dampingFraction: 0.7), value: viewModel.currentPage)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(viewModel.pageIndicatorAccessibilityLabel)
     }
 }
 

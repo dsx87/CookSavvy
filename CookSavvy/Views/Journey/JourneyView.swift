@@ -29,6 +29,7 @@ struct JourneyView: View {
                         .foregroundStyle(theme.text2)
                 }
                 .accessibilityIdentifier(AccessibilityID.Journey.settingsButton)
+                .accessibilityLabel(Strings.Accessibility.settingsButton)
             }
         }
         .task {
@@ -92,6 +93,8 @@ struct JourneyView: View {
         .padding(.vertical, UI.Journey.statItemPadding)
         .frostCard()
         .accessibilityIdentifier(accessibilityID)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label.replacingOccurrences(of: "\n", with: " ")): \(value)")
     }
 
     // MARK: - My Recipes
@@ -101,6 +104,7 @@ struct JourneyView: View {
             HStack {
                 Text(Strings.Journey.myRecipes)
                     .sectionLabel()
+                    .accessibilityAddTraits(.isHeader)
                 Spacer()
                 if !viewModel.userRecipes.isEmpty {
                     Text("\(viewModel.userRecipes.count) recipes")
@@ -154,6 +158,7 @@ struct JourneyView: View {
         VStack(alignment: .leading, spacing: UI.Journey.weeklySpacing) {
             Text(Strings.Journey.thisWeek)
                 .sectionLabel()
+                .accessibilityAddTraits(.isHeader)
 
             HStack(spacing: UI.Journey.dayCircleSpacing) {
                 ForEach(Array(viewModel.weekdayLabels.enumerated()), id: \.offset) { index, day in
@@ -177,6 +182,7 @@ struct JourneyView: View {
             HStack {
                 Text(Strings.Journey.milestones)
                     .sectionLabel()
+                    .accessibilityAddTraits(.isHeader)
                 Spacer()
                 Text(String(format: Strings.Journey.milestonesEarned, viewModel.unlockedCount, viewModel.achievements.count))
                     .font(UI.Fonts.captionSemibold)
@@ -220,6 +226,8 @@ struct JourneyView: View {
                 .lineLimit(2)
                 .frame(width: UI.Journey.achievementBadgeWidth)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(achievement.accessibilityLabel)
     }
 
     // MARK: - Recent Activity
@@ -230,6 +238,7 @@ struct JourneyView: View {
             VStack(alignment: .leading, spacing: UI.Journey.recentActivitySpacing) {
                 Text(Strings.Journey.recentActivity)
                     .sectionLabel()
+                    .accessibilityAddTraits(.isHeader)
 
                 VStack(spacing: 0) {
                     ForEach(Array(viewModel.recentSessions.enumerated()), id: \.element.id) { index, session in

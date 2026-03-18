@@ -31,6 +31,10 @@ struct WeekdayDotView: View {
                 .foregroundStyle(isToday ? theme.accent : theme.text3)
         }
         .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(isActive
+            ? String(format: Strings.Accessibility.weekdayActive, label)
+            : String(format: Strings.Accessibility.weekdayInactive, label))
     }
 }
 
@@ -88,6 +92,12 @@ struct ActivitySessionRow: View {
             }
             .padding(.vertical, UI.Journey.activityVerticalPadding)
             .padding(.horizontal, UI.Journey.activityHorizontalPadding)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel({
+                var parts = [session.recipeTitle, relativeDate(session.cookedAt)]
+                if let duration = session.durationFormatted { parts.append(duration) }
+                return parts.joined(separator: ", ")
+            }())
 
             if showDivider {
                 Divider()
@@ -135,6 +145,8 @@ struct CreateRecipeCard: View {
         .clipShape(RoundedRectangle(cornerRadius: UI.Common.cardCornerRadius, style: .continuous))
         .frostCard(cornerRadius: UI.Common.cardCornerRadius)
         .accessibilityIdentifier(AccessibilityID.Journey.createRecipeCard)
+        .accessibilityLabel(Strings.Accessibility.createRecipe)
+        .accessibilityAddTraits(.isButton)
     }
 }
 
