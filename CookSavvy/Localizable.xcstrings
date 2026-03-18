@@ -571,6 +571,182 @@
         }
       }
     },
+    "dietary.dairyFree" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Dairy Free"
+          }
+        }
+      }
+    },
+    "dietary.dairyFreeDescription" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No milk or dairy products"
+          }
+        }
+      }
+    },
+    "dietary.glutenFree" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Gluten Free"
+          }
+        }
+      }
+    },
+    "dietary.glutenFreeDescription" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No wheat, barley, or rye"
+          }
+        }
+      }
+    },
+    "dietary.halal" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Halal"
+          }
+        }
+      }
+    },
+    "dietary.halalDescription" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No pork or alcohol"
+          }
+        }
+      }
+    },
+    "dietary.kosher" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Kosher"
+          }
+        }
+      }
+    },
+    "dietary.kosherDescription" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No pork or shellfish"
+          }
+        }
+      }
+    },
+    "dietary.nutFree" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Nut Free"
+          }
+        }
+      }
+    },
+    "dietary.nutFreeDescription" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No nuts or peanuts"
+          }
+        }
+      }
+    },
+    "dietary.sectionFooter" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Active filters are applied to recipe search results."
+          }
+        }
+      }
+    },
+    "dietary.sectionTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Dietary Preferences"
+          }
+        }
+      }
+    },
+    "dietary.vegan" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Vegan"
+          }
+        }
+      }
+    },
+    "dietary.veganDescription" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No animal products"
+          }
+        }
+      }
+    },
+    "dietary.vegetarian" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Vegetarian"
+          }
+        }
+      }
+    },
+    "dietary.vegetarianDescription" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No meat or fish"
+          }
+        }
+      }
+    },
     "discover.addYourOwn" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -632,7 +808,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Good Afternoon 🌤️"
+            "value" : "Let's use what you've got 🌤️"
           }
         }
       }
@@ -643,7 +819,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Dinner time? Let's go 🍽️"
+            "value" : "Dinner from what's on hand 🍽️"
           }
         }
       }
@@ -654,7 +830,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Late night snack? 🌜"
+            "value" : "Late night fridge rescue 🌜"
           }
         }
       }
@@ -665,7 +841,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Good Morning ☀️"
+            "value" : "What needs using up? ☀️"
           }
         }
       }
@@ -687,7 +863,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Add what you have — get dinner ideas in seconds"
+            "value" : "Add what you have — we'll find recipes to use it all"
           }
         }
       }
@@ -731,7 +907,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Uses %lld of %lld ingredients"
+            "value" : "Uses %1$lld of %2$lld ingredients"
           }
         }
       }
@@ -765,6 +941,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "MORE OPTIONS"
+          }
+        }
+      }
+    },
+    "discover.quickMealSuffix" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : " · Quick %lld-min meal"
           }
         }
       }
@@ -846,17 +1033,6 @@
         }
       }
     },
-    "discover.searchFailedMessage" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Search failed — please try again"
-          }
-        }
-      }
-    },
     "discover.searchErrorMessage" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -868,13 +1044,13 @@
         }
       }
     },
-    "discover.quickMealSuffix" : {
+    "discover.searchFailedMessage" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : " · Quick %lld-min meal"
+            "value" : "Search failed — please try again"
           }
         }
       }
@@ -996,6 +1172,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Hours\nCooking"
+          }
+        }
+      }
+    },
+    "journey.ingredientsRescued" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ingredients\nRescued"
           }
         }
       }
