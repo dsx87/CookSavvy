@@ -27,6 +27,30 @@ struct UITestConfiguration {
     let withLargeDataset: Bool
     let hasReachedCameraLimit: Bool
 
+    init(
+        isUITesting: Bool,
+        isFreshInstall: Bool,
+        isPremiumUser: Bool,
+        skipOnboarding: Bool,
+        withCookingHistory: Bool,
+        withFavorites: Bool,
+        withShoppingItems: Bool,
+        isEmptyDatabase: Bool = false,
+        withLargeDataset: Bool = false,
+        hasReachedCameraLimit: Bool = false
+    ) {
+        self.isUITesting = isUITesting
+        self.isFreshInstall = isFreshInstall
+        self.isPremiumUser = isPremiumUser
+        self.skipOnboarding = skipOnboarding
+        self.withCookingHistory = withCookingHistory
+        self.withFavorites = withFavorites
+        self.withShoppingItems = withShoppingItems
+        self.isEmptyDatabase = isEmptyDatabase
+        self.withLargeDataset = withLargeDataset
+        self.hasReachedCameraLimit = hasReachedCameraLimit
+    }
+
     static func fromLaunchArguments() -> UITestConfiguration {
         fromArguments(ProcessInfo.processInfo.arguments)
     }

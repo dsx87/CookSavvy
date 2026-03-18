@@ -136,6 +136,8 @@ final class AppContainer {
         self.cameraScanTracker = cameraScanTracker
         self.shoppingListService = shoppingListService
         self.recommendationService = recommendationService
+        self.analyticsService = MockAnalyticsService()
+        self.dietaryPreferences = DietaryPreferences()
     }
     #endif
 
@@ -154,13 +156,15 @@ final class AppContainer {
         let dataImport = DataImportService(dbInterface: db)
         let network = NetworkService()
         let userDataService = UserDataService(dbInterface: db)
+        let llmProvider: LLMProviderProtocol = MockLLMProvider()
+        let ai = AIService(provider: llmProvider)
         let onlineSource = OnlineRecipeSource(provider: nil)
         let recipeService = RecipeService(
             dbInterface: db,
             sources: [
                 .offline: OfflineRecipeSource(dbInterface: db),
                 .online: onlineSource,
-                .ai: AIRecipeSource()
+                .ai: AIRecipeSource(aiService: ai)
             ]
         )
         let databaseInitService = DatabaseInitializationService(
@@ -168,8 +172,6 @@ final class AppContainer {
             ingredientsService: ingredients,
             dataImportService: dataImport
         )
-        let llmProvider: LLMProviderProtocol = MockLLMProvider()
-        let ai = AIService(provider: llmProvider)
         let subscriptionPlan: SubscriptionPlan = config.isPremiumUser ? .premium : .free
 
         let container = AppContainer(
