@@ -85,6 +85,18 @@ final class DiscoverViewModel: ObservableObject {
 
     var hasIngredients: Bool { !selectedIngredients.isEmpty }
 
+    var isDiscoverEmpty: Bool {
+        !hasIngredients &&
+        recentRecipes.isEmpty &&
+        savedRecipes.isEmpty &&
+        suggestedRecipes.isEmpty &&
+        collections.isEmpty
+    }
+
+    var hasNoResults: Bool {
+        !isSearching && searchError == nil && filteredRecipes.isEmpty && showResults
+    }
+
     var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
         switch hour {

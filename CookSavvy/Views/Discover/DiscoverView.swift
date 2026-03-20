@@ -40,6 +40,9 @@ struct DiscoverView: View {
                         savedSection
                         suggestedSection
                         collectionsSection
+                        if viewModel.isDiscoverEmpty {
+                            discoverEmptyState
+                        }
                         categoryFilter
                         ingredientGrid
                         Spacer(minLength: UI.Discover.bottomSpacerMinLength + UI.Discover.findButtonHeight)
@@ -338,6 +341,42 @@ struct DiscoverView: View {
         .accessibilityIdentifier(AccessibilityID.Discover.ingredientGrid)
     }
 
+    private var discoverEmptyState: some View {
+        VStack(spacing: UI.ShoppingList.emptyStateSpacing) {
+            Image(systemName: Icons.Discover.emptyState)
+                .font(.system(size: UI.ShoppingList.emptyIconSize))
+                .foregroundStyle(theme.text3)
+            Text(Strings.Discover.emptyStateTitle)
+                .font(UI.Fonts.title)
+                .foregroundStyle(theme.text1)
+            Text(Strings.Discover.emptyStateSubtitle)
+                .font(UI.Fonts.body)
+                .foregroundStyle(theme.text2)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, UI.Discover.loadingPadding)
+        .accessibilityIdentifier(AccessibilityID.Discover.emptyState)
+    }
+
+    private var noResultsState: some View {
+        VStack(spacing: UI.ShoppingList.emptyStateSpacing) {
+            Image(systemName: Icons.Discover.noResults)
+                .font(.system(size: UI.ShoppingList.emptyIconSize))
+                .foregroundStyle(theme.text3)
+            Text(Strings.Discover.noResultsTitle)
+                .font(UI.Fonts.title)
+                .foregroundStyle(theme.text1)
+            Text(Strings.Discover.noResultsSubtitle)
+                .font(UI.Fonts.body)
+                .foregroundStyle(theme.text2)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, UI.Discover.loadingPadding)
+        .accessibilityIdentifier(AccessibilityID.Discover.noResultsState)
+    }
+
     // MARK: - State 2: Recipe Results
 
     private var useItAllToggle: some View {
@@ -373,8 +412,12 @@ struct DiscoverView: View {
                 if viewModel.searchError != nil {
                     errorBanner
                 }
-                bestMatchSection
-                moreRecipesSection
+                if viewModel.hasNoResults {
+                    noResultsState
+                } else {
+                    bestMatchSection
+                    moreRecipesSection
+                }
             }
             .padding(.horizontal, UI.Discover.horizontalPadding)
             .padding(.bottom, UI.Discover.findButtonBottomPadding)

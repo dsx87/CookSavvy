@@ -135,6 +135,10 @@ enum Strings {
         static let collectionComfortSubtitle = String(localized: "discover.collectionComfortSubtitle", defaultValue: "Tried and trusted favourites")
         static let collectionLight = String(localized: "discover.collectionLight", defaultValue: "Light & Fresh")
         static let collectionLightSubtitle = String(localized: "discover.collectionLightSubtitle", defaultValue: "Clean and vibrant eats")
+        static let emptyStateTitle = String(localized: "discover.emptyStateTitle", defaultValue: "Your fridge is waiting")
+        static let emptyStateSubtitle = String(localized: "discover.emptyStateSubtitle", defaultValue: "Scan your fridge or pick ingredients below to rescue dinner")
+        static let noResultsTitle = String(localized: "discover.noResultsTitle", defaultValue: "No recipes found")
+        static let noResultsSubtitle = String(localized: "discover.noResultsSubtitle", defaultValue: "Try removing an ingredient or changing your mood filter")
     }
 
     enum Journey {

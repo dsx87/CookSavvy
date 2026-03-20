@@ -69,6 +69,8 @@ enum Icons {
         static let person2 = "person.2"
         static let chartBar = "chart.bar"
         static let idea = "lightbulb.fill"
+        static let emptyState = "refrigerator"
+        static let noResults = "magnifyingglass"
     }
 
     enum Journey {

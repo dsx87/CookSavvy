@@ -35,6 +35,8 @@ enum AccessibilityID {
         static let recentSection = "discover.recentSection"
         static let savedSection = "discover.savedSection"
         static let suggestedSection = "discover.suggestedSection"
+        static let emptyState = "discover.emptyState"
+        static let noResultsState = "discover.noResultsState"
 
         static func ingredient(_ name: String) -> String {
             "discover.ingredient.\(AccessibilityID.token(name))"
