@@ -25,6 +25,22 @@ final class JourneyTabUITests: FreeUserUITest {
         XCTAssertTrue(app.staticTexts["Test Garlic Pasta"].exists || app.staticTexts["Test Lemon Chicken"].exists)
     }
 
+    func testMonthlyStatsSectionVisible() {
+        XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Journey.monthlyStats], timeout: 5))
+    }
+
+    func testMonthlyStatTilesExist() {
+        XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Journey.Stats.monthlyMeals], timeout: 5))
+        XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Journey.Stats.monthlyIngredients], timeout: 5))
+    }
+
+    func testMonthlyStatsEmptyState() {
+        // --empty-db overrides --with-cooking-history from FreeUserUITest and skips all seeding
+        relaunchApp(extraLaunchArguments: ["--empty-db"])
+        app.tapJourneyTab()
+        XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Journey.monthlyStats], timeout: 5))
+    }
+
     func testSettingsNav() {
         app.tapElement(withIdentifier: AccessibilityID.Journey.settingsButton)
 

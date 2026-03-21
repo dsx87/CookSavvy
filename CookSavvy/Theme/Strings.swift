@@ -153,6 +153,7 @@ enum Strings {
         static let hoursCooking = String(localized: "journey.hoursCooking", defaultValue: "Hours\nCooking")
         static let myRecipes = String(localized: "journey.myRecipes", defaultValue: "MY RECIPES")
         static let addRecipe = String(localized: "journey.addRecipe", defaultValue: "Add Recipe")
+        static let allTime = String(localized: "journey.allTime", defaultValue: "ALL TIME")
         static let thisWeek = String(localized: "journey.thisWeek", defaultValue: "THIS WEEK")
         static let achievements = String(localized: "journey.achievements", defaultValue: "ACHIEVEMENTS")
         static let milestones = String(localized: "journey.milestones", defaultValue: "MILESTONES")
@@ -160,6 +161,9 @@ enum Strings {
         static let recentActivity = String(localized: "journey.recentActivity", defaultValue: "RECENT ACTIVITY")
         static let seeAll = String(localized: "journey.seeAll", defaultValue: "See All")
         static let shareCreations = String(localized: "journey.shareCreations", defaultValue: "Share your own creations")
+        static let thisMonth = String(localized: "journey.thisMonth", defaultValue: "THIS MONTH")
+        static let monthlyMeals = String(localized: "journey.monthlyMeals", defaultValue: "Meals\nCooked")
+        static let monthlyRescued = String(localized: "journey.monthlyRescued", defaultValue: "Ingredients\nRescued")
     }
 
     enum CookMode {

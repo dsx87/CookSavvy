@@ -122,6 +122,49 @@ final class UserDataServiceTests: XCTestCase {
         XCTAssertEqual(count, 1)
     }
 
+    func testMonthlyRecipesCooked() async throws {
+        let recipe1 = makeRecipe(title: "Monthly Pasta")
+        let recipe2 = makeRecipe(title: "Monthly Chicken")
+        try insertRecipe(recipe1)
+        try insertRecipe(recipe2)
+
+        try await service.markAsCooked(recipe: recipe1, duration: nil, rating: nil)
+        try await service.markAsCooked(recipe: recipe2, duration: nil, rating: nil)
+
+        let count = try await service.monthlyRecipesCooked()
+        XCTAssertEqual(count, 2)
+    }
+
+    func testMonthlyRecipesCookedExcludesOtherMonths() async throws {
+        let recipe = makeRecipe(title: "Old Stew")
+        try insertRecipe(recipe)
+        let recipeId = try db.getRecipeId(byTitle: "Old Stew")!
+
+        let pastDate = Calendar.current.date(byAdding: .month, value: -1, to: Date())!
+        try db.recordCookingSession(recipeId: recipeId, date: pastDate, duration: nil, rating: nil)
+
+        let count = try await service.monthlyRecipesCooked()
+        XCTAssertEqual(count, 0)
+    }
+
+    func testMonthlyIngredientsRescued() async throws {
+        let recipe = Recipe(
+            title: "Ingredient Test",
+            ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion")],
+            instructions: ["Step 1"],
+            image: "",
+            cleanedIngredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion")],
+            additionalInfo: .empty
+        )
+        try db.insertIngredients([Ingredient(name: "Garlic"), Ingredient(name: "Onion")])
+        try insertRecipe(recipe)
+
+        try await service.markAsCooked(recipe: recipe, duration: nil, rating: nil)
+
+        let count = try await service.monthlyIngredientsRescued()
+        XCTAssertEqual(count, 2)
+    }
+
     func testClearRecentPreservesFavorites() async throws {
         let recipe = makeRecipe(title: "Garlic Bread")
         try insertRecipe(recipe)

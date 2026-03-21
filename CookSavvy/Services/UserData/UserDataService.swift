@@ -242,6 +242,24 @@ final class UserDataService: UserDataServiceProtocol {
         return try dbInterface.getDistinctCookedIngredientCount()
     }
 
+    func monthlyRecipesCooked() async throws -> Int {
+        let (monthStart, monthEnd) = currentMonthRange()
+        return try dbInterface.getCookingSessionCount(from: monthStart, to: monthEnd)
+    }
+
+    func monthlyIngredientsRescued() async throws -> Int {
+        let (monthStart, monthEnd) = currentMonthRange()
+        return try dbInterface.getDistinctCookedIngredientCount(from: monthStart, to: monthEnd)
+    }
+
+    private func currentMonthRange() -> (Date, Date) {
+        let calendar = Calendar.current
+        let now = Date()
+        let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+        let monthEnd = calendar.date(byAdding: .month, value: 1, to: monthStart) ?? now
+        return (monthStart, monthEnd)
+    }
+
     func getThemePreference() -> ThemePreference {
         ThemePreference.from(rawValue: defaults.string(forKey: Keys.themePreference))
     }

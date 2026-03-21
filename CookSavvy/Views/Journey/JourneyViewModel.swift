@@ -7,6 +7,8 @@ final class JourneyViewModel: ObservableObject {
     @Published var dayStreak: Int = 0
     @Published var hoursCooking: Double = 0
     @Published var uniqueIngredientsUsed: Int = 0
+    @Published var monthlyRecipesCooked: Int = 0
+    @Published var monthlyIngredientsRescued: Int = 0
     @Published var userRecipes: [Recipe] = []
     @Published var weekCookingDates: Set<Int> = []
     @Published var achievements: [Achievement] = Achievement.allAchievements
@@ -88,6 +90,8 @@ final class JourneyViewModel: ObservableObject {
             let totalSeconds = try await userDataService.totalCookingTime()
             hoursCooking = totalSeconds / 3600.0
             uniqueIngredientsUsed = try await userDataService.getDistinctIngredientsUsedCount()
+            monthlyRecipesCooked = try await userDataService.monthlyRecipesCooked()
+            monthlyIngredientsRescued = try await userDataService.monthlyIngredientsRescued()
         } catch {
             print("❌ Failed to load journey stats: \(error)")
         }

@@ -1714,6 +1714,17 @@
         }
       }
     },
+    "journey.allTime" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ALL TIME"
+          }
+        }
+      }
+    },
     "journey.dayStreak" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -1780,6 +1791,28 @@
         }
       }
     },
+    "journey.monthlyMeals" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Meals\nCooked"
+          }
+        }
+      }
+    },
+    "journey.monthlyRescued" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ingredients\nRescued"
+          }
+        }
+      }
+    },
     "journey.myRecipes" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -1842,6 +1875,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Share your own creations"
+          }
+        }
+      }
+    },
+    "journey.thisMonth" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "THIS MONTH"
           }
         }
       }

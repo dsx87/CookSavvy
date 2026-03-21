@@ -9,6 +9,7 @@ struct JourneyView: View {
             VStack(spacing: UI.Journey.sectionSpacing) {
                 profileHeader
                 statsGrid
+                monthlyStatsSection
                 myRecipesSection
                 weeklyActivity
                 achievementsSection
@@ -63,16 +64,21 @@ struct JourneyView: View {
     // MARK: - Stats Grid
 
     private var statsGrid: some View {
-        HStack(spacing: UI.Journey.statsGridSpacing) {
-            journeyStat(value: "\(viewModel.recipesCooked)", label: Strings.Journey.recipesCooked,
-                        icon: Icons.Journey.forkKnife, color: theme.accent,
-                        accessibilityID: AccessibilityID.Journey.Stats.recipesCooked)
-            journeyStat(value: "\(viewModel.uniqueIngredientsUsed)", label: Strings.Journey.ingredientsRescued,
-                        icon: Icons.Journey.leaf, color: theme.mint,
-                        accessibilityID: AccessibilityID.Journey.Stats.ingredientsRescued)
-            journeyStat(value: String(format: "%.0f", viewModel.hoursCooking), label: Strings.Journey.hoursCooking,
-                        icon: Icons.Journey.clock, color: theme.mint,
-                        accessibilityID: AccessibilityID.Journey.Stats.hoursCooking)
+        VStack(alignment: .leading, spacing: UI.Journey.statsGridSpacing) {
+            Text(Strings.Journey.allTime)
+                .sectionLabel()
+                .accessibilityAddTraits(.isHeader)
+            HStack(spacing: UI.Journey.statsGridSpacing) {
+                journeyStat(value: "\(viewModel.recipesCooked)", label: Strings.Journey.recipesCooked,
+                            icon: Icons.Journey.forkKnife, color: theme.accent,
+                            accessibilityID: AccessibilityID.Journey.Stats.recipesCooked)
+                journeyStat(value: "\(viewModel.uniqueIngredientsUsed)", label: Strings.Journey.ingredientsRescued,
+                            icon: Icons.Journey.leaf, color: theme.mint,
+                            accessibilityID: AccessibilityID.Journey.Stats.ingredientsRescued)
+                journeyStat(value: String(format: "%.0f", viewModel.hoursCooking), label: Strings.Journey.hoursCooking,
+                            icon: Icons.Journey.clock, color: theme.mint,
+                            accessibilityID: AccessibilityID.Journey.Stats.hoursCooking)
+            }
         }
     }
 
@@ -95,6 +101,33 @@ struct JourneyView: View {
         .accessibilityIdentifier(accessibilityID)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label.replacingOccurrences(of: "\n", with: " ")): \(value)")
+    }
+
+    // MARK: - Monthly Stats
+
+    private var monthlyStatsSection: some View {
+        VStack(alignment: .leading, spacing: UI.Journey.statsGridSpacing) {
+            Text(Strings.Journey.thisMonth)
+                .sectionLabel()
+                .accessibilityAddTraits(.isHeader)
+            HStack(spacing: UI.Journey.statsGridSpacing) {
+                journeyStat(
+                    value: "\(viewModel.monthlyRecipesCooked)",
+                    label: Strings.Journey.monthlyMeals,
+                    icon: Icons.Journey.forkKnife,
+                    color: theme.accent,
+                    accessibilityID: AccessibilityID.Journey.Stats.monthlyMeals
+                )
+                journeyStat(
+                    value: "\(viewModel.monthlyIngredientsRescued)",
+                    label: Strings.Journey.monthlyRescued,
+                    icon: Icons.Journey.leaf,
+                    color: theme.mint,
+                    accessibilityID: AccessibilityID.Journey.Stats.monthlyIngredients
+                )
+            }
+        }
+        .accessibilityIdentifier(AccessibilityID.Journey.monthlyStats)
     }
 
     // MARK: - My Recipes

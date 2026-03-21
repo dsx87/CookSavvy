@@ -71,6 +71,8 @@ protocol DBInterfaceProtocol {
     func getCookingSessionDates(from startDate: Date, to endDate: Date) throws -> [Date]
     func getCookingSessionCount() throws -> Int
     func getTotalCookingDuration() throws -> TimeInterval
+    func getCookingSessionCount(from startDate: Date, to endDate: Date) throws -> Int
+    func getDistinctCookedIngredientCount(from startDate: Date, to endDate: Date) throws -> Int
 
     // MARK: - User-Created Recipes
     func getUserCreatedRecipes() throws -> [Recipe]

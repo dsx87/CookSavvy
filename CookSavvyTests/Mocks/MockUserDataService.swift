@@ -26,6 +26,8 @@ final class MockUserDataService: UserDataServiceProtocol {
     var stubbedUserRecipes: [Recipe] = []
     var stubbedUserRecipeCount: Int = 0
     var stubbedDistinctIngredientsUsedCount: Int = 0
+    var stubbedMonthlyRecipesCooked: Int = 0
+    var stubbedMonthlyIngredientsRescued: Int = 0
     var stubbedThemePreference: ThemePreference = .system
     var stubbedEnabledSources: Set<RecipeSourceType> = [.offline]
     var stubbedIsSourceEnabled: Bool = true
@@ -148,6 +150,16 @@ final class MockUserDataService: UserDataServiceProtocol {
     func getDistinctIngredientsUsedCount() async throws -> Int {
         if let error = shouldThrow { throw error }
         return stubbedDistinctIngredientsUsedCount
+    }
+
+    func monthlyRecipesCooked() async throws -> Int {
+        if let error = shouldThrow { throw error }
+        return stubbedMonthlyRecipesCooked
+    }
+
+    func monthlyIngredientsRescued() async throws -> Int {
+        if let error = shouldThrow { throw error }
+        return stubbedMonthlyIngredientsRescued
     }
 
     func getThemePreference() -> ThemePreference {

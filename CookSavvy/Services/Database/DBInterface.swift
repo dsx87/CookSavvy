@@ -744,6 +744,29 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    func getCookingSessionCount(from startDate: Date, to endDate: Date) throws -> Int {
+        return try dbWriter.read { db in
+            let count = try Int.fetchOne(db,
+                sql: "SELECT COUNT(*) FROM cooking_sessions WHERE cooked_at >= ? AND cooked_at < ?",
+                arguments: [startDate.timeIntervalSince1970, endDate.timeIntervalSince1970])
+            return count ?? 0
+        }
+    }
+
+    func getDistinctCookedIngredientCount(from startDate: Date, to endDate: Date) throws -> Int {
+        return try dbWriter.read { db in
+            let count = try Int.fetchOne(db,
+                sql: """
+                    SELECT COUNT(DISTINCT ri.ingredient_name)
+                    FROM cooking_sessions cs
+                    JOIN recipe_ingredients ri ON cs.recipe_id = ri.recipe_id
+                    WHERE cs.cooked_at >= ? AND cs.cooked_at < ?
+                    """,
+                arguments: [startDate.timeIntervalSince1970, endDate.timeIntervalSince1970])
+            return count ?? 0
+        }
+    }
+
     // MARK: - User-Created Recipes
 
     func getUserCreatedRecipes() throws -> [Recipe] {

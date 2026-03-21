@@ -80,6 +80,8 @@ final class MockDBInterfaceForIngredients: DBInterfaceProtocol {
     func getCookingSessionDates(from startDate: Date, to endDate: Date) throws -> [Date] { [] }
     func getCookingSessionCount() throws -> Int { 0 }
     func getTotalCookingDuration() throws -> TimeInterval { 0 }
+    func getCookingSessionCount(from startDate: Date, to endDate: Date) throws -> Int { 0 }
+    func getDistinctCookedIngredientCount(from startDate: Date, to endDate: Date) throws -> Int { 0 }
     func getUserCreatedRecipes() throws -> [Recipe] { [] }
     func getUserCreatedRecipeCount() throws -> Int { 0 }
     func insertUserRecipe(_ recipe: Recipe) throws {}

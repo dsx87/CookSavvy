@@ -87,11 +87,14 @@ enum AccessibilityID {
         static let weeklyActivity = "journey.weeklyActivity"
         static let achievements = "journey.achievements"
         static let recentActivity = "journey.recentActivity"
+        static let monthlyStats = "journey.monthlyStats"
 
         enum Stats {
             static let recipesCooked = "journey.stats.recipesCooked"
             static let ingredientsRescued = "journey.stats.ingredientsRescued"
             static let hoursCooking = "journey.stats.hoursCooking"
+            static let monthlyMeals = "journey.stats.monthlyMeals"
+            static let monthlyIngredients = "journey.stats.monthlyIngredients"
         }
     }
 
