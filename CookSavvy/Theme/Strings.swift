@@ -139,6 +139,9 @@ enum Strings {
         static let emptyStateSubtitle = String(localized: "discover.emptyStateSubtitle", defaultValue: "Scan your fridge or pick ingredients below to rescue dinner")
         static let noResultsTitle = String(localized: "discover.noResultsTitle", defaultValue: "No recipes found")
         static let noResultsSubtitle = String(localized: "discover.noResultsSubtitle", defaultValue: "Try removing an ingredient or changing your mood filter")
+        static let badgeQuick = String(localized: "discover.badgeQuick", defaultValue: "Quick")
+        static let badgeEasy = String(localized: "discover.badgeEasy", defaultValue: "Easy")
+        static let badgeBeginner = String(localized: "discover.badgeBeginner", defaultValue: "Beginner")
     }
 
     enum Journey {

@@ -1120,6 +1120,39 @@
         }
       }
     },
+    "discover.badgeBeginner" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Beginner"
+          }
+        }
+      }
+    },
+    "discover.badgeEasy" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Easy"
+          }
+        }
+      }
+    },
+    "discover.badgeQuick" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Quick"
+          }
+        }
+      }
+    },
     "discover.bestMatch" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {

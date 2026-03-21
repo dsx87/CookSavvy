@@ -80,19 +80,23 @@ struct RecipeDetailsView: View {
 
     // MARK: - Stats Row
 
+    @ViewBuilder
     private var statsRow: some View {
-        HStack(spacing: UI.RecipeDetails.statsSpacing) {
-            ForEach(viewModel.recipe.additionalInfo.infos.filter(\.isNotEmpty), id: \.title) { info in
-                StatPill(
-                    icon: statIcon(for: info),
-                    value: info.stringValue,
-                    label: info.title,
-                    color: statColor(for: info)
-                )
+        let infos = viewModel.recipe.additionalInfo.infos.filter(\.isNotEmpty)
+        if !infos.isEmpty {
+            HStack(spacing: UI.RecipeDetails.statsSpacing) {
+                ForEach(infos, id: \.title) { info in
+                    StatPill(
+                        icon: statIcon(for: info),
+                        value: info.stringValue,
+                        label: info.title,
+                        color: statColor(for: info)
+                    )
+                }
             }
+            .padding(UI.RecipeDetails.statsPadding)
+            .frostCard()
         }
-        .padding(UI.RecipeDetails.statsPadding)
-        .frostCard()
     }
 
     // MARK: - Ingredients

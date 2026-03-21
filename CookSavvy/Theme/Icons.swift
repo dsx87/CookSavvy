@@ -71,6 +71,9 @@ enum Icons {
         static let idea = "lightbulb.fill"
         static let emptyState = "refrigerator"
         static let noResults = "magnifyingglass"
+        static let badgeQuick = "hare"
+        static let badgeEasy = "hand.thumbsup"
+        static let badgeBeginner = "star.circle"
     }
 
     enum Journey {

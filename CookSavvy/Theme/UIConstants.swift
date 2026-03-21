@@ -609,6 +609,17 @@ struct UI {
         static let opacityFaint: Double = 0.12
     }
 
+    // MARK: - RecipeBadge
+
+    struct RecipeBadge {
+        static let spacing: CGFloat = 4
+        static let paddingH: CGFloat = 8
+        static let paddingV: CGFloat = 4
+        static let backgroundOpacity: Double = 0.12
+        static let quickThresholdMinutes: Int = 20
+        static let beginnerMaxIngredients: Int = 5
+    }
+
     // MARK: - ShoppingList
 
     struct ShoppingList {

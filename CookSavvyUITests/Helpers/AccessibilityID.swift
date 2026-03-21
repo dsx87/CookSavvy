@@ -53,6 +53,18 @@ enum AccessibilityID {
         static func recipe(_ title: String) -> String {
             "discover.recipe.\(AccessibilityID.token(title))"
         }
+
+        static func badgeQuick(_ title: String) -> String {
+            "discover.badge.quick.\(AccessibilityID.token(title))"
+        }
+
+        static func badgeEasy(_ title: String) -> String {
+            "discover.badge.easy.\(AccessibilityID.token(title))"
+        }
+
+        static func badgeBeginner(_ title: String) -> String {
+            "discover.badge.beginner.\(AccessibilityID.token(title))"
+        }
     }
 
     enum RecipeDetails {

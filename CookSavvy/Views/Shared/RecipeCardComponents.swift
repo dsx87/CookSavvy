@@ -190,6 +190,8 @@ struct RecipeRow: View {
 
             metaInfoRow
 
+            RecipeBadges(recipe: recipe)
+
             Spacer(minLength: 0)
         }
     }
@@ -354,5 +356,60 @@ private struct RecipeRowThumbnailView: View {
                     lineWidth: UI.Common.borderWidth
                 )
             }
+    }
+}
+
+struct RecipeBadges: View {
+    @Environment(\.appTheme) private var theme
+    let recipe: Recipe
+
+    var body: some View {
+        HStack(spacing: UI.RecipeBadge.spacing) {
+            if isQuick {
+                badge(Strings.Discover.badgeQuick, icon: Icons.Discover.badgeQuick, color: theme.sky)
+                    .accessibilityIdentifier("badge.quick.\(recipe.title.lowercased().replacingOccurrences(of: " ", with: "-"))")
+            }
+            if isEasy {
+                badge(Strings.Discover.badgeEasy, icon: Icons.Discover.badgeEasy, color: theme.mint)
+                    .accessibilityIdentifier("badge.easy.\(recipe.title.lowercased().replacingOccurrences(of: " ", with: "-"))")
+            }
+            if isBeginnerFriendly {
+                badge(Strings.Discover.badgeBeginner, icon: Icons.Discover.badgeBeginner, color: theme.lavender)
+                    .accessibilityIdentifier("badge.beginner.\(recipe.title.lowercased().replacingOccurrences(of: " ", with: "-"))")
+            }
+        }
+    }
+
+    private var isQuick: Bool {
+        for info in recipe.additionalInfo.infos {
+            if case .time(let timeStr) = info {
+                let digits = timeStr.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+                if let minutes = Int(digits) { return minutes <= UI.RecipeBadge.quickThresholdMinutes }
+            }
+        }
+        return false
+    }
+
+    private var isEasy: Bool {
+        for info in recipe.additionalInfo.infos {
+            if case .complexity(let level) = info {
+                return level.lowercased() == "easy" || level.lowercased() == "low"
+            }
+        }
+        return false
+    }
+
+    private var isBeginnerFriendly: Bool {
+        let ingredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
+        return ingredients.count > 0 && ingredients.count <= UI.RecipeBadge.beginnerMaxIngredients
+    }
+
+    private func badge(_ text: String, icon: String, color: Color) -> some View {
+        Label(text, systemImage: icon)
+            .font(UI.Fonts.tinyCaption)
+            .foregroundStyle(color)
+            .padding(.horizontal, UI.RecipeBadge.paddingH)
+            .padding(.vertical, UI.RecipeBadge.paddingV)
+            .background(color.opacity(UI.RecipeBadge.backgroundOpacity), in: Capsule())
     }
 }
