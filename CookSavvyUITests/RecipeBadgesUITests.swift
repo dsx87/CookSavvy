@@ -21,7 +21,7 @@ final class RecipeBadgesUITests: FreeUserUITest {
         app.selectIngredient("Pasta")
         app.tapFindRecipes()
 
-        XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Discover.moreRecipes], timeout: 10), "More recipes section should be visible")
+        XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Discover.bestMatch], timeout: 10), "Best match should be visible")
 
         // Badges should be present in the recipe row views
         // The presence of badge elements indicates the feature is working
@@ -65,6 +65,7 @@ final class RecipeBadgesUITests: FreeUserUITest {
 
     func testBadgesDisappearWhenFiltersApplied() {
         app.selectIngredient("Garlic")
+        app.selectIngredient("Pasta")
         app.tapFindRecipes()
 
         XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Discover.bestMatch], timeout: 10), "Results should be visible")
@@ -76,13 +77,26 @@ final class RecipeBadgesUITests: FreeUserUITest {
         XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Discover.bestMatch], timeout: 10), "Results should still be visible after mood filter")
     }
 
+    func testQuickBadgeAccessibilityIdentifier() {
+        // "Test Garlic Pasta" has a 20 min cook time, which is ≤ quickThresholdMinutes (20)
+        app.selectIngredient("Garlic")
+        app.selectIngredient("Pasta")
+        app.tapFindRecipes()
+
+        XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Discover.bestMatch], timeout: 10))
+        XCTAssertTrue(
+            app.firstMatch(for: AccessibilityID.Discover.badgeQuick("Test Garlic Pasta")).exists,
+            "Quick badge should be present on Test Garlic Pasta with accessibility ID"
+        )
+    }
+
     func testBadgeStringLabelsPresent() {
         // Verify the badge strings are properly localized/present
         app.selectIngredient("Garlic")
         app.selectIngredient("Pasta")
         app.tapFindRecipes()
 
-        XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Discover.moreRecipes], timeout: 10), "Results should load")
+        XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Discover.bestMatch], timeout: 10), "Results should load")
 
         // Check that badge labels can be found (indicates localization is working)
         let quickLabel = app.staticTexts["Quick"]

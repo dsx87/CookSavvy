@@ -122,7 +122,7 @@ final class DiscoverViewModel: ObservableObject {
             moodFiltered = RecipeMoodRanker.rank(searchResultRecipes, for: selectedMood)
         } else {
             moodFiltered = searchResultRecipes.sorted { lhs, rhs in
-                Self.cookTimeMinutes(lhs) < Self.cookTimeMinutes(rhs)
+                (lhs.cookTimeMinutes ?? Int.max) < (rhs.cookTimeMinutes ?? Int.max)
             }
         }
 
@@ -405,17 +405,6 @@ final class DiscoverViewModel: ObservableObject {
     private static func normalizedIngredientName(_ value: String) -> String {
         value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
-
-    private static func cookTimeMinutes(_ recipe: Recipe) -> Int {
-        for info in recipe.additionalInfo.infos {
-            if case .time(let timeStr) = info {
-                let digits = timeStr.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-                if let minutes = Int(digits) { return minutes }
-            }
-        }
-        return Int.max
-    }
-
     private func accessibleEnabledSources() -> Set<RecipeSourceType> {
         RecipeSourceType.accessible(
             from: userDataService.getEnabledSources(),

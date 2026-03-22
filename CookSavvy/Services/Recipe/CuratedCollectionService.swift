@@ -121,70 +121,10 @@ final class CuratedCollectionService: CuratedCollectionServiceProtocol {
 // MARK: - Recipe Cook Time Helper
 
 private extension Recipe {
-    var cookTimeMinutes: Int? {
-        for info in additionalInfo.infos {
-            if case .time(let timeString) = info {
-                return parseMinutes(from: timeString)
-            }
-        }
-        return nil
-    }
-
     var complexityLevel: String? {
         for info in additionalInfo.infos {
             if case .complexity(let level) = info { return level }
         }
         return nil
-    }
-
-    /// Parses a cook-time string into total minutes.
-    /// Handles formats like "30 min", "30m", "1 hr", "1 hr 30 min", "1h30m", "90", "25-30 min".
-    /// For range strings like "25-30 min", uses the upper bound (most conservative for filtering).
-    /// Returns nil when the format is unrecognisable to avoid false filtering.
-    private func parseMinutes(from timeString: String) -> Int? {
-        let s = timeString.lowercased()
-
-        // Match hours and minutes separately using regex-free approach
-        var totalMinutes = 0
-        var matched = false
-
-        // Extract hour component: look for a number before "h" or "hr" or "hour"
-        let hourPattern = #"(\d+)\s*h"#
-        if let range = s.range(of: hourPattern, options: .regularExpression),
-           let numStr = s[range].components(separatedBy: CharacterSet.decimalDigits.inverted).first,
-           let hours = Int(numStr) {
-            totalMinutes += hours * 60
-            matched = true
-        }
-
-        // Extract minute component: look for a number before "m" or "min"
-        // Use last number before "m" to handle "1h30m" and "30 min"
-        let minPattern = #"(\d+)\s*m(?:in)?"#
-        // Find all matches and take the one that isn't part of the hour match
-        var searchRange = s.startIndex..<s.endIndex
-        while let range = s.range(of: minPattern, options: .regularExpression, range: searchRange) {
-            let token = String(s[range])
-            // Skip if this token contains "h" (i.e., it's the hour token, e.g. "1h")
-            if !token.contains("h"),
-               let numStr = token.components(separatedBy: CharacterSet.decimalDigits.inverted).first,
-               let mins = Int(numStr) {
-                totalMinutes += mins
-                matched = true
-                break
-            }
-            searchRange = range.upperBound..<s.endIndex
-        }
-
-        // Fallback: bare number with no unit (treat as minutes)
-        if !matched {
-            // Handle range like "25-30": take upper bound
-            let numbers = s.components(separatedBy: CharacterSet.decimalDigits.inverted)
-                .compactMap { Int($0) }
-                .filter { $0 > 0 }
-            guard let last = numbers.last else { return nil }
-            return last
-        }
-
-        return totalMinutes > 0 ? totalMinutes : nil
     }
 }

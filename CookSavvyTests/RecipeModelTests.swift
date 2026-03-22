@@ -51,4 +51,43 @@ final class RecipeModelTests: XCTestCase {
         XCTAssertEqual(a, b, "Ingredients with the same name should be equal")
         XCTAssertNotEqual(a, c, "Ingredients with different names should not be equal")
     }
+
+    func testCookTimeMinutesParsesHourFormat() {
+        let recipe = Recipe(
+            title: "Slow Braise",
+            ingredients: [],
+            instructions: [Recipe.Step](),
+            image: "",
+            cleanedIngredients: [],
+            additionalInfo: Recipe.AdditionalInfo(time: "1 hr 30 min", servings: nil, complexity: nil, calories: nil)
+        )
+
+        XCTAssertEqual(recipe.cookTimeMinutes, 90)
+    }
+
+    func testCookTimeMinutesParsesBareMinsAfterHour() {
+        let recipe = Recipe(
+            title: "Slow Braise",
+            ingredients: [],
+            instructions: [Recipe.Step](),
+            image: "",
+            cleanedIngredients: [],
+            additionalInfo: Recipe.AdditionalInfo(time: "1h30", servings: nil, complexity: nil, calories: nil)
+        )
+
+        XCTAssertEqual(recipe.cookTimeMinutes, 90)
+    }
+
+    func testCookTimeMinutesUsesUpperBoundForRanges() {
+        let recipe = Recipe(
+            title: "Roasted Veg",
+            ingredients: [],
+            instructions: [Recipe.Step](),
+            image: "",
+            cleanedIngredients: [],
+            additionalInfo: Recipe.AdditionalInfo(time: "25-30 min", servings: nil, complexity: nil, calories: nil)
+        )
+
+        XCTAssertEqual(recipe.cookTimeMinutes, 30)
+    }
 }

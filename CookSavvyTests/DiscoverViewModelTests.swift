@@ -107,6 +107,30 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.filteredRecipes.first?.title, "Warm Chicken Soup")
     }
 
+    func testDefaultSortingUsesParsedCookTimeMinutes() {
+        let vm = makeViewModel()
+        let quickRecipe = Recipe(
+            title: "Quick Pasta",
+            ingredients: [],
+            instructions: [Recipe.Step](),
+            image: "",
+            cleanedIngredients: [],
+            additionalInfo: Recipe.AdditionalInfo(time: "25-30 min", servings: nil, complexity: nil, calories: nil)
+        )
+        let slowRecipe = Recipe(
+            title: "Slow Stew",
+            ingredients: [],
+            instructions: [Recipe.Step](),
+            image: "",
+            cleanedIngredients: [],
+            additionalInfo: Recipe.AdditionalInfo(time: "1 hr", servings: nil, complexity: nil, calories: nil)
+        )
+
+        vm.searchResultRecipes = [slowRecipe, quickRecipe]
+
+        XCTAssertEqual(vm.filteredRecipes.map(\.title), ["Quick Pasta", "Slow Stew"])
+    }
+
     func testClearIngredientsResets() {
         let vm = makeViewModel()
         vm.selectedIngredients = [Ingredient(name: "Onion")]

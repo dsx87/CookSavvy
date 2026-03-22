@@ -367,27 +367,22 @@ struct RecipeBadges: View {
         HStack(spacing: UI.RecipeBadge.spacing) {
             if isQuick {
                 badge(Strings.Discover.badgeQuick, icon: Icons.Discover.badgeQuick, color: theme.sky)
-                    .accessibilityIdentifier("badge.quick.\(recipe.title.lowercased().replacingOccurrences(of: " ", with: "-"))")
+                    .accessibilityIdentifier(AccessibilityID.Discover.badgeQuick(recipe.title))
             }
             if isEasy {
                 badge(Strings.Discover.badgeEasy, icon: Icons.Discover.badgeEasy, color: theme.mint)
-                    .accessibilityIdentifier("badge.easy.\(recipe.title.lowercased().replacingOccurrences(of: " ", with: "-"))")
+                    .accessibilityIdentifier(AccessibilityID.Discover.badgeEasy(recipe.title))
             }
             if isBeginnerFriendly {
                 badge(Strings.Discover.badgeBeginner, icon: Icons.Discover.badgeBeginner, color: theme.lavender)
-                    .accessibilityIdentifier("badge.beginner.\(recipe.title.lowercased().replacingOccurrences(of: " ", with: "-"))")
+                    .accessibilityIdentifier(AccessibilityID.Discover.badgeBeginner(recipe.title))
             }
         }
     }
 
     private var isQuick: Bool {
-        for info in recipe.additionalInfo.infos {
-            if case .time(let timeStr) = info {
-                let digits = timeStr.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-                if let minutes = Int(digits) { return minutes <= UI.RecipeBadge.quickThresholdMinutes }
-            }
-        }
-        return false
+        guard let minutes = recipe.cookTimeMinutes else { return false }
+        return minutes <= UI.RecipeBadge.quickThresholdMinutes
     }
 
     private var isEasy: Bool {

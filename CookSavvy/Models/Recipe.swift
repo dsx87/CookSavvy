@@ -195,6 +195,67 @@ extension Recipe: Identifiable {
 
 extension Recipe: Hashable {}
 
+extension Recipe {
+    var cookTimeMinutes: Int? {
+        for info in additionalInfo.infos {
+            if case .time(let timeString) = info {
+                return Self.parseCookTimeMinutes(from: timeString)
+            }
+        }
+        return nil
+    }
+
+    /// Parses a cook-time string into total minutes.
+    /// Handles formats like "30 min", "30m", "1 hr", "1 hr 30 min", "1h30m", "1h30", "90", "25-30 min".
+    /// For range strings like "25-30 min", uses the upper bound (most conservative for filtering).
+    /// Returns nil when the format is unrecognisable to avoid false filtering.
+    private static func parseCookTimeMinutes(from timeString: String) -> Int? {
+        let s = timeString.lowercased()
+
+        // Combined hour + minute: "1h30m", "1 hr 30 min", "1h30" (bare minutes with no 'm' suffix)
+        let combinedPattern = #"(\d+)\s*h(?:r|our|ours)?\s*(\d+)"#
+        if let range = s.range(of: combinedPattern, options: .regularExpression) {
+            let numbers = s[range]
+                .components(separatedBy: CharacterSet.decimalDigits.inverted)
+                .compactMap(Int.init)
+            if numbers.count >= 2 {
+                return numbers[0] * 60 + numbers[1]
+            }
+        }
+
+        // Hours only: "1h", "1 hr", "2 hours"
+        let hourPattern = #"(\d+)\s*h"#
+        if let range = s.range(of: hourPattern, options: .regularExpression),
+           let hours = s[range]
+               .components(separatedBy: CharacterSet.decimalDigits.inverted)
+               .compactMap(Int.init)
+               .first {
+            return hours * 60
+        }
+
+        // Minutes with explicit unit: "30 min", "30m", "25-30 min" (upper bound for ranges)
+        let minutePattern = #"(\d+)\s*m(?:in)?"#
+        var searchRange = s.startIndex..<s.endIndex
+        while let range = s.range(of: minutePattern, options: .regularExpression, range: searchRange) {
+            let token = String(s[range])
+            if !token.contains("h"),
+               let minutes = token
+                   .components(separatedBy: CharacterSet.decimalDigits.inverted)
+                   .compactMap(Int.init)
+                   .first {
+                return minutes
+            }
+            searchRange = range.upperBound..<s.endIndex
+        }
+
+        // Bare number fallback (treat as minutes): "90", "25-30" → upper bound
+        let numbers = s.components(separatedBy: CharacterSet.decimalDigits.inverted)
+            .compactMap(Int.init)
+            .filter { $0 > 0 }
+        return numbers.last
+    }
+}
+
 extension Recipe: Codable {
     
     enum CodingKeys: String, CodingKey {
