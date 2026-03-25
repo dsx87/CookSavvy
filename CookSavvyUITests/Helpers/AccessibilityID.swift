@@ -103,7 +103,7 @@ enum AccessibilityID {
 
         enum Stats {
             static let recipesCooked = "journey.stats.recipesCooked"
-            static let dayStreak = "journey.stats.dayStreak"
+            static let ingredientsRescued = "journey.stats.ingredientsRescued"
             static let hoursCooking = "journey.stats.hoursCooking"
             static let monthlyMeals = "journey.stats.monthlyMeals"
             static let monthlyIngredients = "journey.stats.monthlyIngredients"

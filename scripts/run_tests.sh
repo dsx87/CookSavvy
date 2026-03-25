@@ -23,12 +23,14 @@ TEMP_ROOT="${PROJECT_ROOT}/.tmp-tests/${TIMESTAMP}"
 
 SCHEME="${DEFAULT_SCHEME}"
 TEST_PLAN="${DEFAULT_TEST_PLAN}"
-DEVICE="${DEFAULT_DEVICE}"
-OS_VER="${DEFAULT_OS}"
+DEVICE=""
+OS_VER=""
 CLEAN="false"
 LIST_SCHEMES="false"
 COMPACT="true"
 ONLY_TESTS=""
+PARALLEL="false"
+WORKERS=""
 
 # Parse args
 while [[ $# -gt 0 ]]; do
@@ -49,6 +51,10 @@ while [[ $# -gt 0 ]]; do
       COMPACT="false"; shift ;;
     --only)
       ONLY_TESTS="$2"; shift 2 ;;
+    --parallel)
+      PARALLEL="true"; shift ;;
+    --workers)
+      WORKERS="$2"; PARALLEL="true"; shift 2 ;;
     -h|--help)
       cat <<EOF
 CookSavvy test runner
@@ -62,11 +68,15 @@ Options:
   --list-schemes        List schemes in the project and exit
   --verbose             verbose output
   --only <identifier>   Run only specific tests (e.g., CookSavvyTests/CSVZipAdapterTests)
+  --parallel            Enable parallel distributed testing (simulator clones)
+  --workers <n>         Number of parallel simulator workers (implies --parallel; default: cpu/2)
   -h, --help            Show this help
 
 Examples:
   scripts/run_tests.sh
-  scripts/run_tests.sh --scheme CookSavvy --device "iPhone 15" --os latest
+  scripts/run_tests.sh --test-plan UITests --parallel
+  scripts/run_tests.sh --test-plan UITests --parallel --workers 4
+  scripts/run_tests.sh --scheme CookSavvy --device "iPhone 15" --os 18.5
   scripts/run_tests.sh --test-plan DefaultTestPlan
 EOF
       exit 0 ;;
@@ -89,7 +99,47 @@ fi
 mkdir -p "${RESULTS_DIR}"
 mkdir -p "${TEMP_ROOT}"
 
-DESTINATION="platform=iOS Simulator,name=${DEVICE},OS=${OS_VER}"
+# --- Simulator resolution ---
+# Prefer explicit --device/--os args; otherwise use the booted simulator; finally fall back to default.
+if [[ -n "${DEVICE}" ]]; then
+  OS_PART="${OS_VER:+,OS=${OS_VER}}"
+  DESTINATION="platform=iOS Simulator,name=${DEVICE}${OS_PART}"
+  echo "▶ Using specified simulator: ${DEVICE}${OS_VER:+ (OS ${OS_VER})}" >&2
+else
+  BOOTED_ID=$(xcrun simctl list devices booted 2>/dev/null \
+    | grep -E "\(Booted\)" \
+    | grep -oE "[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}" \
+    | head -1 || true)
+  if [[ -n "${BOOTED_ID}" ]]; then
+    BOOTED_NAME=$(xcrun simctl list devices booted 2>/dev/null \
+      | grep "${BOOTED_ID}" | sed 's/ (.*//' | xargs || true)
+    DESTINATION="platform=iOS Simulator,id=${BOOTED_ID}"
+    echo "▶ Using booted simulator: ${BOOTED_NAME} (${BOOTED_ID})" >&2
+  else
+    FALLBACK_ID=$(xcrun simctl list devices available 2>/dev/null \
+      | grep -E "iPhone 16 \(" \
+      | grep -oE "[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}" \
+      | head -1)
+    if [[ -z "${FALLBACK_ID}" ]]; then
+      echo "❌ No booted or available iPhone 16 simulator found. Use --device to specify one." >&2
+      exit 1
+    fi
+    DESTINATION="platform=iOS Simulator,id=${FALLBACK_ID}"
+    echo "▶ No booted simulator. Using default: ${DEFAULT_DEVICE} (${FALLBACK_ID})" >&2
+  fi
+fi
+
+# --- Simulator cleanup ---
+echo "▶ Shutting down all simulators before testing" >&2
+xcrun simctl shutdown all >/dev/null 2>&1 || true
+
+# --- Parallel worker count ---
+if [[ "${PARALLEL}" == "true" && -z "${WORKERS}" ]]; then
+  CPU=$(sysctl -n hw.logicalcpu 2>/dev/null || echo 4)
+  WORKERS=$(( CPU / 2 ))
+  [[ "${WORKERS}" -lt 2 ]] && WORKERS=2
+  [[ "${WORKERS}" -gt 6 ]] && WORKERS=6
+fi
 
 CMD=(xcodebuild \
   -project "${PROJECT_FILE}" \
@@ -97,6 +147,11 @@ CMD=(xcodebuild \
   -destination "${DESTINATION}" \
   -resultBundlePath "${RESULT_BUNDLE_PATH}" \
   -enableCodeCoverage YES)
+
+if [[ "${PARALLEL}" == "true" ]]; then
+  CMD+=( -parallel-testing-enabled YES -parallel-testing-worker-count "${WORKERS}" )
+  echo "▶ Parallel testing: ${WORKERS} workers" >&2
+fi
 
 if [[ -n "${TEST_PLAN}" ]]; then
   CMD+=( -testPlan "${TEST_PLAN}" )

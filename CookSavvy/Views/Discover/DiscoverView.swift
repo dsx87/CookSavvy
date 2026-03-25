@@ -93,7 +93,6 @@ struct DiscoverView: View {
                         .background(viewModel.remainingCameraScans > 0 ? theme.mint : theme.rose, in: Capsule())
                         .offset(x: UI.Discover.cameraBadgeOffsetX, y: UI.Discover.cameraBadgeOffsetY)
                         .accessibilityIdentifier(AccessibilityID.Camera.scanLimitBadge)
-                        .accessibilityHidden(true)
                 }
             }
         }

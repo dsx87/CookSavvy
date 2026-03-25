@@ -131,6 +131,52 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.filteredRecipes.map(\.title), ["Quick Pasta", "Slow Stew"])
     }
 
+    func testHasNoResultsWhenSearchCompletesEmpty() {
+        let vm = makeViewModel()
+        vm.searchResultRecipes = []
+        vm.showResults = true
+        XCTAssertTrue(vm.hasNoResults)
+    }
+
+    func testHasNoResultsIsFalseWhileSearching() {
+        let vm = makeViewModel()
+        vm.searchResultRecipes = []
+        vm.showResults = true
+        vm.isSearching = true
+        XCTAssertFalse(vm.hasNoResults)
+    }
+
+    func testHasNoResultsIsFalseWhenResultsExist() {
+        let vm = makeViewModel()
+        vm.searchResultRecipes = [Recipe.mockRandom()]
+        vm.showResults = true
+        XCTAssertFalse(vm.hasNoResults)
+    }
+
+    func testDefaultSortingPutsNilCookTimeRecipesLast() {
+        let vm = makeViewModel()
+        let timedRecipe = Recipe(
+            title: "Quick Eggs",
+            ingredients: [],
+            instructions: [Recipe.Step](),
+            image: "",
+            cleanedIngredients: [],
+            additionalInfo: Recipe.AdditionalInfo(time: "10 min", servings: nil, complexity: nil, calories: nil)
+        )
+        let untimedRecipe = Recipe(
+            title: "Mystery Dish",
+            ingredients: [],
+            instructions: [Recipe.Step](),
+            image: "",
+            cleanedIngredients: [],
+            additionalInfo: .empty
+        )
+
+        vm.searchResultRecipes = [untimedRecipe, timedRecipe]
+
+        XCTAssertEqual(vm.filteredRecipes.map(\.title), ["Quick Eggs", "Mystery Dish"])
+    }
+
     func testClearIngredientsResets() {
         let vm = makeViewModel()
         vm.selectedIngredients = [Ingredient(name: "Onion")]

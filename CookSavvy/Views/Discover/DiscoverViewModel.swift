@@ -89,8 +89,7 @@ final class DiscoverViewModel: ObservableObject {
         !hasIngredients &&
         recentRecipes.isEmpty &&
         savedRecipes.isEmpty &&
-        suggestedRecipes.isEmpty &&
-        collections.isEmpty
+        suggestedRecipes.isEmpty
     }
 
     var hasNoResults: Bool {
@@ -327,9 +326,10 @@ final class DiscoverViewModel: ObservableObject {
 
     private func loadIngredients() async {
         do {
-            popularIngredients = try await userDataService.getPopularIngredients()
-            shownIngredients = popularIngredients
-            IngredientEmojiProvider.fillIngredientsWithEmoji(&popularIngredients)
+            var ingredients = try await userDataService.getPopularIngredients()
+            IngredientEmojiProvider.fillIngredientsWithEmoji(&ingredients)
+            popularIngredients = ingredients
+            shownIngredients = ingredients
         } catch {}
     }
 

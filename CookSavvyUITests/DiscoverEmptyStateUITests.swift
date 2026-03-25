@@ -40,22 +40,12 @@ final class DiscoverEmptyStateUITests: FreshInstallUITest {
 }
 
 final class DiscoverNoResultsStateUITests: FreeUserUITest {
-    func testNoResultsStateAccessibility() {
-        // Select ingredients to trigger search
+    func testNoResultsStateAbsentWhenResultsExist() {
         app.selectIngredient("Garlic")
         app.tapFindRecipes()
 
-        // Wait for results to load
-        XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Discover.bestMatch], timeout: 10), "Search results should be visible")
-
-        // Verify no results state has correct accessibility identifier
-        let noResultsView = app.otherElements[AccessibilityID.Discover.noResultsState]
-        // This test just verifies the accessibility ID is properly set up
-        // In normal cases with data, we wouldn't see the no-results state
-        if noResultsView.exists {
-            let noResultsTitle = app.staticTexts["No recipes found"]
-            XCTAssertTrue(noResultsTitle.exists, "No results title should be visible when present")
-        }
+        XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Discover.bestMatch], timeout: 10), "Results should be visible")
+        XCTAssertFalse(app.otherElements[AccessibilityID.Discover.noResultsState].exists, "No-results state must not appear when recipes are found")
     }
 
     func testSearchStateTransition() {

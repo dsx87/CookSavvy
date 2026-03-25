@@ -16,22 +16,25 @@ final class RecipeBadgesUITests: FreeUserUITest {
     }
 
     func testBadgesAppearOnRecipeRows() {
-        // Select ingredients and search to show recipe results
+        // "Test Garlic Pasta" (20 min, Easy, 5 ingredients) qualifies for all three badge types
         app.selectIngredient("Garlic")
         app.selectIngredient("Pasta")
         app.tapFindRecipes()
 
         XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Discover.bestMatch], timeout: 10), "Best match should be visible")
 
-        // Badges should be present in the recipe row views
-        // The presence of badge elements indicates the feature is working
-        let hasQuickLabel = app.staticTexts["Quick"].exists
-        let hasEasyLabel = app.staticTexts["Easy"].exists
-        let hasBeginnerLabel = app.staticTexts["Beginner"].exists
-
-        // At least one badge type should be visible if recipes have those characteristics
-        let hasBadges = hasQuickLabel || hasEasyLabel || hasBeginnerLabel
-        XCTAssertTrue(hasBadges, "Badges should render in recipe results")
+        XCTAssertTrue(
+            app.firstMatch(for: AccessibilityID.Discover.badgeQuick("Test Garlic Pasta")).exists,
+            "Quick badge should be present on Test Garlic Pasta (20 min cook time)"
+        )
+        XCTAssertTrue(
+            app.firstMatch(for: AccessibilityID.Discover.badgeEasy("Test Garlic Pasta")).exists,
+            "Easy badge should be present on Test Garlic Pasta"
+        )
+        XCTAssertTrue(
+            app.firstMatch(for: AccessibilityID.Discover.badgeBeginner("Test Garlic Pasta")).exists,
+            "Beginner badge should be present on Test Garlic Pasta (5 ingredients)"
+        )
     }
 
     func testDefaultSortingByQuickestTime() {

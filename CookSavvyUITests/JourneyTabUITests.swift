@@ -8,7 +8,7 @@ final class JourneyTabUITests: FreeUserUITest {
 
     func testStatsDisplay() {
         XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Journey.Stats.recipesCooked], timeout: 5))
-        XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Journey.Stats.dayStreak], timeout: 5))
+        XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Journey.Stats.ingredientsRescued], timeout: 5))
         XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Journey.Stats.hoursCooking], timeout: 5))
     }
 

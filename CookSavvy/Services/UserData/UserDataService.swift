@@ -52,7 +52,20 @@ final class UserDataService: UserDataServiceProtocol {
     /// - Parameter limit: Maximum number of ingredients to return (default: 10)
     /// - Returns: Array of popular ingredients ordered by usage count
     func getPopularIngredients(limit: Int = 10) async throws -> [Ingredient] {
-//        return try dbInterface.getPopularIngredients(limit: limit)
+        do {
+            let popular = try dbInterface.getPopularIngredients(limit: limit)
+            if !popular.isEmpty {
+                return popular
+            }
+
+            let fallback = try dbInterface.getAllIngredients(inGroup: nil, limit: max(limit, 20))
+            if !fallback.isEmpty {
+                return fallback
+            }
+        } catch {
+            // Fall back to defaults below.
+        }
+
         let defaultFastIngredients: [Ingredient] = [
             ("Chicken", "🍗"),
             ("Rice", "🍚"),

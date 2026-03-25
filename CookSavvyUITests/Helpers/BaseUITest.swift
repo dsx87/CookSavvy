@@ -27,6 +27,13 @@ class BaseUITest: XCTestCase {
         app.terminate()
         launchApp(extraLaunchArguments: extraLaunchArguments)
     }
+
+    func relaunchApp(withBaseLaunchArguments baseLaunchArguments: [String], extraLaunchArguments: [String] = []) {
+        app.terminate()
+        app = XCUIApplication()
+        app.launchArguments = baseLaunchArguments + extraLaunchArguments
+        app.launch()
+    }
 }
 
 class PremiumUserUITest: BaseUITest {
