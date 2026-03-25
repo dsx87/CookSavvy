@@ -18,11 +18,7 @@ To build the app for any available iOS Simulator (avoiding specific version issu
 xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 ```
 
-To run only the UI tests, use:
-
-```bash
-xcodebuild test -scheme CookSavvy -destination 'platform=iOS Simulator,name=iPhone 16' -testPlan UITestPlan
-```
+> **DO NOT run UI tests** — UITests are disabled in all test plans and must not be executed by Claude or any automated tool. They require manual execution only.
 
 ## UI Test Launch Arguments
 

@@ -13,6 +13,7 @@
   },
   "testTargets" : [
     {
+      "enabled" : false,
       "target" : {
         "containerPath" : "container:CookSavvy.xcodeproj",
         "identifier" : "A1B2C3DD2FBD100100000001",

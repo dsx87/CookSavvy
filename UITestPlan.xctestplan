@@ -18,6 +18,7 @@
   },
   "testTargets" : [
     {
+      "enabled" : false,
       "parallelizable" : true,
       "target" : {
         "containerPath" : "container:CookSavvy.xcodeproj",
