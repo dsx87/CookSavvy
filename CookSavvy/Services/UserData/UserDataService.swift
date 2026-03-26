@@ -189,7 +189,20 @@ final class UserDataService: UserDataServiceProtocol {
         guard let recipeId = try getRecipeId(byTitle: recipe.title) else {
             throw UserDataServiceError.recipeNotFound
         }
-        try dbInterface.recordCookingSession(recipeId: recipeId, date: Date(), duration: duration, rating: rating)
+        try dbInterface.recordCookingSession(
+            recipeId: recipeId,
+            date: Date(),
+            duration: duration,
+            rating: rating,
+            rescuedIngredients: rescuedIngredients(from: recipe)
+        )
+    }
+
+    private func rescuedIngredients(from recipe: Recipe) -> [String]? {
+        guard let missing = recipe.missingIngredients else { return nil }
+        let missingSet = Set(missing.map { $0.lowercased() })
+        let all = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
+        return all.map { $0.name }.filter { !missingSet.contains($0.lowercased()) }
     }
 
     func getCookingSessions(limit: Int = UserDataServiceConstants.cookingSessionsLimit) async throws -> [CookingSession] {

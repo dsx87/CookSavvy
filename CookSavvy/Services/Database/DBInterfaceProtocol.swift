@@ -101,3 +101,9 @@ protocol DBInterfaceProtocol {
     func getRecipeCount() throws -> Int
     func getDistinctCookedIngredientCount() throws -> Int
 }
+
+extension DBInterfaceProtocol {
+    func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?, rating: Int?, rescuedIngredients: [String]?) throws {
+        try recordCookingSession(recipeId: recipeId, date: date, duration: duration, rating: rating)
+    }
+}

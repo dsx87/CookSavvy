@@ -218,7 +218,13 @@ struct DiscoverCoordinatorView: View {
                     }
                 }
         }
-        .fullScreenCover(item: $coordinator.presentedFullScreenCover) { destination in
+        .fullScreenCover(
+            item: $coordinator.presentedFullScreenCover,
+            onDismiss: {
+                coordinator.navigationPath = NavigationPath()
+                discoverViewModel.showResults = false
+            }
+        ) { destination in
             switch destination {
             case .camera:
                 CameraView(

@@ -107,7 +107,9 @@ final class CuratedCollectionService: CuratedCollectionServiceProtocol {
                 guard count <= maxCount else { return false }
             }
             if let maxTime = criteria.maxCookTime {
-                guard let cookMinutes = recipe.cookTimeMinutes, cookMinutes <= maxTime else { return false }
+                if let cookMinutes = recipe.cookTimeMinutes {
+                    guard cookMinutes <= maxTime else { return false }
+                }
             }
             if let complexity = criteria.complexityLevel {
                 guard let recipeComplexity = recipe.complexityLevel else { return false }

@@ -230,6 +230,12 @@ final class DBInterface: DBInterfaceProtocol {
                 """)
             try db.execute(sql: "CREATE INDEX IF NOT EXISTS idx_cooking_sessions_date ON cooking_sessions(cooked_at DESC);")
 
+            // Migration: add ingredients_rescued_json column if not present
+            let cookingColumns = try db.columns(in: "cooking_sessions").map { $0.name }
+            if !cookingColumns.contains("ingredients_rescued_json") {
+                try db.execute(sql: "ALTER TABLE cooking_sessions ADD COLUMN ingredients_rescued_json TEXT;")
+            }
+
             // 9. Shopping List
             try db.execute(sql: """
                 CREATE TABLE IF NOT EXISTS shopping_items (
@@ -677,12 +683,19 @@ final class DBInterface: DBInterfaceProtocol {
     // MARK: - Cooking Sessions
 
     func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?, rating: Int?) throws {
+        try recordCookingSession(recipeId: recipeId, date: date, duration: duration, rating: rating, rescuedIngredients: nil)
+    }
+
+    func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?, rating: Int?, rescuedIngredients: [String]?) throws {
         let timestamp = Int(date.timeIntervalSince1970)
         let durationSeconds: Int? = duration.map { Int($0) }
+        let rescuedJSON: String? = rescuedIngredients.flatMap { ingredients in
+            try? String(data: JSONEncoder().encode(ingredients), encoding: .utf8)
+        }
         try dbWriter.write { db in
             try db.execute(
-                sql: "INSERT INTO cooking_sessions(recipe_id, cooked_at, duration_seconds, rating) VALUES (?, ?, ?, ?);",
-                arguments: [recipeId, timestamp, durationSeconds, rating]
+                sql: "INSERT INTO cooking_sessions(recipe_id, cooked_at, duration_seconds, rating, ingredients_rescued_json) VALUES (?, ?, ?, ?, ?);",
+                arguments: [recipeId, timestamp, durationSeconds, rating, rescuedJSON]
             )
         }
     }
@@ -757,12 +770,21 @@ final class DBInterface: DBInterfaceProtocol {
         return try dbWriter.read { db in
             let count = try Int.fetchOne(db,
                 sql: """
-                    SELECT COUNT(DISTINCT ri.ingredient_name)
-                    FROM cooking_sessions cs
-                    JOIN recipe_ingredients ri ON cs.recipe_id = ri.recipe_id
-                    WHERE cs.cooked_at >= ? AND cs.cooked_at < ?
+                    SELECT COUNT(DISTINCT ingredient_name) FROM (
+                        SELECT json_each.value AS ingredient_name
+                        FROM cooking_sessions, json_each(cooking_sessions.ingredients_rescued_json)
+                        WHERE cooking_sessions.ingredients_rescued_json IS NOT NULL
+                        AND cooking_sessions.cooked_at >= ? AND cooking_sessions.cooked_at < ?
+                        UNION
+                        SELECT ri.ingredient_name
+                        FROM cooking_sessions cs
+                        JOIN recipe_ingredients ri ON cs.recipe_id = ri.recipe_id
+                        WHERE cs.ingredients_rescued_json IS NULL
+                        AND cs.cooked_at >= ? AND cs.cooked_at < ?
+                    )
                     """,
-                arguments: [startDate.timeIntervalSince1970, endDate.timeIntervalSince1970])
+                arguments: [startDate.timeIntervalSince1970, endDate.timeIntervalSince1970,
+                            startDate.timeIntervalSince1970, endDate.timeIntervalSince1970])
             return count ?? 0
         }
     }
@@ -977,9 +999,16 @@ final class DBInterface: DBInterfaceProtocol {
     func getDistinctCookedIngredientCount() throws -> Int {
         return try dbWriter.read { db in
             let sql = """
-                SELECT COUNT(DISTINCT ri.ingredient_name)
-                FROM recipe_ingredients ri
-                INNER JOIN cooking_sessions cs ON ri.recipe_id = cs.recipe_id;
+                SELECT COUNT(DISTINCT ingredient_name) FROM (
+                    SELECT json_each.value AS ingredient_name
+                    FROM cooking_sessions, json_each(cooking_sessions.ingredients_rescued_json)
+                    WHERE cooking_sessions.ingredients_rescued_json IS NOT NULL
+                    UNION
+                    SELECT ri.ingredient_name
+                    FROM cooking_sessions cs
+                    JOIN recipe_ingredients ri ON cs.recipe_id = ri.recipe_id
+                    WHERE cs.ingredients_rescued_json IS NULL
+                )
             """
             return try Int.fetchOne(db, sql: sql) ?? 0
         }
