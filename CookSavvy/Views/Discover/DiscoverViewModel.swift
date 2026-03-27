@@ -121,7 +121,7 @@ final class DiscoverViewModel: ObservableObject {
             moodFiltered = RecipeMoodRanker.rank(searchResultRecipes, for: selectedMood)
         } else {
             moodFiltered = searchResultRecipes.sorted { lhs, rhs in
-                (lhs.cookTimeMinutes ?? Int.max) < (rhs.cookTimeMinutes ?? Int.max)
+                (lhs.missingIngredients?.count ?? Int.max) < (rhs.missingIngredients?.count ?? Int.max)
             }
         }
 
@@ -137,14 +137,12 @@ final class DiscoverViewModel: ObservableObject {
             }
         }
 
-        guard useItAllFilter else { return dietFiltered }
-
-        let perfect = dietFiltered.filter { $0.missingIngredients?.isEmpty == true }
-        if !perfect.isEmpty { return perfect }
-
-        return dietFiltered.sorted {
-            ($0.missingIngredients?.count ?? Int.max) < ($1.missingIngredients?.count ?? Int.max)
+        if useItAllFilter {
+            let perfect = dietFiltered.filter { $0.missingIngredients?.isEmpty == true }
+            if !perfect.isEmpty { return perfect }
         }
+
+        return dietFiltered
     }
 
     var bestMatch: Recipe? {

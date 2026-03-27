@@ -75,7 +75,7 @@ struct JourneyView: View {
                 journeyStat(value: "\(viewModel.uniqueIngredientsUsed)", label: Strings.Journey.ingredientsRescued,
                             icon: Icons.Journey.leaf, color: theme.mint,
                             accessibilityID: AccessibilityID.Journey.Stats.ingredientsRescued)
-                journeyStat(value: String(format: "%.0f", viewModel.hoursCooking), label: Strings.Journey.hoursCooking,
+                journeyStat(value: viewModel.cookingTimeFormatted, label: Strings.Journey.hoursCooking,
                             icon: Icons.Journey.clock, color: theme.mint,
                             accessibilityID: AccessibilityID.Journey.Stats.hoursCooking)
             }

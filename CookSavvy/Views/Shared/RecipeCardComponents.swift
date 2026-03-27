@@ -56,7 +56,7 @@ struct RecipeImage: View {
                 }
             }
         }
-        .frame(maxWidth: .infinity, minHeight: height)
+        .frame(maxWidth: .infinity, minHeight: height, maxHeight: height)
         .clipped()
     }
 

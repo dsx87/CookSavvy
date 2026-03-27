@@ -32,6 +32,19 @@ final class JourneyViewModel: ObservableObject {
         self.coordinator = coordinator
     }
 
+    var cookingTimeFormatted: String {
+        let totalMinutes = Int(hoursCooking * 60)
+        let hours = totalMinutes / 60
+        let minutes = totalMinutes % 60
+        if hours == 0 {
+            return "\(minutes)m"
+        } else if minutes == 0 {
+            return "\(hours)h"
+        } else {
+            return "\(hours)h \(minutes)m"
+        }
+    }
+
     var unlockedCount: Int {
         achievements.filter(\.isUnlocked).count
     }

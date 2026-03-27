@@ -590,10 +590,10 @@ struct DiscoverView: View {
 
                 ZStack(alignment: .bottomLeading) {
                     RecipeImage(recipe: featured, height: UI.Discover.recipeImageHeight)
-                        .clipShape(RoundedRectangle(cornerRadius: UI.Discover.recipeCardCornerRadius, style: .continuous))
 
                     featuredHeroOverlay(for: featured)
                 }
+                .clipShape(RoundedRectangle(cornerRadius: UI.Discover.recipeCardCornerRadius, style: .continuous))
                 .contentShape(RoundedRectangle(cornerRadius: UI.Discover.recipeCardCornerRadius, style: .continuous))
                 .gesture(
                     TapGesture().onEnded {
@@ -612,14 +612,6 @@ struct DiscoverView: View {
         VStack(alignment: .leading, spacing: UI.Discover.featuredInfoSpacing) {
             if recipe.missingIngredients != nil || recipe.matchPercentage != nil {
                 matchIndicator(recipe: recipe, matchingIngredients: viewModel.matchingIngredientNames(for: recipe))
-            }
-            if let reason = recipe.matchReason {
-                Label(reason, systemImage: Icons.Discover.idea)
-                    .font(UI.Fonts.tinyCaption)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, UI.Discover.matchBadgePaddingH)
-                    .padding(.vertical, UI.Discover.matchBadgePaddingV)
-                    .background(.white.opacity(0.2), in: Capsule())
             }
             Text(recipe.title)
                 .font(UI.Fonts.title)
@@ -650,7 +642,6 @@ struct DiscoverView: View {
                 startPoint: .bottom, endPoint: .top
             )
         )
-        .clipShape(RoundedRectangle(cornerRadius: UI.Discover.recipeCardCornerRadius, style: .continuous))
     }
 
     @ViewBuilder

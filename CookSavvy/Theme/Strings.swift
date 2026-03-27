@@ -150,7 +150,7 @@ enum Strings {
         static let recipesCooked = String(localized: "journey.recipesCooked", defaultValue: "Recipes\nCooked")
         static let dayStreak = String(localized: "journey.dayStreak", defaultValue: "Day\nStreak")
         static let ingredientsRescued = String(localized: "journey.ingredientsRescued", defaultValue: "Ingredients\nRescued")
-        static let hoursCooking = String(localized: "journey.hoursCooking", defaultValue: "Hours\nCooking")
+        static let hoursCooking = String(localized: "journey.hoursCooking", defaultValue: "Time\nCooked")
         static let myRecipes = String(localized: "journey.myRecipes", defaultValue: "MY RECIPES")
         static let addRecipe = String(localized: "journey.addRecipe", defaultValue: "Add Recipe")
         static let allTime = String(localized: "journey.allTime", defaultValue: "ALL TIME")
