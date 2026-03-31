@@ -196,6 +196,7 @@ final class DiscoverViewModel: ObservableObject {
         _ = await (ingredientsTask, recentTask, savedTask)
         isLoadingIngredients = false
         Task { await loadSuggestions() }
+        Task { await reloadOnDatabaseReady() }
     }
 
     func toggleIngredient(_ ingredient: Ingredient) {
@@ -272,6 +273,7 @@ final class DiscoverViewModel: ObservableObject {
         loadingCollectionID = collection.id
         Task {
             defer { loadingCollectionID = nil }
+            await databaseInitService.waitForRecipes()
             let recipes = (try? await curatedCollectionService.getRecipes(for: collection)) ?? []
             coordinator?.showRecipeList(title: collection.title, recipes: recipes)
         }
@@ -316,6 +318,16 @@ final class DiscoverViewModel: ObservableObject {
     }
 
     // MARK: - Private
+
+    private func reloadOnDatabaseReady() async {
+        guard !databaseInitService.state.isRecipesReady else { return }
+        await databaseInitService.waitForRecipes()
+        async let ingredientsTask: () = loadIngredients()
+        async let recentTask: () = loadRecentRecipes()
+        async let savedTask: () = loadSavedRecipes()
+        async let suggestionsTask: () = loadSuggestions()
+        _ = await (ingredientsTask, recentTask, savedTask, suggestionsTask)
+    }
 
     private func loadCollections() {
         let isPremium = subscriptionService.canAccessFeature(.onlineRecipes)
