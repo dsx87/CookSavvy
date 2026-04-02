@@ -329,8 +329,9 @@ Extended documentation lives in the `docs/` directory:
 | `docs/IMAGE_SERVICE_README.md` | ImageService usage and API |
 | `docs/INGREDIENTS_SERVICE_README.md` | IngredientsService usage and API |
 | `docs/RECIPE_SERVICE_README.md` | RecipeService usage and API |
-| `docs/PRODUCT_ANALYSIS.md` | Product analysis and feature breakdown |
-| `docs/PRODUCT_AUDIT_GPT.md` | Product audit notes |
+| `prod/` | Product documentation — see `prod/00-README.md` for index |
+| `prod/2026-03-13/` | First product assessment (pre-improvements) |
+| `prod/2026-03-30/` | Current product assessment (analysis, audit, strategy, decisions log) |
 | `docs/MANUAL_QA_CHECKLIST.md` | Scenarios that remain manual after UI test automation |
 
 ## Workflow Rules
