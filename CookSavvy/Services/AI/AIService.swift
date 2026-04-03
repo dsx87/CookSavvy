@@ -13,21 +13,26 @@ final class AIService: AIServiceProtocol {
         category: "AIService"
     )
     
-    private let provider: LLMProviderProtocol
-    
-    init(provider: LLMProviderProtocol) {
+    private let provider: LLMProviderProtocol?
+
+    var isAvailable: Bool { provider.map { !$0.isMock } ?? false }
+
+    init(provider: LLMProviderProtocol?) {
         self.provider = provider
     }
-    
+
     func detectIngredients(from imageData: Data) async throws -> [Ingredient] {
         guard !imageData.isEmpty else {
             throw AIServiceError.invalidImageData
         }
-        
+        guard let provider else {
+            throw AIServiceError.providerError(.invalidAPIKey)
+        }
+
         let mimeType = detectMimeType(from: imageData)
         let prompt = Prompts.ingredientDetection
-        
-        Self.logger.debug("Sending vision request to \(self.provider.name)")
+
+        Self.logger.debug("Sending vision request to \(provider.name)")
         
         do {
             let response = try await provider.sendVisionRequest(
@@ -63,17 +68,20 @@ final class AIService: AIServiceProtocol {
         guard !ingredients.isEmpty else {
             throw AIServiceError.noIngredientsDetected
         }
-        
+        guard let provider else {
+            throw AIServiceError.providerError(.invalidAPIKey)
+        }
+
         let ingredientNames = ingredients.map { $0.name }.joined(separator: ", ")
         let prompt = Prompts.recipeGeneration(ingredients: ingredientNames, count: count)
-        
+
         let messages: [LLMMessage] = [
             LLMMessage(role: .system, content: Prompts.recipeSystemPrompt),
             LLMMessage(role: .user, content: prompt)
         ]
-        
-        Self.logger.debug("Sending chat request to \(self.provider.name)")
-        
+
+        Self.logger.debug("Sending chat request to \(provider.name)")
+
         do {
             let response = try await provider.sendChatRequest(
                 messages: messages,

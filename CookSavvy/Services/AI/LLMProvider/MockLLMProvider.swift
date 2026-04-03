@@ -9,6 +9,7 @@ import Foundation
 final class MockLLMProvider: LLMProviderProtocol {
     
     var name: String { "Mock" }
+    var isMock: Bool { true }
     
     private let simulatedDelay: TimeInterval
     private let shouldSucceed: Bool

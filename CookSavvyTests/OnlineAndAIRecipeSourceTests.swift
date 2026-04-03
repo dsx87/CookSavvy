@@ -73,10 +73,20 @@ final class AIRecipeSourceTests: XCTestCase {
         XCTAssertEqual(source.sourceType, .ai)
     }
 
-    func testAIRecipeSourceIsAvailable() async {
-        let source = AIRecipeSource(aiService: MockAIService())
+    func testAIRecipeSourceIsAvailableWhenServiceIsAvailable() async {
+        let mockService = MockAIService()
+        mockService.isAvailable = true
+        let source = AIRecipeSource(aiService: mockService)
         let available = await source.isAvailable()
-        XCTAssertTrue(available, "AI source should always be available")
+        XCTAssertTrue(available)
+    }
+
+    func testAIRecipeSourceIsUnavailableWhenServiceIsUnavailable() async {
+        let mockService = MockAIService()
+        mockService.isAvailable = false
+        let source = AIRecipeSource(aiService: mockService)
+        let available = await source.isAvailable()
+        XCTAssertFalse(available, "AI source should be unavailable when no real LLM provider is configured")
     }
 
     func testAIRecipeSourceFetchesFromAIService() async throws {
@@ -105,6 +115,7 @@ final class AIRecipeSourceTests: XCTestCase {
 }
 
 private final class MockAIService: AIServiceProtocol {
+    var isAvailable: Bool = true
     var generateRecipesCalled = false
     var shouldThrow = false
 

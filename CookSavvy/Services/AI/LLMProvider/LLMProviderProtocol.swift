@@ -7,7 +7,8 @@ import Foundation
 
 protocol LLMProviderProtocol {
     var name: String { get }
-    
+    var isMock: Bool { get }
+
     func sendVisionRequest(
         imageData: Data,
         mimeType: String,
@@ -22,6 +23,8 @@ protocol LLMProviderProtocol {
 }
 
 extension LLMProviderProtocol {
+    var isMock: Bool { false }
+
     func mapNetworkError(
         _ error: NetworkError,
         extractMessage: ((Data) -> String?)? = nil

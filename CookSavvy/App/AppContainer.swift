@@ -55,7 +55,7 @@ final class AppContainer {
         let network = NetworkService()
         self.networkService = network
         
-        let llmProvider: LLMProviderProtocol
+        let llmProvider: LLMProviderProtocol?
         #if DEBUG
         llmProvider = MockLLMProvider()
         #else
@@ -205,13 +205,12 @@ final class AppContainer {
     }
     #endif
 
-    private static func createProductionProvider(networkService: NetworkServiceProtocol) -> LLMProviderProtocol {
+    private static func createProductionProvider(networkService: NetworkServiceProtocol) -> LLMProviderProtocol? {
         if let openAIKey = APIKeyConfiguration.openAIKey, !openAIKey.isEmpty {
             return OpenAIProvider(apiKey: openAIKey, networkService: networkService)
         } else if let geminiKey = APIKeyConfiguration.geminiKey, !geminiKey.isEmpty {
             return GeminiProvider(apiKey: geminiKey, networkService: networkService)
         }
-        
-        return MockLLMProvider()
+        return nil
     }
 }

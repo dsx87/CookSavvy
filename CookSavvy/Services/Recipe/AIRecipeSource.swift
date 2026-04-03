@@ -23,6 +23,6 @@ final class AIRecipeSource: RecipeSourceProtocol {
     }
 
     func isAvailable() async -> Bool {
-        return true
+        return aiService.isAvailable
     }
 }
