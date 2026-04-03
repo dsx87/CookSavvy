@@ -107,28 +107,16 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.filteredRecipes.first?.title, "Warm Chicken Soup")
     }
 
-    func testDefaultSortingUsesParsedCookTimeMinutes() {
+    func testDefaultSortingPutsFewerMissingIngredientsFirst() {
         let vm = makeViewModel()
-        let quickRecipe = Recipe(
-            title: "Quick Pasta",
-            ingredients: [],
-            instructions: [Recipe.Step](),
-            image: "",
-            cleanedIngredients: [],
-            additionalInfo: Recipe.AdditionalInfo(time: "25-30 min", servings: nil, complexity: nil, calories: nil)
-        )
-        let slowRecipe = Recipe(
-            title: "Slow Stew",
-            ingredients: [],
-            instructions: [Recipe.Step](),
-            image: "",
-            cleanedIngredients: [],
-            additionalInfo: Recipe.AdditionalInfo(time: "1 hr", servings: nil, complexity: nil, calories: nil)
-        )
+        var fewerMissing = Recipe.mockRandom()
+        fewerMissing.missingIngredients = ["Salt"]
+        var moreMissing = Recipe.mockRandom()
+        moreMissing.missingIngredients = ["Salt", "Pepper", "Garlic"]
 
-        vm.searchResultRecipes = [slowRecipe, quickRecipe]
+        vm.searchResultRecipes = [moreMissing, fewerMissing]
 
-        XCTAssertEqual(vm.filteredRecipes.map(\.title), ["Quick Pasta", "Slow Stew"])
+        XCTAssertEqual(vm.filteredRecipes.first?.missingIngredients?.count, 1)
     }
 
     func testHasNoResultsWhenSearchCompletesEmpty() {
@@ -153,28 +141,17 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertFalse(vm.hasNoResults)
     }
 
-    func testDefaultSortingPutsNilCookTimeRecipesLast() {
+    func testDefaultSortingPutsNilMissingIngredientsLast() {
         let vm = makeViewModel()
-        let timedRecipe = Recipe(
-            title: "Quick Eggs",
-            ingredients: [],
-            instructions: [Recipe.Step](),
-            image: "",
-            cleanedIngredients: [],
-            additionalInfo: Recipe.AdditionalInfo(time: "10 min", servings: nil, complexity: nil, calories: nil)
-        )
-        let untimedRecipe = Recipe(
-            title: "Mystery Dish",
-            ingredients: [],
-            instructions: [Recipe.Step](),
-            image: "",
-            cleanedIngredients: [],
-            additionalInfo: .empty
-        )
+        var knownMissing = Recipe.mockRandom()
+        knownMissing.missingIngredients = ["Salt"]
+        var unknownMissing = Recipe.mockRandom()
+        unknownMissing.missingIngredients = nil
 
-        vm.searchResultRecipes = [untimedRecipe, timedRecipe]
+        vm.searchResultRecipes = [unknownMissing, knownMissing]
 
-        XCTAssertEqual(vm.filteredRecipes.map(\.title), ["Quick Eggs", "Mystery Dish"])
+        XCTAssertNotNil(vm.filteredRecipes.first?.missingIngredients)
+        XCTAssertNil(vm.filteredRecipes.last?.missingIngredients)
     }
 
     func testClearIngredientsResets() {

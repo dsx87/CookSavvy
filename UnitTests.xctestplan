@@ -13,7 +13,7 @@
   },
   "testTargets" : [
     {
-      "parallelizable" : true,
+      "parallelizable" : false,
       "selectedTests" : [
         "AIRecipeSourceTests\/testAIRecipeSourceFetchesFromAIService()",
         "AIRecipeSourceTests\/testAIRecipeSourceIsAvailableWhenServiceIsAvailable()",
@@ -112,8 +112,8 @@
         "DBInterfaceTests\/testSearchIngredientsReturnsSubstringMatchesCaseInsensitive()",
         "DatabaseInitializationServiceTests\/testMarkReadyForTestingSetsReadyState()",
         "DiscoverViewModelTests\/testClearIngredientsResets()",
-        "DiscoverViewModelTests\/testDefaultSortingPutsNilCookTimeRecipesLast()",
-        "DiscoverViewModelTests\/testDefaultSortingUsesParsedCookTimeMinutes()",
+        "DiscoverViewModelTests\/testDefaultSortingPutsFewerMissingIngredientsFirst()",
+        "DiscoverViewModelTests\/testDefaultSortingPutsNilMissingIngredientsLast()",
         "DiscoverViewModelTests\/testFindRecipesPopulatesResults()",
         "DiscoverViewModelTests\/testHasNoResultsIsFalseWhenResultsExist()",
         "DiscoverViewModelTests\/testHasNoResultsIsFalseWhileSearching()",
