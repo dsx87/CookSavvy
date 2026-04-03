@@ -15,7 +15,7 @@ final class AIService: AIServiceProtocol {
     
     private let provider: LLMProviderProtocol?
 
-    var isAvailable: Bool { provider.map { !$0.isMock } ?? false }
+    var isAvailable: Bool { provider != nil }
 
     init(provider: LLMProviderProtocol?) {
         self.provider = provider
