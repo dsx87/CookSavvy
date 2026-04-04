@@ -81,6 +81,12 @@ final class JourneyViewModel: ObservableObject {
         isLoading = false
     }
 
+    func refreshRecipeCollections() async {
+        async let savedTask: () = loadSavedRecipes()
+        async let recipesTask: () = loadUserRecipes()
+        _ = await (savedTask, recipesTask)
+    }
+
     // MARK: - Navigation
 
     func showRecipeDetails(_ recipe: Recipe) {
@@ -145,7 +151,7 @@ final class JourneyViewModel: ObservableObject {
 
     private func loadSavedRecipes() async {
         do {
-            savedRecipes = try await userDataService.getSavedRecipes()
+            savedRecipes = try await userDataService.getFavorites()
         } catch {
             print("❌ Failed to load saved recipes: \(error)")
         }
