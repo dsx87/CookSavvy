@@ -42,7 +42,7 @@ struct JourneyView: View {
         .onAppear {
             guard hasLoadedData else { return }
             Task {
-                await viewModel.refreshRecipeCollections()
+                await viewModel.loadData()
             }
         }
     }
