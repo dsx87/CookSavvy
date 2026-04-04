@@ -6,7 +6,7 @@
 import SwiftUI
 
 @MainActor
-final class JourneyCoordinator: ObservableObject, JourneyCoordinating {
+final class JourneyCoordinator: ObservableObject, JourneyCoordinating, RecipeListCoordinating {
     
     private let container: AppContainer
     let settingsCoordinator: SettingsCoordinator
@@ -76,7 +76,8 @@ final class JourneyCoordinator: ObservableObject, JourneyCoordinating {
         RecipeListViewModel(
             title: title,
             recipes: recipes,
-            userDataService: container.userDataService
+            userDataService: container.userDataService,
+            coordinator: self
         )
     }
 
@@ -99,6 +100,10 @@ final class JourneyCoordinator: ObservableObject, JourneyCoordinating {
     
     func showRecipeList(title: String, recipes: [Recipe]) {
         navigationPath.append(NavigationDestination.recipeList(title: title, recipes: recipes))
+    }
+
+    func showRecipeFromList(_ recipe: Recipe) {
+        showRecipeDetail(recipe: recipe)
     }
     
     func showSettings() {
@@ -214,8 +219,7 @@ struct JourneyCoordinatorView: View {
             )
         case .recipeList(let title, let recipes):
             RecipeListView(
-                viewModel: coordinator.makeRecipeListViewModel(title: title, recipes: recipes),
-                onRecipeTap: coordinator.showRecipeDetail(recipe:)
+                viewModel: coordinator.makeRecipeListViewModel(title: title, recipes: recipes)
             )
         case .settings:
             JourneySettingsDestination(settingsCoordinator: coordinator.settingsCoordinator)

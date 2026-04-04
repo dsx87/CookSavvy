@@ -4,7 +4,6 @@ struct DiscoverView: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @StateObject var viewModel: DiscoverViewModel
-    @State private var isMatchInfoPopoverPresented = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -702,14 +701,14 @@ struct DiscoverView: View {
             Text(label)
                 .font(UI.Fonts.smallCaptionBold)
             Button {
-                isMatchInfoPopoverPresented = true
+                viewModel.isMatchInfoPopoverPresented = true
             } label: {
                 Image(systemName: Icons.Discover.matchInfo)
                     .font(UI.Fonts.tinyCaption)
                     .frame(width: UI.Discover.matchInfoButtonSize, height: UI.Discover.matchInfoButtonSize)
             }
             .buttonStyle(.plain)
-            .popover(isPresented: $isMatchInfoPopoverPresented) {
+            .popover(isPresented: $viewModel.isMatchInfoPopoverPresented) {
                 MatchDetailsPopover(ingredients: matchingIngredients)
             }
         }

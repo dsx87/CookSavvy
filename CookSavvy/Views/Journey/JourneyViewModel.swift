@@ -29,6 +29,7 @@ final class JourneyViewModel: ObservableObject {
     private let cameraScanTracker: CameraScanTrackerProtocol
     private let analyticsService: AnalyticsServiceProtocol
     private weak var coordinator: (any JourneyCoordinating)?
+    private var hasLoadedData = false
 
     init(
         userDataService: UserDataServiceProtocol,
@@ -67,6 +68,19 @@ final class JourneyViewModel: ObservableObject {
 
     var weekdayLabels: [String] {
         ["M", "T", "W", "T", "F", "S", "S"]
+    }
+
+    func loadDataIfNeeded() async {
+        guard !hasLoadedData else { return }
+        hasLoadedData = true
+        await loadData()
+    }
+
+    func reloadDataOnAppear() {
+        guard hasLoadedData else { return }
+        Task {
+            await loadData()
+        }
     }
 
     func loadData() async {

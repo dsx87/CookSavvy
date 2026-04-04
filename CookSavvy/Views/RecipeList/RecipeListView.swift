@@ -3,7 +3,6 @@ import SwiftUI
 struct RecipeListView: View {
     @Environment(\.appTheme) private var theme
     @StateObject var viewModel: RecipeListViewModel
-    var onRecipeTap: ((Recipe) -> Void)?
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -12,7 +11,7 @@ struct RecipeListView: View {
                     RecipeRow(recipe: recipe, isSaved: viewModel.isSaved(recipe))
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            onRecipeTap?(recipe)
+                            viewModel.showRecipeDetails(recipe)
                         }
                         .accessibilityAddTraits(.isButton)
                 }

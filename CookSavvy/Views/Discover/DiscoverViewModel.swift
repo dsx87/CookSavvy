@@ -38,6 +38,7 @@ final class DiscoverViewModel: ObservableObject {
     @Published var activeDietaryRestrictions: Set<DietaryRestriction> = []
     @Published var collections: [CuratedCollection] = []
     @Published var loadingCollectionID: String? = nil
+    @Published var isMatchInfoPopoverPresented = false
 
     // MARK: - Dependencies
 

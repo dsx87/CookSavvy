@@ -3,7 +3,6 @@ import SwiftUI
 struct JourneyView: View {
     @Environment(\.appTheme) private var theme
     @StateObject var viewModel: JourneyViewModel
-    @State private var hasLoadedData = false
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -24,15 +23,10 @@ struct JourneyView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { settingsToolbarItem }
         .task {
-            guard !hasLoadedData else { return }
-            hasLoadedData = true
-            await viewModel.loadData()
+            await viewModel.loadDataIfNeeded()
         }
         .onAppear {
-            guard hasLoadedData else { return }
-            Task {
-                await viewModel.loadData()
-            }
+            viewModel.reloadDataOnAppear()
         }
     }
 

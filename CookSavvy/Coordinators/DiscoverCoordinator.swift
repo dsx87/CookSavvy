@@ -6,7 +6,7 @@
 import SwiftUI
 
 @MainActor
-final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating {
+final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating, RecipeListCoordinating {
     
     private let container: AppContainer
     @Published var navigationPath = NavigationPath()
@@ -92,7 +92,8 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating {
         RecipeListViewModel(
             title: title,
             recipes: recipes,
-            userDataService: container.userDataService
+            userDataService: container.userDataService,
+            coordinator: self
         )
     }
 
@@ -115,6 +116,10 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating {
     
     func showRecipeList(title: String, recipes: [Recipe]) {
         navigationPath.append(NavigationDestination.recipeList(title: title, recipes: recipes))
+    }
+
+    func showRecipeFromList(_ recipe: Recipe) {
+        showRecipeDetails(recipe: recipe)
     }
     
     func showCookMode(recipe: Recipe) {
@@ -210,10 +215,7 @@ struct DiscoverCoordinatorView: View {
                         )
                     case .recipeList(let title, let recipes):
                         RecipeListView(
-                            viewModel: coordinator.makeRecipeListViewModel(title: title, recipes: recipes),
-                            onRecipeTap: { recipe in
-                                coordinator.showRecipeDetails(recipe: recipe)
-                            }
+                            viewModel: coordinator.makeRecipeListViewModel(title: title, recipes: recipes)
                         )
                     }
                 }
