@@ -22,18 +22,7 @@ struct JourneyView: View {
         .background(theme.bg)
         .navigationTitle(Strings.Journey.navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    viewModel.showSettings()
-                } label: {
-                    Image(systemName: Icons.Journey.settings)
-                        .foregroundStyle(theme.text2)
-                }
-                .accessibilityIdentifier(AccessibilityID.Journey.settingsButton)
-                .accessibilityLabel(Strings.Accessibility.settingsButton)
-            }
-        }
+        .toolbar { settingsToolbarItem }
         .task {
             guard !hasLoadedData else { return }
             hasLoadedData = true
@@ -47,49 +36,23 @@ struct JourneyView: View {
         }
     }
 
+    private var settingsToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                viewModel.showSettings()
+            } label: {
+                Image(systemName: Icons.Journey.settings)
+                    .foregroundStyle(theme.text2)
+            }
+            .accessibilityIdentifier(AccessibilityID.Journey.settingsButton)
+            .accessibilityLabel(Strings.Accessibility.settingsButton)
+        }
+    }
+
     private var savedRecipesSection: some View {
         VStack(alignment: .leading, spacing: UI.Journey.myRecipesSpacing) {
-            HStack {
-                Text(Strings.Journey.savedRecipes)
-                    .sectionLabel()
-                    .accessibilityAddTraits(.isHeader)
-                Spacer()
-                if !viewModel.savedRecipes.isEmpty {
-                    Button {
-                        viewModel.showRecipeList(
-                            title: Strings.RecipeList.savedRecipes,
-                            recipes: viewModel.savedRecipes
-                        )
-                    } label: {
-                        Text(Strings.Journey.seeAll)
-                            .font(UI.Fonts.captionSemibold)
-                            .foregroundStyle(theme.accent)
-                    }
-                }
-            }
-
-            if viewModel.savedRecipes.isEmpty {
-                Text(Strings.Journey.savedRecipesEmpty)
-                    .font(UI.Fonts.caption)
-                    .foregroundStyle(theme.text3)
-                    .padding(.vertical, UI.Journey.shortcutButtonPaddingV)
-                    .padding(.horizontal, UI.Journey.shortcutHorizontalPadding)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .frostCard(cornerRadius: UI.Common.cardCornerRadius)
-            } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: UI.Journey.myRecipesSpacing) {
-                        ForEach(viewModel.savedRecipes) { recipe in
-                            MiniRecipeCard(recipe: recipe)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    viewModel.showRecipeDetails(recipe)
-                                }
-                                .accessibilityAddTraits(.isButton)
-                        }
-                    }
-                }
-            }
+            savedRecipesHeader
+            savedRecipesContent
         }
         .accessibilityIdentifier(AccessibilityID.Journey.savedRecipes)
     }
@@ -115,6 +78,50 @@ struct JourneyView: View {
             allTimeStatsContent
             monthlyStatsContent
             weeklyActivityContent
+        }
+    }
+
+    private var savedRecipesHeader: some View {
+        HStack {
+            Text(Strings.Journey.savedRecipes)
+                .sectionLabel()
+                .accessibilityAddTraits(.isHeader)
+            Spacer()
+            if !viewModel.savedRecipes.isEmpty {
+                seeAllButton(
+                    title: Strings.RecipeList.savedRecipes,
+                    recipes: viewModel.savedRecipes
+                )
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var savedRecipesContent: some View {
+        if viewModel.savedRecipes.isEmpty {
+            emptySavedRecipesView
+        } else {
+            savedRecipesCarousel
+        }
+    }
+
+    private var emptySavedRecipesView: some View {
+        Text(Strings.Journey.savedRecipesEmpty)
+            .font(UI.Fonts.caption)
+            .foregroundStyle(theme.text3)
+            .padding(.vertical, UI.Journey.shortcutButtonPaddingV)
+            .padding(.horizontal, UI.Journey.shortcutHorizontalPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frostCard(cornerRadius: UI.Common.cardCornerRadius)
+    }
+
+    private var savedRecipesCarousel: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: UI.Journey.myRecipesSpacing) {
+                ForEach(viewModel.savedRecipes) { recipe in
+                    recipeCard(recipe)
+                }
+            }
         }
     }
 
@@ -189,15 +196,7 @@ struct JourneyView: View {
                 .sectionLabel()
                 .accessibilityAddTraits(.isHeader)
 
-            HStack(spacing: UI.Journey.dayCircleSpacing) {
-                ForEach(Array(viewModel.weekdayLabels.enumerated()), id: \.offset) { index, day in
-                    WeekdayDotView(
-                        isActive: viewModel.isActiveDay(index),
-                        isToday: viewModel.isTodayIndex(index),
-                        label: day
-                    )
-                }
-            }
+            weeklyActivityDots
             .padding(UI.Journey.weeklyPadding)
             .frostCard()
         }
@@ -206,47 +205,8 @@ struct JourneyView: View {
 
     private var myRecipesSection: some View {
         VStack(alignment: .leading, spacing: UI.Journey.myRecipesSpacing) {
-            HStack {
-                Text(Strings.Journey.myRecipes)
-                    .sectionLabel()
-                    .accessibilityAddTraits(.isHeader)
-                Spacer()
-                if !viewModel.userRecipes.isEmpty {
-                    Text("\(viewModel.userRecipes.count) recipes")
-                        .font(UI.Fonts.smallCaptionMedium)
-                        .foregroundStyle(theme.text3)
-                    Button {
-                        viewModel.showRecipeList(
-                            title: Strings.RecipeList.myRecipes,
-                            recipes: viewModel.userRecipes
-                        )
-                    } label: {
-                        Text(Strings.Journey.seeAll)
-                            .font(UI.Fonts.captionSemibold)
-                            .foregroundStyle(theme.accent)
-                    }
-                }
-            }
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: UI.Journey.myRecipesSpacing) {
-                    Button {
-                        viewModel.showCreateRecipe()
-                    } label: {
-                        CreateRecipeCard()
-                    }
-                    .buttonStyle(.plain)
-
-                    ForEach(viewModel.userRecipes) { recipe in
-                        UserMiniRecipeCard(recipe: recipe)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                viewModel.showRecipeDetails(recipe)
-                            }
-                            .accessibilityAddTraits(.isButton)
-                    }
-                }
-            }
+            myRecipesHeader
+            myRecipesCarousel
 
             if viewModel.userRecipes.isEmpty {
                 Text(Strings.Journey.shareCreations)
@@ -257,26 +217,52 @@ struct JourneyView: View {
         .accessibilityIdentifier(AccessibilityID.Journey.myRecipes)
     }
 
+    private var weeklyActivityDots: some View {
+        HStack(spacing: UI.Journey.dayCircleSpacing) {
+            ForEach(Array(viewModel.weekdayLabels.enumerated()), id: \.offset) { index, day in
+                WeekdayDotView(
+                    isActive: viewModel.isActiveDay(index),
+                    isToday: viewModel.isTodayIndex(index),
+                    label: day
+                )
+            }
+        }
+    }
+
+    private var myRecipesHeader: some View {
+        HStack {
+            Text(Strings.Journey.myRecipes)
+                .sectionLabel()
+                .accessibilityAddTraits(.isHeader)
+            Spacer()
+            if !viewModel.userRecipes.isEmpty {
+                Text(recipeCountText)
+                    .font(UI.Fonts.smallCaptionMedium)
+                    .foregroundStyle(theme.text3)
+                seeAllButton(
+                    title: Strings.RecipeList.myRecipes,
+                    recipes: viewModel.userRecipes
+                )
+            }
+        }
+    }
+
+    private var myRecipesCarousel: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: UI.Journey.myRecipesSpacing) {
+                createRecipeButton
+
+                ForEach(viewModel.userRecipes) { recipe in
+                    userRecipeCard(recipe)
+                }
+            }
+        }
+    }
+
     private var achievementsSection: some View {
         VStack(alignment: .leading, spacing: UI.Journey.achievementSpacing) {
-            HStack {
-                Text(Strings.Journey.milestones)
-                    .sectionLabel()
-                    .accessibilityAddTraits(.isHeader)
-                Spacer()
-                Text(String(format: Strings.Journey.milestonesEarned, viewModel.unlockedCount, viewModel.achievements.count))
-                    .font(UI.Fonts.captionSemibold)
-                    .foregroundStyle(theme.text2)
-            }
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: UI.Journey.achievementBadgeSpacing) {
-                    ForEach(viewModel.achievements) { achievement in
-                        achievementBadge(achievement)
-                    }
-                }
-                .padding(.horizontal, UI.Journey.achievementBadgeHorizontalPadding)
-            }
+            achievementsHeader
+            achievementsCarousel
         }
         .accessibilityIdentifier(AccessibilityID.Journey.achievements)
     }
@@ -318,17 +304,85 @@ struct JourneyView: View {
                     .sectionLabel()
                     .accessibilityAddTraits(.isHeader)
 
-                VStack(spacing: 0) {
-                    ForEach(Array(viewModel.recentSessions.enumerated()), id: \.element.id) { index, session in
-                        ActivitySessionRow(
-                            session: session,
-                            showDivider: index < viewModel.recentSessions.count - 1
-                        )
-                    }
-                }
-                .frostCard(cornerRadius: UI.Common.cardCornerRadius)
+                recentActivityContent
             }
             .accessibilityIdentifier(AccessibilityID.Journey.recentActivity)
         }
+    }
+
+    private var achievementsHeader: some View {
+        HStack {
+            Text(Strings.Journey.milestones)
+                .sectionLabel()
+                .accessibilityAddTraits(.isHeader)
+            Spacer()
+            Text(String(format: Strings.Journey.milestonesEarned, viewModel.unlockedCount, viewModel.achievements.count))
+                .font(UI.Fonts.captionSemibold)
+                .foregroundStyle(theme.text2)
+        }
+    }
+
+    private var achievementsCarousel: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: UI.Journey.achievementBadgeSpacing) {
+                ForEach(viewModel.achievements) { achievement in
+                    achievementBadge(achievement)
+                }
+            }
+            .padding(.horizontal, UI.Journey.achievementBadgeHorizontalPadding)
+        }
+    }
+
+    private var recentActivityContent: some View {
+        VStack(spacing: 0) {
+            ForEach(Array(viewModel.recentSessions.enumerated()), id: \.element.id) { index, session in
+                ActivitySessionRow(
+                    session: session,
+                    showDivider: index < viewModel.recentSessions.count - 1
+                )
+            }
+        }
+        .frostCard(cornerRadius: UI.Common.cardCornerRadius)
+    }
+
+    private var recipeCountText: String {
+        String(format: Strings.Journey.recipeCount, viewModel.userRecipes.count)
+    }
+
+    private func seeAllButton(title: String, recipes: [Recipe]) -> some View {
+        Button {
+            viewModel.showRecipeList(title: title, recipes: recipes)
+        } label: {
+            Text(Strings.Journey.seeAll)
+                .font(UI.Fonts.captionSemibold)
+                .foregroundStyle(theme.accent)
+        }
+    }
+
+    private func recipeCard(_ recipe: Recipe) -> some View {
+        MiniRecipeCard(recipe: recipe)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                viewModel.showRecipeDetails(recipe)
+            }
+            .accessibilityAddTraits(.isButton)
+    }
+
+    private var createRecipeButton: some View {
+        Button {
+            viewModel.showCreateRecipe()
+        } label: {
+            CreateRecipeCard()
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func userRecipeCard(_ recipe: Recipe) -> some View {
+        UserMiniRecipeCard(recipe: recipe)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                viewModel.showRecipeDetails(recipe)
+            }
+            .accessibilityAddTraits(.isButton)
     }
 }

@@ -151,6 +151,7 @@ enum Strings {
         static let kitchenStats = String(localized: "journey.kitchenStats", defaultValue: "KITCHEN STATS")
         static let myRecipes = String(localized: "journey.myRecipes", defaultValue: "MY RECIPES")
         static let addRecipe = String(localized: "journey.addRecipe", defaultValue: "Add Recipe")
+        static let recipeCount = String(localized: "journey.recipeCount", defaultValue: "%lld recipes")
         static let allTime = String(localized: "journey.allTime", defaultValue: "ALL TIME")
         static let thisWeek = String(localized: "journey.thisWeek", defaultValue: "THIS WEEK")
         static let achievements = String(localized: "journey.achievements", defaultValue: "ACHIEVEMENTS")

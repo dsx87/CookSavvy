@@ -182,53 +182,71 @@ struct JourneyCoordinatorView: View {
     }
 
     var body: some View {
-        NavigationStack(path: $coordinator.navigationPath) {
-            JourneyView(viewModel: journeyViewModel)
-                .navigationDestination(for: JourneyCoordinator.NavigationDestination.self) { destination in
-                    switch destination {
-                    case .recipeDetail(let recipe):
-                        RecipeDetailsView(
-                            viewModel: coordinator.makeRecipeDetailsViewModel(recipe: recipe)
-                        )
-                    case .recipeList(let title, let recipes):
-                        RecipeListView(
-                            viewModel: coordinator.makeRecipeListViewModel(title: title, recipes: recipes),
-                            onRecipeTap: { recipe in
-                                coordinator.showRecipeDetail(recipe: recipe)
-                            }
-                        )
-                    case .settings:
-                        JourneySettingsDestination(settingsCoordinator: coordinator.settingsCoordinator)
-                    }
-                }
-        }
+        navigationContent
         .fullScreenCover(
             item: $coordinator.presentedFullScreenCover,
-            onDismiss: {
-                Task { await journeyViewModel.loadData() }
-            }
-        ) { destination in
-            switch destination {
-            case .cookMode(let recipe):
-                CookModeView(
-                    viewModel: coordinator.makeCookModeViewModel(recipe: recipe)
-                )
-            }
-        }
+            onDismiss: reloadJourneyData,
+            content: fullScreenDestinationView
+        )
         .sheet(
             item: $coordinator.presentedSheet,
-            onDismiss: {
-                Task { await journeyViewModel.loadData() }
-            }
-        ) { sheet in
-            switch sheet {
-            case .upgrade:
-                UpgradeView(viewModel: coordinator.makeUpgradeViewModel())
-            case .createRecipe:
-                CreateRecipeView(viewModel: coordinator.makeCreateRecipeViewModel())
-            case .shoppingList:
-                ShoppingListView(viewModel: coordinator.makeShoppingListViewModel())
-            }
+            onDismiss: reloadJourneyData,
+            content: sheetDestinationView
+        )
+    }
+
+    private var navigationContent: some View {
+        NavigationStack(path: $coordinator.navigationPath) {
+            JourneyView(viewModel: journeyViewModel)
+                .navigationDestination(
+                    for: JourneyCoordinator.NavigationDestination.self,
+                    destination: navigationDestinationView
+                )
+        }
+    }
+
+    @ViewBuilder
+    private func navigationDestinationView(_ destination: JourneyCoordinator.NavigationDestination) -> some View {
+        switch destination {
+        case .recipeDetail(let recipe):
+            RecipeDetailsView(
+                viewModel: coordinator.makeRecipeDetailsViewModel(recipe: recipe)
+            )
+        case .recipeList(let title, let recipes):
+            RecipeListView(
+                viewModel: coordinator.makeRecipeListViewModel(title: title, recipes: recipes),
+                onRecipeTap: coordinator.showRecipeDetail(recipe:)
+            )
+        case .settings:
+            JourneySettingsDestination(settingsCoordinator: coordinator.settingsCoordinator)
+        }
+    }
+
+    @ViewBuilder
+    private func fullScreenDestinationView(_ destination: JourneyCoordinator.FullScreenCoverDestination) -> some View {
+        switch destination {
+        case .cookMode(let recipe):
+            CookModeView(
+                viewModel: coordinator.makeCookModeViewModel(recipe: recipe)
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func sheetDestinationView(_ sheet: JourneyCoordinator.SheetDestination) -> some View {
+        switch sheet {
+        case .upgrade:
+            UpgradeView(viewModel: coordinator.makeUpgradeViewModel())
+        case .createRecipe:
+            CreateRecipeView(viewModel: coordinator.makeCreateRecipeViewModel())
+        case .shoppingList:
+            ShoppingListView(viewModel: coordinator.makeShoppingListViewModel())
+        }
+    }
+
+    private func reloadJourneyData() {
+        Task {
+            await journeyViewModel.loadData()
         }
     }
 }
@@ -246,11 +264,17 @@ struct JourneySettingsDestination: View {
     
     var body: some View {
         SettingsView(viewModel: viewModel)
-            .sheet(item: $settingsCoordinator.presentedSheet) { sheet in
-                switch sheet {
-                case .upgrade:
-                    UpgradeView(viewModel: settingsCoordinator.makeUpgradeViewModel())
-                }
-            }
+            .sheet(
+                item: $settingsCoordinator.presentedSheet,
+                content: settingsSheetView
+            )
+    }
+
+    @ViewBuilder
+    private func settingsSheetView(_ sheet: SettingsCoordinator.SheetDestination) -> some View {
+        switch sheet {
+        case .upgrade:
+            UpgradeView(viewModel: settingsCoordinator.makeUpgradeViewModel())
+        }
     }
 }

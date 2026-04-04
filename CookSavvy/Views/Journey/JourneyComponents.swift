@@ -8,23 +8,7 @@ struct WeekdayDotView: View {
 
     var body: some View {
         VStack(spacing: UI.Journey.dayCircleSpacing) {
-            Circle()
-                .fill(isActive ? theme.accent : theme.surface)
-                .frame(width: UI.Journey.dayCircleSize, height: UI.Journey.dayCircleSize)
-                .overlay(
-                    Group {
-                        if isActive {
-                            Image(systemName: Icons.Journey.checkmark)
-                                .font(UI.Fonts.smallCaptionBold)
-                                .foregroundStyle(.white)
-                        }
-                    }
-                )
-                .overlay(
-                    Circle()
-                        .strokeBorder(isToday ? theme.accent : .clear, lineWidth: UI.Journey.dayTodayBorderWidth)
-                        .frame(width: UI.Journey.dayTodayCircleSize, height: UI.Journey.dayTodayCircleSize)
-                )
+            dayCircle
 
             Text(label)
                 .font(UI.Fonts.tinyCaptionMedium)
@@ -35,6 +19,29 @@ struct WeekdayDotView: View {
         .accessibilityLabel(isActive
             ? String(format: Strings.Accessibility.weekdayActive, label)
             : String(format: Strings.Accessibility.weekdayInactive, label))
+    }
+
+    private var dayCircle: some View {
+        Circle()
+            .fill(isActive ? theme.accent : theme.surface)
+            .frame(width: UI.Journey.dayCircleSize, height: UI.Journey.dayCircleSize)
+            .overlay { dayStatusIcon }
+            .overlay { todayBorder }
+    }
+
+    @ViewBuilder
+    private var dayStatusIcon: some View {
+        if isActive {
+            Image(systemName: Icons.Journey.checkmark)
+                .font(UI.Fonts.smallCaptionBold)
+                .foregroundStyle(.white)
+        }
+    }
+
+    private var todayBorder: some View {
+        Circle()
+            .strokeBorder(isToday ? theme.accent : .clear, lineWidth: UI.Journey.dayTodayBorderWidth)
+            .frame(width: UI.Journey.dayTodayCircleSize, height: UI.Journey.dayTodayCircleSize)
     }
 }
 
@@ -120,46 +127,65 @@ struct ShoppingListShortcutCard: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: UI.Journey.shortcutContentSpacing) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: UI.Journey.activityIconCornerRadius, style: .continuous)
-                        .fill(theme.accentSoft)
-                        .frame(width: UI.Journey.shortcutIconSize, height: UI.Journey.shortcutIconSize)
-                    Image(systemName: Icons.Journey.cart)
-                        .font(UI.Fonts.iconMedium)
-                        .foregroundStyle(theme.accent)
-                }
-
-                VStack(alignment: .leading, spacing: UI.Journey.shortcutTextSpacing) {
-                    Text(Strings.ShoppingList.navigationTitle)
-                        .font(UI.Fonts.bodySemibold)
-                        .foregroundStyle(theme.text1)
-                    Text(isPremium ? Strings.Journey.shoppingListReady : Strings.Journey.shoppingListPremium)
-                        .font(UI.Fonts.caption)
-                        .foregroundStyle(theme.text3)
-                        .multilineTextAlignment(.leading)
-                }
-
-                Spacer(minLength: 0)
-
-                HStack(spacing: UI.Journey.shortcutButtonSpacing) {
-                    Text(isPremium ? Strings.Journey.openList : Strings.Journey.unlockShoppingList)
-                        .font(UI.Fonts.captionSemibold)
-                    Image(systemName: Icons.Settings.chevronRight)
-                        .font(UI.Fonts.smallCaptionBold)
-                }
-                .foregroundStyle(theme.accent)
-                .padding(.horizontal, UI.Journey.shortcutButtonPaddingH)
-                .padding(.vertical, UI.Journey.shortcutButtonPaddingV)
-                .background(theme.accentSoft, in: Capsule())
-            }
-            .padding(.vertical, UI.Journey.shortcutVerticalPadding)
-            .padding(.horizontal, UI.Journey.shortcutHorizontalPadding)
-            .frostCard(cornerRadius: UI.Common.cardCornerRadius)
-        }
+        Button(action: action, label: cardContent)
         .buttonStyle(.plain)
         .accessibilityIdentifier(AccessibilityID.Journey.shoppingListShortcut)
+    }
+
+    private var shoppingListDescription: String {
+        isPremium ? Strings.Journey.shoppingListReady : Strings.Journey.shoppingListPremium
+    }
+
+    private var shoppingListActionTitle: String {
+        isPremium ? Strings.Journey.openList : Strings.Journey.unlockShoppingList
+    }
+
+    private func cardContent() -> some View {
+        HStack(spacing: UI.Journey.shortcutContentSpacing) {
+            shortcutIcon
+            shortcutText
+            Spacer(minLength: 0)
+            shortcutAction
+        }
+        .padding(.vertical, UI.Journey.shortcutVerticalPadding)
+        .padding(.horizontal, UI.Journey.shortcutHorizontalPadding)
+        .frostCard(cornerRadius: UI.Common.cardCornerRadius)
+    }
+
+    private var shortcutIcon: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: UI.Journey.activityIconCornerRadius, style: .continuous)
+                .fill(theme.accentSoft)
+                .frame(width: UI.Journey.shortcutIconSize, height: UI.Journey.shortcutIconSize)
+            Image(systemName: Icons.Journey.cart)
+                .font(UI.Fonts.iconMedium)
+                .foregroundStyle(theme.accent)
+        }
+    }
+
+    private var shortcutText: some View {
+        VStack(alignment: .leading, spacing: UI.Journey.shortcutTextSpacing) {
+            Text(Strings.ShoppingList.navigationTitle)
+                .font(UI.Fonts.bodySemibold)
+                .foregroundStyle(theme.text1)
+            Text(shoppingListDescription)
+                .font(UI.Fonts.caption)
+                .foregroundStyle(theme.text3)
+                .multilineTextAlignment(.leading)
+        }
+    }
+
+    private var shortcutAction: some View {
+        HStack(spacing: UI.Journey.shortcutButtonSpacing) {
+            Text(shoppingListActionTitle)
+                .font(UI.Fonts.captionSemibold)
+            Image(systemName: Icons.Settings.chevronRight)
+                .font(UI.Fonts.smallCaptionBold)
+        }
+        .foregroundStyle(theme.accent)
+        .padding(.horizontal, UI.Journey.shortcutButtonPaddingH)
+        .padding(.vertical, UI.Journey.shortcutButtonPaddingV)
+        .background(theme.accentSoft, in: Capsule())
     }
 }
 
@@ -207,11 +233,15 @@ struct UserMiniRecipeCard: View {
         ZStack(alignment: .topTrailing) {
             MiniRecipeCard(recipe: recipe)
 
-            Image(systemName: "pencil.circle.fill")
+            Image(systemName: userRecipeIcon)
                 .font(.system(size: UI.Components.userCardIconSize))
                 .foregroundStyle(theme.accent)
                 .background(theme.card, in: Circle())
                 .offset(x: -UI.Components.userCardOffset, y: UI.Components.userCardOffset)
         }
+    }
+
+    private var userRecipeIcon: String {
+        "\(Icons.Journey.pencil).circle.fill"
     }
 }

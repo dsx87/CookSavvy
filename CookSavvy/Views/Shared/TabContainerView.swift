@@ -14,21 +14,28 @@ struct TabContainerView: View {
     
     var body: some View {
         TabView {
-            coordinator.discoverCoordinator(container: container).start()
-                .tabItem {
-                    Image(systemName: Icons.Tab.discover)
-                    Text(Strings.Tab.discover)
-                }
-                .accessibilityIdentifier(AccessibilityID.Tab.discover)
-
-            coordinator.journeyCoordinator(container: container).start()
-                .tabItem {
-                    Image(systemName: Icons.Tab.myKitchen)
-                    Text(Strings.Tab.journey)
-                }
-                .accessibilityIdentifier(AccessibilityID.Tab.journey)
+            discoverTab
+            journeyTab
         }
         .tint(theme.accent)
+    }
+
+    private var discoverTab: some View {
+        coordinator.discoverCoordinator(container: container).start()
+            .tabItem {
+                Image(systemName: Icons.Tab.discover)
+                Text(Strings.Tab.discover)
+            }
+            .accessibilityIdentifier(AccessibilityID.Tab.discover)
+    }
+
+    private var journeyTab: some View {
+        coordinator.journeyCoordinator(container: container).start()
+            .tabItem {
+                Image(systemName: Icons.Tab.myKitchen)
+                Text(Strings.Tab.journey)
+            }
+            .accessibilityIdentifier(AccessibilityID.Tab.journey)
     }
 }
 
