@@ -144,7 +144,7 @@ enum Strings {
         static let savedRecipesEmpty = String(localized: "journey.savedRecipesEmpty", defaultValue: "Start saving recipes to see them here.")
         static let recentCooks = String(localized: "journey.recentCooks", defaultValue: "RECENT COOKS")
         static let shoppingList = String(localized: "journey.shoppingList", defaultValue: "SHOPPING LIST")
-        static let shoppingListReady = String(localized: "journey.shoppingListReady", defaultValue: "Keep missing ingredients in one place for your next store run.")
+        static let shoppingListReady = String(localized: "journey.shoppingListReady", defaultValue: "Review missing ingredients before your next store run.")
         static let shoppingListPremium = String(localized: "journey.shoppingListPremium", defaultValue: "Unlock the shopping list to keep missing ingredients organized by recipe.")
         static let openList = String(localized: "journey.openList", defaultValue: "Open List")
         static let unlockShoppingList = String(localized: "journey.unlockShoppingList", defaultValue: "Unlock Shopping List")

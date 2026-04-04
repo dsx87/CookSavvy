@@ -6,7 +6,7 @@
 import SwiftUI
 
 @MainActor
-final class JourneyCoordinator: ObservableObject, RecipeDetailsCoordinating, JourneyCoordinating {
+final class JourneyCoordinator: ObservableObject, JourneyCoordinating {
     
     private let container: AppContainer
     let settingsCoordinator: SettingsCoordinator
