@@ -7,6 +7,25 @@ struct CookingSession: Identifiable, Hashable {
     let cookedAt: Date
     let durationSeconds: TimeInterval?
     let rating: Int?
+    let rescuedIngredients: [Ingredient]
+
+    init(
+        id: Int,
+        recipeId: Int,
+        recipeTitle: String,
+        cookedAt: Date,
+        durationSeconds: TimeInterval?,
+        rating: Int?,
+        rescuedIngredients: [Ingredient] = []
+    ) {
+        self.id = id
+        self.recipeId = recipeId
+        self.recipeTitle = recipeTitle
+        self.cookedAt = cookedAt
+        self.durationSeconds = durationSeconds
+        self.rating = rating
+        self.rescuedIngredients = rescuedIngredients
+    }
 
     var durationFormatted: String? {
         guard let duration = durationSeconds else { return nil }

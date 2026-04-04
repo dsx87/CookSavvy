@@ -1719,6 +1719,39 @@
         }
       }
     },
+    "journey.cookAgain" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cook Again"
+          }
+        }
+      }
+    },
+    "journey.cookAgainErrorMessage" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This recipe couldn't be loaded right now. Please try again later."
+          }
+        }
+      }
+    },
+    "journey.cookAgainErrorTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Recipe Unavailable"
+          }
+        }
+      }
+    },
     "journey.dayStreak" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {

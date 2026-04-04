@@ -13,6 +13,7 @@ final class JourneyCoordinator: ObservableObject, JourneyCoordinating, RecipeLis
     @Published var navigationPath = NavigationPath()
     @Published var presentedSheet: SheetDestination?
     @Published var presentedFullScreenCover: FullScreenCoverDestination?
+    private var recipeDetailSelectedIngredients: [String: [Ingredient]] = [:]
     
     init(container: AppContainer, settingsCoordinator: SettingsCoordinator) {
         self.container = container
@@ -25,9 +26,10 @@ final class JourneyCoordinator: ObservableObject, JourneyCoordinating, RecipeLis
     
     // MARK: - Factory Methods
     
-    func makeRecipeDetailsViewModel(recipe: Recipe) -> RecipeDetailsViewModel {
+    func makeRecipeDetailsViewModel(recipe: Recipe, selectedIngredients: [Ingredient] = []) -> RecipeDetailsViewModel {
         RecipeDetailsViewModel(
             recipe: recipe,
+            selectedIngredients: selectedIngredients,
             userDataService: container.userDataService,
             shoppingListService: container.shoppingListService,
             subscriptionService: container.subscriptionService,
@@ -94,7 +96,8 @@ final class JourneyCoordinator: ObservableObject, JourneyCoordinating, RecipeLis
     
     // MARK: - Navigation
     
-    func showRecipeDetail(recipe: Recipe) {
+    func showRecipeDetail(recipe: Recipe, selectedIngredients: [Ingredient] = []) {
+        recipeDetailSelectedIngredients[recipe.id] = selectedIngredients
         navigationPath.append(NavigationDestination.recipeDetail(recipe))
     }
     
@@ -103,7 +106,7 @@ final class JourneyCoordinator: ObservableObject, JourneyCoordinating, RecipeLis
     }
 
     func showRecipeFromList(_ recipe: Recipe) {
-        showRecipeDetail(recipe: recipe)
+        showRecipeDetail(recipe: recipe, selectedIngredients: [])
     }
     
     func showSettings() {
@@ -215,7 +218,10 @@ struct JourneyCoordinatorView: View {
         switch destination {
         case .recipeDetail(let recipe):
             RecipeDetailsView(
-                viewModel: coordinator.makeRecipeDetailsViewModel(recipe: recipe)
+                viewModel: coordinator.makeRecipeDetailsViewModel(
+                    recipe: recipe,
+                    selectedIngredients: coordinator.selectedIngredients(for: recipe)
+                )
             )
         case .recipeList(let title, let recipes):
             RecipeListView(
@@ -252,6 +258,12 @@ struct JourneyCoordinatorView: View {
         Task {
             await journeyViewModel.loadData()
         }
+    }
+}
+
+private extension JourneyCoordinator {
+    func selectedIngredients(for recipe: Recipe) -> [Ingredient] {
+        recipeDetailSelectedIngredients[recipe.id] ?? []
     }
 }
 

@@ -103,6 +103,10 @@ enum AccessibilityID {
         static let recentActivity = "journey.recentActivity"
         static let monthlyStats = "journey.monthlyStats"
 
+        static func cookAgainButton(_ sessionID: Int) -> String {
+            "journey.cookAgain.\(sessionID)"
+        }
+
         enum Stats {
             static let recipesCooked = "journey.stats.recipesCooked"
             static let ingredientsRescued = "journey.stats.ingredientsRescued"

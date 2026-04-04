@@ -22,6 +22,23 @@ struct JourneyView: View {
         .navigationTitle(Strings.Journey.navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { settingsToolbarItem }
+        .alert(
+            Strings.Journey.cookAgainErrorTitle,
+            isPresented: Binding(
+                get: { viewModel.cookAgainErrorMessage != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        viewModel.dismissCookAgainError()
+                    }
+                }
+            )
+        ) {
+            Button(Strings.Common.ok, role: .cancel) {
+                viewModel.dismissCookAgainError()
+            }
+        } message: {
+            Text(viewModel.cookAgainErrorMessage ?? "")
+        }
         .task {
             await viewModel.loadDataIfNeeded()
         }
@@ -332,7 +349,12 @@ struct JourneyView: View {
             ForEach(Array(viewModel.recentSessions.enumerated()), id: \.element.id) { index, session in
                 ActivitySessionRow(
                     session: session,
-                    showDivider: index < viewModel.recentSessions.count - 1
+                    showDivider: index < viewModel.recentSessions.count - 1,
+                    onCookAgain: {
+                        Task {
+                            await viewModel.cookAgain(session: session)
+                        }
+                    }
                 )
             }
         }

@@ -13,6 +13,7 @@ final class MockUserDataService: UserDataServiceProtocol {
     var stubbedRecentIngredients: [Ingredient] = []
     var stubbedPopularIngredients: [Ingredient] = []
     var stubbedRecentRecipes: [Recipe] = []
+    var stubbedRecipesByID: [Int: Recipe] = [:]
     var stubbedFavorites: [Recipe] = []
     var stubbedSavedRecipes: [Recipe] = []
     var stubbedIsFavorite: Bool = false
@@ -36,6 +37,7 @@ final class MockUserDataService: UserDataServiceProtocol {
     var markAsCookedCalls: [(recipe: Recipe, duration: TimeInterval?, rating: Int?)] = []
     var toggleFavoriteCalls: [Recipe] = []
     var recordedRecipeViews: [Recipe] = []
+    var requestedRecipeIDs: [Int] = []
     var savedUserRecipes: [Recipe] = []
     var updatedUserRecipes: [Recipe] = []
     var deletedUserRecipes: [Recipe] = []
@@ -65,6 +67,12 @@ final class MockUserDataService: UserDataServiceProtocol {
     func getRecentRecipes(limit: Int) async throws -> [Recipe] {
         if let error = shouldThrow { throw error }
         return stubbedRecentRecipes
+    }
+
+    func getRecipe(byID id: Int) async throws -> Recipe? {
+        if let error = shouldThrow { throw error }
+        requestedRecipeIDs.append(id)
+        return stubbedRecipesByID[id]
     }
 
     func recordRecipeView(_ recipe: Recipe) async throws {

@@ -98,6 +98,54 @@ final class UserDataServiceTests: XCTestCase {
         XCTAssertTrue(sessions.contains { $0.recipeTitle == "Beef Stew" })
     }
 
+    func testCookingSessionsRestoreRescuedIngredients() async throws {
+        let recipe = Recipe(
+            title: "Garlic Onion Pasta",
+            ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion"), Ingredient(name: "Pasta")],
+            instructions: ["Step 1"],
+            image: "",
+            cleanedIngredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion"), Ingredient(name: "Pasta")],
+            additionalInfo: .empty,
+            missingIngredients: ["Pasta"]
+        )
+        try insertRecipe(recipe)
+
+        try await service.markAsCooked(recipe: recipe, duration: nil, rating: nil)
+
+        let sessions = try await service.getCookingSessions()
+        let session = try XCTUnwrap(sessions.first)
+        XCTAssertEqual(session.rescuedIngredients.map(\.name), ["Garlic", "Onion"])
+    }
+
+    func testGetRecipeByIDReturnsStoredRecipe() async throws {
+        let recipe = makeRecipe(title: "Replay Soup")
+        try insertRecipe(recipe)
+        let recipeID = try XCTUnwrap(db.getRecipeId(byTitle: recipe.title))
+
+        let loadedRecipe = try await service.getRecipe(byID: recipeID)
+
+        XCTAssertEqual(loadedRecipe?.title, recipe.title)
+    }
+
+    func testMarkAsCookedUsesSharedReplayAvailabilityLogic() async throws {
+        let recipe = Recipe(
+            title: "Replay Logic Pasta",
+            ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion"), Ingredient(name: "Pasta")],
+            instructions: ["Step 1"],
+            image: "",
+            cleanedIngredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion"), Ingredient(name: "Pasta")],
+            additionalInfo: .empty,
+            missingIngredients: ["Onion"]
+        )
+        try insertRecipe(recipe)
+
+        try await service.markAsCooked(recipe: recipe, duration: nil, rating: nil)
+
+        let sessions = try await service.getCookingSessions()
+        let session = try XCTUnwrap(sessions.first)
+        XCTAssertEqual(session.rescuedIngredients.map(\.name), ["Garlic", "Pasta"])
+    }
+
     func testRecipesCooked() async throws {
         let recipe1 = makeRecipe(title: "Lemon Chicken")
         let recipe2 = makeRecipe(title: "Rice Bowl")

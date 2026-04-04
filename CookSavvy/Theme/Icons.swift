@@ -74,6 +74,7 @@ enum Icons {
         static let forkKnife = "fork.knife"
         static let flame = "flame"
         static let clock = "clock"
+        static let cookAgain = "arrow.clockwise"
         static let plus = "plus"
         static let cart = "cart.fill"
         static let pencil = "pencil"

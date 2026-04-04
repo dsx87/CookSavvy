@@ -5,6 +5,7 @@ protocol UserDataServiceProtocol: AnyObject {
     func getPopularIngredients(limit: Int) async throws -> [Ingredient]
     func recordIngredientUsage(_ ingredients: [Ingredient]) async throws
     func getRecentRecipes(limit: Int) async throws -> [Recipe]
+    func getRecipe(byID id: Int) async throws -> Recipe?
     func recordRecipeView(_ recipe: Recipe) async throws
     func getFavorites() async throws -> [Recipe]
     func getSavedRecipes() async throws -> [Recipe]

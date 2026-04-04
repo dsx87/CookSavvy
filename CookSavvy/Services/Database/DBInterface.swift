@@ -365,19 +365,38 @@ final class DBInterface: DBInterfaceProtocol {
         var results: [Recipe] = []
         results.reserveCapacity(rows.count)
         for row in rows {
-            let title: String = row["title"]
-            if let cached = recipeCache[title] {
-                results.append(cached)
-                continue
-            }
-            let recipe = try decodeRecipe(from: row)
-            cacheRecipe(recipe)
-            results.append(recipe)
+            results.append(try cachedRecipe(from: row))
         }
         return results
     }
 
+    func getRecipe(byID id: Int) throws -> Recipe? {
+        let sql = """
+            SELECT \(Self.recipeColumns)
+            FROM recipes r
+            WHERE r.id = ?
+            LIMIT 1;
+        """
+        guard let row: Row = try dbWriter.read({ db in
+            try Row.fetchOne(db, sql: sql, arguments: [id])
+        }) else {
+            return nil
+        }
+        return try cachedRecipe(from: row)
+    }
+
     // MARK: - Private Recipe Caching Methods
+
+    private func cachedRecipe(from row: Row) throws -> Recipe {
+        let title: String = row["title"]
+        if let cachedRecipe = recipeCache[title] {
+            return cachedRecipe
+        }
+
+        let recipe = try decodeRecipe(from: row)
+        cacheRecipe(recipe)
+        return recipe
+    }
     
     private func cacheRecipe(_ recipe: Recipe) {
         // Enforce cache size limit with simple FIFO
@@ -703,7 +722,7 @@ final class DBInterface: DBInterfaceProtocol {
     func getCookingSessions(limit: Int) throws -> [CookingSession] {
         return try dbWriter.read { db in
             let sql = """
-                SELECT cs.id, cs.recipe_id, cs.cooked_at, cs.duration_seconds, cs.rating, r.title AS recipe_title
+                SELECT cs.id, cs.recipe_id, cs.cooked_at, cs.duration_seconds, cs.rating, cs.ingredients_rescued_json, r.title AS recipe_title
                 FROM cooking_sessions cs
                 LEFT JOIN recipes r ON r.id = cs.recipe_id
                 ORDER BY cs.cooked_at DESC
@@ -716,13 +735,19 @@ final class DBInterface: DBInterfaceProtocol {
                 let cookedAtTimestamp: Int = row["cooked_at"]
                 let durationSeconds: Int? = row["duration_seconds"]
                 let rating: Int? = row["rating"]
+                let rescuedIngredientsJSON: String? = row["ingredients_rescued_json"]
+                let rescuedIngredients = rescuedIngredientsJSON
+                    .flatMap { $0.data(using: .utf8) }
+                    .flatMap { try? decoder.decode([String].self, from: $0) }?
+                    .map(Ingredient.init(name:)) ?? []
                 return CookingSession(
                     id: id,
                     recipeId: recipeId,
                     recipeTitle: recipeTitle,
                     cookedAt: Date(timeIntervalSince1970: TimeInterval(cookedAtTimestamp)),
                     durationSeconds: durationSeconds.map { TimeInterval($0) },
-                    rating: rating
+                    rating: rating,
+                    rescuedIngredients: rescuedIngredients
                 )
             }
         }

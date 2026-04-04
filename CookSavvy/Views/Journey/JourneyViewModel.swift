@@ -1,8 +1,9 @@
 import SwiftUI
+import os.log
 
 @MainActor
 protocol JourneyCoordinating: RecipeDetailsCoordinating {
-    func showRecipeDetail(recipe: Recipe)
+    func showRecipeDetail(recipe: Recipe, selectedIngredients: [Ingredient])
     func showRecipeList(title: String, recipes: [Recipe])
     func showCreateRecipe()
     func showSettings()
@@ -10,6 +11,10 @@ protocol JourneyCoordinating: RecipeDetailsCoordinating {
 
 @MainActor
 final class JourneyViewModel: ObservableObject {
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "CookSavvy",
+        category: "JourneyViewModel"
+    )
 
     @Published var recipesCooked: Int = 0
     @Published var dayStreak: Int = 0
@@ -23,6 +28,7 @@ final class JourneyViewModel: ObservableObject {
     @Published var achievements: [Achievement] = Achievement.allAchievements
     @Published var recentSessions: [CookingSession] = []
     @Published var isLoading = false
+    @Published var cookAgainErrorMessage: String?
 
     private let userDataService: UserDataServiceProtocol
     private let subscriptionService: SubscriptionServiceProtocol
@@ -104,7 +110,24 @@ final class JourneyViewModel: ObservableObject {
     // MARK: - Navigation
 
     func showRecipeDetails(_ recipe: Recipe) {
-        coordinator?.showRecipeDetail(recipe: recipe)
+        coordinator?.showRecipeDetail(recipe: recipe, selectedIngredients: [])
+    }
+
+    func cookAgain(session: CookingSession) async {
+        do {
+            guard let recipe = try await userDataService.getRecipe(byID: session.recipeId) else {
+                presentCookAgainError()
+                return
+            }
+            coordinator?.showRecipeDetail(recipe: recipe, selectedIngredients: [])
+        } catch {
+            Self.logger.error("Failed to load recipe for cook again: \(String(describing: error), privacy: .public)")
+            presentCookAgainError()
+        }
+    }
+
+    func dismissCookAgainError() {
+        cookAgainErrorMessage = nil
     }
 
     func showRecipeList(title: String, recipes: [Recipe]) {
@@ -223,5 +246,9 @@ final class JourneyViewModel: ObservableObject {
                 )
             )
         }
+    }
+
+    private func presentCookAgainError() {
+        cookAgainErrorMessage = Strings.Journey.cookAgainErrorMessage
     }
 }

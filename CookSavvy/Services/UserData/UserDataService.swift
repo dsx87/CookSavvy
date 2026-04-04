@@ -96,6 +96,10 @@ final class UserDataService: UserDataServiceProtocol {
         return try dbInterface.getRecentRecipes(limit: limit)
     }
 
+    func getRecipe(byID id: Int) async throws -> Recipe? {
+        try dbInterface.getRecipe(byID: id)
+    }
+
     /// Records that a recipe was viewed
     /// - Parameter recipe: The recipe that was viewed
     func recordRecipeView(_ recipe: Recipe) async throws {
@@ -199,9 +203,9 @@ final class UserDataService: UserDataServiceProtocol {
 
     private func rescuedIngredients(from recipe: Recipe) -> [String]? {
         guard let missing = recipe.missingIngredients else { return nil }
-        let missingSet = Set(missing.map { $0.lowercased() })
-        let all = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
-        return all.map { $0.name }.filter { !missingSet.contains($0.lowercased()) }
+        return RecipeMatchExplainer
+            .ingredientAvailability(recipe: recipe, missingIngredientNames: missing)
+            .rescuedIngredientNames
     }
 
     func getCookingSessions(limit: Int = UserDataServiceConstants.cookingSessionsLimit) async throws -> [CookingSession] {

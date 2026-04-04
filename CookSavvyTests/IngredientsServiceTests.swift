@@ -52,6 +52,7 @@ final class MockDBInterfaceForIngredients: DBInterfaceProtocol {
     func getRecipes(byIngredients: [Ingredient], offset: Int, limit: Int) throws -> [Recipe] { [] }
     func getAllRecipes(offset: Int, limit: Int) throws -> [Recipe] { [] }
     func getRecipeId(byTitle title: String) throws -> Int? { nil }
+    func getRecipe(byID id: Int) throws -> Recipe? { nil }
     func insertRecipes(_ recipes: [Recipe]) throws {}
     func removeIngredients(_ ingredients: [Ingredient]) throws {}
     func removeRecipes(_ recipes: [Recipe]) throws {}
@@ -76,6 +77,7 @@ final class MockDBInterfaceForIngredients: DBInterfaceProtocol {
     func clearFavorites() throws {}
     func getRecipeCount() throws -> Int { 0 }
     func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?, rating: Int?) throws {}
+    func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?, rating: Int?, rescuedIngredients: [String]?) throws {}
     func getCookingSessions(limit: Int) throws -> [CookingSession] { [] }
     func getCookingSessionDates(from startDate: Date, to endDate: Date) throws -> [Date] { [] }
     func getCookingSessionCount() throws -> Int { 0 }

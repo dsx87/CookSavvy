@@ -43,6 +43,7 @@ protocol DBInterfaceProtocol {
     func getRecipes(byIngredients: [Ingredient], offset: Int, limit: Int) throws -> [Recipe]
     func getAllRecipes(offset: Int, limit: Int) throws -> [Recipe]
     func getRecipeId(byTitle title: String) throws -> Int?
+    func getRecipe(byID id: Int) throws -> Recipe?
     func insertRecipes(_ recipes: [Recipe]) throws
     func removeRecipes(_ recipes: [Recipe]) throws
 
@@ -67,6 +68,7 @@ protocol DBInterfaceProtocol {
 
     // MARK: - Cooking Sessions
     func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?, rating: Int?) throws
+    func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?, rating: Int?, rescuedIngredients: [String]?) throws
     func getCookingSessions(limit: Int) throws -> [CookingSession]
     func getCookingSessionDates(from startDate: Date, to endDate: Date) throws -> [Date]
     func getCookingSessionCount() throws -> Int
@@ -100,10 +102,4 @@ protocol DBInterfaceProtocol {
     // MARK: - Statistics
     func getRecipeCount() throws -> Int
     func getDistinctCookedIngredientCount() throws -> Int
-}
-
-extension DBInterfaceProtocol {
-    func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?, rating: Int?, rescuedIngredients: [String]?) throws {
-        try recordCookingSession(recipeId: recipeId, date: date, duration: duration, rating: rating)
-    }
 }

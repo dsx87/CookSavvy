@@ -69,6 +69,7 @@ struct ActivitySessionRow: View {
     @Environment(\.appTheme) private var theme
     let session: CookingSession
     let showDivider: Bool
+    let onCookAgain: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -91,20 +92,28 @@ struct ActivitySessionRow: View {
                         .foregroundStyle(theme.text3)
                 }
                 Spacer()
-                if let duration = session.durationFormatted {
-                    Text(duration)
-                        .font(UI.Fonts.smallCaptionMedium)
-                        .foregroundStyle(theme.text3)
+                VStack(alignment: .trailing, spacing: UI.Journey.activityTextSpacing) {
+                    if let duration = session.durationFormatted {
+                        Text(duration)
+                            .font(UI.Fonts.smallCaptionMedium)
+                            .foregroundStyle(theme.text3)
+                    }
+                    Button(action: onCookAgain) {
+                        Label(Strings.Journey.cookAgain, systemImage: Icons.Journey.cookAgain)
+                            .font(UI.Fonts.captionSemibold)
+                            .foregroundStyle(theme.accent)
+                            .padding(.horizontal, UI.Journey.shortcutButtonPaddingH)
+                            .padding(.vertical, UI.Journey.shortcutButtonPaddingV)
+                            .background(theme.accentSoft, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier(AccessibilityID.Journey.cookAgainButton(session.id))
                 }
             }
             .padding(.vertical, UI.Journey.activityVerticalPadding)
             .padding(.horizontal, UI.Journey.activityHorizontalPadding)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel({
-                var parts = [session.recipeTitle, relativeDate(session.cookedAt)]
-                if let duration = session.durationFormatted { parts.append(duration) }
-                return parts.joined(separator: ", ")
-            }())
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(activityAccessibilityLabel)
 
             if showDivider {
                 Divider()
@@ -118,6 +127,14 @@ struct ActivitySessionRow: View {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .full
         return formatter.localizedString(for: date, relativeTo: Date())
+    }
+
+    private var activityAccessibilityLabel: String {
+        var parts = [session.recipeTitle, relativeDate(session.cookedAt)]
+        if let duration = session.durationFormatted {
+            parts.append(duration)
+        }
+        return parts.joined(separator: ", ")
     }
 }
 

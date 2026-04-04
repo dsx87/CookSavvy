@@ -7,6 +7,8 @@ import XCTest
 private final class SpyJourneyCoordinator: JourneyCoordinating {
     var showCookModeCallCount = 0
     var showRecipeDetailCallCount = 0
+    var lastRecipeDetailRecipe: Recipe?
+    var lastRecipeDetailSelectedIngredients: [Ingredient] = []
     var showRecipeListCallCount = 0
     var showCreateRecipeCallCount = 0
     var showSettingsCallCount = 0
@@ -14,7 +16,11 @@ private final class SpyJourneyCoordinator: JourneyCoordinating {
     var showUpgradeCallCount = 0
 
     func showCookMode(recipe: Recipe) { showCookModeCallCount += 1 }
-    func showRecipeDetail(recipe: Recipe) { showRecipeDetailCallCount += 1 }
+    func showRecipeDetail(recipe: Recipe, selectedIngredients: [Ingredient]) {
+        showRecipeDetailCallCount += 1
+        lastRecipeDetailRecipe = recipe
+        lastRecipeDetailSelectedIngredients = selectedIngredients
+    }
     func showRecipeList(title: String, recipes: [Recipe]) { showRecipeListCallCount += 1 }
     func showCreateRecipe() { showCreateRecipeCallCount += 1 }
     func showSettings() { showSettingsCallCount += 1 }
@@ -75,7 +81,7 @@ final class JourneyViewModelTests: XCTestCase {
 
     func testSavedRecipesLoaded() async {
         let recipes = Recipe.mocks(count: 2)
-        mockUserDataService.stubbedSavedRecipes = recipes
+        mockUserDataService.stubbedFavorites = recipes
 
         let vm = makeViewModel()
         await vm.loadData()
@@ -139,6 +145,100 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertEqual(coordinator.showShoppingListCallCount, 0)
         XCTAssertEqual(coordinator.showUpgradeCallCount, 1)
     }
+
+    func testCookAgainLoadsRecipeAndNavigatesWithoutHistoricalIngredientState() async {
+        let coordinator = SpyJourneyCoordinator()
+        let recipe = Recipe(
+            title: "Replay Pasta",
+            ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion"), Ingredient(name: "Pasta")],
+            instructions: ["Step 1"],
+            image: "",
+            cleanedIngredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion"), Ingredient(name: "Pasta")],
+            additionalInfo: .empty
+        )
+        let rescued = [Ingredient(name: "Garlic"), Ingredient(name: "Onion")]
+        mockUserDataService.stubbedRecipesByID[42] = recipe
+        let vm = makeViewModel(coordinator: coordinator)
+        let session = CookingSession(
+            id: 1,
+            recipeId: 42,
+            recipeTitle: recipe.title,
+            cookedAt: Date(),
+            durationSeconds: nil,
+            rating: nil,
+            rescuedIngredients: rescued
+        )
+
+        await vm.cookAgain(session: session)
+
+        XCTAssertEqual(mockUserDataService.requestedRecipeIDs, [42])
+        XCTAssertEqual(coordinator.showRecipeDetailCallCount, 1)
+        XCTAssertEqual(coordinator.lastRecipeDetailRecipe?.title, recipe.title)
+        XCTAssertTrue(coordinator.lastRecipeDetailSelectedIngredients.isEmpty)
+        XCTAssertNil(coordinator.lastRecipeDetailRecipe?.missingIngredients)
+        XCTAssertNil(vm.cookAgainErrorMessage)
+    }
+
+    func testCookAgainNavigatesWithEmptySelectedIngredientsWhenSessionHasNone() async {
+        let coordinator = SpyJourneyCoordinator()
+        let recipe = Recipe.mocks(count: 1).first!
+        mockUserDataService.stubbedRecipesByID[42] = recipe
+        let vm = makeViewModel(coordinator: coordinator)
+        let session = CookingSession(
+            id: 2,
+            recipeId: 42,
+            recipeTitle: recipe.title,
+            cookedAt: Date(),
+            durationSeconds: nil,
+            rating: nil,
+            rescuedIngredients: []
+        )
+
+        await vm.cookAgain(session: session)
+
+        XCTAssertEqual(coordinator.showRecipeDetailCallCount, 1)
+        XCTAssertTrue(coordinator.lastRecipeDetailSelectedIngredients.isEmpty)
+    }
+
+    func testCookAgainDoesNotNavigateWhenRecipeCannotBeLoaded() async {
+        let coordinator = SpyJourneyCoordinator()
+        let vm = makeViewModel(coordinator: coordinator)
+        let session = CookingSession(
+            id: 3,
+            recipeId: 99,
+            recipeTitle: "Missing Recipe",
+            cookedAt: Date(),
+            durationSeconds: nil,
+            rating: nil,
+            rescuedIngredients: [Ingredient(name: "Garlic")]
+        )
+
+        await vm.cookAgain(session: session)
+
+        XCTAssertEqual(mockUserDataService.requestedRecipeIDs, [99])
+        XCTAssertEqual(coordinator.showRecipeDetailCallCount, 0)
+        XCTAssertEqual(vm.cookAgainErrorMessage, Strings.Journey.cookAgainErrorMessage)
+    }
+
+    func testCookAgainShowsErrorWhenLoadingRecipeThrows() async {
+        let coordinator = SpyJourneyCoordinator()
+        mockUserDataService.shouldThrow = TestError.stub
+        let vm = makeViewModel(coordinator: coordinator)
+        let session = CookingSession(
+            id: 4,
+            recipeId: 77,
+            recipeTitle: "Broken Recipe",
+            cookedAt: Date(),
+            durationSeconds: nil,
+            rating: nil,
+            rescuedIngredients: []
+        )
+
+        await vm.cookAgain(session: session)
+
+        XCTAssertEqual(coordinator.showRecipeDetailCallCount, 0)
+        XCTAssertEqual(vm.cookAgainErrorMessage, Strings.Journey.cookAgainErrorMessage)
+    }
 }
 
 // MARK: - JourneyAchievementIntegrationTests (formerly inline achievement tests)
@@ -200,4 +300,8 @@ final class JourneyAchievementIntegrationTests: XCTestCase {
     private func achievement(withID id: String, in achievements: [Achievement]) -> Achievement? {
         achievements.first { $0.id == id }
     }
+}
+
+private enum TestError: Error {
+    case stub
 }
