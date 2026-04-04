@@ -48,13 +48,6 @@ enum Icons {
         static let checkmark = "checkmark.circle.fill"
     }
 
-    enum RecipeSource {
-        static let offline = "internaldrive"
-        static let online = "globe"
-        static let ai = "sparkles"
-        static let user = "person.crop.circle"
-    }
-
     enum Discover {
         static let error = "exclamationmark.triangle.fill"
         static let clock = "clock"

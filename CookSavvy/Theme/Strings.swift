@@ -36,16 +36,6 @@ enum Strings {
         static let upgradePlan = String(localized: "settings.upgradePlan", defaultValue: "Upgrade Plan")
         static let restorePurchases = String(localized: "settings.restorePurchases", defaultValue: "Restore Purchases")
         static let manageSubscription = String(localized: "settings.manageSubscription", defaultValue: "Manage Subscription")
-        static let recipeSourcesHeader = String(localized: "settings.recipeSourcesHeader", defaultValue: "Recipe Sources")
-        static let recipeSourcesFooter = String(localized: "settings.recipeSourcesFooter", defaultValue: "Select which sources to use when searching for recipes. At least one source must be enabled.")
-        static let localRecipes = String(localized: "settings.localRecipes", defaultValue: "Local Recipes")
-        static let offlineDatabase = String(localized: "settings.offlineDatabase", defaultValue: "Offline database")
-        static let onlineRecipes = String(localized: "settings.onlineRecipes", defaultValue: "Online Recipes")
-        static let apiSource = String(localized: "settings.apiSource", defaultValue: "API source")
-        static let aiRecipes = String(localized: "settings.aiRecipes", defaultValue: "AI Recipes")
-        static let aiGeneratedRecipes = String(localized: "settings.aiGeneratedRecipes", defaultValue: "AI-generated recipes")
-        static let extendedRecipes = String(localized: "settings.extendedRecipes", defaultValue: "Extended Recipes")
-        static let extendedRecipesDescription = String(localized: "settings.extendedRecipesDescription", defaultValue: "Search online databases for more options")
         static let statisticsHeader = String(localized: "settings.statisticsHeader", defaultValue: "Statistics")
         static let totalRecipes = String(localized: "settings.totalRecipes", defaultValue: "Total Recipes")
         static let favoriteRecipes = String(localized: "settings.favoriteRecipes", defaultValue: "Favorite Recipes")
@@ -216,22 +206,6 @@ enum Strings {
         static let recentRecipes = String(localized: "recipeList.recentRecipes", defaultValue: "Recent Recipes")
         static let savedRecipes = String(localized: "recipeList.savedRecipes", defaultValue: "Saved Recipes")
         static let myRecipes = String(localized: "recipeList.myRecipes", defaultValue: "My Recipes")
-    }
-
-    enum SourceBadge {
-        static let localTitle = String(localized: "sourceBadge.localTitle", defaultValue: "Local recipe")
-        static let localDescription = String(localized: "sourceBadge.localDescription", defaultValue: "This recipe comes from CookSavvy's local recipe collection.")
-        static let networkTitle = String(localized: "sourceBadge.networkTitle", defaultValue: "Network recipe")
-        static let networkDescription = String(localized: "sourceBadge.networkDescription", defaultValue: "This recipe was fetched from an online recipe provider.")
-        static let aiTitle = String(localized: "sourceBadge.aiTitle", defaultValue: "AI recipe")
-        static let aiDescription = String(localized: "sourceBadge.aiDescription", defaultValue: "This recipe was generated with AI from your ingredients.")
-        static let userTitle = String(localized: "sourceBadge.userTitle", defaultValue: "Your recipe")
-        static let userDescription = String(localized: "sourceBadge.userDescription", defaultValue: "This recipe was created and saved by you.")
-        static let accessibilityHint = String(localized: "sourceBadge.accessibilityHint", defaultValue: "Shows where this recipe came from")
-        static let localShortLabel = String(localized: "sourceBadge.localShortLabel", defaultValue: "Local")
-        static let networkShortLabel = String(localized: "sourceBadge.networkShortLabel", defaultValue: "Web")
-        static let aiShortLabel = String(localized: "sourceBadge.aiShortLabel", defaultValue: "AI")
-        static let userShortLabel = String(localized: "sourceBadge.userShortLabel", defaultValue: "Mine")
     }
 
     enum Onboarding {

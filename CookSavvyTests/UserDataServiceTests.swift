@@ -184,10 +184,4 @@ final class UserDataServiceTests: XCTestCase {
         XCTAssertEqual(service.getThemePreference(), .light)
     }
 
-    func testEnabledSources() {
-        service.setEnabledSources([.offline, .online])
-        let sources = service.getEnabledSources()
-        XCTAssertTrue(sources.contains(.offline))
-        XCTAssertTrue(sources.contains(.online))
-    }
 }

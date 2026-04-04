@@ -2168,28 +2168,6 @@
         }
       }
     },
-    "settings.aiGeneratedRecipes" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "AI-generated recipes"
-          }
-        }
-      }
-    },
-    "settings.aiRecipes" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "AI Recipes"
-          }
-        }
-      }
-    },
     "settings.alertClear" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -2197,17 +2175,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Clear"
-          }
-        }
-      }
-    },
-    "settings.apiSource" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "API source"
           }
         }
       }
@@ -2388,28 +2355,6 @@
         }
       }
     },
-    "settings.extendedRecipes" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Extended Recipes"
-          }
-        }
-      }
-    },
-    "settings.extendedRecipesDescription" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Search online databases for more options"
-          }
-        }
-      }
-    },
     "settings.favoriteRecipes" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -2417,17 +2362,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Favorite Recipes"
-          }
-        }
-      }
-    },
-    "settings.localRecipes" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Local Recipes"
           }
         }
       }
@@ -2454,28 +2388,6 @@
         }
       }
     },
-    "settings.offlineDatabase" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Offline database"
-          }
-        }
-      }
-    },
-    "settings.onlineRecipes" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Online Recipes"
-          }
-        }
-      }
-    },
     "settings.recentRecipes" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -2483,28 +2395,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Recent Recipes"
-          }
-        }
-      }
-    },
-    "settings.recipeSourcesFooter" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Select which sources to use when searching for recipes. At least one source must be enabled."
-          }
-        }
-      }
-    },
-    "settings.recipeSourcesHeader" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Recipe Sources"
           }
         }
       }
@@ -2648,149 +2538,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Other"
-          }
-        }
-      }
-    },
-    "sourceBadge.accessibilityHint" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Shows where this recipe came from"
-          }
-        }
-      }
-    },
-    "sourceBadge.aiDescription" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "This recipe was generated with AI from your ingredients."
-          }
-        }
-      }
-    },
-    "sourceBadge.aiShortLabel" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "AI"
-          }
-        }
-      }
-    },
-    "sourceBadge.aiTitle" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "AI recipe"
-          }
-        }
-      }
-    },
-    "sourceBadge.localDescription" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "This recipe comes from CookSavvy's local recipe collection."
-          }
-        }
-      }
-    },
-    "sourceBadge.localShortLabel" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Local"
-          }
-        }
-      }
-    },
-    "sourceBadge.localTitle" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Local recipe"
-          }
-        }
-      }
-    },
-    "sourceBadge.networkDescription" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "This recipe was fetched from an online recipe provider."
-          }
-        }
-      }
-    },
-    "sourceBadge.networkShortLabel" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Web"
-          }
-        }
-      }
-    },
-    "sourceBadge.networkTitle" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Network recipe"
-          }
-        }
-      }
-    },
-    "sourceBadge.userDescription" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "This recipe was created and saved by you."
-          }
-        }
-      }
-    },
-    "sourceBadge.userShortLabel" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Mine"
-          }
-        }
-      }
-    },
-    "sourceBadge.userTitle" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Your recipe"
           }
         }
       }

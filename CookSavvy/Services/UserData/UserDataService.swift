@@ -27,7 +27,6 @@ final class UserDataService: UserDataServiceProtocol {
     private let defaults: UserDefaults
 
     private enum Keys {
-        static let enabledSources = "enabled_recipe_sources"
         static let themePreference = ThemePreference.storageKey
     }
 
@@ -321,42 +320,6 @@ final class UserDataService: UserDataServiceProtocol {
         try dbInterface.clearFavorites()
     }
     
-    // MARK: - Recipe Source Preferences
-    
-    func getEnabledSources() -> Set<RecipeSourceType> {
-        guard let data = defaults.data(forKey: Keys.enabledSources),
-              let sources = try? JSONDecoder().decode(Set<RecipeSourceType>.self, from: data) else {
-            return [.offline]
-        }
-        return sources.isEmpty ? [.offline] : sources
-    }
-    
-    func setEnabledSources(_ sources: Set<RecipeSourceType>) {
-        let sourcesToSave = sources.isEmpty ? Set([RecipeSourceType.offline]) : sources
-        if let data = try? JSONEncoder().encode(sourcesToSave) {
-            defaults.set(data, forKey: Keys.enabledSources)
-        }
-    }
-    
-    func isSourceEnabled(_ source: RecipeSourceType) -> Bool {
-        getEnabledSources().contains(source)
-    }
-    
-    func toggleSource(_ source: RecipeSourceType) -> Bool {
-        var enabled = getEnabledSources()
-        if enabled.contains(source) {
-            if enabled.count > 1 {
-                enabled.remove(source)
-            } else {
-                return true
-            }
-        } else {
-            enabled.insert(source)
-        }
-        setEnabledSources(enabled)
-        return enabled.contains(source)
-    }
-
     // MARK: - Private Helpers
 
     /// Gets the database ID for a recipe by its title

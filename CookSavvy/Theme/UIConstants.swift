@@ -170,24 +170,6 @@ struct UI {
         static let planInfoSpacing: CGFloat = 4
     }
 
-    // MARK: - SourceBadge
-
-    struct SourceBadge {
-        static let iconSize: CGFloat = 11
-        static let labelSpacing: CGFloat = 4
-        static let pillPaddingH: CGFloat = 9
-        static let pillPaddingV: CGFloat = 5
-        static let edgePadding: CGFloat = 8
-        static let shadowOpacity: Double = 0.25
-        static let shadowRadius: CGFloat = 6
-        static let shadowY: CGFloat = 2
-        static let popoverSpacing: CGFloat = 8
-        static let popoverPadding: CGFloat = 14
-        static let popoverWidth: CGFloat = 220
-        static let popoverIconSize: CGFloat = 18
-        static let popoverIconPadding: CGFloat = 8
-    }
-
     // MARK: - DiskImage
 
     struct DiskImage {

@@ -417,7 +417,7 @@ final class DiscoverViewModel: ObservableObject {
     }
     private func accessibleEnabledSources() -> Set<RecipeSourceType> {
         RecipeSourceType.accessible(
-            from: userDataService.getEnabledSources(),
+            from: Set(RecipeSourceType.allCases),
             canAccessOnline: subscriptionService.canAccessFeature(.onlineRecipes),
             canAccessAI: subscriptionService.canAccessFeature(.aiRecipes)
         )

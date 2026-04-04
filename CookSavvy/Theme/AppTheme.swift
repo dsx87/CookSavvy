@@ -41,9 +41,6 @@ protocol AppTheme {
     var backgroundSecondary: Color { get }
     var buttonPrimary: Color { get }
     var backgroundSubtle: Color { get }
-    var sourceBadgeOffline: Color { get }
-    var sourceBadgeOnline: Color { get }
-    var sourceBadgeAI: Color { get }
 }
 
 extension AppTheme {
@@ -96,9 +93,6 @@ struct LightTheme: AppTheme {
         bg
     }
     var shadowStrength: Double { 1.0 }
-    var sourceBadgeOffline: Color { .gray }
-    var sourceBadgeOnline: Color { .blue }
-    var sourceBadgeAI: Color { .purple }
 }
 
 struct DarkTheme: AppTheme {
@@ -131,9 +125,6 @@ struct DarkTheme: AppTheme {
     var buttonPrimary: Color { accent }
     var backgroundSubtle: Color { card }
     var shadowStrength: Double { 0.5 }
-    var sourceBadgeOffline: Color { .gray }
-    var sourceBadgeOnline: Color { sky }
-    var sourceBadgeAI: Color { lavender }
 }
 
 struct SystemTheme {

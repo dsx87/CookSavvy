@@ -28,9 +28,6 @@ final class SettingsViewModel: ObservableObject {
     @Published var showClearFavoritesAlert: Bool = false
     @Published var isRestoringPurchases: Bool = false
     @Published var restoreError: String?
-    @Published var localSourceEnabled: Bool = true
-    @Published var apiSourceEnabled: Bool = false
-    @Published var aiSourceEnabled: Bool = false
     @Published var themePreference: ThemePreference = .defaultValue
 
     // MARK: - Properties
@@ -81,15 +78,7 @@ final class SettingsViewModel: ObservableObject {
             .store(in: &cancellables)
         
         currentPlan = subscriptionService.currentPlan
-        loadSourcePreferences()
         themePreference = userDataService.getThemePreference()
-    }
-    
-    private func loadSourcePreferences() {
-        let enabled = userDataService.getEnabledSources()
-        localSourceEnabled = enabled.contains(.offline)
-        apiSourceEnabled = enabled.contains(.online)
-        aiSourceEnabled = enabled.contains(.ai)
     }
     
     func showUpgrade() {
@@ -108,43 +97,6 @@ final class SettingsViewModel: ObservableObject {
         }
     }
     
-    func toggleLocalSource() {
-        localSourceEnabled = userDataService.toggleSource(.offline)
-    }
-    
-    func toggleApiSource() {
-        apiSourceEnabled = userDataService.toggleSource(.online)
-    }
-    
-    func toggleAiSource() {
-        aiSourceEnabled = userDataService.toggleSource(.ai)
-    }
-
-    var extendedRecipesEnabled: Bool {
-        apiSourceEnabled || aiSourceEnabled
-    }
-
-    func toggleExtendedRecipes() {
-        let shouldEnable = !extendedRecipesEnabled
-        if apiSourceEnabled != shouldEnable {
-            apiSourceEnabled = userDataService.toggleSource(.online)
-        }
-        if aiSourceEnabled != shouldEnable {
-            aiSourceEnabled = userDataService.toggleSource(.ai)
-        }
-    }
-
-    func canAccessSource(_ source: RecipeSourceType) -> Bool {
-        switch source {
-        case .offline:
-            return true
-        case .online:
-            return subscriptionService.canAccessFeature(.onlineRecipes)
-        case .ai:
-            return subscriptionService.canAccessFeature(.aiRecipes)
-        }
-    }
-
     func updateThemePreference(_ themePreference: ThemePreference) {
         guard self.themePreference != themePreference else { return }
         self.themePreference = themePreference

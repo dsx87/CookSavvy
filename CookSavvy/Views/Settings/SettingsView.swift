@@ -15,7 +15,6 @@ struct SettingsView: View {
             List {
                 appearanceSection
                 subscriptionSection
-                recipeSourcesSection
                 dietarySection
                 statsSection
                 dataManagementSection
@@ -140,40 +139,6 @@ struct SettingsView: View {
             }
         } header: {
             Text(Strings.Settings.subscriptionHeader)
-        }
-    }
-
-    private var recipeSourcesSection: some View {
-        Section {
-            Toggle(isOn: Binding(
-                get: { viewModel.localSourceEnabled },
-                set: { _ in viewModel.toggleLocalSource() }
-            )) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(Strings.Settings.localRecipes)
-                    Text(Strings.Settings.offlineDatabase)
-                        .font(.caption)
-                        .foregroundStyle(theme.text2)
-                }
-            }
-
-            if viewModel.currentPlan == .premium {
-                Toggle(isOn: Binding(
-                    get: { viewModel.extendedRecipesEnabled },
-                    set: { _ in viewModel.toggleExtendedRecipes() }
-                )) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(Strings.Settings.extendedRecipes)
-                        Text(Strings.Settings.extendedRecipesDescription)
-                            .font(.caption)
-                            .foregroundStyle(theme.text2)
-                    }
-                }
-            }
-        } header: {
-            Text(Strings.Settings.recipeSourcesHeader)
-        } footer: {
-            Text(Strings.Settings.recipeSourcesFooter)
         }
     }
 

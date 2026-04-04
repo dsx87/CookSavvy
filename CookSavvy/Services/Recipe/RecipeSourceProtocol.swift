@@ -14,14 +14,6 @@ enum RecipeSourceType: String, Codable, CaseIterable {
     case ai = "AI"
     
     var displayName: String { rawValue }
-    
-    var iconName: String {
-        switch self {
-        case .offline: Icons.RecipeSource.offline
-        case .online: Icons.RecipeSource.online
-        case .ai: Icons.RecipeSource.ai
-        }
-    }
 }
 
 /// Protocol defining the interface for recipe sources

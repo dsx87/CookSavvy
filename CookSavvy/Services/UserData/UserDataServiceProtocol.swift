@@ -30,10 +30,6 @@ protocol UserDataServiceProtocol: AnyObject {
     func deleteUserRecipe(recipe: Recipe) async throws
     func clearRecentData() async throws
     func clearFavorites() async throws
-    func getEnabledSources() -> Set<RecipeSourceType>
-    func setEnabledSources(_ sources: Set<RecipeSourceType>)
-    func isSourceEnabled(_ source: RecipeSourceType) -> Bool
-    func toggleSource(_ source: RecipeSourceType) -> Bool
 }
 
 extension UserDataServiceProtocol {

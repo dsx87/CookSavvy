@@ -29,9 +29,6 @@ final class MockUserDataService: UserDataServiceProtocol {
     var stubbedMonthlyRecipesCooked: Int = 0
     var stubbedMonthlyIngredientsRescued: Int = 0
     var stubbedThemePreference: ThemePreference = .system
-    var stubbedEnabledSources: Set<RecipeSourceType> = [.offline]
-    var stubbedIsSourceEnabled: Bool = true
-    var stubbedToggleSource: Bool = true
     var shouldThrow: Error?
 
     // MARK: - Call tracking
@@ -45,7 +42,6 @@ final class MockUserDataService: UserDataServiceProtocol {
     var recordedIngredientUsages: [[Ingredient]] = []
     var recordedSearches: [[Ingredient]] = []
     var setThemePreferenceCalls: [ThemePreference] = []
-    var setEnabledSourcesCalls: [Set<RecipeSourceType>] = []
     var clearRecentDataCallCount = 0
     var clearFavoritesCallCount = 0
 
@@ -196,20 +192,4 @@ final class MockUserDataService: UserDataServiceProtocol {
         clearFavoritesCallCount += 1
     }
 
-    func getEnabledSources() -> Set<RecipeSourceType> {
-        stubbedEnabledSources
-    }
-
-    func setEnabledSources(_ sources: Set<RecipeSourceType>) {
-        setEnabledSourcesCalls.append(sources)
-        stubbedEnabledSources = sources
-    }
-
-    func isSourceEnabled(_ source: RecipeSourceType) -> Bool {
-        stubbedIsSourceEnabled
-    }
-
-    func toggleSource(_ source: RecipeSourceType) -> Bool {
-        stubbedToggleSource
-    }
 }
