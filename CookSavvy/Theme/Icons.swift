@@ -81,6 +81,8 @@ enum Icons {
         static let checkmark = "checkmark"
         static let star = "star.fill"
         static let leaf = "leaf.fill"
+        static let chevronDown = "chevron.down"
+        static let chevronUp = "chevron.up"
     }
 
     enum CookMode {

@@ -98,6 +98,10 @@ enum AccessibilityID {
         static let createRecipeCard = "journey.createRecipeCard"
         static let weeklyActivity = "journey.weeklyActivity"
         static let achievements = "journey.achievements"
+        static let achievementsCompact = "journey.achievementsCompact"
+        static let achievementsExpanded = "journey.achievementsExpanded"
+        static let achievementsToggle = "journey.achievementsToggle"
+        static let achievementsAntiWaste = "journey.achievementsAntiWaste"
         static let recentActivity = "journey.recentActivity"
         static let monthlyStats = "journey.monthlyStats"
 

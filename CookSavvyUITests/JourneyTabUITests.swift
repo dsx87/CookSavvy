@@ -18,6 +18,20 @@ final class JourneyTabUITests: FreeUserUITest {
 
     func testAchievements() {
         XCTAssertTrue(app.waitForElement(app.otherElements[AccessibilityID.Journey.achievements], timeout: 5))
+        XCTAssertTrue(app.otherElements[AccessibilityID.Journey.achievementsCompact].exists)
+        XCTAssertTrue(app.otherElements[AccessibilityID.Journey.achievementsAntiWaste].exists)
+        XCTAssertFalse(app.otherElements[AccessibilityID.Journey.achievementsExpanded].exists)
+        XCTAssertTrue(app.staticTexts["Fridge Cleaner"].exists)
+        XCTAssertFalse(app.staticTexts["First Cook"].exists)
+    }
+
+    func testAchievementsCanExpandToShowFullList() {
+        XCTAssertTrue(app.waitForElement(app.buttons[AccessibilityID.Journey.achievementsToggle], timeout: 5))
+
+        app.tapElement(withIdentifier: AccessibilityID.Journey.achievementsToggle)
+
+        XCTAssertTrue(app.otherElements[AccessibilityID.Journey.achievementsExpanded].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["First Cook"].exists)
     }
 
     func testRecentSessions() {

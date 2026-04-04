@@ -26,6 +26,7 @@ final class JourneyViewModel: ObservableObject {
     @Published var userRecipes: [Recipe] = []
     @Published var weekCookingDates: Set<Int> = []
     @Published var achievements: [Achievement] = Achievement.allAchievements
+    @Published var isAchievementsExpanded = false
     @Published var recentSessions: [CookingSession] = []
     @Published var isLoading = false
     @Published var cookAgainErrorMessage: String?
@@ -66,6 +67,10 @@ final class JourneyViewModel: ObservableObject {
 
     var unlockedCount: Int {
         achievements.filter(\.isUnlocked).count
+    }
+
+    var antiWasteAchievements: [Achievement] {
+        achievements.filter { $0.category == .antiWaste }
     }
 
     var subscriptionHasShoppingListAccess: Bool {
@@ -128,6 +133,10 @@ final class JourneyViewModel: ObservableObject {
 
     func dismissCookAgainError() {
         cookAgainErrorMessage = nil
+    }
+
+    func toggleAchievementsExpanded() {
+        isAchievementsExpanded.toggle()
     }
 
     func showRecipeList(title: String, recipes: [Recipe]) {

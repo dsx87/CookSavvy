@@ -72,4 +72,21 @@ final class AchievementEvaluatorTests: XCTestCase {
         let weekStreak = results.first { $0.id == "week_streak" }!
         XCTAssertNil(weekStreak.unlockedAt)
     }
+
+    func testAntiWasteAchievementsAreExplicitlyCategorized() {
+        let antiWasteAchievements = Achievement.allAchievements.filter { $0.category == .antiWaste }
+
+        XCTAssertEqual(antiWasteAchievements.map(\.id), [
+            "fridge_cleaner",
+            "ingredient_master",
+            "scan_pro"
+        ])
+    }
+
+    func testGenericAchievementsRemainCategorizedSeparately() {
+        let generalAchievements = Achievement.allAchievements.filter { $0.category == .general }
+
+        XCTAssertEqual(generalAchievements.count, 7)
+        XCTAssertFalse(generalAchievements.contains { $0.id == "fridge_cleaner" })
+    }
 }

@@ -1,11 +1,17 @@
 import Foundation
 
+enum AchievementCategory: String, Hashable {
+    case general
+    case antiWaste
+}
+
 struct Achievement: Identifiable, Hashable {
     let id: String
     let title: String
     let description: String
     let emoji: String
     let colorHex: String
+    let category: AchievementCategory
     let maxProgress: Int
     var currentProgress: Int
     var isUnlocked: Bool
@@ -39,6 +45,7 @@ struct Achievement: Identifiable, Hashable {
             description: "Cook your first recipe",
             emoji: "👨‍🍳",
             colorHex: "#FF9500",
+            category: .general,
             maxProgress: 1,
             currentProgress: 0,
             isUnlocked: false
@@ -49,6 +56,7 @@ struct Achievement: Identifiable, Hashable {
             description: "Cook 7 days in a row",
             emoji: "🔥",
             colorHex: "#FF3B30",
+            category: .general,
             maxProgress: 7,
             currentProgress: 0,
             isUnlocked: false
@@ -59,6 +67,7 @@ struct Achievement: Identifiable, Hashable {
             description: "Create your first recipe",
             emoji: "📝",
             colorHex: "#007AFF",
+            category: .general,
             maxProgress: 1,
             currentProgress: 0,
             isUnlocked: false
@@ -69,6 +78,7 @@ struct Achievement: Identifiable, Hashable {
             description: "Cook 10 different recipes",
             emoji: "⭐",
             colorHex: "#FFCC00",
+            category: .general,
             maxProgress: 10,
             currentProgress: 0,
             isUnlocked: false
@@ -79,6 +89,7 @@ struct Achievement: Identifiable, Hashable {
             description: "Create 5 recipes",
             emoji: "📚",
             colorHex: "#AF52DE",
+            category: .general,
             maxProgress: 5,
             currentProgress: 0,
             isUnlocked: false
@@ -89,6 +100,7 @@ struct Achievement: Identifiable, Hashable {
             description: "Cook 50 different recipes",
             emoji: "👑",
             colorHex: "#FFD14D",
+            category: .general,
             maxProgress: 50,
             currentProgress: 0,
             isUnlocked: false
@@ -99,6 +111,7 @@ struct Achievement: Identifiable, Hashable {
             description: "Spend 10 hours cooking",
             emoji: "⏰",
             colorHex: "#00C7BE",
+            category: .general,
             maxProgress: 10,
             currentProgress: 0,
             isUnlocked: false
@@ -109,6 +122,7 @@ struct Achievement: Identifiable, Hashable {
             description: "Cook 5 recipes using 90%+ of your ingredients",
             emoji: "♻️",
             colorHex: "#34C759",
+            category: .antiWaste,
             maxProgress: 5,
             currentProgress: 0,
             isUnlocked: false
@@ -119,6 +133,7 @@ struct Achievement: Identifiable, Hashable {
             description: "Use 50 unique ingredients",
             emoji: "🧑‍🍳",
             colorHex: "#5856D6",
+            category: .antiWaste,
             maxProgress: 50,
             currentProgress: 0,
             isUnlocked: false
@@ -129,6 +144,7 @@ struct Achievement: Identifiable, Hashable {
             description: "Scan ingredients 20 times",
             emoji: "📸",
             colorHex: "#007AFF",
+            category: .antiWaste,
             maxProgress: 20,
             currentProgress: 0,
             isUnlocked: false

@@ -282,7 +282,13 @@ struct JourneyView: View {
     private var achievementsSection: some View {
         VStack(alignment: .leading, spacing: UI.Journey.achievementSpacing) {
             achievementsHeader
-            achievementsCarousel
+            if viewModel.isAchievementsExpanded {
+                achievementsCarousel
+                    .accessibilityIdentifier(AccessibilityID.Journey.achievementsExpanded)
+            } else {
+                achievementsCompactCard
+                    .accessibilityIdentifier(AccessibilityID.Journey.achievementsCompact)
+            }
         }
         .accessibilityIdentifier(AccessibilityID.Journey.achievements)
     }
@@ -342,15 +348,64 @@ struct JourneyView: View {
         }
     }
 
-    private var achievementsCarousel: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: UI.Journey.achievementBadgeSpacing) {
-                ForEach(viewModel.achievements) { achievement in
-                    achievementBadge(achievement)
-                }
-            }
-            .padding(.horizontal, UI.Journey.achievementBadgeHorizontalPadding)
+    private var achievementsCompactCard: some View {
+        VStack(alignment: .leading, spacing: UI.Journey.achievementCompactSpacing) {
+            Text(Strings.Journey.achievementsSummary)
+                .font(UI.Fonts.caption)
+                .foregroundStyle(theme.text3)
+
+            antiWasteAchievementsRow
+
+            achievementsToggleButton(title: Strings.Journey.showAllMilestones, icon: Icons.Journey.chevronDown)
         }
+        .padding(UI.Journey.achievementCompactPadding)
+        .frostCard(cornerRadius: UI.Common.cardCornerRadius)
+    }
+
+    private var antiWasteAchievementsRow: some View {
+        HStack(spacing: UI.Journey.achievementBadgeSpacing) {
+            ForEach(viewModel.antiWasteAchievements) { achievement in
+                achievementBadge(achievement)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityIdentifier(AccessibilityID.Journey.achievementsAntiWaste)
+    }
+
+    private var achievementsCarousel: some View {
+        VStack(alignment: .leading, spacing: UI.Journey.achievementCompactSpacing) {
+            achievementsToggleButton(title: Strings.Journey.hideMilestones, icon: Icons.Journey.chevronUp)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: UI.Journey.achievementBadgeSpacing) {
+                    ForEach(viewModel.achievements) { achievement in
+                        achievementBadge(achievement)
+                    }
+                }
+                .padding(.horizontal, UI.Journey.achievementBadgeHorizontalPadding)
+            }
+        }
+        .padding(UI.Journey.achievementCompactPadding)
+        .frostCard(cornerRadius: UI.Common.cardCornerRadius)
+    }
+
+    private func achievementsToggleButton(title: String, icon: String) -> some View {
+        Button {
+            viewModel.toggleAchievementsExpanded()
+        } label: {
+            HStack(spacing: UI.Journey.achievementToggleSpacing) {
+                Text(title)
+                    .font(UI.Fonts.captionSemibold)
+                Image(systemName: icon)
+                    .font(UI.Fonts.smallCaptionBold)
+            }
+            .foregroundStyle(theme.accent)
+            .padding(.horizontal, UI.Journey.shortcutButtonPaddingH)
+            .padding(.vertical, UI.Journey.shortcutButtonPaddingV)
+            .background(theme.accentSoft, in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(AccessibilityID.Journey.achievementsToggle)
     }
 
     private var recentActivityContent: some View {

@@ -507,6 +507,10 @@ struct UI {
         static let achievementBadgeLabelSpacing: CGFloat = 6
         static let achievementBadgeStrokeOpacity: Double = 0.4
         static let achievementBadgeLockedOpacity: Double = 0.4
+        static let achievementCompactSpacing: CGFloat = 12
+        static let achievementSummarySpacing: CGFloat = 8
+        static let achievementCompactPadding: CGFloat = 16
+        static let achievementToggleSpacing: CGFloat = 8
         static let recentActivitySpacing: CGFloat = 14
         static let activityRowSpacing: CGFloat = 12
         static let activityIconSize: CGFloat = 50
