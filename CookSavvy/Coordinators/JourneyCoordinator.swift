@@ -6,7 +6,7 @@
 import SwiftUI
 
 @MainActor
-final class JourneyCoordinator: ObservableObject, RecipeDetailsCoordinating {
+final class JourneyCoordinator: ObservableObject, RecipeDetailsCoordinating, JourneyCoordinating {
     
     private let container: AppContainer
     let settingsCoordinator: SettingsCoordinator
@@ -65,6 +65,7 @@ final class JourneyCoordinator: ObservableObject, RecipeDetailsCoordinating {
     func makeJourneyViewModel() -> JourneyViewModel {
         JourneyViewModel(
             userDataService: container.userDataService,
+            subscriptionService: container.subscriptionService,
             cameraScanTracker: container.cameraScanTracker,
             analyticsService: container.analyticsService,
             coordinator: self

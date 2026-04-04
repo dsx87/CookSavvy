@@ -9,7 +9,7 @@ enum Icons {
 
     enum Tab {
         static let discover = "compass.drawing"
-        static let journey = "trophy.fill"
+        static let myKitchen = "fork.knife.circle.fill"
     }
 
     enum SearchBar {
@@ -75,6 +75,7 @@ enum Icons {
         static let flame = "flame"
         static let clock = "clock"
         static let plus = "plus"
+        static let cart = "cart.fill"
         static let pencil = "pencil"
         static let checkmark = "checkmark"
         static let star = "star.fill"

@@ -114,6 +114,55 @@ struct ActivitySessionRow: View {
     }
 }
 
+struct ShoppingListShortcutCard: View {
+    @Environment(\.appTheme) private var theme
+    let isPremium: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: UI.Journey.shortcutContentSpacing) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: UI.Journey.activityIconCornerRadius, style: .continuous)
+                        .fill(theme.accentSoft)
+                        .frame(width: UI.Journey.shortcutIconSize, height: UI.Journey.shortcutIconSize)
+                    Image(systemName: Icons.Journey.cart)
+                        .font(UI.Fonts.iconMedium)
+                        .foregroundStyle(theme.accent)
+                }
+
+                VStack(alignment: .leading, spacing: UI.Journey.shortcutTextSpacing) {
+                    Text(Strings.ShoppingList.navigationTitle)
+                        .font(UI.Fonts.bodySemibold)
+                        .foregroundStyle(theme.text1)
+                    Text(isPremium ? Strings.Journey.shoppingListReady : Strings.Journey.shoppingListPremium)
+                        .font(UI.Fonts.caption)
+                        .foregroundStyle(theme.text3)
+                        .multilineTextAlignment(.leading)
+                }
+
+                Spacer(minLength: 0)
+
+                HStack(spacing: UI.Journey.shortcutButtonSpacing) {
+                    Text(isPremium ? Strings.Journey.openList : Strings.Journey.unlockShoppingList)
+                        .font(UI.Fonts.captionSemibold)
+                    Image(systemName: Icons.Settings.chevronRight)
+                        .font(UI.Fonts.smallCaptionBold)
+                }
+                .foregroundStyle(theme.accent)
+                .padding(.horizontal, UI.Journey.shortcutButtonPaddingH)
+                .padding(.vertical, UI.Journey.shortcutButtonPaddingV)
+                .background(theme.accentSoft, in: Capsule())
+            }
+            .padding(.vertical, UI.Journey.shortcutVerticalPadding)
+            .padding(.horizontal, UI.Journey.shortcutHorizontalPadding)
+            .frostCard(cornerRadius: UI.Common.cardCornerRadius)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(AccessibilityID.Journey.shoppingListShortcut)
+    }
+}
+
 struct CreateRecipeCard: View {
     @Environment(\.appTheme) private var theme
 

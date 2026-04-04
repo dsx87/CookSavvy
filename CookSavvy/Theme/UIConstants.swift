@@ -479,13 +479,9 @@ struct UI {
     struct Journey {
         static let sectionSpacing: CGFloat = 24
         static let horizontalPadding: CGFloat = 20
-        static let profileSpacing: CGFloat = 16
-        static let profileTopPadding: CGFloat = 8
-        static let profileNameSpacing: CGFloat = 4
-        static let levelSpacing: CGFloat = 8
-        static let levelPaddingH: CGFloat = 16
-        static let levelPaddingV: CGFloat = 8
-        static let levelBadgeOpacity: Double = 0.12
+        static let compactSectionSpacing: CGFloat = 18
+        static let utilityCardSpacing: CGFloat = 14
+        static let contentTopPadding: CGFloat = 8
         static let statsGridSpacing: CGFloat = 12
         static let statItemSpacing: CGFloat = 10
         static let statItemPadding: CGFloat = 18
@@ -519,7 +515,14 @@ struct UI {
         static let activityDividerLeading: CGFloat = 76
         static let activityVerticalPadding: CGFloat = 12
         static let activityHorizontalPadding: CGFloat = 14
-        static let emojiSize: CGFloat = 40
+        static let shortcutIconSize: CGFloat = 52
+        static let shortcutContentSpacing: CGFloat = 14
+        static let shortcutTextSpacing: CGFloat = 4
+        static let shortcutVerticalPadding: CGFloat = 16
+        static let shortcutHorizontalPadding: CGFloat = 16
+        static let shortcutButtonPaddingH: CGFloat = 14
+        static let shortcutButtonPaddingV: CGFloat = 10
+        static let shortcutButtonSpacing: CGFloat = 8
     }
 
     // MARK: - CreateRecipe

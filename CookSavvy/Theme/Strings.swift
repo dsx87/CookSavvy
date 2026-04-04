@@ -11,7 +11,7 @@ enum Strings {
 
     enum Tab {
         static let discover = String(localized: "tab.discover", defaultValue: "Discover")
-        static let journey = String(localized: "tab.journey", defaultValue: "Journey")
+        static let journey = String(localized: "tab.journey", defaultValue: "My Kitchen")
     }
 
     enum RecipeDetails {
@@ -135,12 +135,20 @@ enum Strings {
     }
 
     enum Journey {
-        static let navigationTitle = String(localized: "journey.navigationTitle", defaultValue: "Journey")
-        static let homeChef = String(localized: "journey.homeChef", defaultValue: "Home Chef")
+        static let navigationTitle = String(localized: "journey.navigationTitle", defaultValue: "My Kitchen")
         static let recipesCooked = String(localized: "journey.recipesCooked", defaultValue: "Recipes\nCooked")
         static let dayStreak = String(localized: "journey.dayStreak", defaultValue: "Day\nStreak")
         static let ingredientsRescued = String(localized: "journey.ingredientsRescued", defaultValue: "Ingredients\nRescued")
         static let hoursCooking = String(localized: "journey.hoursCooking", defaultValue: "Time\nCooked")
+        static let savedRecipes = String(localized: "journey.savedRecipes", defaultValue: "SAVED RECIPES")
+        static let savedRecipesEmpty = String(localized: "journey.savedRecipesEmpty", defaultValue: "Start saving recipes to see them here.")
+        static let recentCooks = String(localized: "journey.recentCooks", defaultValue: "RECENT COOKS")
+        static let shoppingList = String(localized: "journey.shoppingList", defaultValue: "SHOPPING LIST")
+        static let shoppingListReady = String(localized: "journey.shoppingListReady", defaultValue: "Keep missing ingredients in one place for your next store run.")
+        static let shoppingListPremium = String(localized: "journey.shoppingListPremium", defaultValue: "Unlock the shopping list to keep missing ingredients organized by recipe.")
+        static let openList = String(localized: "journey.openList", defaultValue: "Open List")
+        static let unlockShoppingList = String(localized: "journey.unlockShoppingList", defaultValue: "Unlock Shopping List")
+        static let kitchenStats = String(localized: "journey.kitchenStats", defaultValue: "KITCHEN STATS")
         static let myRecipes = String(localized: "journey.myRecipes", defaultValue: "MY RECIPES")
         static let addRecipe = String(localized: "journey.addRecipe", defaultValue: "Add Recipe")
         static let allTime = String(localized: "journey.allTime", defaultValue: "ALL TIME")

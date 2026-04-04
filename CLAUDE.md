@@ -49,17 +49,17 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 | Screen | Description |
 |--------|-------------|
 | **Discover** (tab 1) | Two-state flow: ingredient selection (grid, categories, search, recent/saved cards) and recipe results (mood filter, hero best match, recipe rows) |
-| **Journey** (tab 2) | Profile header, stats, user-created recipes, weekly calendar, achievements, recent sessions, settings (gear icon in nav bar) |
+| **My Kitchen** (tab 2) | Saved recipes, recent cooks, shopping list shortcut, compact stats, user recipes + create card, achievements, settings (gear icon in nav bar) |
 | **Recipe Details** | Hero image, floating back/bookmark actions, stats row, ingredients (with "Add Missing to List" button for premium), steps, sticky Start Cooking CTA |
 | **Recipe List** | Reusable See All destination for recent, saved, and user recipes |
 | **Cook Mode** | Full-screen step-by-step cooking flow with progress ring, timer, and prev/next navigation |
 | **Create Recipe** | 5-step wizard: Name & Photo → Ingredients → Steps → Details → Review & Save |
-| **Settings** | Subscription plan, usage limits, preferences (accessed from Journey nav bar) |
+| **Settings** | Subscription plan, usage limits, preferences (accessed from My Kitchen nav bar) |
 | **Camera** | Camera capture for AI ingredient detection (free users: 5/week via `CameraScanTracker`) |
 | **Upgrade** | Single-plan upgrade prompt (CookSavvy+) |
 | **Onboarding** | 3-screen first-launch walkthrough (fork.knife.circle → camera.viewfinder → timer); gated by `hasCompletedOnboarding` AppStorage |
-| **Shopping List** | Premium checklist of missing ingredients grouped by recipe; swipe-to-delete, toggle checked, clear done; sheet from Recipe Details or Journey |
-| **Tab Container** | Root tab bar with 2 tabs: Discover + Journey |
+| **Shopping List** | Premium checklist of missing ingredients grouped by recipe; swipe-to-delete, toggle checked, clear done; sheet from Recipe Details or My Kitchen |
+| **Tab Container** | Root tab bar with 2 tabs: Discover + My Kitchen |
 | **UI Tests** | XCUITest target under `CookSavvyUITests/` with launch-argument driven app setup and feature-focused suites |
 
 > All screens are subject to extension and modification.
@@ -80,7 +80,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 - `AppCoordinator`: Root coordinator managing tab-level coordinators via lazy factory methods
 - Feature coordinators: `DiscoverCoordinator`, `JourneyCoordinator`, `SettingsCoordinator`
 - `DiscoverCoordinator`: Discover landing/results flow, recipe detail, recipe list, cook mode (full screen cover), camera, create recipe, upgrade
-- `JourneyCoordinator`: Journey stats, recipe detail, recipe list, settings, create recipe, upgrade
+- `JourneyCoordinator`: My Kitchen navigation for saved recipes, recent cooks, shopping list, stats, recipe detail, recipe list, settings, create recipe, upgrade
 - Each coordinator owns its navigation stack and sheet presentations
 - ViewModels hold weak references to coordinators for navigation
 

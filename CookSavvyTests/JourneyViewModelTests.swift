@@ -4,26 +4,49 @@ import XCTest
 // MARK: - JourneyViewModelTests (ViewModel behavior)
 
 @MainActor
+private final class SpyJourneyCoordinator: JourneyCoordinating {
+    var showCookModeCallCount = 0
+    var showRecipeDetailCallCount = 0
+    var showRecipeListCallCount = 0
+    var showCreateRecipeCallCount = 0
+    var showSettingsCallCount = 0
+    var showShoppingListCallCount = 0
+    var showUpgradeCallCount = 0
+
+    func showCookMode(recipe: Recipe) { showCookModeCallCount += 1 }
+    func showRecipeDetail(recipe: Recipe) { showRecipeDetailCallCount += 1 }
+    func showRecipeList(title: String, recipes: [Recipe]) { showRecipeListCallCount += 1 }
+    func showCreateRecipe() { showCreateRecipeCallCount += 1 }
+    func showSettings() { showSettingsCallCount += 1 }
+    func showShoppingList() { showShoppingListCallCount += 1 }
+    func showUpgrade() { showUpgradeCallCount += 1 }
+}
+
+@MainActor
 final class JourneyViewModelTests: XCTestCase {
 
     var mockUserDataService: MockUserDataService!
+    var subscriptionService: MockSubscriptionService!
 
     override func setUp() {
         super.setUp()
         mockUserDataService = MockUserDataService()
+        subscriptionService = MockSubscriptionService(initialPlan: .free)
     }
 
     override func tearDown() {
         mockUserDataService = nil
+        subscriptionService = nil
         super.tearDown()
     }
 
-    private func makeViewModel() -> JourneyViewModel {
+    private func makeViewModel(coordinator: (any JourneyCoordinating)? = nil) -> JourneyViewModel {
         JourneyViewModel(
             userDataService: mockUserDataService,
+            subscriptionService: subscriptionService,
             cameraScanTracker: MockCameraScanTracker(),
             analyticsService: MockAnalyticsService(),
-            coordinator: nil
+            coordinator: coordinator
         )
     }
 
@@ -48,6 +71,16 @@ final class JourneyViewModelTests: XCTestCase {
         await vm.loadData()
 
         XCTAssertEqual(vm.userRecipes.count, 3)
+    }
+
+    func testSavedRecipesLoaded() async {
+        let recipes = Recipe.mocks(count: 2)
+        mockUserDataService.stubbedSavedRecipes = recipes
+
+        let vm = makeViewModel()
+        await vm.loadData()
+
+        XCTAssertEqual(vm.savedRecipes.count, 2)
     }
 
     func testAchievementsEvaluated() async {
@@ -81,7 +114,30 @@ final class JourneyViewModelTests: XCTestCase {
 
         XCTAssertEqual(vm.recipesCooked, 0)
         XCTAssertEqual(vm.dayStreak, 0)
+        XCTAssertTrue(vm.savedRecipes.isEmpty)
         XCTAssertTrue(vm.userRecipes.isEmpty)
+    }
+
+    func testShowShoppingListRoutesPremiumUsersToShoppingList() {
+        let coordinator = SpyJourneyCoordinator()
+        subscriptionService.setPlan(.premium)
+        let vm = makeViewModel(coordinator: coordinator)
+
+        vm.showShoppingList()
+
+        XCTAssertEqual(coordinator.showShoppingListCallCount, 1)
+        XCTAssertEqual(coordinator.showUpgradeCallCount, 0)
+    }
+
+    func testShowShoppingListRoutesFreeUsersToUpgrade() {
+        let coordinator = SpyJourneyCoordinator()
+        subscriptionService.setPlan(.free)
+        let vm = makeViewModel(coordinator: coordinator)
+
+        vm.showShoppingList()
+
+        XCTAssertEqual(coordinator.showShoppingListCallCount, 0)
+        XCTAssertEqual(coordinator.showUpgradeCallCount, 1)
     }
 }
 

@@ -94,6 +94,8 @@ enum AccessibilityID {
 
     enum Journey {
         static let settingsButton = "journey.settingsButton"
+        static let savedRecipes = "journey.savedRecipes"
+        static let shoppingListShortcut = "journey.shoppingListShortcut"
         static let myRecipes = "journey.myRecipes"
         static let createRecipeCard = "journey.createRecipeCard"
         static let weeklyActivity = "journey.weeklyActivity"

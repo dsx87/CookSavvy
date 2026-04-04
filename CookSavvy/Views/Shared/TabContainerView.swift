@@ -23,7 +23,7 @@ struct TabContainerView: View {
 
             coordinator.journeyCoordinator(container: container).start()
                 .tabItem {
-                    Image(systemName: Icons.Tab.journey)
+                    Image(systemName: Icons.Tab.myKitchen)
                     Text(Strings.Tab.journey)
                 }
                 .accessibilityIdentifier(AccessibilityID.Tab.journey)

@@ -102,7 +102,7 @@ Product ID: `com.cooksavvy.subscription.premium`
 ## Screens
 
 - **Discover** (tab 1) — Two-state flow: ingredient selection (grid, categories, search, recent/saved cards) ↔ recipe results (mood filter, hero best-match, recipe rows). `DiscoverView` + `DiscoverViewModel`
-- **Journey** (tab 2) — Profile header, stats grid, my recipes + create card, weekly calendar, achievements, recent sessions. `JourneyView` + `JourneyViewModel`
+- **My Kitchen** (tab 2) — Saved recipes, recent cooks, shopping list shortcut, compact stats, my recipes + create card, achievements. `JourneyView` + `JourneyViewModel`
 - **Recipe Details** — Hero image (340pt), floating back/bookmark, content card overlay, stats row, ingredient list, steps with timer badges, sticky "Start Cooking" CTA. `RecipeDetailsView` + `RecipeDetailsViewModel`
 - **Recipe List** — Reusable "See All" destination with `RecipeRow` cards. `RecipeListView` + `RecipeListViewModel`
 - **Cook Mode** — Full-screen: progress ring, step dots, large text, countdown timer, prev/next/done nav. `CookModeView` + `CookModeViewModel`
@@ -112,8 +112,8 @@ Product ID: `com.cooksavvy.subscription.premium`
   - `Shared/CommonComponents.swift`: `StarRating`, `StatPill`
   - `Discover/DiscoverComponents.swift`: `CategoryChip`, `IngredientBubble`, `SelectedChip`, `MoodPill`, `AddYourOwnCard`
   - `Journey/JourneyComponents.swift`: `CreateRecipeCard`, `UserMiniRecipeCard`
-- **Settings** — subscription, preferences (accessed from Journey nav bar); single "Extended Recipes" toggle for premium users
+- **Settings** — subscription, preferences (accessed from My Kitchen nav bar); single "Extended Recipes" toggle for premium users
 - **Camera** — AI ingredient detection; free users get 5 scans/week tracked by `CameraScanTracker`
 - **Upgrade** — single CookSavvy+ plan upgrade prompt
 - **Onboarding** — 3-screen first-launch flow (gated by `hasCompletedOnboarding` UserDefaults/AppStorage)
-- **Tab Container** — 2 tabs: Discover (`compass.drawing`) + Journey (`trophy.fill`)
+- **Tab Container** — 2 tabs: Discover (`compass.drawing`) + My Kitchen (`fork.knife.circle.fill`)

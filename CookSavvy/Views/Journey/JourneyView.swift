@@ -7,15 +7,15 @@ struct JourneyView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: UI.Journey.sectionSpacing) {
-                profileHeader
-                statsGrid
-                monthlyStatsSection
-                myRecipesSection
-                weeklyActivity
-                achievementsSection
+                savedRecipesSection
                 recentActivitySection
+                shoppingListSection
+                statsSection
+                myRecipesSection
+                achievementsSection
                 Spacer(minLength: UI.Common.bottomSpacerMinLength)
             }
+            .padding(.top, UI.Journey.contentTopPadding)
             .padding(.horizontal, UI.Journey.horizontalPadding)
         }
         .background(theme.bg)
@@ -38,32 +38,78 @@ struct JourneyView: View {
         }
     }
 
-    // MARK: - Profile Header
-
-    private var profileHeader: some View {
-        VStack(spacing: UI.Journey.profileSpacing) {
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(colors: [theme.accent, theme.rose],
-                                       startPoint: .topLeading, endPoint: .bottomTrailing)
-                    )
-                    .frame(width: UI.V2.avatarSize, height: UI.V2.avatarSize)
-                Text("🧑‍🍳")
-                    .font(.system(size: UI.Journey.emojiSize))
+    private var savedRecipesSection: some View {
+        VStack(alignment: .leading, spacing: UI.Journey.myRecipesSpacing) {
+            HStack {
+                Text(Strings.Journey.savedRecipes)
+                    .sectionLabel()
+                    .accessibilityAddTraits(.isHeader)
+                Spacer()
+                if !viewModel.savedRecipes.isEmpty {
+                    Button {
+                        viewModel.showRecipeList(
+                            title: Strings.RecipeList.savedRecipes,
+                            recipes: viewModel.savedRecipes
+                        )
+                    } label: {
+                        Text(Strings.Journey.seeAll)
+                            .font(UI.Fonts.captionSemibold)
+                            .foregroundStyle(theme.accent)
+                    }
+                }
             }
-            .neonGlow(theme.accent, radius: UI.Common.neonRadiusDefault)
 
-            Text(Strings.Journey.homeChef)
-                .font(UI.Fonts.profileName)
-                .foregroundStyle(theme.text1)
+            if viewModel.savedRecipes.isEmpty {
+                Text(Strings.Journey.savedRecipesEmpty)
+                    .font(UI.Fonts.caption)
+                    .foregroundStyle(theme.text3)
+                    .padding(.vertical, UI.Journey.shortcutButtonPaddingV)
+                    .padding(.horizontal, UI.Journey.shortcutHorizontalPadding)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frostCard(cornerRadius: UI.Common.cardCornerRadius)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: UI.Journey.myRecipesSpacing) {
+                        ForEach(viewModel.savedRecipes) { recipe in
+                            MiniRecipeCard(recipe: recipe)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    viewModel.showRecipeDetails(recipe)
+                                }
+                                .accessibilityAddTraits(.isButton)
+                        }
+                    }
+                }
+            }
         }
-        .padding(.top, UI.Journey.profileTopPadding)
+        .accessibilityIdentifier(AccessibilityID.Journey.savedRecipes)
     }
 
-    // MARK: - Stats Grid
+    private var shoppingListSection: some View {
+        VStack(alignment: .leading, spacing: UI.Journey.utilityCardSpacing) {
+            Text(Strings.Journey.shoppingList)
+                .sectionLabel()
+                .accessibilityAddTraits(.isHeader)
 
-    private var statsGrid: some View {
+            ShoppingListShortcutCard(isPremium: viewModel.subscriptionHasShoppingListAccess) {
+                viewModel.showShoppingList()
+            }
+        }
+    }
+
+    private var statsSection: some View {
+        VStack(alignment: .leading, spacing: UI.Journey.compactSectionSpacing) {
+            Text(Strings.Journey.kitchenStats)
+                .sectionLabel()
+                .accessibilityAddTraits(.isHeader)
+
+            allTimeStatsContent
+            monthlyStatsContent
+            weeklyActivityContent
+        }
+    }
+
+    private var allTimeStatsContent: some View {
         VStack(alignment: .leading, spacing: UI.Journey.statsGridSpacing) {
             Text(Strings.Journey.allTime)
                 .sectionLabel()
@@ -103,9 +149,7 @@ struct JourneyView: View {
         .accessibilityLabel("\(label.replacingOccurrences(of: "\n", with: " ")): \(value)")
     }
 
-    // MARK: - Monthly Stats
-
-    private var monthlyStatsSection: some View {
+    private var monthlyStatsContent: some View {
         VStack(alignment: .leading, spacing: UI.Journey.statsGridSpacing) {
             Text(Strings.Journey.thisMonth)
                 .sectionLabel()
@@ -130,7 +174,26 @@ struct JourneyView: View {
         .accessibilityIdentifier(AccessibilityID.Journey.monthlyStats)
     }
 
-    // MARK: - My Recipes
+    private var weeklyActivityContent: some View {
+        VStack(alignment: .leading, spacing: UI.Journey.weeklySpacing) {
+            Text(Strings.Journey.thisWeek)
+                .sectionLabel()
+                .accessibilityAddTraits(.isHeader)
+
+            HStack(spacing: UI.Journey.dayCircleSpacing) {
+                ForEach(Array(viewModel.weekdayLabels.enumerated()), id: \.offset) { index, day in
+                    WeekdayDotView(
+                        isActive: viewModel.isActiveDay(index),
+                        isToday: viewModel.isTodayIndex(index),
+                        label: day
+                    )
+                }
+            }
+            .padding(UI.Journey.weeklyPadding)
+            .frostCard()
+        }
+        .accessibilityIdentifier(AccessibilityID.Journey.weeklyActivity)
+    }
 
     private var myRecipesSection: some View {
         VStack(alignment: .leading, spacing: UI.Journey.myRecipesSpacing) {
@@ -185,31 +248,6 @@ struct JourneyView: View {
         .accessibilityIdentifier(AccessibilityID.Journey.myRecipes)
     }
 
-    // MARK: - Weekly Activity
-
-    private var weeklyActivity: some View {
-        VStack(alignment: .leading, spacing: UI.Journey.weeklySpacing) {
-            Text(Strings.Journey.thisWeek)
-                .sectionLabel()
-                .accessibilityAddTraits(.isHeader)
-
-            HStack(spacing: UI.Journey.dayCircleSpacing) {
-                ForEach(Array(viewModel.weekdayLabels.enumerated()), id: \.offset) { index, day in
-                    WeekdayDotView(
-                        isActive: viewModel.isActiveDay(index),
-                        isToday: viewModel.isTodayIndex(index),
-                        label: day
-                    )
-                }
-            }
-            .padding(UI.Journey.weeklyPadding)
-            .frostCard()
-        }
-        .accessibilityIdentifier(AccessibilityID.Journey.weeklyActivity)
-    }
-
-    // MARK: - Achievements
-
     private var achievementsSection: some View {
         VStack(alignment: .leading, spacing: UI.Journey.achievementSpacing) {
             HStack {
@@ -263,13 +301,11 @@ struct JourneyView: View {
         .accessibilityLabel(achievement.accessibilityLabel)
     }
 
-    // MARK: - Recent Activity
-
     @ViewBuilder
     private var recentActivitySection: some View {
         if !viewModel.recentSessions.isEmpty {
             VStack(alignment: .leading, spacing: UI.Journey.recentActivitySpacing) {
-                Text(Strings.Journey.recentActivity)
+                Text(Strings.Journey.recentCooks)
                     .sectionLabel()
                     .accessibilityAddTraits(.isHeader)
 
@@ -286,5 +322,4 @@ struct JourneyView: View {
             .accessibilityIdentifier(AccessibilityID.Journey.recentActivity)
         }
     }
-
 }

@@ -1,6 +1,14 @@
 import SwiftUI
 
 @MainActor
+protocol JourneyCoordinating: RecipeDetailsCoordinating {
+    func showRecipeDetail(recipe: Recipe)
+    func showRecipeList(title: String, recipes: [Recipe])
+    func showCreateRecipe()
+    func showSettings()
+}
+
+@MainActor
 final class JourneyViewModel: ObservableObject {
 
     @Published var recipesCooked: Int = 0
@@ -9,6 +17,7 @@ final class JourneyViewModel: ObservableObject {
     @Published var uniqueIngredientsUsed: Int = 0
     @Published var monthlyRecipesCooked: Int = 0
     @Published var monthlyIngredientsRescued: Int = 0
+    @Published var savedRecipes: [Recipe] = []
     @Published var userRecipes: [Recipe] = []
     @Published var weekCookingDates: Set<Int> = []
     @Published var achievements: [Achievement] = Achievement.allAchievements
@@ -16,17 +25,20 @@ final class JourneyViewModel: ObservableObject {
     @Published var isLoading = false
 
     private let userDataService: UserDataServiceProtocol
+    private let subscriptionService: SubscriptionServiceProtocol
     private let cameraScanTracker: CameraScanTrackerProtocol
     private let analyticsService: AnalyticsServiceProtocol
-    private weak var coordinator: JourneyCoordinator?
+    private weak var coordinator: (any JourneyCoordinating)?
 
     init(
         userDataService: UserDataServiceProtocol,
+        subscriptionService: SubscriptionServiceProtocol,
         cameraScanTracker: CameraScanTrackerProtocol,
         analyticsService: AnalyticsServiceProtocol,
-        coordinator: JourneyCoordinator? = nil
+        coordinator: (any JourneyCoordinating)? = nil
     ) {
         self.userDataService = userDataService
+        self.subscriptionService = subscriptionService
         self.cameraScanTracker = cameraScanTracker
         self.analyticsService = analyticsService
         self.coordinator = coordinator
@@ -49,6 +61,10 @@ final class JourneyViewModel: ObservableObject {
         achievements.filter(\.isUnlocked).count
     }
 
+    var subscriptionHasShoppingListAccess: Bool {
+        subscriptionService.canAccessFeature(.shoppingList)
+    }
+
     var weekdayLabels: [String] {
         ["M", "T", "W", "T", "F", "S", "S"]
     }
@@ -56,10 +72,11 @@ final class JourneyViewModel: ObservableObject {
     func loadData() async {
         isLoading = true
         async let statsTask: () = loadStats()
+        async let savedTask: () = loadSavedRecipes()
         async let recipesTask: () = loadUserRecipes()
         async let weekTask: () = loadWeekActivity()
         async let sessionsTask: () = loadRecentSessions()
-        _ = await (statsTask, recipesTask, weekTask, sessionsTask)
+        _ = await (statsTask, savedTask, recipesTask, weekTask, sessionsTask)
         await refreshAchievements()
         isLoading = false
     }
@@ -80,6 +97,14 @@ final class JourneyViewModel: ObservableObject {
 
     func showSettings() {
         coordinator?.showSettings()
+    }
+
+    func showShoppingList() {
+        if subscriptionService.canAccessFeature(.shoppingList) {
+            coordinator?.showShoppingList()
+        } else {
+            coordinator?.showUpgrade()
+        }
     }
 
     // MARK: - Week Calendar Helpers
@@ -115,6 +140,14 @@ final class JourneyViewModel: ObservableObject {
             userRecipes = try await userDataService.getUserRecipes()
         } catch {
             print("❌ Failed to load user recipes: \(error)")
+        }
+    }
+
+    private func loadSavedRecipes() async {
+        do {
+            savedRecipes = try await userDataService.getSavedRecipes()
+        } catch {
+            print("❌ Failed to load saved recipes: \(error)")
         }
     }
 
