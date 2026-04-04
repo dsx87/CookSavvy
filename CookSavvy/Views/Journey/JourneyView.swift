@@ -22,22 +22,10 @@ struct JourneyView: View {
         .navigationTitle(Strings.Journey.navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { settingsToolbarItem }
-        .alert(
-            Strings.Journey.cookAgainErrorTitle,
-            isPresented: Binding(
-                get: { viewModel.cookAgainErrorMessage != nil },
-                set: { isPresented in
-                    if !isPresented {
-                        viewModel.dismissCookAgainError()
-                    }
-                }
-            )
-        ) {
-            Button(Strings.Common.ok, role: .cancel) {
-                viewModel.dismissCookAgainError()
-            }
+        .alert(Strings.Journey.cookAgainErrorTitle, isPresented: cookAgainErrorBinding) {
+            cookAgainErrorDismissButton
         } message: {
-            Text(viewModel.cookAgainErrorMessage ?? "")
+            cookAgainErrorMessage
         }
         .task {
             await viewModel.loadDataIfNeeded()
@@ -58,6 +46,27 @@ struct JourneyView: View {
             .accessibilityIdentifier(AccessibilityID.Journey.settingsButton)
             .accessibilityLabel(Strings.Accessibility.settingsButton)
         }
+    }
+
+    private var cookAgainErrorBinding: Binding<Bool> {
+        Binding(
+            get: { viewModel.cookAgainErrorMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    viewModel.dismissCookAgainError()
+                }
+            }
+        )
+    }
+
+    private var cookAgainErrorDismissButton: some View {
+        Button(Strings.Common.ok, role: .cancel) {
+            viewModel.dismissCookAgainError()
+        }
+    }
+
+    private var cookAgainErrorMessage: some View {
+        Text(viewModel.cookAgainErrorMessage ?? "")
     }
 
     private var savedRecipesSection: some View {
@@ -350,11 +359,7 @@ struct JourneyView: View {
                 ActivitySessionRow(
                     session: session,
                     showDivider: index < viewModel.recentSessions.count - 1,
-                    onCookAgain: {
-                        Task {
-                            await viewModel.cookAgain(session: session)
-                        }
-                    }
+                    onCookAgain: cookAgainAction(for: session)
                 )
             }
         }
@@ -400,5 +405,13 @@ struct JourneyView: View {
                 viewModel.showRecipeDetails(recipe)
             }
             .accessibilityAddTraits(.isButton)
+    }
+
+    private func cookAgainAction(for session: CookingSession) -> () -> Void {
+        {
+            Task {
+                await viewModel.cookAgain(session: session)
+            }
+        }
     }
 }

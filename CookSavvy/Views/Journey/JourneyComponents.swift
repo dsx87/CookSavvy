@@ -73,43 +73,7 @@ struct ActivitySessionRow: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: UI.Journey.activityRowSpacing) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: UI.Journey.activityIconCornerRadius, style: .continuous)
-                        .fill(theme.accentSoft)
-                        .frame(width: UI.Journey.activityIconSize, height: UI.Journey.activityIconSize)
-                    Image(systemName: Icons.Journey.forkKnife)
-                        .font(UI.Fonts.iconMedium)
-                        .foregroundStyle(theme.accent)
-                }
-
-                VStack(alignment: .leading, spacing: UI.Journey.activityTextSpacing) {
-                    Text(session.recipeTitle)
-                        .font(UI.Fonts.smallButton)
-                        .foregroundStyle(theme.text1)
-                    Text(relativeDate(session.cookedAt))
-                        .font(UI.Fonts.tinyCaption)
-                        .foregroundStyle(theme.text3)
-                }
-                Spacer()
-                VStack(alignment: .trailing, spacing: UI.Journey.activityTextSpacing) {
-                    if let duration = session.durationFormatted {
-                        Text(duration)
-                            .font(UI.Fonts.smallCaptionMedium)
-                            .foregroundStyle(theme.text3)
-                    }
-                    Button(action: onCookAgain) {
-                        Label(Strings.Journey.cookAgain, systemImage: Icons.Journey.cookAgain)
-                            .font(UI.Fonts.captionSemibold)
-                            .foregroundStyle(theme.accent)
-                            .padding(.horizontal, UI.Journey.shortcutButtonPaddingH)
-                            .padding(.vertical, UI.Journey.shortcutButtonPaddingV)
-                            .background(theme.accentSoft, in: Capsule())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier(AccessibilityID.Journey.cookAgainButton(session.id))
-                }
-            }
+            rowContent
             .padding(.vertical, UI.Journey.activityVerticalPadding)
             .padding(.horizontal, UI.Journey.activityHorizontalPadding)
             .accessibilityElement(children: .contain)
@@ -121,6 +85,66 @@ struct ActivitySessionRow: View {
                     .padding(.leading, UI.Journey.activityDividerLeading)
             }
         }
+    }
+
+    private var rowContent: some View {
+        HStack(spacing: UI.Journey.activityRowSpacing) {
+            activityIcon
+            activityDetails
+            Spacer()
+            activityActions
+        }
+    }
+
+    private var activityIcon: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: UI.Journey.activityIconCornerRadius, style: .continuous)
+                .fill(theme.accentSoft)
+                .frame(width: UI.Journey.activityIconSize, height: UI.Journey.activityIconSize)
+            Image(systemName: Icons.Journey.forkKnife)
+                .font(UI.Fonts.iconMedium)
+                .foregroundStyle(theme.accent)
+        }
+    }
+
+    private var activityDetails: some View {
+        VStack(alignment: .leading, spacing: UI.Journey.activityTextSpacing) {
+            Text(session.recipeTitle)
+                .font(UI.Fonts.smallButton)
+                .foregroundStyle(theme.text1)
+            Text(relativeDate(session.cookedAt))
+                .font(UI.Fonts.tinyCaption)
+                .foregroundStyle(theme.text3)
+        }
+    }
+
+    private var activityActions: some View {
+        VStack(alignment: .trailing, spacing: UI.Journey.activityTextSpacing) {
+            durationText
+            cookAgainButton
+        }
+    }
+
+    @ViewBuilder
+    private var durationText: some View {
+        if let duration = session.durationFormatted {
+            Text(duration)
+                .font(UI.Fonts.smallCaptionMedium)
+                .foregroundStyle(theme.text3)
+        }
+    }
+
+    private var cookAgainButton: some View {
+        Button(action: onCookAgain) {
+            Label(Strings.Journey.cookAgain, systemImage: Icons.Journey.cookAgain)
+                .font(UI.Fonts.captionSemibold)
+                .foregroundStyle(theme.accent)
+                .padding(.horizontal, UI.Journey.shortcutButtonPaddingH)
+                .padding(.vertical, UI.Journey.shortcutButtonPaddingV)
+                .background(theme.accentSoft, in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(AccessibilityID.Journey.cookAgainButton(session.id))
     }
 
     private func relativeDate(_ date: Date) -> String {
