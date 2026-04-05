@@ -100,6 +100,17 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertTrue(firstCook?.isUnlocked ?? false)
     }
 
+    func testAchievementsUseHighMatchRecipesCookedCountFromUserDataService() async {
+        mockUserDataService.stubbedHighMatchRecipesCookedCount = 5
+
+        let vm = makeViewModel()
+        await vm.loadData()
+
+        let fridgeCleaner = vm.achievements.first { $0.id == "fridge_cleaner" }
+        XCTAssertEqual(fridgeCleaner?.currentProgress, 5)
+        XCTAssertTrue(fridgeCleaner?.isUnlocked ?? false)
+    }
+
     func testWeekCookingDates() async {
         let today = Date()
         let weekday = Calendar.current.component(.weekday, from: today)

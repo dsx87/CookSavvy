@@ -224,7 +224,7 @@ final class JourneyViewModel: ObservableObject {
     }
 
     private func refreshAchievements() async {
-        let highMatchCooks = UserDefaults.standard.integer(forKey: "high_match_cooks_count")
+        let highMatchCooks = userDataService.getHighMatchRecipesCookedCount()
         let totalScans = cameraScanTracker.totalScansRecorded()
         do {
             let allSessions = try await userDataService.getCookingSessions(limit: max(recipesCooked, 50))

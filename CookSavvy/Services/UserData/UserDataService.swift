@@ -27,6 +27,7 @@ final class UserDataService: UserDataServiceProtocol {
     private let defaults: UserDefaults
 
     private enum Keys {
+        static let highMatchRecipesCookedCount = "high_match_cooks_count"
         static let themePreference = ThemePreference.storageKey
     }
 
@@ -199,6 +200,12 @@ final class UserDataService: UserDataServiceProtocol {
             rating: rating,
             rescuedIngredients: rescuedIngredients(from: recipe)
         )
+        if recipe.missingIngredients?.isEmpty == true {
+            defaults.set(
+                defaults.integer(forKey: Keys.highMatchRecipesCookedCount) + 1,
+                forKey: Keys.highMatchRecipesCookedCount
+            )
+        }
     }
 
     private func rescuedIngredients(from recipe: Recipe) -> [String]? {
@@ -279,6 +286,10 @@ final class UserDataService: UserDataServiceProtocol {
     func monthlyIngredientsRescued() async throws -> Int {
         let (monthStart, monthEnd) = currentMonthRange()
         return try dbInterface.getDistinctCookedIngredientCount(from: monthStart, to: monthEnd)
+    }
+
+    func getHighMatchRecipesCookedCount() -> Int {
+        defaults.integer(forKey: Keys.highMatchRecipesCookedCount)
     }
 
     private func currentMonthRange() -> (Date, Date) {

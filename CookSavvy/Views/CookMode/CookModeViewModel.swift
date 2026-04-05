@@ -106,7 +106,6 @@ final class CookModeViewModel: ObservableObject {
     func submitFeedback() {
         let rating = feedbackRating > 0 ? feedbackRating : nil
         let duration = cookDuration
-        let isPerfectMatch = recipe.missingIngredients?.isEmpty == true
         analyticsService.track(.recipeCooked)
         Task {
             do {
@@ -115,16 +114,11 @@ final class CookModeViewModel: ObservableObject {
                 print("❌ Failed to mark recipe as cooked: \(error)")
             }
         }
-        if isPerfectMatch {
-            let current = UserDefaults.standard.integer(forKey: "high_match_cooks_count")
-            UserDefaults.standard.set(current + 1, forKey: "high_match_cooks_count")
-        }
         onDismiss()
     }
 
     func skipFeedback() {
         let duration = cookDuration
-        let isPerfectMatch = recipe.missingIngredients?.isEmpty == true
         analyticsService.track(.recipeCooked)
         Task {
             do {
@@ -132,10 +126,6 @@ final class CookModeViewModel: ObservableObject {
             } catch {
                 print("❌ Failed to mark recipe as cooked: \(error)")
             }
-        }
-        if isPerfectMatch {
-            let current = UserDefaults.standard.integer(forKey: "high_match_cooks_count")
-            UserDefaults.standard.set(current + 1, forKey: "high_match_cooks_count")
         }
         onDismiss()
     }

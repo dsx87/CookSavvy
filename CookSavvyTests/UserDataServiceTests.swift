@@ -159,6 +159,44 @@ final class UserDataServiceTests: XCTestCase {
         XCTAssertEqual(count, 2)
     }
 
+    func testHighMatchRecipesCookedCountDefaultsToZero() {
+        XCTAssertEqual(service.getHighMatchRecipesCookedCount(), 0)
+    }
+
+    func testMarkAsCookedIncrementsHighMatchRecipesCookedCountForPerfectMatch() async throws {
+        let recipe = Recipe(
+            title: "Perfect Match Pasta",
+            ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Pasta")],
+            instructions: ["Step 1"],
+            image: "",
+            cleanedIngredients: [Ingredient(name: "Garlic"), Ingredient(name: "Pasta")],
+            additionalInfo: .empty,
+            missingIngredients: []
+        )
+        try insertRecipe(recipe)
+
+        try await service.markAsCooked(recipe: recipe, duration: nil, rating: nil)
+
+        XCTAssertEqual(service.getHighMatchRecipesCookedCount(), 1)
+    }
+
+    func testMarkAsCookedDoesNotIncrementHighMatchRecipesCookedCountWhenRecipeHasMissingIngredients() async throws {
+        let recipe = Recipe(
+            title: "Almost Match Pasta",
+            ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Pasta")],
+            instructions: ["Step 1"],
+            image: "",
+            cleanedIngredients: [Ingredient(name: "Garlic"), Ingredient(name: "Pasta")],
+            additionalInfo: .empty,
+            missingIngredients: ["Pasta"]
+        )
+        try insertRecipe(recipe)
+
+        try await service.markAsCooked(recipe: recipe, duration: nil, rating: nil)
+
+        XCTAssertEqual(service.getHighMatchRecipesCookedCount(), 0)
+    }
+
     func testUserRecipeCRUD() async throws {
         let recipe = makeRecipe(title: "My Custom Dish")
         try await service.saveUserRecipe(recipe)
