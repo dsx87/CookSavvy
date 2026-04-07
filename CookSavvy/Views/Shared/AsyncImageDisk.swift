@@ -84,7 +84,8 @@ struct AsyncImageDisk<Placeholder: View>: View {
             do {
                 self.image = try await AppContainer.shared.imageService.loadImage(named: fullImageName)
             } catch {
-                print(error)
+                let logger = AppContainer.shared.loggingService.makeLogger(category: .asyncImageDisk)
+                logger.error("Failed to load disk image \(fullImageName): \(error)")
             }
         }
     }

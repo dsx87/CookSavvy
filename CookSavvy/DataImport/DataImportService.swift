@@ -22,14 +22,20 @@ final class DataImportService: DataImportServiceProtocol {
 
     private let dbInterface: DBInterfaceProtocol
     private let csvReader: CSVParser
+    private let logger: any LoggerProtocol
 
     private var isRecipesImported: Bool = false
 
     // MARK: - Initialization
 
-    init(dbInterface: DBInterfaceProtocol, csvReader: CSVParser = CSVParser()) {
+    init(
+        dbInterface: DBInterfaceProtocol,
+        csvReader: CSVParser = CSVParser(),
+        logger: any LoggerProtocol
+    ) {
         self.dbInterface = dbInterface
         self.csvReader = csvReader
+        self.logger = logger
     }
 
     // MARK: - Public Methods
@@ -43,7 +49,7 @@ final class DataImportService: DataImportServiceProtocol {
             limit: DataImportServiceConstants.populationProbeLimit
         )
 
-        print("🔍 Checking for existing recipes...")
+        logger.info("Checking for existing recipes")
 
         if !commonIngredients.isEmpty {
             let existingRecipes = try dbInterface.getRecipes(
@@ -53,13 +59,13 @@ final class DataImportService: DataImportServiceProtocol {
             )
 
             if !existingRecipes.isEmpty {
-                print("✅ Recipes already imported (\(existingRecipes.count) found)")
+                logger.info("Recipes already imported (\(existingRecipes.count) found)")
                 isRecipesImported = true
                 return
             }
         }
 
-        print("📥 Importing recipes from dataset...")
+        logger.info("Importing recipes from dataset")
 
         guard let zipURL = Bundle.main.url(
             forResource: DataImportServiceConstants.datasetName,
@@ -76,11 +82,11 @@ final class DataImportService: DataImportServiceProtocol {
         // TODO: optimize
         for i in importedRecipes.indices { importedRecipes[i].source = .offline }
 
-        print("📊 Parsed \(importedRecipes.count) recipes from CSV")
+        logger.info("Parsed \(importedRecipes.count) recipes from CSV")
 
         try dbInterface.insertRecipes(importedRecipes)
 
-        print("✅ Successfully imported \(importedRecipes.count) recipes to database")
+        logger.info("Successfully imported \(importedRecipes.count) recipes to database")
         isRecipesImported = true
     }
 

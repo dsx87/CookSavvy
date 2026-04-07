@@ -42,11 +42,17 @@ final class AppContainer {
     // MARK: - Initialization
 
     private init() {
+        let loggingService = LoggingService()
+        self.loggingService = loggingService
+
         let db = DBInterface()
         self.dbInterface = db
 
         let ingredients = IngredientsService(dbInterface: db)
-        let dataImport = DataImportService(dbInterface: db)
+        let dataImport = DataImportService(
+            dbInterface: db,
+            logger: loggingService.makeLogger(category: .dataImportService)
+        )
         
         self.ingredientsService = ingredients
         self.imageService = ImageService()
@@ -74,7 +80,8 @@ final class AppContainer {
                 .offline: OfflineRecipeSource(dbInterface: db),
                 .online: onlineSource,
                 .ai: AIRecipeSource(aiService: ai)
-            ]
+            ],
+            logger: loggingService.makeLogger(category: .recipeService)
         )
 
         self.databaseInitService = DatabaseInitializationService(
@@ -86,7 +93,9 @@ final class AppContainer {
         #if DEBUG
         self.subscriptionService = MockSubscriptionService(initialPlan: .free)
         #else
-        self.subscriptionService = StoreKitSubscriptionService()
+        self.subscriptionService = StoreKitSubscriptionService(
+            logger: loggingService.makeLogger(category: .subscriptionService)
+        )
         #endif
 
         self.cameraScanTracker = CameraScanTracker()
@@ -104,8 +113,9 @@ final class AppContainer {
         #else
         self.analyticsService = AnalyticsService()
         #endif
-        self.loggingService = LoggingService()
-        self.dietaryPreferences = DietaryPreferences()
+        self.dietaryPreferences = DietaryPreferences(
+            logger: loggingService.makeLogger(category: .dietaryPreferences)
+        )
         self.curatedCollectionService = CuratedCollectionService(dbInterface: db)
     }
 
@@ -143,7 +153,9 @@ final class AppContainer {
         self.recommendationService = recommendationService
         self.analyticsService = MockAnalyticsService()
         self.loggingService = loggingService
-        self.dietaryPreferences = DietaryPreferences()
+        self.dietaryPreferences = DietaryPreferences(
+            logger: loggingService.makeLogger(category: .dietaryPreferences)
+        )
         self.curatedCollectionService = CuratedCollectionService(dbInterface: dbInterface)
     }
     #endif
@@ -158,9 +170,13 @@ final class AppContainer {
     #if DEBUG
     @MainActor
     static func configureForUITesting(_ config: UITestConfiguration) {
+        let loggingService = LoggingService()
         let db = DBInterface(inMemory: true)
         let ingredients = IngredientsService(dbInterface: db)
-        let dataImport = DataImportService(dbInterface: db)
+        let dataImport = DataImportService(
+            dbInterface: db,
+            logger: loggingService.makeLogger(category: .dataImportService)
+        )
         let network = NetworkService()
         let userDataService = UserDataService(dbInterface: db)
         let llmProvider: LLMProviderProtocol = MockLLMProvider()
@@ -172,7 +188,8 @@ final class AppContainer {
                 .offline: OfflineRecipeSource(dbInterface: db),
                 .online: onlineSource,
                 .ai: AIRecipeSource(aiService: ai)
-            ]
+            ],
+            logger: loggingService.makeLogger(category: .recipeService)
         )
         let databaseInitService = DatabaseInitializationService(
             dbInterface: db,
@@ -200,7 +217,7 @@ final class AppContainer {
                 dbInterface: db,
                 databaseInitService: databaseInitService
             ),
-            loggingService: LoggingService()
+            loggingService: loggingService
         )
 
         UITestDataSeeder(db: db).seed(config: config)

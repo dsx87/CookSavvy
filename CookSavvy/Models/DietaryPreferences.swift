@@ -80,10 +80,15 @@ protocol DietaryPreferencesProtocol: AnyObject {
 final class DietaryPreferences: DietaryPreferencesProtocol {
 
     private let defaults: UserDefaults
+    private let logger: any LoggerProtocol
     private static let key = "dietary_restrictions"
 
-    init(defaults: UserDefaults = .standard) {
+    init(
+        defaults: UserDefaults = .standard,
+        logger: any LoggerProtocol = LoggingService().makeLogger(category: .dietaryPreferences)
+    ) {
         self.defaults = defaults
+        self.logger = logger
     }
 
     func activeRestrictions() -> Set<DietaryRestriction> {
@@ -91,7 +96,7 @@ final class DietaryPreferences: DietaryPreferencesProtocol {
         do {
             return try JSONDecoder().decode(Set<DietaryRestriction>.self, from: data)
         } catch {
-            print("❌ Failed to decode dietary restrictions: \(error)")
+            logger.error("Failed to decode dietary restrictions: \(error)")
             return []
         }
     }
@@ -115,7 +120,7 @@ final class DietaryPreferences: DietaryPreferencesProtocol {
             let data = try JSONEncoder().encode(restrictions)
             defaults.set(data, forKey: Self.key)
         } catch {
-            print("❌ Failed to encode dietary restrictions: \(error)")
+            logger.error("Failed to encode dietary restrictions: \(error)")
         }
     }
 }

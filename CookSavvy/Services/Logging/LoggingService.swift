@@ -9,6 +9,11 @@ enum LogCategory: String {
     case cookModeViewModel = "CookModeViewModel"
     case settingsViewModel = "SettingsViewModel"
     case recipeDetailsViewModel = "RecipeDetailsViewModel"
+    case recipeService = "RecipeService"
+    case dataImportService = "DataImportService"
+    case subscriptionService = "SubscriptionService"
+    case dietaryPreferences = "DietaryPreferences"
+    case asyncImageDisk = "AsyncImageDisk"
 }
 
 protocol LoggerProtocol {

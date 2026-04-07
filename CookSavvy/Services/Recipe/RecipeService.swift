@@ -17,6 +17,8 @@ final class RecipeService: RecipeServiceProtocol {
     
     /// Database interface for storing fetched recipes
     private let dbInterface: DBInterfaceProtocol
+
+    private let logger: any LoggerProtocol
     
     /// Flag to control whether fetched recipes should be stored in DB
     private let shouldStoreRecipes: Bool
@@ -31,10 +33,12 @@ final class RecipeService: RecipeServiceProtocol {
     init(
         dbInterface: DBInterfaceProtocol,
         sources: [RecipeSourceType: RecipeSourceProtocol],
+        logger: any LoggerProtocol = LoggingService().makeLogger(category: .recipeService),
         shouldStoreRecipes: Bool = true
     ) {
         self.dbInterface = dbInterface
         self.sources = sources
+        self.logger = logger
         self.shouldStoreRecipes = shouldStoreRecipes
     }
     
@@ -60,6 +64,7 @@ final class RecipeService: RecipeServiceProtocol {
         self.init(
             dbInterface: dbInterface,
             sources: sources,
+            logger: LoggingService().makeLogger(category: .recipeService),
             shouldStoreRecipes: shouldStoreRecipes
         )
     }
@@ -171,7 +176,7 @@ final class RecipeService: RecipeServiceProtocol {
                 // Source worked but found nothing — not a failure
             } catch {
                 hadSourceFailures = true
-                print("⚠️ Source \(sourceType) failed: \(error)")
+                logger.warning("Source \(sourceType) failed: \(error)")
             }
         }
 
@@ -181,7 +186,7 @@ final class RecipeService: RecipeServiceProtocol {
                 do {
                     try storeRecipes(nonOfflineRecipes)
                 } catch {
-                    print("⚠️ Failed to cache recipes: \(error)")
+                    logger.warning("Failed to cache recipes: \(error)")
                 }
             }
         }

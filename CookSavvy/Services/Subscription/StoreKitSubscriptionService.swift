@@ -21,8 +21,10 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
     private var transactionListener: Task<Void, Error>?
     
     private let cacheKey = "cached_subscription_plan"
+    private let logger: any LoggerProtocol
     
-    init() {
+    init(logger: any LoggerProtocol) {
+        self.logger = logger
         loadCachedPlan()
         transactionListener = listenForTransactions()
         Task {
@@ -104,7 +106,7 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
                 products[product.id] = product
             }
         } catch {
-            print("❌ Failed to load products: \(error)")
+            logger.error("Failed to load products: \(error)")
         }
     }
     
