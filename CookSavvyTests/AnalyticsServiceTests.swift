@@ -46,6 +46,7 @@ final class AnalyticsServiceTests: XCTestCase {
     func testAllEventsHaveRawValues() {
         let events: [AnalyticsEvent] = [
             .appOpened, .onboardingCompleted, .onboardingSkipped,
+            .onboardingCameraScanCompleted, .onboardingTypeInsteadTapped,
             .cameraScanStarted, .recipeSearchPerformed, .recipeViewed,
             .recipeFavorited, .recipeCooked, .upgradeScreenViewed,
             .upgradePurchased, .upgradeDismissed, .scanLimitHit

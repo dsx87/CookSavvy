@@ -4,6 +4,8 @@ enum AnalyticsEvent: String {
     case appOpened = "app_opened"
     case onboardingCompleted = "onboarding_completed"
     case onboardingSkipped = "onboarding_skipped"
+    case onboardingCameraScanCompleted = "onboarding_camera_scan_completed"
+    case onboardingTypeInsteadTapped = "onboarding_type_instead_tapped"
     case cameraScanStarted = "camera_scan_started"
     case recipeSearchPerformed = "recipe_search_performed"
     case recipeViewed = "recipe_viewed"

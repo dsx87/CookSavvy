@@ -9,6 +9,7 @@ import SwiftUI
 final class AppCoordinator: ObservableObject {
 
     @Published var hasCompletedOnboarding: Bool = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+    @Published private(set) var pendingOnboardingIngredients: [Ingredient]?
 
     private var _discoverCoordinator: DiscoverCoordinator?
     private var _journeyCoordinator: JourneyCoordinator?
@@ -16,7 +17,10 @@ final class AppCoordinator: ObservableObject {
     
     func discoverCoordinator(container: AppContainer) -> DiscoverCoordinator {
         if let existing = _discoverCoordinator { return existing }
-        let coordinator = DiscoverCoordinator(container: container)
+        let coordinator = DiscoverCoordinator(
+            container: container,
+            initialIngredients: consumeOnboardingIngredients()
+        )
         _discoverCoordinator = coordinator
         return coordinator
     }
@@ -39,10 +43,18 @@ final class AppCoordinator: ObservableObject {
     func makeOnboardingViewModel() -> OnboardingViewModel {
         OnboardingViewModel(
             analyticsService: AppContainer.shared.analyticsService,
-            onComplete: { [weak self] in
+            ingredientDetectionService: AppContainer.shared.ingredientDetectionService,
+            cameraScanTracker: AppContainer.shared.cameraScanTracker,
+            onComplete: { [weak self] ingredients in
+                self?.pendingOnboardingIngredients = ingredients.isEmpty ? nil : ingredients
                 self?.hasCompletedOnboarding = true
             }
         )
+    }
+
+    func consumeOnboardingIngredients() -> [Ingredient]? {
+        defer { pendingOnboardingIngredients = nil }
+        return pendingOnboardingIngredients
     }
 
     func start() -> some View {

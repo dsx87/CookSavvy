@@ -189,6 +189,20 @@ final class DiscoverViewModelTests: XCTestCase {
         // No scan recorded when limit is reached
         XCTAssertEqual(mockCameraScanTracker.recordScanCallCount, 0)
     }
+
+    func testPreloadIngredientsShowsResultsAndSearches() async {
+        let recipe = Recipe.mockRandom()
+        mockRecipeService.stubbedRecipes = [recipe]
+        let vm = makeViewModel()
+
+        vm.preloadIngredients([Ingredient(name: "Tomato"), Ingredient(name: "Basil")])
+
+        for _ in 0..<10 { await Task.yield() }
+
+        XCTAssertEqual(vm.selectedIngredients.map(\.name), ["Tomato", "Basil"])
+        XCTAssertTrue(vm.showResults)
+        XCTAssertEqual(mockRecipeService.getRecipesCallCount, 1)
+    }
 }
 
 // MARK: - RecipeSourceTypeTests

@@ -52,6 +52,7 @@ final class DiscoverViewModel: ObservableObject {
     private let analyticsService: AnalyticsServiceProtocol
     private let dietaryPreferences: DietaryPreferencesProtocol
     private let curatedCollectionService: CuratedCollectionServiceProtocol
+    private var initialIngredients: [Ingredient]?
     private weak var coordinator: DiscoverCoordinator?
 
     // MARK: - Init
@@ -67,6 +68,7 @@ final class DiscoverViewModel: ObservableObject {
         analyticsService: AnalyticsServiceProtocol,
         dietaryPreferences: DietaryPreferencesProtocol,
         curatedCollectionService: CuratedCollectionServiceProtocol,
+        initialIngredients: [Ingredient]? = nil,
         coordinator: DiscoverCoordinator? = nil
     ) {
         self.ingredientsService = ingredientsService
@@ -79,6 +81,7 @@ final class DiscoverViewModel: ObservableObject {
         self.analyticsService = analyticsService
         self.dietaryPreferences = dietaryPreferences
         self.curatedCollectionService = curatedCollectionService
+        self.initialIngredients = initialIngredients
         self.coordinator = coordinator
     }
 
@@ -196,8 +199,24 @@ final class DiscoverViewModel: ObservableObject {
         async let savedTask: () = loadSavedRecipes()
         _ = await (ingredientsTask, recentTask, savedTask)
         isLoadingIngredients = false
+        if let initialIngredients, !initialIngredients.isEmpty {
+            self.initialIngredients = nil
+            preloadIngredients(initialIngredients)
+        }
         Task { await loadSuggestions() }
         Task { await reloadOnDatabaseReady() }
+    }
+
+    func preloadIngredients(_ ingredients: [Ingredient]) {
+        guard !ingredients.isEmpty else { return }
+
+        for ingredient in ingredients where !selectedIngredients.contains(ingredient) {
+            selectedIngredients.append(ingredient)
+        }
+
+        analyticsService.track(.recipeSearchPerformed)
+        showResults = true
+        Task { await searchRecipes() }
     }
 
     func toggleIngredient(_ ingredient: Ingredient) {

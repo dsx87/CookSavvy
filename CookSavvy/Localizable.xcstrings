@@ -2128,6 +2128,50 @@
         }
       }
     },
+    "onboarding.cameraDeniedSubtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Allow camera access to scan ingredients, or type them manually"
+          }
+        }
+      }
+    },
+    "onboarding.cameraDeniedTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Camera Access Needed"
+          }
+        }
+      }
+    },
+    "onboarding.detectedTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ingredients Found!"
+          }
+        }
+      }
+    },
+    "onboarding.errorTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Something went wrong"
+          }
+        }
+      }
+    },
     "onboarding.getStarted" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -2135,6 +2179,39 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Get Started"
+          }
+        }
+      }
+    },
+    "onboarding.noIngredientsSubtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Try again with your ingredients clearly visible"
+          }
+        }
+      }
+    },
+    "onboarding.noIngredientsTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No ingredients found"
+          }
+        }
+      }
+    },
+    "onboarding.openSettings" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Open Settings"
           }
         }
       }
@@ -2183,24 +2260,35 @@
         }
       }
     },
-    "onboarding.page3Subtitle" : {
+    "onboarding.scanning" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Step-by-step guidance with built-in timers"
+            "value" : "Looking for ingredients…"
           }
         }
       }
     },
-    "onboarding.page3Title" : {
+    "onboarding.scanPageSubtitle" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Cook with Confidence"
+            "value" : "Point your camera at any ingredients"
+          }
+        }
+      }
+    },
+    "onboarding.scanPageTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Let's See What You've Got"
           }
         }
       }
@@ -2212,6 +2300,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Skip"
+          }
+        }
+      }
+    },
+    "onboarding.typeInstead" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Type ingredients instead"
           }
         }
       }

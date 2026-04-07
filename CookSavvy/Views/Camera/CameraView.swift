@@ -188,10 +188,12 @@ struct CameraView: View {
 
 struct CameraCaptureView: UIViewControllerRepresentable {
     let onPhotoCaptured: (UIImage) -> Void
+    var showsCloseButton: Bool = true
     
     func makeUIViewController(context: Context) -> CameraCaptureViewController {
         let controller = CameraCaptureViewController()
         controller.onPhotoCaptured = onPhotoCaptured
+        controller.showsCloseButton = showsCloseButton
         return controller
     }
     
@@ -200,6 +202,7 @@ struct CameraCaptureView: UIViewControllerRepresentable {
 
 final class CameraCaptureViewController: UIViewController {
     var onPhotoCaptured: ((UIImage) -> Void)?
+    var showsCloseButton: Bool = true
     
     private var captureSession: AVCaptureSession?
     private var photoOutput: AVCapturePhotoOutput?
@@ -272,19 +275,27 @@ final class CameraCaptureViewController: UIViewController {
     
     private func setupUI() {
         view.addSubview(captureButton)
-        view.addSubview(closeButton)
+        if showsCloseButton {
+            view.addSubview(closeButton)
+        }
         
-        NSLayoutConstraint.activate([
+        var constraints = [
             captureButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             captureButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -30),
             captureButton.widthAnchor.constraint(equalToConstant: 70),
             captureButton.heightAnchor.constraint(equalToConstant: 70),
-            
-            closeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
-            closeButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            closeButton.widthAnchor.constraint(equalToConstant: 40),
-            closeButton.heightAnchor.constraint(equalToConstant: 40)
-        ])
+        ]
+
+        if showsCloseButton {
+            constraints.append(contentsOf: [
+                closeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+                closeButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+                closeButton.widthAnchor.constraint(equalToConstant: 40),
+                closeButton.heightAnchor.constraint(equalToConstant: 40)
+            ])
+        }
+
+        NSLayoutConstraint.activate(constraints)
     }
     
     @objc private func capturePhoto() {

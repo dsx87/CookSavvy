@@ -57,7 +57,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 | **Settings** | Subscription plan, usage limits, preferences (accessed from My Kitchen nav bar) |
 | **Camera** | Camera capture for AI ingredient detection (free users: 5/week via `CameraScanTracker`) |
 | **Upgrade** | Single-plan upgrade prompt (CookSavvy+) |
-| **Onboarding** | 3-screen first-launch walkthrough (fork.knife.circle → camera.viewfinder → timer); gated by `hasCompletedOnboarding` AppStorage |
+| **Onboarding** | Camera-first first-launch walkthrough: 2 static intro pages followed by an embedded camera scan page; skip/type fallback lands on Discover ingredient selection and a successful first scan hands ingredients to Discover for immediate results |
 | **Shopping List** | Premium checklist of missing ingredients grouped by recipe; swipe-to-delete, toggle checked, clear done; sheet from Recipe Details or My Kitchen |
 | **Tab Container** | Root tab bar with 2 tabs: Discover + My Kitchen |
 | **UI Tests** | XCUITest target under `CookSavvyUITests/` with launch-argument driven app setup and feature-focused suites |
@@ -263,7 +263,7 @@ CookSavvy/
 │   ├── ShoppingList/                  — Shopping list (ShoppingListView + ShoppingListViewModel)
 │   ├── Settings/                      — Settings screen
 │   ├── Upgrade/                       — Subscription upgrade screen (single CookSavvy+ plan)
-│   └── Onboarding/                    — First-launch walkthrough (OnboardingView + OnboardingViewModel)
+│   └── Onboarding/                    — First-launch walkthrough with embedded camera page (OnboardingView + OnboardingViewModel + OnboardingCameraPage)
 ├── Extensions/
 │   ├── Character+Extensions.swift
 │   └── String+Extensions.swift

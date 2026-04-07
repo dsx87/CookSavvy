@@ -17,6 +17,8 @@ enum AccessibilityID {
     enum Onboarding {
         static let skipButton = "onboarding.skipButton"
         static let getStartedButton = "onboarding.getStartedButton"
+        static let cameraPage = "onboarding.cameraPage"
+        static let typeInsteadButton = "onboarding.typeInsteadButton"
 
         static func page(_ index: Int) -> String {
             "onboarding.page.\(index)"

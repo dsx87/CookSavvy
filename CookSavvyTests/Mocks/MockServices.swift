@@ -128,6 +128,7 @@ final class MockCameraScanTracker: CameraScanTrackerProtocol {
     var stubbedCanScan: Bool = true
     var stubbedRemainingScans: Int = CameraScanTracker.freeWeeklyLimit
     var recordScanCallCount = 0
+    var recordScanWithoutQuotaCallCount = 0
 
     func canScan(limit: Int) -> Bool {
         stubbedCanScan
@@ -138,7 +139,7 @@ final class MockCameraScanTracker: CameraScanTrackerProtocol {
     }
 
     func recordScanWithoutQuota() {
-        recordScanCallCount += 1
+        recordScanWithoutQuotaCallCount += 1
     }
 
     func remainingScans(limit: Int) -> Int {
@@ -146,7 +147,28 @@ final class MockCameraScanTracker: CameraScanTrackerProtocol {
     }
 
     func totalScansRecorded() -> Int {
-        recordScanCallCount
+        recordScanCallCount + recordScanWithoutQuotaCallCount
+    }
+}
+
+// MARK: - MockIngredientDetectionService
+
+final class MockIngredientDetectionService: IngredientDetectionServiceProtocol {
+
+    var stubbedIngredients: [Ingredient] = []
+    var shouldThrow: Error?
+    var delayNanoseconds: UInt64 = 0
+    private(set) var detectIngredientsCallCount = 0
+
+    func detectIngredients(in image: UIImage) async throws -> [Ingredient] {
+        if delayNanoseconds > 0 {
+            try await Task.sleep(nanoseconds: delayNanoseconds)
+        }
+        if let shouldThrow {
+            throw shouldThrow
+        }
+        detectIngredientsCallCount += 1
+        return stubbedIngredients
     }
 }
 

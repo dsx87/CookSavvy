@@ -92,6 +92,35 @@ struct UI {
         static let chipVerticalPadding: CGFloat = 8
     }
 
+    // MARK: - Onboarding
+
+    struct Onboarding {
+        static let pageSpacing: CGFloat = 32
+        static let pageHorizontalPadding: CGFloat = 32
+        static let indicatorSpacing: CGFloat = 8
+        static let indicatorActiveWidth: CGFloat = 20
+        static let indicatorInactiveWidth: CGFloat = 8
+        static let indicatorHeight: CGFloat = 8
+        static let bottomSpacing: CGFloat = 24
+        static let bottomPadding: CGFloat = 48
+        static let buttonCornerRadius: CGFloat = 28
+        static let buttonVerticalPadding: CGFloat = 16
+        static let overlayTopPadding: CGFloat = 24
+        static let overlayHorizontalPadding: CGFloat = 20
+        static let cameraOverlaySpacing: CGFloat = 12
+        static let cameraOverlayPadding: CGFloat = 24
+        static let cardSpacing: CGFloat = 24
+        static let cardPadding: CGFloat = 24
+        static let cardMaxWidth: CGFloat = 360
+        static let chipSpacing: CGFloat = 8
+        static let chipMaxCount: Int = 6
+        static let successDelayNanoseconds: UInt64 = 1_500_000_000
+        static let iconSize: CGFloat = 80
+        static let stateIconSize: CGFloat = 60
+        static let buttonMaxWidth: CGFloat = 320
+        static let processingOverlayOpacity: Double = 0.45
+    }
+
     // MARK: - RecipeCell
 
     struct RecipeCell {

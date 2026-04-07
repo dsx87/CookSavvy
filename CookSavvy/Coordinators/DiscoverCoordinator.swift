@@ -9,12 +9,14 @@ import SwiftUI
 final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating, RecipeListCoordinating {
     
     private let container: AppContainer
+    private let initialIngredients: [Ingredient]?
     @Published var navigationPath = NavigationPath()
     @Published var presentedSheet: SheetDestination?
     @Published var presentedFullScreenCover: FullScreenCoverDestination?
     
-    init(container: AppContainer) {
+    init(container: AppContainer, initialIngredients: [Ingredient]? = nil) {
         self.container = container
+        self.initialIngredients = initialIngredients
     }
     
     func start() -> some View {
@@ -84,6 +86,7 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating, Re
             analyticsService: container.analyticsService,
             dietaryPreferences: container.dietaryPreferences,
             curatedCollectionService: container.curatedCollectionService,
+            initialIngredients: initialIngredients,
             coordinator: self
         )
     }
