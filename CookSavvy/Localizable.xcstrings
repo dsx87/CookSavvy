@@ -2183,6 +2183,17 @@
         }
       }
     },
+    "onboarding.next" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Next"
+          }
+        }
+      }
+    },
     "onboarding.noIngredientsSubtitle" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {

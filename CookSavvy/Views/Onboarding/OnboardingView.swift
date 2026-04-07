@@ -40,7 +40,7 @@ struct OnboardingView: View {
                             viewModel.handlePrimaryAction()
                         }
                     } label: {
-                        Text(Strings.Onboarding.getStarted)
+                        Text(viewModel.primaryButtonTitle)
                             .font(UI.Fonts.buttonLabel)
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)

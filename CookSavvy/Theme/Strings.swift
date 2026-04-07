@@ -239,6 +239,7 @@ enum Strings {
         static let noIngredientsTitle = String(localized: "onboarding.noIngredientsTitle", defaultValue: "No ingredients found")
         static let noIngredientsSubtitle = String(localized: "onboarding.noIngredientsSubtitle", defaultValue: "Try again with your ingredients clearly visible")
         static let errorTitle = String(localized: "onboarding.errorTitle", defaultValue: "Something went wrong")
+        static let next = String(localized: "onboarding.next", defaultValue: "Next")
         static let getStarted = String(localized: "onboarding.getStarted", defaultValue: "Get Started")
         static let skip = String(localized: "onboarding.skip", defaultValue: "Skip")
     }

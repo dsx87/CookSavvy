@@ -105,6 +105,10 @@ final class OnboardingViewModel: ObservableObject {
         !isCameraPage
     }
 
+    var primaryButtonTitle: String {
+        isCameraPage ? Strings.Onboarding.getStarted : Strings.Onboarding.next
+    }
+
     func handleScenePhaseChange(_ scenePhase: ScenePhase) {
         guard
             scenePhase == .active,

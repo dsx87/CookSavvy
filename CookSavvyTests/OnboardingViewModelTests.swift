@@ -33,6 +33,24 @@ final class OnboardingViewModelTests: XCTestCase {
         XCTAssertTrue(viewModel.isCameraPage)
     }
 
+    func testPrimaryButtonTitleUsesNextForStaticPages() {
+        let viewModel = makeViewModel()
+
+        viewModel.currentPage = 0
+        XCTAssertEqual(viewModel.primaryButtonTitle, Strings.Onboarding.next)
+
+        viewModel.currentPage = 1
+        XCTAssertEqual(viewModel.primaryButtonTitle, Strings.Onboarding.next)
+    }
+
+    func testPrimaryButtonTitleUsesGetStartedForCameraPage() {
+        let viewModel = makeViewModel()
+
+        viewModel.currentPage = viewModel.pages.count
+
+        XCTAssertEqual(viewModel.primaryButtonTitle, Strings.Onboarding.getStarted)
+    }
+
     func testTypeInsteadCompletesWithNoIngredients() {
         var completedIngredients: [Ingredient]?
         let viewModel = makeViewModel { ingredients in
