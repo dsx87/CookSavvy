@@ -2,7 +2,6 @@ import SwiftUI
 
 @MainActor
 final class DiscoverViewModel: ObservableObject {
-
     // MARK: - Published State
 
     @Published var selectedIngredients: [Ingredient] = []
@@ -30,6 +29,7 @@ final class DiscoverViewModel: ObservableObject {
     @Published var searchResultRecipes: [Recipe] = []
     @Published var isSearching = false
     @Published var searchError: String? = nil
+    @Published var homeLoadError: String? = nil
     @Published var isLoadingIngredients = false
     @Published var showResults = false
     @Published var useItAllFilter = false
@@ -50,6 +50,7 @@ final class DiscoverViewModel: ObservableObject {
     private let cameraScanTracker: CameraScanTrackerProtocol
     private let recommendationService: RecipeRecommendationServiceProtocol
     private let analyticsService: AnalyticsServiceProtocol
+    private let logger: any LoggerProtocol
     private let dietaryPreferences: DietaryPreferencesProtocol
     private let curatedCollectionService: CuratedCollectionServiceProtocol
     private var initialIngredients: [Ingredient]?
@@ -66,6 +67,7 @@ final class DiscoverViewModel: ObservableObject {
         cameraScanTracker: CameraScanTrackerProtocol,
         recommendationService: RecipeRecommendationServiceProtocol,
         analyticsService: AnalyticsServiceProtocol,
+        logger: any LoggerProtocol,
         dietaryPreferences: DietaryPreferencesProtocol,
         curatedCollectionService: CuratedCollectionServiceProtocol,
         initialIngredients: [Ingredient]? = nil,
@@ -79,6 +81,7 @@ final class DiscoverViewModel: ObservableObject {
         self.cameraScanTracker = cameraScanTracker
         self.recommendationService = recommendationService
         self.analyticsService = analyticsService
+        self.logger = logger
         self.dietaryPreferences = dietaryPreferences
         self.curatedCollectionService = curatedCollectionService
         self.initialIngredients = initialIngredients
@@ -193,6 +196,7 @@ final class DiscoverViewModel: ObservableObject {
 
     func loadInitialData() async {
         isLoadingIngredients = true
+        homeLoadError = nil
         loadCollections()
         async let ingredientsTask: () = loadIngredients()
         async let recentTask: () = loadRecentRecipes()
@@ -342,6 +346,7 @@ final class DiscoverViewModel: ObservableObject {
     private func reloadOnDatabaseReady() async {
         guard !databaseInitService.state.isRecipesReady else { return }
         await databaseInitService.waitForRecipes()
+        homeLoadError = nil
         async let ingredientsTask: () = loadIngredients()
         async let recentTask: () = loadRecentRecipes()
         async let savedTask: () = loadSavedRecipes()
@@ -360,19 +365,28 @@ final class DiscoverViewModel: ObservableObject {
             IngredientEmojiProvider.fillIngredientsWithEmoji(&ingredients)
             popularIngredients = ingredients
             shownIngredients = ingredients
-        } catch {}
+        } catch {
+            logger.error("Failed to load discover ingredients: \(String(describing: error))")
+            homeLoadError = Strings.Errors.loadFailed
+        }
     }
 
     private func loadRecentRecipes() async {
         do {
             recentRecipes = try await userDataService.getRecentRecipes(limit: 6)
-        } catch {}
+        } catch {
+            logger.error("Failed to load discover recent recipes: \(String(describing: error))")
+            homeLoadError = Strings.Errors.loadFailed
+        }
     }
 
     private func loadSavedRecipes() async {
         do {
             savedRecipes = try await userDataService.getSavedRecipes()
-        } catch {}
+        } catch {
+            logger.error("Failed to load discover saved recipes: \(String(describing: error))")
+            homeLoadError = Strings.Errors.loadFailed
+        }
     }
 
     private func loadSuggestions() async {
@@ -380,7 +394,9 @@ final class DiscoverViewModel: ObservableObject {
             let result = try await recommendationService.getSuggestions()
             suggestedRecipes = result.recipes
             suggestionReason = result.reason
-        } catch {}
+        } catch {
+            logger.error("Failed to load discover suggestions: \(String(describing: error))")
+        }
     }
 
     private func searchRecipes() async {
@@ -467,6 +483,7 @@ final class DiscoverViewModel: ObservableObject {
             }
         } catch {
             guard isCurrentRefresh(token) else { return }
+            logger.error("Failed to refresh discover ingredients: \(String(describing: error))")
         }
     }
 

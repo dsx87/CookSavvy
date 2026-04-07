@@ -24,6 +24,7 @@ final class ShoppingListViewModelTests: XCTestCase {
     private func makeViewModel() -> ShoppingListViewModel {
         ShoppingListViewModel(
             shoppingListService: mockService,
+            logger: MockLogger(),
             onDismiss: {}
         )
     }
@@ -73,4 +74,28 @@ final class ShoppingListViewModelTests: XCTestCase {
         XCTAssertFalse(vm.hasCompletedItems)
         XCTAssertEqual(vm.items.count, 1)
     }
+
+    func testLoadSetsErrorMessageWhenFetchingItemsFails() async {
+        mockService.shouldThrow = TestError.stub
+
+        let vm = makeViewModel()
+        for _ in 0..<10 { await Task.yield() }
+
+        XCTAssertEqual(vm.errorMessage, Strings.Errors.shoppingListLoadFailed)
+    }
+
+    func testToggleSetsErrorMessageWhenUpdateFails() async {
+        mockService.seed(names: ["Egg"])
+        let vm = makeViewModel()
+        for _ in 0..<10 { await Task.yield() }
+        mockService.shouldThrow = TestError.stub
+
+        await vm.toggleItem(vm.items[0])
+
+        XCTAssertEqual(vm.errorMessage, Strings.Errors.shoppingListActionFailed)
+    }
+}
+
+private enum TestError: Error {
+    case stub
 }

@@ -87,6 +87,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 ### Dependency Injection
 - `AppContainer`: `@MainActor` singleton holding all shared service instances
 - Services initialized once and exposed via protocol-typed dependencies in coordinators and view models
+- Shared cross-cutting services such as `LoggingServiceProtocol` are resolved in `AppContainer`, and feature-specific `LoggerProtocol` instances are injected into view models
 - Maintains single source of truth for app-wide dependencies
 - TODO: refactor away from singleton pattern
 
@@ -98,6 +99,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 ### Service Layer
 - **Data Services**: `RecipeServiceProtocol` / `RecipeService`, `IngredientsServiceProtocol` / `IngredientsService`, `UserDataServiceProtocol` / `UserDataService`
 - **Infrastructure**: `ImageServiceProtocol` / `ImageService`, `DatabaseInitializationServiceProtocol` / `DatabaseInitializationService`, `DataImportServiceProtocol` / `DataImportService`, `CSVParser`
+- **Cross-cutting**: `LoggingServiceProtocol` / `LoggingService` creates feature-scoped `LoggerProtocol` instances backed by `os.Logger`
 - **Feature Services**: `ShoppingListServiceProtocol` / `ShoppingListService`, `RecipeRecommendationServiceProtocol` / `RecipeRecommendationService`, `CameraScanTrackerProtocol` / `CameraScanTracker`, `IngredientDetectionServiceProtocol` (impl: `AIIngredientDetectionAdapter`), `SubscriptionServiceProtocol` (impl: `StoreKitSubscriptionService` / `MockSubscriptionService`)
 - **Network Layer**: `NetworkServiceProtocol` / `NetworkService`, `NetworkConfiguration`, `URLBuilder`, `NetworkRequest`, `NetworkResponse`, `NetworkError`, `HTTPMethod`
 - **Recipe Sources** — `RecipeSourceProtocol` → `OfflineRecipeSource`, `OnlineRecipeSource` (via `RecipeAPIProviderProtocol`), `AIRecipeSource`
@@ -197,6 +199,8 @@ CookSavvy/
 │   ├── Image/
 │   │   ├── ImageService.swift
 │   │   └── ImageExtractor.swift
+│   ├── Logging/
+│   │   └── LoggingService.swift
 │   ├── UserData/
 │   │   └── UserDataService.swift
 │   ├── Subscription/

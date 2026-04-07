@@ -22,10 +22,12 @@ struct JourneyView: View {
         .navigationTitle(Strings.Journey.navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { settingsToolbarItem }
-        .alert(Strings.Journey.cookAgainErrorTitle, isPresented: cookAgainErrorBinding) {
-            cookAgainErrorDismissButton
+        .alert(activeAlertTitle, isPresented: alertBinding) {
+            Button(Strings.Common.ok, role: .cancel) {
+                dismissActiveAlert()
+            }
         } message: {
-            cookAgainErrorMessage
+            Text(activeAlertMessage)
         }
         .task {
             await viewModel.loadDataIfNeeded()
@@ -48,25 +50,36 @@ struct JourneyView: View {
         }
     }
 
-    private var cookAgainErrorBinding: Binding<Bool> {
+    private var alertBinding: Binding<Bool> {
         Binding(
-            get: { viewModel.cookAgainErrorMessage != nil },
+            get: {
+                viewModel.cookAgainErrorMessage != nil || viewModel.errorMessage != nil
+            },
             set: { isPresented in
                 if !isPresented {
-                    viewModel.dismissCookAgainError()
+                    dismissActiveAlert()
                 }
             }
         )
     }
 
-    private var cookAgainErrorDismissButton: some View {
-        Button(Strings.Common.ok, role: .cancel) {
-            viewModel.dismissCookAgainError()
+    private var activeAlertTitle: String {
+        if viewModel.cookAgainErrorMessage != nil {
+            return Strings.Journey.cookAgainErrorTitle
         }
+        return Strings.Errors.errorAlertTitle
     }
 
-    private var cookAgainErrorMessage: some View {
-        Text(viewModel.cookAgainErrorMessage ?? "")
+    private var activeAlertMessage: String {
+        if let cookAgainErrorMessage = viewModel.cookAgainErrorMessage {
+            return cookAgainErrorMessage
+        }
+        return viewModel.errorMessage ?? ""
+    }
+
+    private func dismissActiveAlert() {
+        viewModel.dismissCookAgainError()
+        viewModel.dismissError()
     }
 
     private var savedRecipesSection: some View {

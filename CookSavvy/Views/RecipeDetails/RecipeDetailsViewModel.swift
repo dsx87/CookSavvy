@@ -16,12 +16,12 @@ protocol RecipeDetailsCoordinating: AnyObject {
 
 @MainActor
 final class RecipeDetailsViewModel: ObservableObject {
-
     // MARK: - Published Properties
 
     @Published var recipe: Recipe
     @Published var isFavorite: Bool = false
     @Published var isLoadingFavorite: Bool = false
+    @Published var errorMessage: String?
 
     // MARK: - Properties
 
@@ -30,6 +30,7 @@ final class RecipeDetailsViewModel: ObservableObject {
     private let shoppingListService: ShoppingListServiceProtocol
     private let subscriptionService: SubscriptionServiceProtocol
     private let analyticsService: AnalyticsServiceProtocol
+    private let logger: any LoggerProtocol
     private weak var coordinator: (any RecipeDetailsCoordinating)?
 
     // MARK: - Computed
@@ -53,6 +54,7 @@ final class RecipeDetailsViewModel: ObservableObject {
         shoppingListService: ShoppingListServiceProtocol,
         subscriptionService: SubscriptionServiceProtocol,
         analyticsService: AnalyticsServiceProtocol,
+        logger: any LoggerProtocol,
         coordinator: (any RecipeDetailsCoordinating)?
     ) {
         self.recipe = recipe
@@ -61,6 +63,7 @@ final class RecipeDetailsViewModel: ObservableObject {
         self.shoppingListService = shoppingListService
         self.subscriptionService = subscriptionService
         self.analyticsService = analyticsService
+        self.logger = logger
         self.coordinator = coordinator
 
         // Load data on init
@@ -78,6 +81,7 @@ final class RecipeDetailsViewModel: ObservableObject {
 
     func toggleFavorite() async {
         isLoadingFavorite = true
+        errorMessage = nil
         defer { isLoadingFavorite = false }
 
         do {
@@ -86,7 +90,8 @@ final class RecipeDetailsViewModel: ObservableObject {
                 analyticsService.track(.recipeFavorited)
             }
         } catch {
-            print("❌ Failed to toggle favorite: \(error)")
+            logger.error("Failed to toggle recipe favorite: \(String(describing: error))")
+            errorMessage = Strings.Errors.favoriteFailed
         }
     }
 
@@ -97,6 +102,7 @@ final class RecipeDetailsViewModel: ObservableObject {
     func addMissingToShoppingList() async {
         let missing = missingIngredientNames
         guard !missing.isEmpty else { return }
+        errorMessage = nil
         guard subscriptionService.canAccessFeature(.shoppingList) else {
             coordinator?.showUpgrade()
             return
@@ -105,7 +111,8 @@ final class RecipeDetailsViewModel: ObservableObject {
             _ = try await shoppingListService.addItems(missing, recipeTitle: recipe.title)
             coordinator?.showShoppingList()
         } catch {
-            print("❌ Failed to add items to shopping list: \(error)")
+            logger.error("Failed to add items to shopping list: \(String(describing: error))")
+            errorMessage = Strings.Errors.shoppingListAddFailed
         }
     }
 
@@ -129,13 +136,17 @@ final class RecipeDetailsViewModel: ObservableObject {
         return isMatch ? .available : .missing
     }
 
+    func dismissError() {
+        errorMessage = nil
+    }
+
     // MARK: - Private Methods
 
     private func loadFavoriteStatus() async {
         do {
             isFavorite = try await userDataService.isFavorite(recipe)
         } catch {
-            print("❌ Failed to load favorite status: \(error)")
+            logger.error("Failed to load favorite status: \(String(describing: error))")
             isFavorite = false
         }
     }
@@ -145,7 +156,7 @@ final class RecipeDetailsViewModel: ObservableObject {
         do {
             try await userDataService.recordRecipeView(recipe)
         } catch {
-            print("❌ Failed to record recipe view: \(error)")
+            logger.error("Failed to record recipe detail view: \(String(describing: error))")
         }
     }
 }

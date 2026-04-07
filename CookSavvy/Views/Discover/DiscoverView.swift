@@ -34,6 +34,9 @@ struct DiscoverView: View {
                     VStack(alignment: .leading, spacing: UI.Discover.sectionSpacing) {
                         headerView
                         searchBar
+                        if viewModel.homeLoadError != nil {
+                            homeErrorBanner
+                        }
                         selectedIngredientsStrip
                         recentSection
                         savedSection
@@ -148,6 +151,23 @@ struct DiscoverView: View {
             RoundedRectangle(cornerRadius: UI.Discover.searchBarCornerRadius, style: .continuous)
                 .strokeBorder(theme.divider, lineWidth: UI.Common.borderWidth)
         )
+    }
+
+    @ViewBuilder
+    private var homeErrorBanner: some View {
+        if let errorMessage = viewModel.homeLoadError {
+            HStack(spacing: UI.Common.smallSpacing) {
+                Image(systemName: Icons.Discover.error)
+                    .foregroundStyle(theme.gold)
+                Text(errorMessage)
+                    .font(UI.Fonts.caption)
+                    .foregroundStyle(theme.text2)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer()
+            }
+            .padding(UI.Common.horizontalPadding)
+            .frostCard()
+        }
     }
 
     @ViewBuilder

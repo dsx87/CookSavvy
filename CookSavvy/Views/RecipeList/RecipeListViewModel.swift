@@ -12,17 +12,20 @@ final class RecipeListViewModel: ObservableObject {
     @Published private var savedIds: Set<String> = []
 
     private let userDataService: UserDataServiceProtocol
+    private let logger: any LoggerProtocol
     private weak var coordinator: (any RecipeListCoordinating)?
 
     init(
         title: String,
         recipes: [Recipe],
         userDataService: UserDataServiceProtocol,
+        logger: any LoggerProtocol,
         coordinator: (any RecipeListCoordinating)? = nil
     ) {
         self.title = title
         self.recipes = recipes
         self.userDataService = userDataService
+        self.logger = logger
         self.coordinator = coordinator
     }
 
@@ -30,7 +33,9 @@ final class RecipeListViewModel: ObservableObject {
         do {
             let savedRecipes = try await userDataService.getSavedRecipes()
             savedIds = Set(savedRecipes.map(\.id))
-        } catch {}
+        } catch {
+            logger.error("Failed to load saved recipe status: \(String(describing: error))")
+        }
     }
 
     func isSaved(_ recipe: Recipe) -> Bool {

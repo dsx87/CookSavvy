@@ -16,7 +16,6 @@ private enum SettingsViewModelConstants {
 
 @MainActor
 final class SettingsViewModel: ObservableObject {
-
     // MARK: - Published Properties
 
     @Published private(set) var currentPlan: SubscriptionPlan = .free
@@ -28,6 +27,7 @@ final class SettingsViewModel: ObservableObject {
     @Published var showClearFavoritesAlert: Bool = false
     @Published var isRestoringPurchases: Bool = false
     @Published var restoreError: String?
+    @Published var errorMessage: String?
     @Published var themePreference: ThemePreference = .defaultValue
 
     // MARK: - Properties
@@ -39,6 +39,7 @@ final class SettingsViewModel: ObservableObject {
     private let dbInterface: DBInterfaceProtocol
     private let subscriptionService: SubscriptionServiceProtocol
     private let dietaryPreferences: DietaryPreferencesProtocol
+    private let logger: any LoggerProtocol
     private weak var coordinator: SettingsCoordinator?
     private var cancellables = Set<AnyCancellable>()
 
@@ -49,12 +50,14 @@ final class SettingsViewModel: ObservableObject {
         dbInterface: DBInterfaceProtocol,
         subscriptionService: SubscriptionServiceProtocol,
         dietaryPreferences: DietaryPreferencesProtocol,
+        logger: any LoggerProtocol,
         coordinator: SettingsCoordinator?
     ) {
         self.userDataService = userDataService
         self.dbInterface = dbInterface
         self.subscriptionService = subscriptionService
         self.dietaryPreferences = dietaryPreferences
+        self.logger = logger
         self.coordinator = coordinator
 
         // Get app version info
@@ -122,6 +125,7 @@ final class SettingsViewModel: ObservableObject {
 
     func loadSettings() async {
         isLoading = true
+        errorMessage = nil
         defer { isLoading = false }
 
         do {
@@ -130,12 +134,14 @@ final class SettingsViewModel: ObservableObject {
             favoriteCount = try await getFavoriteCount()
             recentRecipeCount = try await getRecentRecipeCount()
         } catch {
-            print("❌ Failed to load settings: \(error)")
+            logger.error("Failed to load settings: \(String(describing: error))")
+            errorMessage = Strings.Errors.settingsLoadFailed
         }
     }
 
     func clearRecentData() async {
         isLoading = true
+        errorMessage = nil
         defer { isLoading = false }
 
         do {
@@ -143,12 +149,14 @@ final class SettingsViewModel: ObservableObject {
             // Reload stats
             await loadSettings()
         } catch {
-            print("❌ Failed to clear recent data: \(error)")
+            logger.error("Failed to clear recent data: \(String(describing: error))")
+            errorMessage = Strings.Errors.clearDataFailed
         }
     }
 
     func clearFavorites() async {
         isLoading = true
+        errorMessage = nil
         defer { isLoading = false }
 
         do {
@@ -156,8 +164,13 @@ final class SettingsViewModel: ObservableObject {
             // Reload stats
             await loadSettings()
         } catch {
-            print("❌ Failed to clear favorites: \(error)")
+            logger.error("Failed to clear favorites: \(String(describing: error))")
+            errorMessage = Strings.Errors.clearDataFailed
         }
+    }
+
+    func dismissError() {
+        errorMessage = nil
     }
 
     // MARK: - Private Methods

@@ -17,6 +17,13 @@ struct RecipeDetailsView: View {
         .background(theme.bg)
         .navigationBarTitleDisplayMode(.inline)
         .tint(theme.accent)
+        .alert(Strings.Errors.errorAlertTitle, isPresented: errorBinding) {
+            Button(Strings.Common.ok, role: .cancel) {
+                viewModel.dismissError()
+            }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 ShareLink(item: viewModel.recipe, preview: SharePreview(viewModel.recipe.title)) {
@@ -35,6 +42,17 @@ struct RecipeDetailsView: View {
                 .accessibilityLabel(viewModel.isFavorite ? Strings.Accessibility.removeFromFavorites : Strings.Accessibility.addToFavorites)
             }
         }
+    }
+
+    private var errorBinding: Binding<Bool> {
+        Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    viewModel.dismissError()
+                }
+            }
+        )
     }
 
     private var contentCard: some View {

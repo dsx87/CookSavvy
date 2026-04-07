@@ -69,6 +69,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
             shoppingListService: mockShoppingListService,
             subscriptionService: subscription ?? freeSubscription,
             analyticsService: MockAnalyticsService(),
+            logger: MockLogger(),
             coordinator: nil
         )
     }
@@ -172,6 +173,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
             shoppingListService: mockShoppingListService,
             subscriptionService: premiumSubscription,
             analyticsService: MockAnalyticsService(),
+            logger: MockLogger(),
             coordinator: spy
         )
 
@@ -191,6 +193,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
             shoppingListService: mockShoppingListService,
             subscriptionService: freeSubscription,
             analyticsService: MockAnalyticsService(),
+            logger: MockLogger(),
             coordinator: spy
         )
 
@@ -199,4 +202,33 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         XCTAssertEqual(spy.showUpgradeCallCount, 1)
         XCTAssertEqual(spy.showShoppingListCallCount, 0)
     }
+
+    func testToggleFavoriteSetsErrorMessageWhenServiceThrows() async {
+        mockUserDataService.shouldThrow = TestError.stub
+
+        let vm = makeViewModel()
+        for _ in 0..<10 { await Task.yield() }
+
+        await vm.toggleFavorite()
+
+        XCTAssertEqual(vm.errorMessage, Strings.Errors.favoriteFailed)
+    }
+
+    func testAddToShoppingListSetsErrorMessageWhenServiceThrows() async {
+        mockShoppingListService.shouldThrow = TestError.stub
+        let recipe = makeRecipe(ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion")])
+        let vm = makeViewModel(
+            recipe: recipe,
+            selectedIngredients: [Ingredient(name: "Garlic")],
+            subscription: premiumSubscription
+        )
+
+        await vm.addMissingToShoppingList()
+
+        XCTAssertEqual(vm.errorMessage, Strings.Errors.shoppingListAddFailed)
+    }
+}
+
+private enum TestError: Error {
+    case stub
 }

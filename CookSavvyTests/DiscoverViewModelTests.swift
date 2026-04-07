@@ -49,6 +49,7 @@ final class DiscoverViewModelTests: XCTestCase {
             cameraScanTracker: mockCameraScanTracker,
             recommendationService: mockRecommendationService,
             analyticsService: MockAnalyticsService(),
+            logger: MockLogger(),
             dietaryPreferences: DietaryPreferences(defaults: UserDefaults()),
             curatedCollectionService: mockCuratedCollectionService,
             coordinator: nil
@@ -203,6 +204,15 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertTrue(vm.showResults)
         XCTAssertEqual(mockRecipeService.getRecipesCallCount, 1)
     }
+
+    func testLoadInitialDataSetsHomeLoadErrorWhenHomeDataFails() async {
+        mockUserDataService.shouldThrow = TestError.stub
+
+        let vm = makeViewModel()
+        await vm.loadInitialData()
+
+        XCTAssertEqual(vm.homeLoadError, Strings.Errors.loadFailed)
+    }
 }
 
 // MARK: - RecipeSourceTypeTests
@@ -234,4 +244,8 @@ final class RecipeSourceTypeTests: XCTestCase {
         XCTAssertFalse(RecipeSourceType.requiresDatabaseReady([.offline, .online]))
         XCTAssertFalse(RecipeSourceType.requiresDatabaseReady([.online]))
     }
+}
+
+private enum TestError: Error {
+    case stub
 }

@@ -52,6 +52,7 @@ final class JourneyViewModelTests: XCTestCase {
             subscriptionService: subscriptionService,
             cameraScanTracker: MockCameraScanTracker(),
             analyticsService: MockAnalyticsService(),
+            logger: MockLogger(),
             coordinator: coordinator
         )
     }
@@ -249,6 +250,15 @@ final class JourneyViewModelTests: XCTestCase {
 
         XCTAssertEqual(coordinator.showRecipeDetailCallCount, 0)
         XCTAssertEqual(vm.cookAgainErrorMessage, Strings.Journey.cookAgainErrorMessage)
+    }
+
+    func testLoadDataSetsErrorMessageWhenPrimaryJourneyLoadFails() async {
+        mockUserDataService.shouldThrow = TestError.stub
+
+        let vm = makeViewModel()
+        await vm.loadData()
+
+        XCTAssertEqual(vm.errorMessage, Strings.Errors.journeyLoadFailed)
     }
 }
 

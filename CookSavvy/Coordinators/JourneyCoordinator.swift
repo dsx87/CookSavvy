@@ -34,6 +34,7 @@ final class JourneyCoordinator: ObservableObject, JourneyCoordinating, RecipeLis
             shoppingListService: container.shoppingListService,
             subscriptionService: container.subscriptionService,
             analyticsService: container.analyticsService,
+            logger: container.loggingService.makeLogger(category: .recipeDetailsViewModel),
             coordinator: self
         )
     }
@@ -41,6 +42,7 @@ final class JourneyCoordinator: ObservableObject, JourneyCoordinating, RecipeLis
     func makeShoppingListViewModel() -> ShoppingListViewModel {
         ShoppingListViewModel(
             shoppingListService: container.shoppingListService,
+            logger: container.loggingService.makeLogger(category: .shoppingListViewModel),
             onDismiss: { [weak self] in self?.dismissSheet() }
         )
     }
@@ -70,6 +72,7 @@ final class JourneyCoordinator: ObservableObject, JourneyCoordinating, RecipeLis
             subscriptionService: container.subscriptionService,
             cameraScanTracker: container.cameraScanTracker,
             analyticsService: container.analyticsService,
+            logger: container.loggingService.makeLogger(category: .journeyViewModel),
             coordinator: self
         )
     }
@@ -79,6 +82,7 @@ final class JourneyCoordinator: ObservableObject, JourneyCoordinating, RecipeLis
             title: title,
             recipes: recipes,
             userDataService: container.userDataService,
+            logger: container.loggingService.makeLogger(category: .recipeListViewModel),
             coordinator: self
         )
     }
@@ -88,6 +92,7 @@ final class JourneyCoordinator: ObservableObject, JourneyCoordinating, RecipeLis
             recipe: recipe,
             userDataService: container.userDataService,
             analyticsService: container.analyticsService,
+            logger: container.loggingService.makeLogger(category: .cookModeViewModel),
             onDismiss: { [weak self] in
                 self?.dismissFullScreenCover()
             }

@@ -7,6 +7,39 @@ import Foundation
 import UIKit
 @testable import CookSavvy
 
+final class MockLogger: LoggerProtocol {
+    private(set) var debugMessages: [String] = []
+    private(set) var infoMessages: [String] = []
+    private(set) var noticeMessages: [String] = []
+    private(set) var warningMessages: [String] = []
+    private(set) var errorMessages: [String] = []
+    private(set) var faultMessages: [String] = []
+
+    func debug(_ message: String) {
+        debugMessages.append(message)
+    }
+
+    func info(_ message: String) {
+        infoMessages.append(message)
+    }
+
+    func notice(_ message: String) {
+        noticeMessages.append(message)
+    }
+
+    func warning(_ message: String) {
+        warningMessages.append(message)
+    }
+
+    func error(_ message: String) {
+        errorMessages.append(message)
+    }
+
+    func fault(_ message: String) {
+        faultMessages.append(message)
+    }
+}
+
 // MARK: - MockDatabaseInitService
 
 final class MockDatabaseInitService: DatabaseInitializationServiceProtocol {

@@ -42,6 +42,7 @@ final class CookModeViewModelTests: XCTestCase {
             recipe: makeRecipe(stepCount: stepCount),
             userDataService: mockUserDataService,
             analyticsService: MockAnalyticsService(),
+            logger: MockLogger(),
             onDismiss: { [weak self] in self?.dismissCallCount += 1 }
         )
     }
@@ -138,4 +139,32 @@ final class CookModeViewModelTests: XCTestCase {
         XCTAssertFalse(vm.timerRunning)
         XCTAssertEqual(dismissCallCount, 1)
     }
+
+    func testSubmitFeedbackStillDismissesWhenSaveFails() async {
+        mockUserDataService.shouldThrow = TestError.stub
+        let vm = makeViewModel()
+        vm.finish()
+        vm.submitFeedback()
+
+        for _ in 0..<10 { await Task.yield() }
+
+        XCTAssertEqual(dismissCallCount, 1)
+        XCTAssertTrue(mockUserDataService.markAsCookedCalls.isEmpty)
+    }
+
+    func testSkipFeedbackStillDismissesWhenSaveFails() async {
+        mockUserDataService.shouldThrow = TestError.stub
+        let vm = makeViewModel()
+        vm.finish()
+        vm.skipFeedback()
+
+        for _ in 0..<10 { await Task.yield() }
+
+        XCTAssertEqual(dismissCallCount, 1)
+        XCTAssertTrue(mockUserDataService.markAsCookedCalls.isEmpty)
+    }
+}
+
+private enum TestError: Error {
+    case stub
 }

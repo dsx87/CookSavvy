@@ -35,6 +35,7 @@ final class AppContainer {
     let shoppingListService: ShoppingListServiceProtocol
     let recommendationService: RecipeRecommendationServiceProtocol
     let analyticsService: AnalyticsServiceProtocol
+    let loggingService: LoggingServiceProtocol
     let dietaryPreferences: DietaryPreferences
     let curatedCollectionService: CuratedCollectionServiceProtocol
 
@@ -103,6 +104,7 @@ final class AppContainer {
         #else
         self.analyticsService = AnalyticsService()
         #endif
+        self.loggingService = LoggingService()
         self.dietaryPreferences = DietaryPreferences()
         self.curatedCollectionService = CuratedCollectionService(dbInterface: db)
     }
@@ -122,7 +124,8 @@ final class AppContainer {
         subscriptionService: SubscriptionServiceProtocol,
         cameraScanTracker: CameraScanTrackerProtocol,
         shoppingListService: ShoppingListServiceProtocol,
-        recommendationService: RecipeRecommendationServiceProtocol
+        recommendationService: RecipeRecommendationServiceProtocol,
+        loggingService: LoggingServiceProtocol
     ) {
         self.dbInterface = dbInterface
         self.ingredientsService = ingredientsService
@@ -139,6 +142,7 @@ final class AppContainer {
         self.shoppingListService = shoppingListService
         self.recommendationService = recommendationService
         self.analyticsService = MockAnalyticsService()
+        self.loggingService = loggingService
         self.dietaryPreferences = DietaryPreferences()
         self.curatedCollectionService = CuratedCollectionService(dbInterface: dbInterface)
     }
@@ -195,7 +199,8 @@ final class AppContainer {
                 userDataService: userDataService,
                 dbInterface: db,
                 databaseInitService: databaseInitService
-            )
+            ),
+            loggingService: LoggingService()
         )
 
         UITestDataSeeder(db: db).seed(config: config)

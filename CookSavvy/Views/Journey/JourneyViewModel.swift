@@ -1,5 +1,4 @@
 import SwiftUI
-import os.log
 
 @MainActor
 protocol JourneyCoordinating: RecipeDetailsCoordinating {
@@ -11,11 +10,6 @@ protocol JourneyCoordinating: RecipeDetailsCoordinating {
 
 @MainActor
 final class JourneyViewModel: ObservableObject {
-    private static let logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "CookSavvy",
-        category: "JourneyViewModel"
-    )
-
     @Published var recipesCooked: Int = 0
     @Published var dayStreak: Int = 0
     @Published var hoursCooking: Double = 0
@@ -30,11 +24,13 @@ final class JourneyViewModel: ObservableObject {
     @Published var recentSessions: [CookingSession] = []
     @Published var isLoading = false
     @Published var cookAgainErrorMessage: String?
+    @Published var errorMessage: String?
 
     private let userDataService: UserDataServiceProtocol
     private let subscriptionService: SubscriptionServiceProtocol
     private let cameraScanTracker: CameraScanTrackerProtocol
     private let analyticsService: AnalyticsServiceProtocol
+    private let logger: any LoggerProtocol
     private weak var coordinator: (any JourneyCoordinating)?
     private var hasLoadedData = false
 
@@ -43,12 +39,14 @@ final class JourneyViewModel: ObservableObject {
         subscriptionService: SubscriptionServiceProtocol,
         cameraScanTracker: CameraScanTrackerProtocol,
         analyticsService: AnalyticsServiceProtocol,
+        logger: any LoggerProtocol,
         coordinator: (any JourneyCoordinating)? = nil
     ) {
         self.userDataService = userDataService
         self.subscriptionService = subscriptionService
         self.cameraScanTracker = cameraScanTracker
         self.analyticsService = analyticsService
+        self.logger = logger
         self.coordinator = coordinator
     }
 
@@ -96,6 +94,7 @@ final class JourneyViewModel: ObservableObject {
 
     func loadData() async {
         isLoading = true
+        errorMessage = nil
         async let statsTask: () = loadStats()
         async let savedTask: () = loadSavedRecipes()
         async let recipesTask: () = loadUserRecipes()
@@ -126,7 +125,7 @@ final class JourneyViewModel: ObservableObject {
             }
             coordinator?.showRecipeDetail(recipe: recipe, selectedIngredients: [])
         } catch {
-            Self.logger.error("Failed to load recipe for cook again: \(String(describing: error), privacy: .public)")
+            logger.error("Failed to load recipe for cook again: \(String(describing: error))")
             presentCookAgainError()
         }
     }
@@ -137,6 +136,10 @@ final class JourneyViewModel: ObservableObject {
 
     func toggleAchievementsExpanded() {
         isAchievementsExpanded.toggle()
+    }
+
+    func dismissError() {
+        errorMessage = nil
     }
 
     func showRecipeList(title: String, recipes: [Recipe]) {
@@ -183,7 +186,8 @@ final class JourneyViewModel: ObservableObject {
             monthlyRecipesCooked = try await userDataService.monthlyRecipesCooked()
             monthlyIngredientsRescued = try await userDataService.monthlyIngredientsRescued()
         } catch {
-            print("❌ Failed to load journey stats: \(error)")
+            logger.error("Failed to load journey stats: \(String(describing: error))")
+            errorMessage = Strings.Errors.journeyLoadFailed
         }
     }
 
@@ -191,7 +195,8 @@ final class JourneyViewModel: ObservableObject {
         do {
             userRecipes = try await userDataService.getUserRecipes()
         } catch {
-            print("❌ Failed to load user recipes: \(error)")
+            logger.error("Failed to load journey user recipes: \(String(describing: error))")
+            errorMessage = Strings.Errors.journeyLoadFailed
         }
     }
 
@@ -199,7 +204,8 @@ final class JourneyViewModel: ObservableObject {
         do {
             savedRecipes = try await userDataService.getFavorites()
         } catch {
-            print("❌ Failed to load saved recipes: \(error)")
+            logger.error("Failed to load journey saved recipes: \(String(describing: error))")
+            errorMessage = Strings.Errors.journeyLoadFailed
         }
     }
 
@@ -214,13 +220,17 @@ final class JourneyViewModel: ObservableObject {
                 daySet.insert(mondayBased)
             }
             weekCookingDates = daySet
-        } catch {}
+        } catch {
+            logger.error("Failed to load journey week activity: \(String(describing: error))")
+        }
     }
 
     private func loadRecentSessions() async {
         do {
             recentSessions = try await userDataService.getCookingSessions(limit: 5)
-        } catch {}
+        } catch {
+            logger.error("Failed to load journey recent sessions: \(String(describing: error))")
+        }
     }
 
     private func refreshAchievements() async {
@@ -242,6 +252,7 @@ final class JourneyViewModel: ObservableObject {
                 )
             )
         } catch {
+            logger.error("Failed to refresh journey achievements: \(String(describing: error))")
             achievements = AchievementEvaluator.evaluate(
                 metrics: AchievementMetrics(
                     recipesCooked: recipesCooked,

@@ -7,11 +7,11 @@ import Foundation
 
 @MainActor
 final class ShoppingListViewModel: ObservableObject {
-
     // MARK: - Published
 
     @Published var items: [ShoppingItem] = []
     @Published var isLoading = false
+    @Published var errorMessage: String?
 
     // MARK: - Computed
 
@@ -36,12 +36,18 @@ final class ShoppingListViewModel: ObservableObject {
     // MARK: - Private
 
     private let shoppingListService: ShoppingListServiceProtocol
+    private let logger: any LoggerProtocol
     private let onDismiss: () -> Void
 
     // MARK: - Init
 
-    init(shoppingListService: ShoppingListServiceProtocol, onDismiss: @escaping () -> Void) {
+    init(
+        shoppingListService: ShoppingListServiceProtocol,
+        logger: any LoggerProtocol,
+        onDismiss: @escaping () -> Void
+    ) {
         self.shoppingListService = shoppingListService
+        self.logger = logger
         self.onDismiss = onDismiss
         Task { await loadItems() }
     }
@@ -50,40 +56,48 @@ final class ShoppingListViewModel: ObservableObject {
 
     func loadItems() async {
         isLoading = true
+        errorMessage = nil
         defer { isLoading = false }
         do {
             items = try await shoppingListService.getItems()
         } catch {
-            print("❌ Failed to load shopping items: \(error)")
+            logger.error("Failed to load shopping items: \(String(describing: error))")
+            errorMessage = Strings.Errors.shoppingListLoadFailed
         }
     }
 
     func toggleItem(_ item: ShoppingItem) async {
+        errorMessage = nil
         do {
             let newState = try await shoppingListService.toggleItem(item)
             if let index = items.firstIndex(of: item) {
                 items[index].isChecked = newState
             }
         } catch {
-            print("❌ Failed to toggle shopping item: \(error)")
+            logger.error("Failed to toggle shopping item: \(String(describing: error))")
+            errorMessage = Strings.Errors.shoppingListActionFailed
         }
     }
 
     func removeItem(_ item: ShoppingItem) async {
+        errorMessage = nil
         do {
             try await shoppingListService.removeItem(item)
             items.removeAll { $0.id == item.id }
         } catch {
-            print("❌ Failed to remove shopping item: \(error)")
+            logger.error("Failed to remove shopping item: \(String(describing: error))")
+            errorMessage = Strings.Errors.shoppingListActionFailed
         }
     }
 
     func clearCompleted() async {
+        errorMessage = nil
         do {
             try await shoppingListService.clearCompleted()
             items.removeAll { $0.isChecked }
         } catch {
-            print("❌ Failed to clear completed items: \(error)")
+            logger.error("Failed to clear completed shopping items: \(String(describing: error))")
+            errorMessage = Strings.Errors.shoppingListActionFailed
         }
     }
 
@@ -95,5 +109,9 @@ final class ShoppingListViewModel: ObservableObject {
 
     func dismiss() {
         onDismiss()
+    }
+
+    func dismissError() {
+        errorMessage = nil
     }
 }

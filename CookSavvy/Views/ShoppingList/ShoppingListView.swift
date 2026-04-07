@@ -30,7 +30,25 @@ struct ShoppingListView: View {
                         }
                     }
                 }
+                .alert(Strings.Errors.errorAlertTitle, isPresented: errorBinding) {
+                    Button(Strings.Common.ok, role: .cancel) {
+                        viewModel.dismissError()
+                    }
+                } message: {
+                    Text(viewModel.errorMessage ?? "")
+                }
         }
+    }
+
+    private var errorBinding: Binding<Bool> {
+        Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    viewModel.dismissError()
+                }
+            }
+        )
     }
 
     // MARK: - Content

@@ -9,6 +9,20 @@ enum Strings {
         static let minutesCompact = String(localized: "common.minutesCompact", defaultValue: "%lldm")
     }
 
+    enum Errors {
+        static let loadFailed = String(localized: "errors.loadFailed", defaultValue: "We couldn't load this right now.")
+        static let actionFailed = String(localized: "errors.actionFailed", defaultValue: "That action didn't go through. Please try again.")
+        static let favoriteFailed = String(localized: "errors.favoriteFailed", defaultValue: "We couldn't update favorites right now.")
+        static let shoppingListAddFailed = String(localized: "errors.shoppingListAddFailed", defaultValue: "We couldn't add those items to your shopping list.")
+        static let shoppingListLoadFailed = String(localized: "errors.shoppingListLoadFailed", defaultValue: "We couldn't load your shopping list.")
+        static let shoppingListActionFailed = String(localized: "errors.shoppingListActionFailed", defaultValue: "We couldn't update your shopping list right now.")
+        static let settingsLoadFailed = String(localized: "errors.settingsLoadFailed", defaultValue: "We couldn't load your settings right now.")
+        static let clearDataFailed = String(localized: "errors.clearDataFailed", defaultValue: "We couldn't clear that data right now.")
+        static let cookModeSaveFailed = String(localized: "errors.cookModeSaveFailed", defaultValue: "We couldn't save your cooking progress.")
+        static let journeyLoadFailed = String(localized: "errors.journeyLoadFailed", defaultValue: "We couldn't load your kitchen activity right now.")
+        static let errorAlertTitle = String(localized: "errors.errorAlertTitle", defaultValue: "Something went wrong")
+    }
+
     enum Tab {
         static let discover = String(localized: "tab.discover", defaultValue: "Discover")
         static let journey = String(localized: "tab.journey", defaultValue: "My Kitchen")

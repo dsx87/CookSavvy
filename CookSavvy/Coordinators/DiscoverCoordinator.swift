@@ -33,6 +33,7 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating, Re
             shoppingListService: container.shoppingListService,
             subscriptionService: container.subscriptionService,
             analyticsService: container.analyticsService,
+            logger: container.loggingService.makeLogger(category: .recipeDetailsViewModel),
             coordinator: self
         )
     }
@@ -40,6 +41,7 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating, Re
     func makeShoppingListViewModel() -> ShoppingListViewModel {
         ShoppingListViewModel(
             shoppingListService: container.shoppingListService,
+            logger: container.loggingService.makeLogger(category: .shoppingListViewModel),
             onDismiss: { [weak self] in self?.dismissSheet() }
         )
     }
@@ -84,6 +86,7 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating, Re
             cameraScanTracker: container.cameraScanTracker,
             recommendationService: container.recommendationService,
             analyticsService: container.analyticsService,
+            logger: container.loggingService.makeLogger(category: .discoverViewModel),
             dietaryPreferences: container.dietaryPreferences,
             curatedCollectionService: container.curatedCollectionService,
             initialIngredients: initialIngredients,
@@ -96,6 +99,7 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating, Re
             title: title,
             recipes: recipes,
             userDataService: container.userDataService,
+            logger: container.loggingService.makeLogger(category: .recipeListViewModel),
             coordinator: self
         )
     }
@@ -105,6 +109,7 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating, Re
             recipe: recipe,
             userDataService: container.userDataService,
             analyticsService: container.analyticsService,
+            logger: container.loggingService.makeLogger(category: .cookModeViewModel),
             onDismiss: { [weak self] in
                 self?.dismissFullScreenCover()
             }

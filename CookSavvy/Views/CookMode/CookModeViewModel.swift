@@ -3,7 +3,6 @@ import Combine
 
 @MainActor
 final class CookModeViewModel: ObservableObject {
-
     let recipe: Recipe
 
     @Published var currentStep: Int = 0
@@ -15,6 +14,7 @@ final class CookModeViewModel: ObservableObject {
 
     private let userDataService: UserDataServiceProtocol
     private let analyticsService: AnalyticsServiceProtocol
+    private let logger: any LoggerProtocol
     private let onDismiss: () -> Void
     private var timerCancellable: AnyCancellable?
     private var startDate: Date?
@@ -24,11 +24,13 @@ final class CookModeViewModel: ObservableObject {
         recipe: Recipe,
         userDataService: UserDataServiceProtocol,
         analyticsService: AnalyticsServiceProtocol,
+        logger: any LoggerProtocol,
         onDismiss: @escaping () -> Void
     ) {
         self.recipe = recipe
         self.userDataService = userDataService
         self.analyticsService = analyticsService
+        self.logger = logger
         self.onDismiss = onDismiss
         self.startDate = Date()
     }
@@ -111,7 +113,7 @@ final class CookModeViewModel: ObservableObject {
             do {
                 try await userDataService.markAsCooked(recipe: recipe, duration: duration, rating: rating)
             } catch {
-                print("❌ Failed to mark recipe as cooked: \(error)")
+                logger.error("Failed to save cooked recipe feedback: \(String(describing: error))")
             }
         }
         onDismiss()
@@ -124,7 +126,7 @@ final class CookModeViewModel: ObservableObject {
             do {
                 try await userDataService.markAsCooked(recipe: recipe, duration: duration)
             } catch {
-                print("❌ Failed to mark recipe as cooked: \(error)")
+                logger.error("Failed to save cooked recipe progress: \(String(describing: error))")
             }
         }
         onDismiss()
