@@ -9,7 +9,7 @@ import SwiftUI
 final class AppCoordinator: ObservableObject {
 
     @Published var hasCompletedOnboarding: Bool = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
-    @Published private(set) var pendingOnboardingIngredients: [Ingredient]?
+    private var pendingOnboardingIngredients: [Ingredient]?
 
     private var _discoverCoordinator: DiscoverCoordinator?
     private var _journeyCoordinator: JourneyCoordinator?
