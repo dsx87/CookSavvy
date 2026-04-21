@@ -6,7 +6,6 @@
 import Foundation
 import Combine
 
-@MainActor
 protocol SubscriptionServiceProtocol: AnyObject {
     var currentPlan: SubscriptionPlan { get }
     var currentPlanPublisher: AnyPublisher<SubscriptionPlan, Never> { get }

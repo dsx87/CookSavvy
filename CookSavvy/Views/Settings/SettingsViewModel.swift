@@ -29,6 +29,25 @@ final class SettingsViewModel: ObservableObject {
     @Published var restoreError: String?
     @Published var errorMessage: String?
     @Published var themePreference: ThemePreference = .defaultValue
+    @Published private(set) var authState: AuthState = .unknown
+    @Published private(set) var isAnonymous: Bool = true
+    @Published var isSigningIn: Bool = false
+    @Published var showSignOutConfirmation: Bool = false
+
+    var isAuthAvailable: Bool {
+        authService.isAuthAvailable
+    }
+
+    var isSignedInWithApple: Bool {
+        !isAnonymous && currentUserId != nil
+    }
+
+    var currentUserId: String? {
+        if case .signedIn(let userId) = authState {
+            return userId
+        }
+        return nil
+    }
 
     // MARK: - Properties
 
@@ -39,6 +58,9 @@ final class SettingsViewModel: ObservableObject {
     private let dbInterface: DBInterfaceProtocol
     private let subscriptionService: SubscriptionServiceProtocol
     private let dietaryPreferences: DietaryPreferencesProtocol
+    private let authService: AuthServiceProtocol
+    private let analyticsService: AnalyticsServiceProtocol
+    private let signInWithAppleAction: SignInWithAppleActionProtocol
     private let logger: any LoggerProtocol
     private weak var coordinator: SettingsCoordinator?
     private var cancellables = Set<AnyCancellable>()
@@ -50,6 +72,9 @@ final class SettingsViewModel: ObservableObject {
         dbInterface: DBInterfaceProtocol,
         subscriptionService: SubscriptionServiceProtocol,
         dietaryPreferences: DietaryPreferencesProtocol,
+        authService: AuthServiceProtocol,
+        analyticsService: AnalyticsServiceProtocol,
+        signInWithAppleAction: SignInWithAppleActionProtocol,
         logger: any LoggerProtocol,
         coordinator: SettingsCoordinator?
     ) {
@@ -57,6 +82,9 @@ final class SettingsViewModel: ObservableObject {
         self.dbInterface = dbInterface
         self.subscriptionService = subscriptionService
         self.dietaryPreferences = dietaryPreferences
+        self.authService = authService
+        self.analyticsService = analyticsService
+        self.signInWithAppleAction = signInWithAppleAction
         self.logger = logger
         self.coordinator = coordinator
 
@@ -82,10 +110,54 @@ final class SettingsViewModel: ObservableObject {
         
         currentPlan = subscriptionService.currentPlan
         themePreference = userDataService.getThemePreference()
+
+        authState = authService.authState
+        isAnonymous = authService.isAnonymous
+        isSigningIn = signInWithAppleAction.isSigningIn
+        authService.authStatePublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] state in
+                self?.authState = state
+                self?.isAnonymous = self?.authService.isAnonymous ?? true
+            }
+            .store(in: &cancellables)
+        signInWithAppleAction.isSigningInPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isSigningIn in
+                self?.isSigningIn = isSigningIn
+            }
+            .store(in: &cancellables)
     }
     
     func showUpgrade() {
         coordinator?.showUpgrade()
+    }
+
+    func signInWithApple() async {
+        errorMessage = nil
+        errorMessage = await signInWithAppleAction.signIn(context: .settings).errorMessage
+    }
+
+    func signOut() async {
+        errorMessage = nil
+        do {
+            try await authService.signOut()
+        } catch {
+            logger.error("Sign out failed: \(String(describing: error))")
+            errorMessage = Strings.Errors.actionFailed
+            return
+        }
+
+        analyticsService.track(.signOutCompleted)
+        logger.info("Signed out successfully")
+
+        do {
+            try await authService.signInAnonymously()
+            logger.info("Reverted to anonymous session after sign-out")
+        } catch {
+            logger.error("Failed to create anonymous session after sign-out: \(String(describing: error))")
+            errorMessage = Strings.Auth.signOutGuestFailed
+        }
     }
     
     func restorePurchases() async {

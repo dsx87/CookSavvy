@@ -125,6 +125,13 @@ enum Icons {
         static let kosher = "star.circle.fill"
     }
 
+    enum Auth {
+        static let applelogo = "apple.logo"
+        static let personCircle = "person.crop.circle"
+        static let signOut = "rectangle.portrait.and.arrow.right"
+        static let checkmarkShield = "checkmark.shield"
+    }
+
     enum Mood {
         static let cozy = "flame"
         static let fresh = "leaf"

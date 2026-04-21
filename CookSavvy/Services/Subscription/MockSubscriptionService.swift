@@ -6,17 +6,18 @@
 import Foundation
 import Combine
 
-@MainActor
 final class MockSubscriptionService: SubscriptionServiceProtocol {
-    
-    @Published private(set) var currentPlan: SubscriptionPlan
-    
+
+    private let _currentPlan: CurrentValueSubject<SubscriptionPlan, Never>
+
+    var currentPlan: SubscriptionPlan { _currentPlan.value }
+
     var currentPlanPublisher: AnyPublisher<SubscriptionPlan, Never> {
-        $currentPlan.eraseToAnyPublisher()
+        _currentPlan.eraseToAnyPublisher()
     }
-    
+
     init(initialPlan: SubscriptionPlan = .free) {
-        self.currentPlan = initialPlan
+        self._currentPlan = CurrentValueSubject(initialPlan)
     }
     
     func canAccessFeature(_ feature: PaidFeature) -> Bool {
@@ -29,7 +30,7 @@ final class MockSubscriptionService: SubscriptionServiceProtocol {
     
     func purchase(_ plan: SubscriptionPlan) async throws {
         try await Task.sleep(nanoseconds: 500_000_000)
-        currentPlan = plan
+        _currentPlan.send(plan)
     }
     
     func restorePurchases() async throws {
@@ -48,6 +49,6 @@ final class MockSubscriptionService: SubscriptionServiceProtocol {
     // MARK: - Test Helpers
     
     func setPlan(_ plan: SubscriptionPlan) {
-        currentPlan = plan
+        _currentPlan.send(plan)
     }
 }

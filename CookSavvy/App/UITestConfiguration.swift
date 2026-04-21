@@ -26,6 +26,7 @@ struct UITestConfiguration {
     let isEmptyDatabase: Bool
     let withLargeDataset: Bool
     let hasReachedCameraLimit: Bool
+    let isSignedInWithApple: Bool
 
     init(
         isUITesting: Bool,
@@ -37,7 +38,8 @@ struct UITestConfiguration {
         withShoppingItems: Bool,
         isEmptyDatabase: Bool = false,
         withLargeDataset: Bool = false,
-        hasReachedCameraLimit: Bool = false
+        hasReachedCameraLimit: Bool = false,
+        isSignedInWithApple: Bool = false
     ) {
         self.isUITesting = isUITesting
         self.isFreshInstall = isFreshInstall
@@ -49,6 +51,7 @@ struct UITestConfiguration {
         self.isEmptyDatabase = isEmptyDatabase
         self.withLargeDataset = withLargeDataset
         self.hasReachedCameraLimit = hasReachedCameraLimit
+        self.isSignedInWithApple = isSignedInWithApple
     }
 
     static func fromLaunchArguments() -> UITestConfiguration {
@@ -68,7 +71,8 @@ struct UITestConfiguration {
             withShoppingItems: args.contains("--with-shopping-items"),
             isEmptyDatabase: args.contains("--empty-db"),
             withLargeDataset: args.contains("--large-dataset"),
-            hasReachedCameraLimit: args.contains("--camera-limit-reached")
+            hasReachedCameraLimit: args.contains("--camera-limit-reached"),
+            isSignedInWithApple: args.contains("--signed-in-apple")
         )
     }
 

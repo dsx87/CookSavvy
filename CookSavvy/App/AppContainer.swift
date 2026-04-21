@@ -36,6 +36,8 @@ final class AppContainer {
     let recommendationService: RecipeRecommendationServiceProtocol
     let analyticsService: AnalyticsServiceProtocol
     let loggingService: LoggingServiceProtocol
+    let authService: AuthServiceProtocol
+    let signInWithAppleAction: SignInWithAppleActionProtocol
     let dietaryPreferences: DietaryPreferences
     let curatedCollectionService: CuratedCollectionServiceProtocol
 
@@ -44,6 +46,13 @@ final class AppContainer {
     private init() {
         let loggingService = LoggingService()
         self.loggingService = loggingService
+
+        #if DEBUG
+        let analyticsService: AnalyticsServiceProtocol = MockAnalyticsService()
+        #else
+        let analyticsService: AnalyticsServiceProtocol = AnalyticsService()
+        #endif
+        self.analyticsService = analyticsService
 
         let db = DBInterface()
         self.dbInterface = db
@@ -62,17 +71,45 @@ final class AppContainer {
         let network = NetworkService()
         self.networkService = network
         
-        let llmProvider: LLMProviderProtocol?
+        let supabaseAssembly = SupabaseServiceAssembly()
+        let recipeAPIProvider = supabaseAssembly.recipeAPIProvider
+        let llmProvider = supabaseAssembly.llmProvider
+
+        if let clientProvider = supabaseAssembly.clientProvider {
+            self.authService = SupabaseAuthService(
+                clientProvider: clientProvider,
+                analyticsService: analyticsService,
+                logger: loggingService.makeLogger(category: .authService)
+            )
+        } else {
+            #if DEBUG
+            self.authService = MockAuthService(
+                initialState: .signedIn(userId: "mock-user"),
+                analyticsService: analyticsService
+            )
+            #else
+            self.authService = NoOpAuthService()
+            #endif
+        }
+
         #if DEBUG
-        llmProvider = MockLLMProvider()
+        let appleSignInManager: any AppleSignInManaging = supabaseAssembly.clientProvider == nil
+            ? MockAppleSignInManager()
+            : AppleSignInManager()
         #else
-        llmProvider = Self.createProductionProvider(networkService: network)
+        let appleSignInManager: any AppleSignInManaging = AppleSignInManager()
         #endif
+        self.signInWithAppleAction = SignInWithAppleAction(
+            authService: self.authService,
+            analyticsService: analyticsService,
+            logger: loggingService.makeLogger(category: .authService),
+            appleSignInManager: appleSignInManager
+        )
+
         let ai = AIService(provider: llmProvider)
         self.aiService = ai
         self.ingredientDetectionService = AIIngredientDetectionAdapter(aiService: ai)
 
-        let recipeAPIProvider = Self.createRecipeAPIProvider(networkService: network)
         let onlineSource = OnlineRecipeSource(provider: recipeAPIProvider)
         self.recipeService = RecipeService(
             dbInterface: db,
@@ -108,11 +145,6 @@ final class AppContainer {
 
         databaseInitService.startInitialization()
 
-        #if DEBUG
-        self.analyticsService = MockAnalyticsService()
-        #else
-        self.analyticsService = AnalyticsService()
-        #endif
         self.dietaryPreferences = DietaryPreferences(
             logger: loggingService.makeLogger(category: .dietaryPreferences)
         )
@@ -135,7 +167,10 @@ final class AppContainer {
         cameraScanTracker: CameraScanTrackerProtocol,
         shoppingListService: ShoppingListServiceProtocol,
         recommendationService: RecipeRecommendationServiceProtocol,
-        loggingService: LoggingServiceProtocol
+        loggingService: LoggingServiceProtocol,
+        authService: AuthServiceProtocol,
+        analyticsService: AnalyticsServiceProtocol = MockAnalyticsService(),
+        signInWithAppleAction: SignInWithAppleActionProtocol? = nil
     ) {
         self.dbInterface = dbInterface
         self.ingredientsService = ingredientsService
@@ -151,8 +186,15 @@ final class AppContainer {
         self.cameraScanTracker = cameraScanTracker
         self.shoppingListService = shoppingListService
         self.recommendationService = recommendationService
-        self.analyticsService = MockAnalyticsService()
+        self.analyticsService = analyticsService
         self.loggingService = loggingService
+        self.authService = authService
+        self.signInWithAppleAction = signInWithAppleAction ?? SignInWithAppleAction(
+            authService: authService,
+            analyticsService: analyticsService,
+            logger: loggingService.makeLogger(category: .authService),
+            appleSignInManager: MockAppleSignInManager()
+        )
         self.dietaryPreferences = DietaryPreferences(
             logger: loggingService.makeLogger(category: .dietaryPreferences)
         )
@@ -160,13 +202,6 @@ final class AppContainer {
     }
     #endif
 
-    private static func createRecipeAPIProvider(networkService: NetworkServiceProtocol) -> RecipeAPIProviderProtocol? {
-        guard let key = APIKeyConfiguration.spoonacularKey, !key.isEmpty else {
-            return nil
-        }
-        return SpoonacularProvider(apiKey: key, networkService: networkService)
-    }
-    
     #if DEBUG
     @MainActor
     static func configureForUITesting(_ config: UITestConfiguration) {
@@ -197,6 +232,7 @@ final class AppContainer {
             dataImportService: dataImport
         )
         let subscriptionPlan: SubscriptionPlan = config.isPremiumUser ? .premium : .free
+        let analyticsService = MockAnalyticsService()
 
         let container = AppContainer(
             dbInterface: db,
@@ -217,7 +253,15 @@ final class AppContainer {
                 dbInterface: db,
                 databaseInitService: databaseInitService
             ),
-            loggingService: loggingService
+            loggingService: loggingService,
+            authService: MockAuthService(
+                initialState: config.isSignedInWithApple
+                    ? .signedIn(userId: "mock-apple-user")
+                    : .signedIn(userId: "mock-anonymous-user"),
+                isAnonymous: !config.isSignedInWithApple,
+                analyticsService: analyticsService
+            ),
+            analyticsService: analyticsService
         )
 
         UITestDataSeeder(db: db).seed(config: config)
@@ -226,13 +270,4 @@ final class AppContainer {
         AppContainer.shared = container
     }
     #endif
-
-    private static func createProductionProvider(networkService: NetworkServiceProtocol) -> LLMProviderProtocol? {
-        if let openAIKey = APIKeyConfiguration.openAIKey, !openAIKey.isEmpty {
-            return OpenAIProvider(apiKey: openAIKey, networkService: networkService)
-        } else if let geminiKey = APIKeyConfiguration.geminiKey, !geminiKey.isEmpty {
-            return GeminiProvider(apiKey: geminiKey, networkService: networkService)
-        }
-        return nil
-    }
 }

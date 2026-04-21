@@ -1,6 +1,6 @@
 import Foundation
 
-final class SpoonacularProvider: RecipeAPIProviderProtocol {
+final class SpoonacularProvider: RecipeAPIProviderProtocol, @unchecked Sendable {
 
     var name: String { "Spoonacular" }
 

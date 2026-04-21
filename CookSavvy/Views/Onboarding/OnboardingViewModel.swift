@@ -235,12 +235,12 @@ final class OnboardingViewModel: ObservableObject {
             if let self, self.completionDelayNanoseconds > 0 {
                 try? await Task.sleep(nanoseconds: self.completionDelayNanoseconds)
             }
-            await self?.finishAfterDetectedIngredients(ingredients)
+            self?.finishAfterDetectedIngredients(ingredients)
         }
     }
 
     private func finishAfterDetectedIngredients(_ ingredients: [Ingredient]) {
-        guard !Task.isCancelled, !hasCompletedFlow else { return }
+        guard !hasCompletedFlow else { return }
         finish(with: ingredients, trackCompletion: true)
     }
 

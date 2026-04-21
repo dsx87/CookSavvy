@@ -18,6 +18,7 @@ struct CookSavvyApp: App {
 
 private struct ThemedAppRoot: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage(ThemePreference.storageKey) private var themePreferenceRawValue = ThemePreference.defaultValue.rawValue
     @StateObject private var coordinator: AppCoordinator
 
@@ -50,6 +51,16 @@ private struct ThemedAppRoot: View {
         }
         .preferredColorScheme(themePreference.preferredColorScheme)
         .environment(\.appTheme, themePreference.resolvedTheme(for: colorScheme))
+        .task {
+            await AppContainer.shared.authService.startSessionIfNeeded()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                Task {
+                    await AppContainer.shared.authService.startSessionIfNeeded()
+                }
+            }
+        }
     }
 
     private static func applyOnboardingMigrationIfNeeded(defaults: UserDefaults = .standard) {

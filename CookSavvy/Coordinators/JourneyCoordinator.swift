@@ -71,7 +71,8 @@ final class JourneyCoordinator: ObservableObject, JourneyCoordinating, RecipeLis
             userDataService: container.userDataService,
             subscriptionService: container.subscriptionService,
             cameraScanTracker: container.cameraScanTracker,
-            analyticsService: container.analyticsService,
+            authService: container.authService,
+            signInWithAppleAction: container.signInWithAppleAction,
             logger: container.loggingService.makeLogger(category: .journeyViewModel),
             coordinator: self
         )

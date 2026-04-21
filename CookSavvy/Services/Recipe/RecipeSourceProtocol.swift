@@ -8,7 +8,7 @@
 import Foundation
 
 /// Represents the source from which recipes can be fetched
-enum RecipeSourceType: String, Codable, CaseIterable {
+enum RecipeSourceType: String, Codable, CaseIterable, Sendable {
     case offline = "Offline"
     case online = "Online"
     case ai = "AI"

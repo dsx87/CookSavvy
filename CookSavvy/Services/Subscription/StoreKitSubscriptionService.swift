@@ -8,13 +8,14 @@ import StoreKit
 import Combine
 
 // TODO: Review this
-@MainActor
 final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
-    
-    @Published private(set) var currentPlan: SubscriptionPlan = .free
-    
+
+    private let _currentPlan = CurrentValueSubject<SubscriptionPlan, Never>(.free)
+
+    var currentPlan: SubscriptionPlan { _currentPlan.value }
+
     var currentPlanPublisher: AnyPublisher<SubscriptionPlan, Never> {
-        $currentPlan.eraseToAnyPublisher()
+        _currentPlan.eraseToAnyPublisher()
     }
     
     private var products: [String: Product] = [:]
@@ -121,7 +122,7 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
             }
         }
         
-        currentPlan = highestPlan
+        _currentPlan.send(highestPlan)
         cachePlan(highestPlan)
     }
     
@@ -153,7 +154,7 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
     private func loadCachedPlan() {
         if let rawValue = UserDefaults.standard.string(forKey: cacheKey),
            let plan = SubscriptionPlan(rawValue: rawValue) {
-            currentPlan = plan
+            _currentPlan.send(plan)
         }
     }
     

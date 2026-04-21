@@ -183,6 +183,8 @@ enum Strings {
         static let thisMonth = String(localized: "journey.thisMonth", defaultValue: "THIS MONTH")
         static let monthlyMeals = String(localized: "journey.monthlyMeals", defaultValue: "Meals\nCooked")
         static let monthlyRescued = String(localized: "journey.monthlyRescued", defaultValue: "Ingredients\nRescued")
+        static let signIn = String(localized: "journey.signIn", defaultValue: "Sign In")
+        static let accountSecured = String(localized: "journey.accountSecured", defaultValue: "Your recipes and preferences are backed up")
     }
 
     enum CookMode {
@@ -293,6 +295,19 @@ enum Strings {
         static let comfort = String(localized: "moodFilter.comfort", defaultValue: "Comfort")
         static let quick = String(localized: "moodFilter.quick", defaultValue: "Quick")
         static let refineByMood = String(localized: "moodFilter.refineByMood", defaultValue: "REFINE BY MOOD")
+    }
+
+    enum Auth {
+        static let accountHeader = String(localized: "auth.accountHeader", defaultValue: "Account")
+        static let signInWithApple = String(localized: "auth.signInWithApple", defaultValue: "Sign in with Apple")
+        static let signInSubtitle = String(localized: "auth.signInSubtitle", defaultValue: "Back up your preferences and secure your account")
+        static let signOut = String(localized: "auth.signOut", defaultValue: "Sign Out")
+        static let signOutConfirmTitle = String(localized: "auth.signOutConfirmTitle", defaultValue: "Sign Out?")
+        static let signOutConfirmMessage = String(localized: "auth.signOutConfirmMessage", defaultValue: "You'll continue as a guest. Your local recipes and favorites will stay on this device.")
+        static let signedInAs = String(localized: "auth.signedInAs", defaultValue: "Signed in with Apple")
+        static let guestAccount = String(localized: "auth.guestAccount", defaultValue: "Guest")
+        static let signingIn = String(localized: "auth.signingIn", defaultValue: "Signing in…")
+        static let signOutGuestFailed = String(localized: "auth.signOutGuestFailed", defaultValue: "You've been signed out, but we couldn't restore a guest session. Online features may be unavailable until you're back online.")
     }
 
     enum Accessibility {

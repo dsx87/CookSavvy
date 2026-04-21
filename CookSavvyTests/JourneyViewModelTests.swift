@@ -33,25 +33,40 @@ final class JourneyViewModelTests: XCTestCase {
 
     var mockUserDataService: MockUserDataService!
     var subscriptionService: MockSubscriptionService!
+    var mockAuthService: MockAuthService!
+    var mockAnalytics: MockAnalyticsService!
 
     override func setUp() {
         super.setUp()
         mockUserDataService = MockUserDataService()
         subscriptionService = MockSubscriptionService(initialPlan: .free)
+        mockAuthService = MockAuthService(initialState: .signedIn(userId: "mock-anonymous-user"), isAnonymous: true)
+        mockAnalytics = MockAnalyticsService()
     }
 
     override func tearDown() {
         mockUserDataService = nil
         subscriptionService = nil
+        mockAuthService = nil
+        mockAnalytics = nil
         super.tearDown()
     }
 
-    private func makeViewModel(coordinator: (any JourneyCoordinating)? = nil) -> JourneyViewModel {
+    private func makeViewModel(
+        coordinator: (any JourneyCoordinating)? = nil,
+        authService: MockAuthService? = nil
+    ) -> JourneyViewModel {
         JourneyViewModel(
             userDataService: mockUserDataService,
             subscriptionService: subscriptionService,
             cameraScanTracker: MockCameraScanTracker(),
-            analyticsService: MockAnalyticsService(),
+            authService: authService ?? mockAuthService,
+            signInWithAppleAction: SignInWithAppleAction(
+                authService: authService ?? mockAuthService,
+                analyticsService: mockAnalytics,
+                logger: MockLogger(),
+                appleSignInManager: MockAppleSignInManager()
+            ),
             logger: MockLogger(),
             coordinator: coordinator
         )
@@ -259,6 +274,47 @@ final class JourneyViewModelTests: XCTestCase {
         await vm.loadData()
 
         XCTAssertEqual(vm.errorMessage, Strings.Errors.journeyLoadFailed)
+    }
+
+    // MARK: - Auth
+
+    func testIsAnonymousTrueForGuestUser() {
+        let vm = makeViewModel()
+        XCTAssertTrue(vm.isAnonymous)
+        XCTAssertFalse(vm.isSignedInWithApple)
+    }
+
+    func testIsSignedInWithAppleWhenNotAnonymous() {
+        let auth = MockAuthService(initialState: .signedIn(userId: "apple-user"), isAnonymous: false)
+        let vm = makeViewModel(authService: auth)
+        XCTAssertFalse(vm.isAnonymous)
+        XCTAssertTrue(vm.isSignedInWithApple)
+    }
+
+    func testIsAuthAvailableReflectsAuthService() {
+        let vm = makeViewModel()
+        XCTAssertTrue(vm.isAuthAvailable)
+    }
+
+    func testSignInWithAppleUpdatesAnonymousState() async {
+        let vm = makeViewModel()
+        XCTAssertTrue(vm.isAnonymous)
+
+        await vm.signInWithApple()
+
+        XCTAssertFalse(vm.isAnonymous)
+        XCTAssertTrue(vm.isSignedInWithApple)
+        XCTAssertEqual(mockAuthService.signInWithAppleCallCount, 1)
+    }
+
+    func testSignInWithAppleSetsErrorOnFailure() async {
+        mockAuthService.signInWithAppleError = AuthError.signInFailed
+        let vm = makeViewModel()
+
+        await vm.signInWithApple()
+
+        XCTAssertTrue(vm.isAnonymous)
+        XCTAssertNotNil(vm.errorMessage)
     }
 }
 

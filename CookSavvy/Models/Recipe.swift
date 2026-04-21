@@ -194,6 +194,10 @@ extension Recipe: Identifiable {
 }
 
 extension Recipe: Hashable {}
+extension Recipe: Sendable {}
+extension Recipe.Step: Sendable {}
+extension Recipe.AdditionalInfo: Sendable {}
+extension Recipe.AdditionalInfo.InfoType: Sendable {}
 
 extension Recipe {
     var cookTimeMinutes: Int? {

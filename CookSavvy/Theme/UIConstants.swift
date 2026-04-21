@@ -556,6 +556,11 @@ struct UI {
         static let shortcutButtonPaddingH: CGFloat = 14
         static let shortcutButtonPaddingV: CGFloat = 10
         static let shortcutButtonSpacing: CGFloat = 8
+        static let accountCardPadding: CGFloat = 16
+        static let accountCardContentSpacing: CGFloat = 14
+        static let accountCardTextSpacing: CGFloat = 2
+        static let accountCardButtonSpacing: CGFloat = 6
+        static let accountCardIconSize: CGFloat = 28
     }
 
     // MARK: - CreateRecipe
@@ -667,5 +672,11 @@ struct UI {
         static let shadowOpacity: Double = 0.1
         static let shadowRadius: CGFloat = 8
         static let shadowY: CGFloat = 2
+    }
+
+    struct Auth {
+        static let signInButtonHeight: CGFloat = 50
+        static let signInButtonCornerRadius: CGFloat = 12
+        static let accountIconSize: CGFloat = 40
     }
 }

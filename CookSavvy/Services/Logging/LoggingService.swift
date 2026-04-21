@@ -12,6 +12,7 @@ enum LogCategory: String {
     case recipeService = "RecipeService"
     case dataImportService = "DataImportService"
     case subscriptionService = "SubscriptionService"
+    case authService = "AuthService"
     case dietaryPreferences = "DietaryPreferences"
     case asyncImageDisk = "AsyncImageDisk"
 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 @MainActor
 protocol JourneyCoordinating: RecipeDetailsCoordinating {
@@ -25,29 +26,58 @@ final class JourneyViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var cookAgainErrorMessage: String?
     @Published var errorMessage: String?
+    @Published private(set) var isAnonymous: Bool = true
+    @Published var isSigningIn: Bool = false
+
+    var isAuthAvailable: Bool {
+        authService.isAuthAvailable
+    }
+
+    var isSignedInWithApple: Bool {
+        !isAnonymous && authService.currentUserId != nil
+    }
 
     private let userDataService: UserDataServiceProtocol
     private let subscriptionService: SubscriptionServiceProtocol
     private let cameraScanTracker: CameraScanTrackerProtocol
-    private let analyticsService: AnalyticsServiceProtocol
+    private let authService: AuthServiceProtocol
+    private let signInWithAppleAction: SignInWithAppleActionProtocol
     private let logger: any LoggerProtocol
     private weak var coordinator: (any JourneyCoordinating)?
     private var hasLoadedData = false
+    private var cancellables = Set<AnyCancellable>()
 
     init(
         userDataService: UserDataServiceProtocol,
         subscriptionService: SubscriptionServiceProtocol,
         cameraScanTracker: CameraScanTrackerProtocol,
-        analyticsService: AnalyticsServiceProtocol,
+        authService: AuthServiceProtocol,
+        signInWithAppleAction: SignInWithAppleActionProtocol,
         logger: any LoggerProtocol,
         coordinator: (any JourneyCoordinating)? = nil
     ) {
         self.userDataService = userDataService
         self.subscriptionService = subscriptionService
         self.cameraScanTracker = cameraScanTracker
-        self.analyticsService = analyticsService
+        self.authService = authService
+        self.signInWithAppleAction = signInWithAppleAction
         self.logger = logger
         self.coordinator = coordinator
+
+        isAnonymous = authService.isAnonymous
+        isSigningIn = signInWithAppleAction.isSigningIn
+        authService.authStatePublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.isAnonymous = self?.authService.isAnonymous ?? true
+            }
+            .store(in: &cancellables)
+        signInWithAppleAction.isSigningInPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isSigningIn in
+                self?.isSigningIn = isSigningIn
+            }
+            .store(in: &cancellables)
     }
 
     var cookingTimeFormatted: String {
@@ -160,6 +190,13 @@ final class JourneyViewModel: ObservableObject {
         } else {
             coordinator?.showUpgrade()
         }
+    }
+
+    // MARK: - Auth
+
+    func signInWithApple() async {
+        errorMessage = nil
+        errorMessage = await signInWithAppleAction.signIn(context: .journey).errorMessage
     }
 
     // MARK: - Week Calendar Helpers

@@ -7,6 +7,7 @@ struct JourneyView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: UI.Journey.sectionSpacing) {
+                accountCardSection
                 savedRecipesSection
                 recentActivitySection
                 shoppingListSection
@@ -80,6 +81,84 @@ struct JourneyView: View {
     private func dismissActiveAlert() {
         viewModel.dismissCookAgainError()
         viewModel.dismissError()
+    }
+
+    @ViewBuilder
+    private var accountCardSection: some View {
+        if viewModel.isAuthAvailable {
+            if viewModel.isSignedInWithApple {
+                signedInCard
+            } else {
+                signInCard
+            }
+        }
+    }
+
+    private var signInCard: some View {
+        HStack(spacing: UI.Journey.accountCardContentSpacing) {
+            Image(systemName: Icons.Auth.personCircle)
+                .font(.system(size: UI.Auth.accountIconSize))
+                .foregroundStyle(theme.text3)
+
+            VStack(alignment: .leading, spacing: UI.Journey.accountCardTextSpacing) {
+                Text(Strings.Auth.guestAccount)
+                    .font(UI.Fonts.bodySemibold)
+                    .foregroundStyle(theme.text1)
+                Text(Strings.Auth.signInSubtitle)
+                    .font(UI.Fonts.caption)
+                    .foregroundStyle(theme.text3)
+            }
+
+            Spacer()
+
+            Button {
+                Task { await viewModel.signInWithApple() }
+            } label: {
+                HStack(spacing: UI.Journey.accountCardButtonSpacing) {
+                    if viewModel.isSigningIn {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                            .scaleEffect(0.7)
+                    } else {
+                        Image(systemName: Icons.Auth.applelogo)
+                            .font(UI.Fonts.caption)
+                    }
+                    Text(viewModel.isSigningIn ? Strings.Auth.signingIn : Strings.Journey.signIn)
+                        .font(UI.Fonts.captionSemibold)
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, UI.Journey.shortcutButtonPaddingH)
+                .padding(.vertical, UI.Journey.shortcutButtonPaddingV)
+                .background(theme.text1, in: Capsule())
+            }
+            .buttonStyle(.plain)
+            .disabled(viewModel.isSigningIn)
+        }
+        .padding(UI.Journey.accountCardPadding)
+        .frostCard(cornerRadius: UI.Common.cardCornerRadius)
+        .accessibilityIdentifier(AccessibilityID.Journey.accountCard)
+    }
+
+    private var signedInCard: some View {
+        HStack(spacing: UI.Journey.accountCardContentSpacing) {
+            Image(systemName: Icons.Auth.checkmarkShield)
+                .font(.system(size: UI.Journey.accountCardIconSize))
+                .foregroundStyle(theme.mint)
+
+            VStack(alignment: .leading, spacing: UI.Journey.accountCardTextSpacing) {
+                Text(Strings.Auth.signedInAs)
+                    .font(UI.Fonts.bodySemibold)
+                    .foregroundStyle(theme.text1)
+                Text(Strings.Journey.accountSecured)
+                    .font(UI.Fonts.caption)
+                    .foregroundStyle(theme.text3)
+            }
+
+            Spacer()
+        }
+        .padding(UI.Journey.accountCardPadding)
+        .frostCard(cornerRadius: UI.Common.cardCornerRadius)
+        .accessibilityIdentifier(AccessibilityID.Journey.accountCard)
     }
 
     private var savedRecipesSection: some View {

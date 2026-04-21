@@ -355,6 +355,116 @@
         }
       }
     },
+    "auth.accountHeader" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Account"
+          }
+        }
+      }
+    },
+    "auth.guestAccount" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Guest"
+          }
+        }
+      }
+    },
+    "auth.signedInAs" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Signed in with Apple"
+          }
+        }
+      }
+    },
+    "auth.signingIn" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Signing in…"
+          }
+        }
+      }
+    },
+    "auth.signInSubtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Back up your preferences and secure your account"
+          }
+        }
+      }
+    },
+    "auth.signInWithApple" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sign in with Apple"
+          }
+        }
+      }
+    },
+    "auth.signOut" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sign Out"
+          }
+        }
+      }
+    },
+    "auth.signOutConfirmMessage" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You'll continue as a guest. Your local recipes and favorites will stay on this device."
+          }
+        }
+      }
+    },
+    "auth.signOutConfirmTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sign Out?"
+          }
+        }
+      }
+    },
+    "auth.signOutGuestFailed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You've been signed out, but we couldn't restore a guest session. Online features may be unavailable until you're back online."
+          }
+        }
+      }
+    },
     "camera.accessDescription" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -1686,6 +1796,138 @@
         }
       }
     },
+    "errors.actionFailed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "That action didn't go through. Please try again."
+          }
+        }
+      }
+    },
+    "errors.clearDataFailed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "We couldn't clear that data right now."
+          }
+        }
+      }
+    },
+    "errors.cookModeSaveFailed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "We couldn't save your cooking progress."
+          }
+        }
+      }
+    },
+    "errors.errorAlertTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Something went wrong"
+          }
+        }
+      }
+    },
+    "errors.favoriteFailed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "We couldn't update favorites right now."
+          }
+        }
+      }
+    },
+    "errors.journeyLoadFailed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "We couldn't load your kitchen activity right now."
+          }
+        }
+      }
+    },
+    "errors.loadFailed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "We couldn't load this right now."
+          }
+        }
+      }
+    },
+    "errors.settingsLoadFailed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "We couldn't load your settings right now."
+          }
+        }
+      }
+    },
+    "errors.shoppingListActionFailed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "We couldn't update your shopping list right now."
+          }
+        }
+      }
+    },
+    "errors.shoppingListAddFailed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "We couldn't add those items to your shopping list."
+          }
+        }
+      }
+    },
+    "errors.shoppingListLoadFailed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "We couldn't load your shopping list."
+          }
+        }
+      }
+    },
+    "journey.accountSecured" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your recipes and preferences are backed up"
+          }
+        }
+      }
+    },
     "journey.achievements" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -2022,6 +2264,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Show All"
+          }
+        }
+      }
+    },
+    "journey.signIn" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sign In"
           }
         }
       }

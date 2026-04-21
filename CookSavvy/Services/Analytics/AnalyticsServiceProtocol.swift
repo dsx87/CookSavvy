@@ -15,6 +15,11 @@ enum AnalyticsEvent: String {
     case upgradePurchased = "upgrade_purchased"
     case upgradeDismissed = "upgrade_dismissed"
     case scanLimitHit = "scan_limit_hit"
+    case anonymousAuthCompleted = "anonymous_auth_completed"
+    case signInWithAppleStarted = "sign_in_with_apple_started"
+    case signInWithAppleCompleted = "sign_in_with_apple_completed"
+    case signInWithAppleFailed = "sign_in_with_apple_failed"
+    case signOutCompleted = "sign_out_completed"
 }
 
 protocol AnalyticsServiceProtocol: AnyObject {

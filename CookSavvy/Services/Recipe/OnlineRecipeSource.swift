@@ -43,7 +43,7 @@ final class OnlineRecipeSource: RecipeSourceProtocol {
                 throw RecipeSourceError.invalidData
             case .networkError(let underlyingError):
                 throw RecipeSourceError.networkError(underlyingError)
-            case .invalidAPIKey, .rateLimitExceeded:
+            case .invalidAPIKey, .notAuthenticated, .rateLimitExceeded:
                 throw RecipeSourceError.networkError(error)
             }
         } catch {

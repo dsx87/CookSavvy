@@ -68,6 +68,8 @@ struct Ingredient: Codable, Identifiable {
 }
 
 extension Ingredient: Hashable {}
+extension Ingredient: Sendable {}
+extension IngredientCategory: Sendable {}
 
 extension Ingredient: ExpressibleByStringLiteral {
     init(extendedGraphemeClusterLiteral value: String) {

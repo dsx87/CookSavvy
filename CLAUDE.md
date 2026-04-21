@@ -32,6 +32,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 - `--empty-db` — skips DB seeding for empty-state coverage
 - `--large-dataset` — adds a larger deterministic recipe set
 - `--camera-limit-reached` — preloads free-tier camera usage to the weekly cap
+- `--signed-in-apple` — boots with a mock Apple-authenticated session (non-anonymous)
 
 ## Subscription Tiers
 
@@ -54,7 +55,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 | **Recipe List** | Reusable See All destination for recent, saved, and user recipes |
 | **Cook Mode** | Full-screen step-by-step cooking flow with progress ring, timer, and prev/next navigation |
 | **Create Recipe** | 5-step wizard: Name & Photo → Ingredients → Steps → Details → Review & Save |
-| **Settings** | Subscription plan, usage limits, preferences (accessed from My Kitchen nav bar) |
+| **Settings** | Subscription plan, usage limits, account (Sign in with Apple / Sign Out), preferences (accessed from My Kitchen nav bar) |
 | **Camera** | Camera capture for AI ingredient detection (free users: 5/week via `CameraScanTracker`) |
 | **Upgrade** | Single-plan upgrade prompt (CookSavvy+) |
 | **Onboarding** | Camera-first first-launch walkthrough: 2 static intro pages followed by an embedded camera scan page; skip/type fallback lands on Discover ingredient selection and a successful first scan hands ingredients to Discover for immediate results |
@@ -101,7 +102,9 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 - **Infrastructure**: `ImageServiceProtocol` / `ImageService`, `DatabaseInitializationServiceProtocol` / `DatabaseInitializationService`, `DataImportServiceProtocol` / `DataImportService`, `CSVParser`
 - **Cross-cutting**: `LoggingServiceProtocol` / `LoggingService` creates feature-scoped `LoggerProtocol` instances backed by `os.Logger`
 - **Feature Services**: `ShoppingListServiceProtocol` / `ShoppingListService`, `RecipeRecommendationServiceProtocol` / `RecipeRecommendationService`, `CameraScanTrackerProtocol` / `CameraScanTracker`, `IngredientDetectionServiceProtocol` (impl: `AIIngredientDetectionAdapter`), `SubscriptionServiceProtocol` (impl: `StoreKitSubscriptionService` / `MockSubscriptionService`)
+- **Auth Services**: `AuthServiceProtocol`, `SupabaseAuthService`, `MockAuthService`, `NoOpAuthService` (RELEASE fallback when Supabase keys are missing), `SignInWithAppleAction` (shared SIWA flow, analytics, concurrency guard), `AppleSignInManager` / `AppleSignInManaging` (ASAuthorizationController + SHA256 nonce for SIWA flow)
 - **Network Layer**: `NetworkServiceProtocol` / `NetworkService`, `NetworkConfiguration`, `URLBuilder`, `NetworkRequest`, `NetworkResponse`, `NetworkError`, `HTTPMethod`
+- **Supabase Layer** (`Services/Supabase/`): `SupabaseConfiguration`, `SupabaseClientProviderProtocol` / `SupabaseClientProvider`, `SupabaseLLMProvider`, `SupabaseRecipeAPIProvider`, `SupabaseRecipeDTOs`, `SupabaseServiceAssembly`
 - **Recipe Sources** — `RecipeSourceProtocol` → `OfflineRecipeSource`, `OnlineRecipeSource` (via `RecipeAPIProviderProtocol`), `AIRecipeSource`
 - **Recipe API Providers** (`Network/RecipeAPIProvider/`):
   - `RecipeAPIProviderProtocol` — common interface for online recipe APIs
@@ -118,13 +121,20 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
   - `LLMProviderProtocol` — common interface
   - `OpenAIProvider` — OpenAI API integration
   - `GeminiProvider` — Google Gemini API integration
-  - `MockLLMProvider` — mock for testing/DEBUG builds
+  - `MockLLMProvider` — mock retained for UI testing and DEBUG-only helpers
   - `LLMModels`, `LLMProviderError` — shared types
 - **Provider selection** (in `AppContainer`):
-  - DEBUG → `MockLLMProvider`
-  - RELEASE → OpenAI (preferred) → Gemini → MockLLMProvider fallback
-- **API keys** stored in `Support/APIKeys.plist` (gitignored), read via `APIKeyConfiguration` enum (`App/APIKeyConfiguration.swift`)
-  - Keys: `OPENAI_API_KEY`, `GEMINI_API_KEY`, `SPOONACULAR_API_KEY`
+  - Normal DEBUG and RELEASE app runtime use `SupabaseServiceAssembly` for AI and online recipe providers when configured
+  - `OnlineRecipeSource` receives `SupabaseRecipeAPIProvider` for the `search-recipes` backend flow when Supabase is configured
+- **API keys** stored in `Support/APIKeys.plist` (gitignored)
+  - Active Supabase keys: `SUPABASE_URL`, `SUPABASE_ANON_KEY`
+  - Legacy direct-provider keys still exist in code/config readers but are not used by the active app wiring: `OPENAI_API_KEY`, `GEMINI_API_KEY`, `SPOONACULAR_API_KEY`
+- **Supabase runtime wiring**:
+  - Swift package dependency: `supabase-swift`
+  - `SupabaseConfiguration` reads optional `SUPABASE_URL` and `SUPABASE_ANON_KEY` placeholders from `APIKeys.plist`
+  - Normal app runtime wires `AIService` through `SupabaseLLMProvider`; `OnlineRecipeSource` is wired through `SupabaseRecipeAPIProvider`
+  - DEBUG runtime uses `SupabaseAuthService` when Supabase is configured; DEBUG without Supabase and UI tests use mock auth/sign-in managers
+  - `SupabaseAuthService` handles anonymous auth bootstrap and Sign in with Apple identity linking
 
 ### Subscription Layer
 - `SubscriptionServiceProtocol` — common interface (plan access, purchases, restore)
@@ -203,6 +213,13 @@ CookSavvy/
 │   │   └── LoggingService.swift
 │   ├── UserData/
 │   │   └── UserDataService.swift
+│   ├── Auth/
+│   │   ├── AuthServiceProtocol.swift
+│   │   ├── SupabaseAuthService.swift
+│   │   ├── MockAuthService.swift
+│   │   ├── NoOpAuthService.swift
+│   │   ├── AppleSignInManager.swift
+│   │   └── SignInWithAppleAction.swift
 │   ├── Subscription/
 │   │   ├── SubscriptionServiceProtocol.swift
 │   │   ├── StoreKitSubscriptionService.swift
@@ -222,6 +239,13 @@ CookSavvy/
 │   │       ├── OpenAIProvider.swift
 │   │       ├── GeminiProvider.swift
 │   │       └── MockLLMProvider.swift
+│   ├── Supabase/
+│   │   ├── SupabaseConfiguration.swift
+│   │   ├── SupabaseClientProvider.swift
+│   │   ├── SupabaseRecipeDTOs.swift
+│   │   ├── SupabaseServiceAssembly.swift
+│   │   ├── SupabaseLLMProvider.swift
+│   │   └── SupabaseRecipeAPIProvider.swift
 │   └── Database/
 │       ├── DBInterfaceProtocol.swift  — Protocol + errors
 │       ├── DBInterface.swift          — GRDB implementation
@@ -294,8 +318,12 @@ CookSavvy/
 CookSavvyTests/                        — Unit + integration tests
 ├── Mocks/
 │   ├── MockServices.swift              — MockDatabaseInitService, MockIngredientsService, MockRecipeService, MockRecommendationService, MockCameraScanTracker, MockImageService
+│   ├── MockSupabaseClientProvider.swift
 │   ├── MockUserDataService.swift
 │   └── MockShoppingListService.swift
+├── SupabaseConfigurationTests.swift
+├── SupabaseProviderTests.swift
+├── SupabaseServiceAssemblyTests.swift
 ├── CookSavvyTests.swift                — DBInterface integration tests
 ├── IngredientsServiceTests.swift
 ├── RecipeServiceTests.swift
@@ -321,7 +349,8 @@ CookSavvyTests/                        — Unit + integration tests
 ├── CookModeViewModelTests.swift
 ├── CreateRecipeViewModelTests.swift
 ├── ShoppingListViewModelTests.swift
-└── RecipeDetailsViewModelTests.swift
+├── RecipeDetailsViewModelTests.swift
+└── SettingsViewModelAuthTests.swift
 ```
 
 ## Documentation

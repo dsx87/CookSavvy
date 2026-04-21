@@ -26,6 +26,9 @@ final class SettingsCoordinator: ObservableObject {
             dbInterface: container.dbInterface,
             subscriptionService: container.subscriptionService,
             dietaryPreferences: container.dietaryPreferences,
+            authService: container.authService,
+            analyticsService: container.analyticsService,
+            signInWithAppleAction: container.signInWithAppleAction,
             logger: container.loggingService.makeLogger(category: .settingsViewModel),
             coordinator: self
         )

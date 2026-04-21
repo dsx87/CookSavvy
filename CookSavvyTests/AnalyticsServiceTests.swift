@@ -49,7 +49,10 @@ final class AnalyticsServiceTests: XCTestCase {
             .onboardingCameraScanCompleted, .onboardingTypeInsteadTapped,
             .cameraScanStarted, .recipeSearchPerformed, .recipeViewed,
             .recipeFavorited, .recipeCooked, .upgradeScreenViewed,
-            .upgradePurchased, .upgradeDismissed, .scanLimitHit
+            .upgradePurchased, .upgradeDismissed, .scanLimitHit,
+            .anonymousAuthCompleted, .signInWithAppleStarted,
+            .signInWithAppleCompleted, .signInWithAppleFailed,
+            .signOutCompleted
         ]
         for event in events {
             XCTAssertFalse(event.rawValue.isEmpty)

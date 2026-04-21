@@ -23,6 +23,10 @@
         "CookSavvyTests/RecipeRecommendationServiceTests",
         "CookSavvyTests/RecipeServiceTests",
         "CookSavvyTests/ShoppingListServiceTests",
+        "SupabaseIntegrationTests\/testAIRecipeGenerationEndToEndReturnsRecipes()",
+        "SupabaseIntegrationTests\/testAnonymousAuthFlowProvidesAccessToken()",
+        "SupabaseIntegrationTests\/testIngredientDetectionEndToEndWithConfiguredFixtureImage()",
+        "SupabaseIntegrationTests\/testRecipeSearchProviderEndToEndReturnsRecipes()",
         "CookSavvyTests/UserDataServiceTests"
       ],
       "target" : {

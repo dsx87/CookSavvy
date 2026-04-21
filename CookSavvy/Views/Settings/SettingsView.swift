@@ -12,69 +12,141 @@ struct SettingsView: View {
     @Environment(\.appTheme) private var theme
 
     var body: some View {
-            List {
-                appearanceSection
-                subscriptionSection
-                dietarySection
-                statsSection
-                dataManagementSection
-                appInfoSection
+        List {
+            if viewModel.isAuthAvailable {
+                accountSection
             }
-            .navigationTitle(Strings.Settings.navigationTitle)
-            .tint(theme.accent)
-            .task {
-                await viewModel.loadSettings()
+            appearanceSection
+            subscriptionSection
+            dietarySection
+            statsSection
+            dataManagementSection
+            appInfoSection
+        }
+        .navigationTitle(Strings.Settings.navigationTitle)
+        .tint(theme.accent)
+        .task {
+            await viewModel.loadSettings()
+        }
+        .refreshable {
+            await viewModel.loadSettings()
+        }
+        .alert(Strings.Settings.clearRecentAlertTitle, isPresented: $viewModel.showClearRecentAlert) {
+            Button(Strings.Common.cancel, role: .cancel) { }
+            Button(Strings.Settings.alertClear, role: .destructive) {
+                Task { await viewModel.clearRecentData() }
             }
-            .refreshable {
-                await viewModel.loadSettings()
+        } message: {
+            Text(Strings.Settings.clearRecentAlertMessage)
+        }
+        .alert(Strings.Settings.clearFavoritesAlertTitle, isPresented: $viewModel.showClearFavoritesAlert) {
+            Button(Strings.Common.cancel, role: .cancel) { }
+            Button(Strings.Settings.alertClear, role: .destructive) {
+                Task { await viewModel.clearFavorites() }
             }
-            .alert(Strings.Settings.clearRecentAlertTitle, isPresented: $viewModel.showClearRecentAlert) {
-                Button(Strings.Common.cancel, role: .cancel) { }
-                Button(Strings.Settings.alertClear, role: .destructive) {
-                    Task {
-                        await viewModel.clearRecentData()
-                    }
-                }
-            } message: {
-                Text(Strings.Settings.clearRecentAlertMessage)
+        } message: {
+            Text(Strings.Settings.clearFavoritesAlertMessage)
+        }
+        .alert(Strings.Settings.restoreFailed, isPresented: restoreErrorBinding) {
+            Button(Strings.Common.ok, role: .cancel) { }
+        } message: {
+            Text(viewModel.restoreError ?? "")
+        }
+        .alert(Strings.Errors.errorAlertTitle, isPresented: errorBinding) {
+            Button(Strings.Common.ok, role: .cancel) {
+                viewModel.dismissError()
             }
-            .alert(Strings.Settings.clearFavoritesAlertTitle, isPresented: $viewModel.showClearFavoritesAlert) {
-                Button(Strings.Common.cancel, role: .cancel) { }
-                Button(Strings.Settings.alertClear, role: .destructive) {
-                    Task {
-                        await viewModel.clearFavorites()
-                    }
-                }
-            } message: {
-                Text(Strings.Settings.clearFavoritesAlertMessage)
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
+        .alert(Strings.Auth.signOutConfirmTitle, isPresented: $viewModel.showSignOutConfirmation) {
+            Button(Strings.Common.cancel, role: .cancel) { }
+            Button(Strings.Auth.signOut, role: .destructive) {
+                Task { await viewModel.signOut() }
             }
-            .alert(Strings.Settings.restoreFailed, isPresented: .init(
-                get: { viewModel.restoreError != nil },
-                set: { if !$0 { viewModel.restoreError = nil } }
-            )) {
-                Button(Strings.Common.ok, role: .cancel) { }
-            } message: {
-                Text(viewModel.restoreError ?? "")
-            }
-            .alert(Strings.Errors.errorAlertTitle, isPresented: errorBinding) {
-                Button(Strings.Common.ok, role: .cancel) {
-                    viewModel.dismissError()
-                }
-            } message: {
-                Text(viewModel.errorMessage ?? "")
-            }
+        } message: {
+            Text(Strings.Auth.signOutConfirmMessage)
+        }
+    }
+
+    // MARK: - Alert Bindings
+
+    private var restoreErrorBinding: Binding<Bool> {
+        Binding(
+            get: { viewModel.restoreError != nil },
+            set: { if !$0 { viewModel.restoreError = nil } }
+        )
     }
 
     private var errorBinding: Binding<Bool> {
         Binding(
             get: { viewModel.errorMessage != nil },
-            set: { isPresented in
-                if !isPresented {
-                    viewModel.dismissError()
-                }
-            }
+            set: { if !$0 { viewModel.dismissError() } }
         )
     }
+
+    // MARK: - Account
+
+    private var accountSection: some View {
+        Section {
+            if viewModel.isSignedInWithApple {
+                signedInAccountContent
+            } else {
+                signInRow
+            }
+        } header: {
+            Text(Strings.Auth.accountHeader)
+        } footer: {
+            if viewModel.isAnonymous {
+                Text(Strings.Auth.signInSubtitle)
+            }
+        }
+    }
+
+    private var signInRow: some View {
+        Button {
+            Task { await viewModel.signInWithApple() }
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: Icons.Auth.applelogo)
+                    .font(.title3)
+                Text(viewModel.isSigningIn ? Strings.Auth.signingIn : Strings.Auth.signInWithApple)
+                    .font(UI.Fonts.bodySemibold)
+                Spacer()
+                if viewModel.isSigningIn {
+                    ProgressView()
+                }
+            }
+            .frame(height: UI.Auth.signInButtonHeight)
+        }
+        .disabled(viewModel.isSigningIn)
+    }
+
+    @ViewBuilder private var signedInAccountContent: some View {
+        HStack(spacing: 12) {
+            Image(systemName: Icons.Auth.checkmarkShield)
+                .font(.title3)
+                .foregroundStyle(theme.mint)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(Strings.Auth.signedInAs)
+                    .font(UI.Fonts.bodySemibold)
+                if let userId = viewModel.currentUserId {
+                    Text(userId)
+                        .font(UI.Fonts.caption)
+                        .foregroundStyle(theme.text2)
+                        .lineLimit(1)
+                }
+            }
+        }
+
+        Button(role: .destructive) {
+            viewModel.showSignOutConfirmation = true
+        } label: {
+            Label(Strings.Auth.signOut, systemImage: Icons.Auth.signOut)
+        }
+    }
+
+    // MARK: - Appearance
 
     private var appearanceSection: some View {
         Section {
@@ -86,8 +158,7 @@ struct SettingsView: View {
                 )
             ) {
                 ForEach(ThemePreference.allCases) { preference in
-                    Text(preference.displayName)
-                        .tag(preference)
+                    Text(preference.displayName).tag(preference)
                 }
             }
             .pickerStyle(.inline)
@@ -98,67 +169,78 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - Subscription
+
     private var subscriptionSection: some View {
         Section {
-            HStack {
-                VStack(alignment: .leading, spacing: UI.Settings.planInfoSpacing) {
-                    Text(viewModel.currentPlan.displayName)
-                        .font(.headline)
-                    Text(viewModel.currentPlan.description)
-                        .font(.caption)
-                        .foregroundStyle(theme.text2)
-                }
-                Spacer()
-                Image(systemName: Icons.Settings.planCheckmark)
-                    .foregroundStyle(theme.mint)
-            }
-            .accessibilityIdentifier(AccessibilityID.Settings.subscriptionSection)
-
+            planInfoRow
             if viewModel.currentPlan != .premium {
-                Button {
-                    viewModel.showUpgrade()
-                } label: {
-                    HStack {
-                        Image(systemName: Icons.Settings.crown)
-                            .foregroundStyle(theme.gold)
-                        Text(Strings.Settings.upgradePlan)
-                        Spacer()
-                        Image(systemName: Icons.Settings.chevronRight)
-                            .foregroundStyle(theme.text3)
-                    }
-                }
-                .accessibilityIdentifier(AccessibilityID.Settings.upgradeButton)
+                upgradeRow
             }
-
-            Button {
-                Task {
-                    await viewModel.restorePurchases()
-                }
-            } label: {
-                HStack {
-                    Text(Strings.Settings.restorePurchases)
-                    Spacer()
-                    if viewModel.isRestoringPurchases {
-                        ProgressView()
-                    }
-                }
-            }
-            .disabled(viewModel.isRestoringPurchases)
-
-            Button {
-                viewModel.openManageSubscriptions()
-            } label: {
-                HStack {
-                    Text(Strings.Settings.manageSubscription)
-                    Spacer()
-                    Image(systemName: Icons.Settings.manageSubscription)
-                        .foregroundStyle(theme.text3)
-                }
-            }
+            restorePurchasesRow
+            manageSubscriptionRow
         } header: {
             Text(Strings.Settings.subscriptionHeader)
         }
     }
+
+    private var planInfoRow: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: UI.Settings.planInfoSpacing) {
+                Text(viewModel.currentPlan.displayName)
+                    .font(.headline)
+                Text(viewModel.currentPlan.description)
+                    .font(.caption)
+                    .foregroundStyle(theme.text2)
+            }
+            Spacer()
+            Image(systemName: Icons.Settings.planCheckmark)
+                .foregroundStyle(theme.mint)
+        }
+        .accessibilityIdentifier(AccessibilityID.Settings.subscriptionSection)
+    }
+
+    private var upgradeRow: some View {
+        Button { viewModel.showUpgrade() } label: {
+            HStack {
+                Image(systemName: Icons.Settings.crown)
+                    .foregroundStyle(theme.gold)
+                Text(Strings.Settings.upgradePlan)
+                Spacer()
+                Image(systemName: Icons.Settings.chevronRight)
+                    .foregroundStyle(theme.text3)
+            }
+        }
+        .accessibilityIdentifier(AccessibilityID.Settings.upgradeButton)
+    }
+
+    private var restorePurchasesRow: some View {
+        Button {
+            Task { await viewModel.restorePurchases() }
+        } label: {
+            HStack {
+                Text(Strings.Settings.restorePurchases)
+                Spacer()
+                if viewModel.isRestoringPurchases {
+                    ProgressView()
+                }
+            }
+        }
+        .disabled(viewModel.isRestoringPurchases)
+    }
+
+    private var manageSubscriptionRow: some View {
+        Button { viewModel.openManageSubscriptions() } label: {
+            HStack {
+                Text(Strings.Settings.manageSubscription)
+                Spacer()
+                Image(systemName: Icons.Settings.manageSubscription)
+                    .foregroundStyle(theme.text3)
+            }
+        }
+    }
+
+    // MARK: - Dietary
 
     private var dietarySection: some View {
         Section {
@@ -176,6 +258,8 @@ struct SettingsView: View {
             Text(Strings.Dietary.sectionFooter)
         }
     }
+
+    // MARK: - Stats
 
     private var statsSection: some View {
         Section {
@@ -200,28 +284,12 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - Data Management
+
     private var dataManagementSection: some View {
         Section {
-            Button(role: .destructive) {
-                viewModel.showClearRecentAlert = true
-            } label: {
-                HStack {
-                    Image(systemName: Icons.Settings.trash)
-                    Text(Strings.Settings.clearRecentButton)
-                }
-            }
-            .disabled(viewModel.isLoading || viewModel.recentRecipeCount == 0)
-            .accessibilityIdentifier(AccessibilityID.Settings.clearRecent)
-
-            Button(role: .destructive) {
-                viewModel.showClearFavoritesAlert = true
-            } label: {
-                HStack {
-                    Image(systemName: Icons.Settings.trash)
-                    Text(Strings.Settings.clearFavoritesButton)
-                }
-            }
-            .disabled(viewModel.isLoading || viewModel.favoriteCount == 0)
+            clearRecentRow
+            clearFavoritesRow
         } header: {
             Text(Strings.Settings.dataManagementHeader)
         } footer: {
@@ -229,38 +297,69 @@ struct SettingsView: View {
         }
     }
 
+    private var clearRecentRow: some View {
+        Button(role: .destructive) {
+            viewModel.showClearRecentAlert = true
+        } label: {
+            Label(Strings.Settings.clearRecentButton, systemImage: Icons.Settings.trash)
+        }
+        .disabled(viewModel.isLoading || viewModel.recentRecipeCount == 0)
+        .accessibilityIdentifier(AccessibilityID.Settings.clearRecent)
+    }
+
+    private var clearFavoritesRow: some View {
+        Button(role: .destructive) {
+            viewModel.showClearFavoritesAlert = true
+        } label: {
+            Label(Strings.Settings.clearFavoritesButton, systemImage: Icons.Settings.trash)
+        }
+        .disabled(viewModel.isLoading || viewModel.favoriteCount == 0)
+    }
+
+    // MARK: - App Info
+
     private var appInfoSection: some View {
         Section {
-            HStack {
-                Text(Strings.Settings.versionLabel)
-                Spacer()
-                Text(viewModel.appVersion)
-                    .foregroundStyle(theme.text2)
-            }
-            .accessibilityIdentifier(AccessibilityID.Settings.versionLabel)
-
-            HStack {
-                Text(Strings.Settings.buildLabel)
-                Spacer()
-                Text(viewModel.buildNumber)
-                    .foregroundStyle(theme.text2)
-            }
+            infoRow(label: Strings.Settings.versionLabel, value: viewModel.appVersion)
+                .accessibilityIdentifier(AccessibilityID.Settings.versionLabel)
+            infoRow(label: Strings.Settings.buildLabel, value: viewModel.buildNumber)
         } header: {
             Text(Strings.Settings.appInfoHeader)
         }
     }
+
+    private func infoRow(label: String, value: String) -> some View {
+        HStack {
+            Text(label)
+            Spacer()
+            Text(value)
+                .foregroundStyle(theme.text2)
+        }
+    }
 }
 
+#if DEBUG
 #Preview {
     let dbInterface = DBInterface()
+    let authService = MockAuthService(initialState: .signedIn(userId: "mock-user"))
+    let analyticsService = MockAnalyticsService()
     return SettingsView(
         viewModel: SettingsViewModel(
             userDataService: UserDataService(dbInterface: dbInterface),
             dbInterface: dbInterface,
             subscriptionService: MockSubscriptionService(),
             dietaryPreferences: DietaryPreferences(),
+            authService: authService,
+            analyticsService: analyticsService,
+            signInWithAppleAction: SignInWithAppleAction(
+                authService: authService,
+                analyticsService: analyticsService,
+                logger: LoggingService().makeLogger(category: .authService),
+                appleSignInManager: MockAppleSignInManager()
+            ),
             logger: LoggingService().makeLogger(category: .settingsViewModel),
             coordinator: nil
         )
     )
 }
+#endif
