@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+/// The root tab-bar container that hosts the two main app tabs — Discover and My Kitchen.
+///
+/// Owned and driven by `AppCoordinator`, which lazily vends the per-tab coordinators.
+/// The accent colour is bound to the active theme so the tab bar tint updates dynamically.
 struct TabContainerView: View {
     @ObservedObject var coordinator: AppCoordinator
     @Environment(\.appTheme) var theme
@@ -19,6 +23,7 @@ struct TabContainerView: View {
         .tint(theme.accent)
     }
 
+    /// The Discover tab item wrapping the `DiscoverCoordinator` navigation stack.
     private var discoverTab: some View {
         coordinator.discoverCoordinator().start()
             .tabItem {
@@ -28,6 +33,7 @@ struct TabContainerView: View {
             .accessibilityIdentifier(AccessibilityID.Tab.discover)
     }
 
+    /// The My Kitchen tab item wrapping the `JourneyCoordinator` navigation stack.
     private var journeyTab: some View {
         coordinator.journeyCoordinator().start()
             .tabItem {

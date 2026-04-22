@@ -10,12 +10,44 @@ import GRDB
 import os.log
 
 // MARK: - GRDB-backed implementation
+
+/// GRDB-backed concrete implementation of `DBInterfaceProtocol`.
+///
+/// Manages a single SQLite database containing 9 tables:
+/// - `ingredients` / `ingredients_fts` — ingredient catalogue with FTS5 full-text search
+/// - `recipes` / `recipes_fts` — recipe catalogue with FTS5 search on title
+/// - `recipe_ingredients` — many-to-many link table (recipe ↔ ingredient name)
+/// - `recent_ingredients` — per-ingredient usage frequency and recency
+/// - `recent_recipes` — per-recipe view count and recency
+/// - `favorite_recipes` — user-bookmarked recipes
+/// - `recent_searches` — stored ingredient-combination searches (capped at 50 entries)
+/// - `cooking_sessions` — timestamped cook-mode completions with optional duration, rating, and rescued-ingredient list
+/// - `shopping_items` — premium shopping list entries
+///
+/// **Thread safety**: file-based databases use a `DatabasePool` (concurrent reads, serialised writes);
+/// the in-memory test variant uses a `DatabaseQueue`. GRDB serialises all write access automatically.
+///
+/// **JSON columns**: `instructions_json`, `ingredients_json`, `cleaned_ingredients_json`, and
+/// `additional_info_json` in `recipes` store model objects as JSON blobs to avoid schema churn
+/// as models evolve.
+///
+/// **Recipe cache**: a title-keyed in-memory dictionary (`maxRecipeCacheSize = 100`) reduces
+/// repeated JSON decoding for hot recipes. Eviction is simple FIFO.
+///
+/// **Dates**: all timestamps are stored as Unix epoch integers (seconds since 1970).
+///
+/// **Schema migrations**: `createSchema()` applies lightweight `ALTER TABLE` migrations inline
+/// using a `db.columns(in:).contains(…)` guard. New migrations should follow the same pattern.
 final class DBInterface: DBInterfaceProtocol {
     // MARK: - DB
+    /// GRDB writer providing thread-safe reads and serialised writes.
+    /// `DatabasePool` for file-based databases; `DatabaseQueue` for in-memory test databases.
     private let dbWriter: DatabaseWriter
 
     // MARK: - JSON coders
+    /// Shared encoder used when serialising recipe model objects to JSON columns.
     private let encoder = JSONEncoder()
+    /// Shared decoder used when deserialising recipe model objects from JSON columns.
     private let decoder = JSONDecoder()
     
     // MARK: - Logging
@@ -25,16 +57,25 @@ final class DBInterface: DBInterfaceProtocol {
     )
 
     // MARK: - Test helpers (only used in test mode)
+    /// Non-nil only when the instance was created with `inMemory: true`.
+    /// Wires deterministic ingredient-variant delivery into `getIngredients(byName:)`.
     private let testHelpers: DBTestHelpers?
     
     // MARK: - Recipe caching
+    /// In-memory title-keyed recipe cache to avoid repeated JSON decoding for hot recipes.
     private var recipeCache: [String: Recipe] = [:]
+    /// Serialises all access to `recipeCache` for thread safety.
     private let cacheQueue = DispatchQueue(label: "com.cooksavvy.database.recipe-cache")
+    /// Maximum number of recipes held in `recipeCache`. Eviction is simple FIFO.
     private let maxRecipeCacheSize = 100
 
+    /// Shared `SELECT` column list used in every recipe query, aliased under `r`.
+    /// Keeping this in one place ensures all queries produce the row shape that `decodeRecipe(from:)` expects.
     private static let recipeColumns = "r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.cleaned_ingredients_json, r.additional_info_json, r.source, r.tagline, r.user_rating, r.api_rating, r.author, r.is_user_created, r.emoji, r.cuisine"
 
     // MARK: - Init
+    /// Creates a file-based database in the app's Application Support directory (`CookSavvy/db.sqlite`).
+    /// - Throws: A `DatabaseError.initializationError` if the directory cannot be created or schema setup fails.
     convenience init() throws {
         let fileManager = FileManager.default
         let appSupportURL = try fileManager.url(
@@ -49,7 +90,12 @@ final class DBInterface: DBInterfaceProtocol {
         try self.init(databaseURL: databaseURL)
     }
     
-    /// Initializer for testing to force in-memory
+    /// Creates an in-memory database for unit tests when `inMemory` is `true`.
+    ///
+    /// The in-memory database uses a `DatabaseQueue` (not `DatabasePool`) and attaches a
+    /// `DBTestHelpers` instance for deterministic ingredient variant delivery. Passing `false`
+    /// falls through to the default file-based initialiser.
+    /// - Parameter inMemory: Pass `true` to force an in-memory SQLite database.
     convenience init(inMemory: Bool) throws {
         guard inMemory else {
             try self.init()
@@ -64,6 +110,8 @@ final class DBInterface: DBInterfaceProtocol {
         try self.init(dbWriter: writer, testHelpers: DBTestHelpers())
     }
 
+    /// Creates a file-based database at a specific URL using a `DatabasePool`.
+    /// - Parameter databaseURL: File URL for the `.sqlite` database file.
     convenience init(databaseURL: URL) throws {
         var configuration = Configuration()
         configuration.prepareDatabase { db in
@@ -73,6 +121,10 @@ final class DBInterface: DBInterfaceProtocol {
         try self.init(dbWriter: writer, testHelpers: nil)
     }
 
+    /// Designated initialiser: stores the writer, attaches test helpers, and creates the schema.
+    /// - Parameters:
+    ///   - dbWriter: A pre-configured GRDB writer (pool or queue).
+    ///   - testHelpers: Optional test-variant helper; non-nil only in in-memory mode.
     private init(dbWriter: DatabaseWriter, testHelpers: DBTestHelpers?) throws {
         self.dbWriter = dbWriter
         self.testHelpers = testHelpers
@@ -85,6 +137,18 @@ final class DBInterface: DBInterfaceProtocol {
     }
 
     // MARK: - Schema
+    /// Creates all database tables, FTS virtual tables, triggers, indexes, and inline migrations.
+    ///
+    /// All `CREATE TABLE` / `CREATE VIRTUAL TABLE` / `CREATE TRIGGER` / `CREATE INDEX` statements
+    /// use `IF NOT EXISTS`, making the method safe to call on every app launch.
+    ///
+    /// **FTS setup** (ingredients and recipes): each main table has a paired `_fts` virtual table
+    /// using FTS5 with `content=` pointing at the main table. Three triggers per table
+    /// (`_ai`, `_ad`, `_au`) keep the FTS index in sync with inserts, deletes, and updates.
+    ///
+    /// **Inline migration**: after creating `cooking_sessions`, the method checks whether the
+    /// `ingredients_rescued_json` column exists and runs `ALTER TABLE … ADD COLUMN` if absent.
+    /// This pattern allows lightweight schema evolution without a separate migration framework.
     private func createSchema() throws {
         try dbWriter.write { db in
             // 1. Ingredients
@@ -259,6 +323,12 @@ final class DBInterface: DBInterfaceProtocol {
     }
 
     // MARK: - DBInterfaceProtocol
+    /// Returns all ingredients whose name exactly matches `name` (case-insensitive `COLLATE NOCASE`).
+    ///
+    /// In test mode, delegates to `DBTestHelpers.getNextVariant(for:)` first, allowing unit tests
+    /// to control returned values without touching the real database rows.
+    /// - Parameter name: The exact ingredient name to look up.
+    /// - Returns: A single-element array if found, or an empty array if not.
     func getIngredients(byName name: String) throws -> [Ingredient] {
         // Use test helpers for variant tracking if available (test mode)
         if let testHelpers = testHelpers,
@@ -283,6 +353,14 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Searches ingredients using FTS5 prefix matching.
+    ///
+    /// The query is sanitised (double-quotes stripped) then wrapped in the FTS5 phrase-prefix
+    /// syntax `"<query>"*` so "chick" matches "Chicken", "Chicken Breast", etc. Results are
+    /// joined with the main `ingredients` table to retrieve full metadata and ordered by FTS5 rank.
+    /// - Parameters:
+    ///   - query: The user-entered search string. Empty queries return immediately with no results.
+    ///   - limit: Maximum number of results (default 50).
     func searchIngredients(matching query: String, limit: Int = 50) throws -> [Ingredient] {
         guard !query.isEmpty else { return [] }
         
@@ -314,6 +392,17 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Fetches paginated recipes that contain at least one of the specified ingredients.
+    ///
+    /// Uses `LIKE '%name%'` wildcards rather than exact joins so that "chicken" also matches
+    /// recipe ingredients listed as "chicken breast" or "grilled chicken". This trades some
+    /// precision for recall — scoring and ranking layers above this method handle deduplication.
+    ///
+    /// Hot results are served from the title-keyed `recipeCache` to avoid repeated JSON decoding.
+    /// - Parameters:
+    ///   - ingredients: The ingredient set to search by (empty set returns immediately).
+    ///   - offset: Pagination offset.
+    ///   - limit: Maximum number of results (default 20).
     func getRecipes(byIngredients ingredients: [Ingredient], offset: Int = 0, limit: Int = 20) throws -> [Recipe] {
         let ingredientNames = Set(ingredients.map { $0.name })
         if ingredientNames.isEmpty { return [] }
@@ -360,6 +449,7 @@ final class DBInterface: DBInterfaceProtocol {
         return results
     }
     
+    /// Fetches all recipes with offset pagination. Results are served from `recipeCache` where available.
     func getAllRecipes(offset: Int = 0, limit: Int = 50) throws -> [Recipe] {
         let sql = """
             SELECT \(Self.recipeColumns)
@@ -378,6 +468,9 @@ final class DBInterface: DBInterfaceProtocol {
         return results
     }
 
+    /// Fetches a single recipe by its primary key.
+    /// - Parameter id: The recipe's integer primary key.
+    /// - Returns: The decoded recipe if found, `nil` otherwise.
     func getRecipe(byID id: Int) throws -> Recipe? {
         let sql = """
             SELECT \(Self.recipeColumns)
@@ -395,6 +488,7 @@ final class DBInterface: DBInterfaceProtocol {
 
     // MARK: - Private Recipe Caching Methods
 
+    /// Returns a cached recipe for the given row, or decodes and caches it on first access.
     private func cachedRecipe(from row: Row) throws -> Recipe {
         let title: String = row["title"]
         if let cachedRecipe = cachedRecipe(forTitle: title) {
@@ -406,6 +500,7 @@ final class DBInterface: DBInterfaceProtocol {
         return recipe
     }
     
+    /// Stores a recipe in the cache, evicting the oldest entry (FIFO) when the limit is reached.
     private func cacheRecipe(_ recipe: Recipe) {
         cacheQueue.sync {
             // Enforce cache size limit with simple FIFO
@@ -418,22 +513,27 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Thread-safe read from `recipeCache` keyed by recipe title.
     private func cachedRecipe(forTitle title: String) -> Recipe? {
         cacheQueue.sync { recipeCache[title] }
     }
 
+    /// Removes all entries from `recipeCache`.
     private func clearRecipeCache() {
         cacheQueue.sync {
             recipeCache.removeAll()
         }
     }
 
+    /// Removes a single recipe from `recipeCache` by title; called after update and delete operations.
     private func removeCachedRecipe(forTitle title: String) {
         cacheQueue.sync {
             _ = recipeCache.removeValue(forKey: title)
         }
     }
 
+    /// Inserts or replaces a batch of ingredients using `INSERT OR REPLACE`.
+    /// In test mode, also registers each ingredient with `DBTestHelpers` for variant tracking.
     func insertIngredients(_ ingredients: [Ingredient]) throws {
         guard !ingredients.isEmpty else { return }
         try dbWriter.write { db in
@@ -455,6 +555,12 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Inserts a batch of recipes and their `recipe_ingredients` link rows in a single write transaction.
+    ///
+    /// Complex fields (`instructions`, `ingredients`, `cleanedIngredients`, `additionalInfo`) are
+    /// JSON-encoded before storage. Duplicate ingredient names within a single recipe are
+    /// deduplicated before inserting into `recipe_ingredients` — some CSV-sourced recipes list
+    /// the same ingredient more than once.
     func insertRecipes(_ recipes: [Recipe]) throws {
         guard !recipes.isEmpty else { return }
         try dbWriter.write { db in
@@ -486,15 +592,18 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Removes the given ingredients by extracting their names and delegating to `removeIngredients(_:)`.
     func removeIngredients(_ ingredients: [Ingredient]) throws {
         try removeIngredients(ingredients.map { $0.name })
     }
 
+    /// Removes the given recipes by extracting their titles and delegating to `removeRecipes(withTitles:)`.
     func removeRecipes(_ recipes: [Recipe]) throws {
         let titles = recipes.map { $0.title }
         try removeRecipes(withTitles: titles)
     }
 
+    /// Deletes all rows from every table, and clears the in-memory recipe cache and test variants.
     func clearDatabase() throws {
         try dbWriter.write { db in
             try db.execute(sql: "DELETE FROM recent_searches;")
@@ -512,6 +621,7 @@ final class DBInterface: DBInterfaceProtocol {
         clearRecipeCache()
     }
 
+    /// Clears recent search history, recent recipe views, and recent ingredient usage.
     func clearRecentData() throws {
         try dbWriter.write { db in
             try db.execute(sql: "DELETE FROM recent_searches;")
@@ -520,6 +630,7 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Deletes all entries from the `favorite_recipes` table.
     func clearFavorites() throws {
         try dbWriter.write { db in
             try db.execute(sql: "DELETE FROM favorite_recipes;")
@@ -528,6 +639,8 @@ final class DBInterface: DBInterfaceProtocol {
 
     // MARK: - Recent Ingredients
 
+    /// Returns the most recently used ingredients by joining `recent_ingredients` with `ingredients`,
+    /// sorted by `last_used_at` descending.
     func getRecentIngredients(limit: Int) throws -> [Ingredient] {
         return try dbWriter.read { db in
             let sql = """
@@ -549,6 +662,8 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Returns the most frequently used ingredients, with recency as a tiebreaker.
+    /// Sorted by `use_count` descending, then `last_used_at` descending.
     func getPopularIngredients(limit: Int) throws -> [Ingredient] {
         return try dbWriter.read { db in
             let sql = """
@@ -570,6 +685,11 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Upserts the ingredient into `recent_ingredients`, incrementing its `use_count`.
+    ///
+    /// A case-insensitive lookup resolves the canonical stored name before upserting, ensuring
+    /// "Chicken" and "chicken" both map to the same `recent_ingredients` row.
+    /// Silently skips if the ingredient does not exist in the `ingredients` table.
     func recordIngredientUsage(_ ingredient: Ingredient) throws {
         let timestamp = Int(Date().timeIntervalSince1970)
         try dbWriter.write { db in
@@ -601,6 +721,7 @@ final class DBInterface: DBInterfaceProtocol {
 
     // MARK: - Recent Recipes
 
+    /// Returns recently viewed recipes joined with their full data, sorted by `last_viewed_at` descending.
     func getRecentRecipes(limit: Int) throws -> [Recipe] {
         return try dbWriter.read { db in
             let sql = """
@@ -616,6 +737,7 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Upserts a recipe view event into `recent_recipes`, incrementing `view_count` on conflict.
     func recordRecipeView(_ recipeId: Int) throws {
         let timestamp = Int(Date().timeIntervalSince1970)
         try dbWriter.write { db in
@@ -632,6 +754,7 @@ final class DBInterface: DBInterfaceProtocol {
 
     // MARK: - Favorites
 
+    /// Returns all favorited recipes sorted by `added_at` descending.
     func getFavoriteRecipes() throws -> [Recipe] {
         return try dbWriter.read { db in
             let sql = """
@@ -646,6 +769,7 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Adds a recipe to favourites using `INSERT OR IGNORE` so duplicate calls are safe.
     func addFavorite(_ recipeId: Int) throws {
         let timestamp = Int(Date().timeIntervalSince1970)
         try dbWriter.write { db in
@@ -656,6 +780,7 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Removes a recipe from favourites.
     func removeFavorite(_ recipeId: Int) throws {
         try dbWriter.write { db in
             try db.execute(
@@ -665,6 +790,7 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Returns whether a recipe is currently in the user's favourites by counting matching rows.
     func isFavorite(_ recipeId: Int) throws -> Bool {
         return try dbWriter.read { db in
             let count = try Int.fetchOne(
@@ -678,6 +804,7 @@ final class DBInterface: DBInterfaceProtocol {
 
     // MARK: - Recent Searches
 
+    /// Returns recent ingredient-combination searches, deserialising each row's JSON ingredient-name array.
     func getRecentSearches(limit: Int) throws -> [[Ingredient]] {
         return try dbWriter.read { db in
             let sql = """
@@ -697,6 +824,8 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Records an ingredient search by serialising ingredient names to a JSON array.
+    /// Automatically prunes `recent_searches` to the 50 most recent entries to bound table size.
     func recordSearch(ingredients: [Ingredient]) throws {
         guard !ingredients.isEmpty else { return }
         let timestamp = Int(Date().timeIntervalSince1970)
@@ -727,10 +856,17 @@ final class DBInterface: DBInterfaceProtocol {
 
     // MARK: - Cooking Sessions
 
+    /// Records a cooking session without rescued-ingredient data. Delegates to the full variant.
     func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?, rating: Int?) throws {
         try recordCookingSession(recipeId: recipeId, date: date, duration: duration, rating: rating, rescuedIngredients: nil)
     }
 
+    /// Records a cooking session, optionally capturing which ingredients were actually used.
+    ///
+    /// When `rescuedIngredients` is provided, the names are JSON-encoded into
+    /// `ingredients_rescued_json`. This column overrides the recipe's linked `recipe_ingredients`
+    /// rows when computing "distinct cooked ingredients" statistics — useful when the user
+    /// substituted or omitted ingredients from the original recipe.
     func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?, rating: Int?, rescuedIngredients: [String]?) throws {
         let timestamp = Int(date.timeIntervalSince1970)
         let durationSeconds: Int? = duration.map { Int($0) }
@@ -745,6 +881,7 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Returns recent cooking sessions joined with recipe titles, including deserialised rescued-ingredient lists.
     func getCookingSessions(limit: Int) throws -> [CookingSession] {
         return try dbWriter.read { db in
             let sql = """
@@ -779,6 +916,7 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Returns the timestamps of all cooking sessions within an inclusive date range.
     func getCookingSessionDates(from startDate: Date, to endDate: Date) throws -> [Date] {
         let startTimestamp = Int(startDate.timeIntervalSince1970)
         let endTimestamp = Int(endDate.timeIntervalSince1970)
@@ -795,12 +933,14 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Returns the total number of recorded cooking sessions.
     func getCookingSessionCount() throws -> Int {
         return try dbWriter.read { db in
             try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM cooking_sessions;") ?? 0
         }
     }
 
+    /// Returns the cumulative duration of all cooking sessions as a `TimeInterval` (seconds).
     func getTotalCookingDuration() throws -> TimeInterval {
         return try dbWriter.read { db in
             let total = try Int.fetchOne(db, sql: "SELECT COALESCE(SUM(duration_seconds), 0) FROM cooking_sessions;") ?? 0
@@ -808,6 +948,7 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Returns the number of cooking sessions within a half-open date range `[startDate, endDate)`.
     func getCookingSessionCount(from startDate: Date, to endDate: Date) throws -> Int {
         return try dbWriter.read { db in
             let count = try Int.fetchOne(db,
@@ -817,6 +958,16 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Returns the count of distinct ingredients cooked within a date range.
+    ///
+    /// Uses a `UNION` query over two paths to handle both session types:
+    /// 1. Sessions **with** `ingredients_rescued_json`: expands the JSON array via SQLite's
+    ///    `json_each()` to obtain the explicitly-recorded ingredient names.
+    /// 2. Sessions **without** `ingredients_rescued_json`: joins `recipe_ingredients` to get
+    ///    the default ingredient list for the cooked recipe.
+    ///
+    /// This dual-path design ensures accurate statistics whether the user cooked the recipe
+    /// as-is or substituted ingredients.
     func getDistinctCookedIngredientCount(from startDate: Date, to endDate: Date) throws -> Int {
         return try dbWriter.read { db in
             let count = try Int.fetchOne(db,
@@ -842,6 +993,7 @@ final class DBInterface: DBInterfaceProtocol {
 
     // MARK: - User-Created Recipes
 
+    /// Returns all user-created recipes (`is_user_created = 1`), sorted by id descending (newest first).
     func getUserCreatedRecipes() throws -> [Recipe] {
         return try dbWriter.read { db in
             let sql = """
@@ -856,18 +1008,27 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Returns the count of user-created recipes.
     func getUserCreatedRecipeCount() throws -> Int {
         return try dbWriter.read { db in
             try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM recipes WHERE is_user_created = 1;") ?? 0
         }
     }
 
+    /// Sets `isUserCreated = true` on the recipe and delegates to `insertRecipes(_:)`.
     func insertUserRecipe(_ recipe: Recipe) throws {
         var userRecipe = recipe
         userRecipe.isUserCreated = true
         try insertRecipes([userRecipe])
     }
 
+    /// Updates all mutable fields of a user-created recipe and rebuilds its `recipe_ingredients` links.
+    ///
+    /// After the `UPDATE`, the existing `recipe_ingredients` rows for this recipe are deleted and
+    /// re-inserted from `recipe.ingredients`, deduplicating ingredient names in the same way as
+    /// `insertRecipes(_:)`. The recipe is then evicted from `recipeCache` so subsequent reads
+    /// pick up the new data.
+    /// - Throws: `DatabaseError.recipeNotFound` if no recipe with this title exists.
     func updateUserRecipe(_ recipe: Recipe) throws {
         guard let recipeId = try getRecipeId(byTitle: recipe.title) else {
             throw DatabaseError.recipeNotFound(recipe.title)
@@ -908,6 +1069,8 @@ final class DBInterface: DBInterfaceProtocol {
         removeCachedRecipe(forTitle: recipe.title)
     }
 
+    /// Deletes a user-created recipe. The `AND is_user_created = 1` guard prevents accidental
+    /// deletion of seeded recipes by ID collision.
     func deleteUserRecipe(recipeId: Int) throws {
         try dbWriter.write { db in
             try db.execute(
@@ -919,6 +1082,10 @@ final class DBInterface: DBInterfaceProtocol {
 
     // MARK: - Ingredient Queries
 
+    /// Returns all ingredients, optionally filtered to a specific food group, sorted alphabetically.
+    /// - Parameters:
+    ///   - foodGroup: Optional food group to filter by (e.g. `"Vegetables"`). `nil` returns all groups.
+    ///   - limit: Maximum number of results (default 100).
     func getAllIngredients(inGroup foodGroup: String? = nil, limit: Int = 100) throws -> [Ingredient] {
         return try dbWriter.read { db in
             let sql: String
@@ -953,6 +1120,7 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Returns all distinct non-null food group values in the `ingredients` table, sorted alphabetically.
     func getDistinctFoodGroups() throws -> [String] {
         return try dbWriter.read { db in
             try String.fetchAll(
@@ -979,6 +1147,7 @@ final class DBInterface: DBInterfaceProtocol {
 
     // MARK: - Shopping List
 
+    /// Returns all shopping list items ordered by `added_at` ascending (oldest first).
     func getShoppingItems() throws -> [ShoppingItem] {
         try dbWriter.read { db in
             try Row.fetchAll(db, sql: "SELECT id, name, is_checked, added_at, recipe_title FROM shopping_items ORDER BY added_at ASC;").map { row in
@@ -993,6 +1162,8 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Inserts multiple shopping items in a single write transaction and returns the persisted records.
+    /// All items share the same `added_at` timestamp and optional `recipeTitle`.
     func addShoppingItems(_ names: [String], recipeTitle: String?) throws -> [ShoppingItem] {
         let timestamp = Int(Date().timeIntervalSince1970)
         var inserted: [ShoppingItem] = []
@@ -1015,6 +1186,8 @@ final class DBInterface: DBInterfaceProtocol {
         return inserted
     }
 
+    /// Atomically reads the current `is_checked` state and writes its opposite.
+    /// - Returns: `true` if the item is now checked, `false` if now unchecked.
     func toggleShoppingItem(id: Int) throws -> Bool {
         try dbWriter.write { db in
             let current = try Int.fetchOne(db, sql: "SELECT is_checked FROM shopping_items WHERE id = ?;", arguments: [id]) ?? 0
@@ -1024,12 +1197,14 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Deletes a shopping item by primary key.
     func removeShoppingItem(id: Int) throws {
         try dbWriter.write { db in
             try db.execute(sql: "DELETE FROM shopping_items WHERE id = ?;", arguments: [id])
         }
     }
 
+    /// Deletes all shopping items where `is_checked = 1`.
     func clearCheckedShoppingItems() throws {
         try dbWriter.write { db in
             try db.execute(sql: "DELETE FROM shopping_items WHERE is_checked = 1;")
@@ -1038,6 +1213,7 @@ final class DBInterface: DBInterfaceProtocol {
 
     // MARK: - Statistics
 
+    /// Returns the total number of recipes in the database (seeded + user-created).
     func getRecipeCount() throws -> Int {
         return try dbWriter.read { db in
             try Int.fetchOne(
@@ -1047,6 +1223,11 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Returns the count of distinct ingredients across all cooking sessions (all time).
+    ///
+    /// Uses the same `UNION` logic as the date-ranged variant: sessions with
+    /// `ingredients_rescued_json` expand that JSON array; sessions without it join
+    /// `recipe_ingredients` for the recipe's default ingredient list.
     func getDistinctCookedIngredientCount() throws -> Int {
         return try dbWriter.read { db in
             let sql = """
@@ -1067,6 +1248,13 @@ final class DBInterface: DBInterfaceProtocol {
 
     // MARK: - Private Helpers
 
+    /// Decodes a `Recipe` from a GRDB `Row` matching the shape defined by `recipeColumns`.
+    ///
+    /// **Migration fallback for `instructions_json`**: older database rows may store instructions
+    /// as a JSON array of plain strings (`[String]`) rather than the current `[Recipe.Step]` format.
+    /// The decoder first attempts `[Recipe.Step]` decoding; on failure it retries as `[String]` and
+    /// converts each string to a `Recipe.Step` via `Step.init(plainText:)`, ensuring backward
+    /// compatibility without requiring a schema migration.
     private func decodeRecipe(from row: Row) throws -> Recipe {
         let title: String = row["title"]
         let image: String = row["image"]
@@ -1115,10 +1303,12 @@ final class DBInterface: DBInterfaceProtocol {
     }
 
     // MARK: - Test convenience & removal APIs used by tests
+    /// Removes a single ingredient by name; delegates to `removeIngredients(_:)`.
     func removeIngredient(named name: String) throws {
         try removeIngredients([name])
     }
 
+    /// Removes multiple ingredients by name using a single `DELETE … WHERE name IN (…)` statement.
     func removeIngredients(_ names: [String]) throws {
         guard !names.isEmpty else { return }
         let placeholders = Array(repeating: "?", count: names.count).joined(separator: ",")
@@ -1129,6 +1319,7 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Removes all rows from the `ingredients` table.
     func removeAllIngredients() throws {
         try dbWriter.write { db in
             try db.execute(sql: "DELETE FROM ingredients;")
@@ -1136,10 +1327,12 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Removes a single recipe by title; delegates to `removeRecipes(withTitles:)`.
     func removeRecipe(withTitle title: String) throws {
         try removeRecipes(withTitles: [title])
     }
 
+    /// Removes all rows from both `recipes` and `recipe_ingredients`.
     func removeAllRecipes() throws {
         try dbWriter.write { db in
             try db.execute(sql: "DELETE FROM recipes;")
@@ -1147,6 +1340,8 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    /// Removes all recipes that have at least one of the given ingredients linked via `recipe_ingredients`.
+    /// Uses a subquery with `EXISTS` to match recipes by ingredient name.
     func removeRecipes(byIngredients ingredients: [Ingredient]) throws {
         let names = Set(ingredients.map { $0.name })
         guard !names.isEmpty else { return }
@@ -1167,6 +1362,7 @@ final class DBInterface: DBInterfaceProtocol {
     }
 
     // MARK: - Private helpers
+    /// Deletes recipes by title using a single `DELETE … WHERE title IN (…)` statement.
     private func removeRecipes(withTitles titles: [String]) throws {
         guard !titles.isEmpty else { return }
         let placeholders = Array(repeating: "?", count: titles.count).joined(separator: ",")

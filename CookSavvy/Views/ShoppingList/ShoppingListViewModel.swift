@@ -5,16 +5,25 @@
 
 import Foundation
 
+/// ViewModel backing the Shopping List sheet (premium feature).
+///
+/// Maintains a flat list of `ShoppingItem` values and a grouped view for display.
+/// Supports toggling checked state, swipe-to-delete, and clearing all completed items.
+/// All mutations are persisted immediately via `ShoppingListServiceProtocol`.
 @MainActor
 final class ShoppingListViewModel: ObservableObject {
     // MARK: - Published
 
+    /// All shopping items; used as the source of truth for `groupedItems`.
     @Published var items: [ShoppingItem] = []
+    /// `true` while items are being loaded from the service.
     @Published var isLoading = false
+    /// Non-`nil` when any action fails; drives the error alert.
     @Published var errorMessage: String?
 
     // MARK: - Computed
 
+    /// Items grouped by recipe title, with recipe-less items last; within each group sorted by add date.
     var groupedItems: [(title: String?, items: [ShoppingItem])] {
         var groups: [String?: [ShoppingItem]] = [:]
         for item in items {
@@ -31,6 +40,7 @@ final class ShoppingListViewModel: ObservableObject {
             .map { ($0.key, $0.value.sorted { $0.addedAt < $1.addedAt }) }
     }
 
+    /// `true` when at least one item is checked (enabling the "Clear Done" button).
     var hasCompletedItems: Bool { items.contains { $0.isChecked } }
 
     // MARK: - Private
@@ -41,6 +51,7 @@ final class ShoppingListViewModel: ObservableObject {
 
     // MARK: - Init
 
+    /// Creates the shopping list view model and immediately loads persisted items.
     init(
         shoppingListService: ShoppingListServiceProtocol,
         logger: any LoggerProtocol,
@@ -54,6 +65,7 @@ final class ShoppingListViewModel: ObservableObject {
 
     // MARK: - Public Methods
 
+    /// Fetches all shopping items from the service, replacing the current list.
     func loadItems() async {
         isLoading = true
         errorMessage = nil
@@ -66,6 +78,7 @@ final class ShoppingListViewModel: ObservableObject {
         }
     }
 
+    /// Toggles the checked state of an item and persists the change.
     func toggleItem(_ item: ShoppingItem) async {
         errorMessage = nil
         do {
@@ -79,6 +92,7 @@ final class ShoppingListViewModel: ObservableObject {
         }
     }
 
+    /// Deletes an item from the list and the persistence layer.
     func removeItem(_ item: ShoppingItem) async {
         errorMessage = nil
         do {
@@ -90,6 +104,7 @@ final class ShoppingListViewModel: ObservableObject {
         }
     }
 
+    /// Removes all checked items from both the list and the persistence layer.
     func clearCompleted() async {
         errorMessage = nil
         do {
@@ -101,16 +116,19 @@ final class ShoppingListViewModel: ObservableObject {
         }
     }
 
+    /// Returns a VoiceOver label for the item's checkbox: "Check <name>" or "Uncheck <name>".
     func checkboxAccessibilityLabel(for item: ShoppingItem) -> String {
         item.isChecked
             ? String(format: Strings.Accessibility.uncheckItem, item.name)
             : String(format: Strings.Accessibility.checkItem, item.name)
     }
 
+    /// Dismisses the shopping list sheet.
     func dismiss() {
         onDismiss()
     }
 
+    /// Clears the currently displayed error message.
     func dismissError() {
         errorMessage = nil
     }

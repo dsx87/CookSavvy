@@ -5,10 +5,13 @@
 
 import Foundation
 
-/// Calls the `search-recipes` edge function used for the app's online recipe flow.
+/// `RecipeAPIProviderProtocol` implementation that calls the `search-recipes` Supabase Edge Function,
+/// enabling AI-powered online recipe search for premium users without exposing backend API keys on device.
 final class SupabaseRecipeAPIProvider: RecipeAPIProviderProtocol, @unchecked Sendable {
+    /// Identifies this provider in logs and error messages.
     var name: String { "Supabase" }
 
+    /// Edge function name constant used by this provider.
     private enum FunctionName {
         static let searchRecipes = "search-recipes"
     }
@@ -17,6 +20,10 @@ final class SupabaseRecipeAPIProvider: RecipeAPIProviderProtocol, @unchecked Sen
     private let configuration: SupabaseConfiguration
     private let decoder: JSONDecoder
 
+    /// - Parameters:
+    ///   - clientProvider: Supabase client used to invoke edge functions.
+    ///   - configuration: Used by `isAvailable()` to check whether Supabase credentials are present.
+    ///   - decoder: Pre-configured JSON decoder; defaults to the snake_case decoder from `SupabaseRecipeProviderSupport`.
     init(
         clientProvider: SupabaseClientProviderProtocol,
         configuration: SupabaseConfiguration = SupabaseConfiguration(),
@@ -27,6 +34,17 @@ final class SupabaseRecipeAPIProvider: RecipeAPIProviderProtocol, @unchecked Sen
         self.decoder = decoder
     }
 
+    /// Fetches AI-matched recipes from the `search-recipes` edge function for the given ingredients.
+    ///
+    /// The function receives a list of ingredient names and a desired result count. It returns
+    /// a ranked list of recipes with match metadata (`matchPercentage`, `matchReason`, `missingIngredients`).
+    /// - Parameters:
+    ///   - ingredients: The ingredients the user has selected; must be non-empty.
+    ///   - count: Maximum number of recipes to return.
+    /// - Returns: An array of `Recipe` values mapped from the API response DTOs.
+    /// - Throws: `RecipeAPIProviderError.noResults` if ingredients is empty or the response is empty;
+    ///   `RecipeAPIProviderError.networkError` or `.notAuthenticated` on transport/auth failure;
+    ///   `RecipeAPIProviderError.invalidResponse` if decoding fails.
     func fetchRecipes(for ingredients: [Ingredient], count: Int) async throws -> [Recipe] {
         guard !ingredients.isEmpty else {
             throw RecipeAPIProviderError.noResults
@@ -47,6 +65,7 @@ final class SupabaseRecipeAPIProvider: RecipeAPIProviderProtocol, @unchecked Sen
         return try SupabaseRecipeProviderSupport.decodeRecipes(from: data, using: decoder)
     }
 
+    /// Returns `true` when Supabase is fully configured (URL + anon key present).
     func isAvailable() async -> Bool {
         configuration.isConfigured
     }

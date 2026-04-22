@@ -5,6 +5,19 @@
 
 import Foundation
 // TODO: review this
+/// Legacy direct-call `LLMProviderProtocol` implementation targeting the OpenAI Chat Completions API.
+///
+/// Not wired in production — the active runtime routes through `SupabaseLLMProvider`. Retained
+/// in the codebase as a fallback and for potential future direct-API usage.
+///
+/// **Vision requests** encode the image as a base64 data URL and attach it as an `image_url`
+/// content part alongside the text prompt within a single user message.
+///
+/// **Chat requests** map `LLMMessage` roles directly to OpenAI role strings and wrap them in
+/// the standard `messages` array.
+///
+/// JSON mode is requested via `response_format: {"type": "json_object"}` when `responseFormat == .json`.
+/// The response is decoded with `.convertFromSnakeCase` to handle OpenAI's snake_case field names.
 final class OpenAIProvider: LLMProviderProtocol {
     
     var name: String { "OpenAI" }
@@ -14,6 +27,11 @@ final class OpenAIProvider: LLMProviderProtocol {
     private let baseURL: URL
     private let networkService: NetworkServiceProtocol
     
+    /// - Parameters:
+    ///   - apiKey: OpenAI secret key (`sk-…`).
+    ///   - model: Model identifier. Defaults to `gpt-4o-mini` for cost-effective vision support.
+    ///   - baseURL: Chat completions endpoint. Overridable for proxy/testing.
+    ///   - networkService: Network layer used to execute requests.
     init(
         apiKey: String,
         model: String = "gpt-4o-mini",
@@ -26,13 +44,9 @@ final class OpenAIProvider: LLMProviderProtocol {
         self.networkService = networkService
     }
     
+    /// Encodes the image as a base64 data URL and sends it alongside the prompt in a single
+    /// user message using OpenAI's multi-part vision content format.
     func sendVisionRequest(
-        imageData: Data,
-        mimeType: String,
-        prompt: String,
-        responseFormat: LLMResponseFormat
-    ) async throws -> LLMResponse {
-        let base64Image = imageData.base64EncodedString()
         let dataURL = "data:\(mimeType);base64,\(base64Image)"
         
         let requestBody = OpenAIRequest(
@@ -52,11 +66,8 @@ final class OpenAIProvider: LLMProviderProtocol {
         return try await sendRequest(body: requestBody)
     }
     
+    /// Maps `LLMMessage` roles to OpenAI role strings and builds a standard chat completions request.
     func sendChatRequest(
-        messages: [LLMMessage],
-        responseFormat: LLMResponseFormat
-    ) async throws -> LLMResponse {
-        let openAIMessages = messages.map { message in
             OpenAIMessage(
                 role: message.role.rawValue,
                 content: .text(message.content)
@@ -72,6 +83,8 @@ final class OpenAIProvider: LLMProviderProtocol {
         return try await sendRequest(body: requestBody)
     }
     
+    /// Executes the HTTP POST, maps network errors, and decodes the Chat Completions response.
+    /// Uses `.convertFromSnakeCase` decoding strategy to handle fields like `prompt_tokens`.
     private func sendRequest(body: OpenAIRequest) async throws -> LLMResponse {
         let request = NetworkRequest.post(
             url: baseURL,
@@ -121,11 +134,13 @@ final class OpenAIProvider: LLMProviderProtocol {
     
 }
 
+/// Chat Completions request body.
 private struct OpenAIRequest: Encodable {
     let model: String
     let messages: [OpenAIMessage]
     let responseFormat: OpenAIResponseFormat?
     
+    /// Wire key mapping for OpenAI Chat Completions request fields.
     enum CodingKeys: String, CodingKey {
         case model
         case messages
@@ -133,15 +148,19 @@ private struct OpenAIRequest: Encodable {
     }
 }
 
+/// A single message in the OpenAI messages array; content can be plain text or a vision part list.
 private struct OpenAIMessage: Encodable {
     let role: String
     let content: OpenAIContent
 }
 
+/// Encodes message content as either a plain string (text) or an array of vision parts,
+/// matching the polymorphic `content` field in the OpenAI Chat Completions API.
 private enum OpenAIContent: Encodable {
     case text(String)
     case vision([OpenAIVisionPart])
     
+    /// Encodes the polymorphic OpenAI `content` field as either string or part array.
     func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         switch self {
@@ -153,10 +172,12 @@ private enum OpenAIContent: Encodable {
     }
 }
 
+/// An individual part within a vision content array — either a text string or an image URL object.
 private enum OpenAIVisionPart: Encodable {
     case text(String)
     case imageURL(OpenAIImageURL)
     
+    /// Encodes a vision part using OpenAI's required `{type,...}` object format.
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         switch self {
@@ -169,6 +190,7 @@ private enum OpenAIVisionPart: Encodable {
         }
     }
     
+    /// Wire keys for OpenAI vision parts.
     enum CodingKeys: String, CodingKey {
         case type
         case text
@@ -176,38 +198,47 @@ private enum OpenAIVisionPart: Encodable {
     }
 }
 
+/// Image reference inside a vision part. `url` is a base64 data URL; `detail` controls
+/// OpenAI's image processing resolution ("auto", "low", or "high").
 private struct OpenAIImageURL: Encodable {
     let url: String
     let detail: String
 }
 
+/// Requests a structured output type from the model (e.g. `{"type": "json_object"}`).
 private struct OpenAIResponseFormat: Encodable {
     let type: String
 }
 
+/// Top-level Chat Completions response from the OpenAI API.
 private struct OpenAIResponse: Decodable {
     let choices: [OpenAIChoice]
     let usage: OpenAIUsage?
 }
 
+/// A single completion candidate returned by the API.
 private struct OpenAIChoice: Decodable {
     let message: OpenAIResponseMessage
 }
 
+/// The assistant message contained within a completion choice.
 private struct OpenAIResponseMessage: Decodable {
     let content: String
 }
 
+/// Token usage fields from the OpenAI response (snake_case decoded via `.convertFromSnakeCase`).
 private struct OpenAIUsage: Decodable {
     let promptTokens: Int
     let completionTokens: Int
     let totalTokens: Int
 }
 
+/// Top-level error response body returned by the OpenAI API on 4xx/5xx status codes.
 private struct OpenAIErrorResponse: Decodable {
     let error: OpenAIError
 }
 
+/// The nested error object within `OpenAIErrorResponse`.
 private struct OpenAIError: Decodable {
     let message: String
 }

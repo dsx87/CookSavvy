@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// Emoji-related helpers for single `Character` values.
 extension Character {
     /// A simple emoji is one scalar and presented to the user as an Emoji
     fileprivate var isSimpleEmoji: Bool {
@@ -17,5 +18,6 @@ extension Character {
     /// Checks if the scalars will be merged into an emoji
     fileprivate var isCombinedIntoEmoji: Bool { unicodeScalars.count > 1 && unicodeScalars.first?.properties.isEmoji ?? false }
 
+    /// `true` when the character is rendered as an emoji by the system.
     var isEmoji: Bool { isSimpleEmoji || isCombinedIntoEmoji }
 }

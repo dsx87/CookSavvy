@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// Internal constants used by `IngredientsService` to avoid magic values.
 private enum IngredientsServiceConstants {
     static let defaultFileName = "Food"
     static let defaultFileExtension = "json"
@@ -16,13 +17,22 @@ private enum IngredientsServiceConstants {
     static let populationProbeLimit = 1
 }
 
-/// Service for managing ingredient operations including autocompletion
+/// Manages the ingredient catalog and user ingredient history.
+///
+/// On first use, imports the ingredient catalog from a bundled JSON file into the SQLite database
+/// via `DBInterface`. Subsequent searches leverage GRDB's FTS5 full-text index for fast
+/// prefix-matching. The service also provides category browsing — note that `IngredientCategory`
+/// is a computed property derived from the raw `foodGroup` string stored in the database, so
+/// category-based queries require an intermediate mapping step through a proxy `Ingredient`.
 final class IngredientsService: IngredientsServiceProtocol {
     
     // MARK: - Properties
     
+    /// Database interface used for all ingredient read/write operations.
     private let dbInterface: DBInterfaceProtocol
+    /// Name of the bundled JSON file containing the ingredient catalog.
     private let ingredientsFileName: String
+    /// File extension of the bundled ingredient catalog file.
     private let ingredientsFileExtension: String
     
     /// Tracks whether ingredients have been imported
@@ -46,6 +56,11 @@ final class IngredientsService: IngredientsServiceProtocol {
     }
 
     #if DEBUG
+    /// Convenience initializer for DEBUG builds that creates its own `DBInterface`.
+    /// - Parameters:
+    ///   - ingredientsFileName: Name of the bundled JSON ingredient catalog (default: "Food").
+    ///   - ingredientsFileExtension: File extension of the catalog (default: "json").
+    /// - Throws: Any error thrown by `DBInterface` initialization.
     convenience init(
         ingredientsFileName: String = IngredientsServiceConstants.defaultFileName,
         ingredientsFileExtension: String = IngredientsServiceConstants.defaultFileExtension
@@ -136,6 +151,19 @@ final class IngredientsService: IngredientsServiceProtocol {
         }
     }
     
+    /// Returns ingredients, optionally filtered by category, up to `limit` results.
+    ///
+    /// Filtering by `IngredientCategory` requires a two-step mapping because the database
+    /// stores raw `foodGroup` strings rather than a typed category column. All distinct food
+    /// group strings are fetched first; each is mapped to an `IngredientCategory` by constructing
+    /// a throwaway `Ingredient` and reading its computed `.category` property. Only groups that
+    /// match the requested category are then queried for actual ingredients.
+    ///
+    /// - Parameters:
+    ///   - category: If provided, only ingredients in this category are returned. Pass `nil` for all ingredients.
+    ///   - limit: Maximum number of ingredients to return (default: 100).
+    /// - Returns: Array of matching ingredients.
+    /// - Throws: `IngredientsServiceError.searchFailed` if the database query fails.
     func getAllIngredients(category: IngredientCategory? = nil, limit: Int = IngredientsServiceConstants.defaultCategoryLimit) async throws -> [Ingredient] {
         if !isImported {
             try await ensureIngredientsLoaded()
@@ -163,6 +191,14 @@ final class IngredientsService: IngredientsServiceProtocol {
         }
     }
 
+    /// Returns the set of `IngredientCategory` values that have at least one ingredient in the database.
+    ///
+    /// Like `getAllIngredients(category:limit:)`, this requires mapping raw `foodGroup` strings
+    /// to `IngredientCategory` via a proxy `Ingredient`. Results are deduplicated with a `Set`
+    /// and returned in the canonical order defined by `IngredientCategory.allCases`.
+    ///
+    /// - Returns: Categories present in the database, in canonical declaration order.
+    /// - Throws: `IngredientsServiceError.databaseError` if the database query fails.
     func getCategories() async throws -> [IngredientCategory] {
         if !isImported {
             try await ensureIngredientsLoaded()
@@ -233,13 +269,19 @@ final class IngredientsService: IngredientsServiceProtocol {
 
 // MARK: - Error Types
 
-/// Errors that can occur during ingredient service operations
+/// Errors that can occur during ingredient service operations.
 enum IngredientsServiceError: Error, LocalizedError {
+    /// The bundled ingredient catalog file could not be located in the app bundle.
     case fileNotFound(String)
+    /// The ingredient catalog file was found but contained no ingredient entries.
     case emptyFile
+    /// Decoding or writing the ingredient catalog to the database failed.
     case importFailed(Error)
+    /// An FTS5 search query against the ingredients table failed.
     case searchFailed(Error)
+    /// A lookup by exact ingredient name failed.
     case retrievalFailed(Error)
+    /// A general database operation (e.g. fetching food groups) failed.
     case databaseError(Error)
     
     var errorDescription: String? {

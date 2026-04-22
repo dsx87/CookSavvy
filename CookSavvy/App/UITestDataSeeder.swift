@@ -6,18 +6,34 @@
 #if DEBUG
 import Foundation
 
+/// Seeds deterministic data into the database before UI tests run.
+///
+/// Called from `AppContainer.configureForUITesting(_:)` after the in-memory database is
+/// created. All seeded data uses fixed, predictable values so that UI assertions can rely on
+/// specific recipe titles, ingredient names, and session dates.
 @MainActor
 struct UITestDataSeeder {
+    /// Day offsets from today used to distribute cooking sessions across the past week.
     private static let cookingSessionOffsets = [-1, -2, -4, -6, -8]
+    /// Duration in seconds for each seeded cooking session, matched by index to `cookingSessionOffsets`.
     private static let cookingSessionDurations: [TimeInterval] = [1_200, 1_500, 1_800, 2_100, 2_400]
+    /// Star ratings for each seeded cooking session, matched by index.
     private static let cookingSessionRatings = [5, 4, 5, 3, 4]
 
     private let db: DBInterfaceProtocol
 
+    /// - Parameter db: The database interface to write seeded data into.
     init(db: DBInterfaceProtocol) {
         self.db = db
     }
 
+    /// Runs the full seeding pass for the given configuration.
+    ///
+    /// Always inserts the base ingredient and recipe sets unless `config.isEmptyDatabase` is true.
+    /// Optionally extends the dataset and seeds cooking history, favorites, and shopping items
+    /// based on the flags in `config`.
+    ///
+    /// - Parameter config: The launch-argument configuration that controls what is seeded.
     func seed(config: UITestConfiguration) {
         guard !config.isEmptyDatabase else { return }
 
@@ -47,6 +63,7 @@ struct UITestDataSeeder {
 
     // MARK: - Ingredients
 
+    /// Returns the deterministic set of 15 ingredients used across all seeded recipes.
     private static func makeIngredients() -> [Ingredient] {
         [
             Ingredient(name: "Garlic",         description: nil, pictureFileName: nil, foodGroup: "Vegetables",     foodSubgroup: "Alliums"),
@@ -69,6 +86,9 @@ struct UITestDataSeeder {
 
     // MARK: - Recipes
 
+    /// Builds the base set of 5 seeded recipes, each composed from the provided ingredients.
+    ///
+    /// - Parameter ingredients: The ingredient pool returned by ``makeIngredients()``.
     private static func makeRecipes(ingredients: [Ingredient]) -> [Recipe] {
         let byName: (String) -> Ingredient = { name in
             ingredients.first(where: { $0.name == name }) ?? Ingredient(name: name)
@@ -162,6 +182,13 @@ struct UITestDataSeeder {
         ]
     }
 
+    /// Generates 125 additional recipes (5 blueprints × 25 iterations) for large-dataset tests.
+    ///
+    /// Titles are suffixed with the iteration index to guarantee uniqueness. Serving count and
+    /// calorie values vary slightly across iterations to add realistic diversity without
+    /// sacrificing determinism.
+    ///
+    /// - Parameter ingredients: The ingredient pool returned by ``makeIngredients()``.
     private static func makeLargeDatasetRecipes(ingredients: [Ingredient]) -> [Recipe] {
         let byName: (String) -> Ingredient = { name in
             ingredients.first(where: { $0.name == name }) ?? Ingredient(name: name)
@@ -222,6 +249,10 @@ struct UITestDataSeeder {
 
     // MARK: - Cooking History
 
+    /// Inserts 5 cooking sessions spread across the past 8 days using fixed offsets and ratings.
+    ///
+    /// - Parameter recipes: The full recipe set to pull session subjects from (cycled by index).
+    /// - Throws: Database write errors.
     private func seedCookingHistory(recipes: [Recipe]) throws {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = .current
@@ -244,6 +275,10 @@ struct UITestDataSeeder {
 
     // MARK: - Favorites
 
+    /// Marks the first two seeded recipes as favorites.
+    ///
+    /// - Parameter recipes: The full recipe set.
+    /// - Throws: Database write errors.
     private func seedFavorites(recipes: [Recipe]) throws {
         for recipe in recipes.prefix(2) {
             if let recipeId = try db.getRecipeId(byTitle: recipe.title) {
@@ -254,6 +289,10 @@ struct UITestDataSeeder {
 
     // MARK: - Shopping Items
 
+    /// Adds three shopping items (Garlic, Olive Oil, Parmesan) attributed to the first seeded recipe.
+    ///
+    /// - Parameter recipes: The full recipe set; uses the first recipe for title attribution.
+    /// - Throws: Database write errors.
     private func seedShoppingItems(recipes: [Recipe]) throws {
         guard let firstRecipe = recipes.first else { return }
         _ = try db.addShoppingItems(["Garlic", "Olive Oil", "Parmesan"], recipeTitle: firstRecipe.title)

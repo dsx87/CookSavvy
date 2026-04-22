@@ -1,5 +1,6 @@
 import Foundation
 
+/// Constants that control recommendation sampling and scoring behaviour.
 private enum RecommendationConstants {
     static let defaultLimit = 5
     static let sessionSampleLimit = 20
@@ -11,17 +12,41 @@ private enum RecommendationConstants {
     static let standardSessionWeight = 1
 }
 
+/// Generates personalised recipe suggestions based on the user's cooking history and favourites.
+///
+/// ## Algorithm
+///
+/// 1. Fetch up to `sessionSampleLimit` recent cooking sessions and all favourites in parallel.
+/// 2. Build an `ingredientCounts` frequency map by scanning each recipe's ingredients and title
+///    against a curated list of `knownIngredients` (protein and staple keywords).
+///    - Ingredients in **favourites** contribute `favoriteWeight` (2) — stronger signal.
+///    - Ingredients in **sessions** contribute `highlyRatedWeight` (2) if the session rating
+///      is ≥ `highlyRatedThreshold` (4), otherwise `standardSessionWeight` (1).
+/// 3. Identify the single top-scoring ingredient (`topIngredient`).
+/// 4. Query the database for up to `candidateLimit` recipes containing `topIngredient`.
+/// 5. Filter out recipes cooked in the most recent `recentSessionWindow` (10) sessions
+///    to avoid repetition.
+/// 6. Return up to `limit` recipes with a localised reason string explaining the suggestion.
 final class RecipeRecommendationService: RecipeRecommendationServiceProtocol {
+    /// Provides access to the user's cooking history and favourites.
     private let userDataService: UserDataServiceProtocol
+    /// Database interface used to query candidate recipes.
     private let dbInterface: DBInterfaceProtocol
+    /// Awaited before querying to ensure the bundled recipe dataset is loaded.
     private let databaseInitService: DatabaseInitializationServiceProtocol
 
+    /// Protein and staple ingredient keywords scanned against recipe titles and ingredient names
+    /// when building the frequency map. Kept small and high-signal to avoid noise.
     private static let knownIngredients = [
         "chicken", "beef", "pork", "lamb", "fish", "salmon", "tuna",
         "shrimp", "turkey", "tofu", "lentil", "pasta", "rice",
         "potato", "mushroom", "tomato", "egg", "noodle"
     ]
 
+    /// - Parameters:
+    ///   - userDataService: Source of cooking history and favourites.
+    ///   - dbInterface: Database used to fetch candidate recipes.
+    ///   - databaseInitService: Awaited to ensure recipe data is seeded before querying.
     init(
         userDataService: UserDataServiceProtocol,
         dbInterface: DBInterfaceProtocol,
@@ -32,6 +57,14 @@ final class RecipeRecommendationService: RecipeRecommendationServiceProtocol {
         self.databaseInitService = databaseInitService
     }
 
+    /// Returns personalised recipe suggestions with a human-readable reason string.
+    ///
+    /// Returns an empty result (not an error) when the user has no history or favourites,
+    /// or when no known ingredient appears in their history.
+    /// - Parameter limit: Maximum number of recipes to return (default: 5).
+    /// - Returns: Up to `limit` suggested recipes and an optional localised reason string
+    ///   such as "Suggested because you often cook with Chicken".
+    /// - Throws: Errors from `UserDataService` or `DBInterface` reads.
     func getSuggestions(limit: Int = RecommendationConstants.defaultLimit) async throws -> (recipes: [Recipe], reason: String?) {
         await databaseInitService.waitForRecipes()
 

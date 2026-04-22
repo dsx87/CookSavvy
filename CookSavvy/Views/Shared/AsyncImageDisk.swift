@@ -8,6 +8,7 @@
 import SwiftUI
 import UIKit
 
+/// A simple placeholder view displaying a progress spinner, used while an image is loading from disk.
 struct DefaultPlaceholder: View {
     @Environment(\.appTheme) private var theme
 
@@ -26,6 +27,14 @@ struct DefaultPlaceholder: View {
 }
 
 
+/// A SwiftUI view that asynchronously loads and displays an image from the app's on-disk image cache
+/// via `ImageService`. Accepts a custom placeholder shown while the image is loading.
+///
+/// The full filename is assembled using a configurable `imageNameBuilder` closure, allowing
+/// callers to inject directory prefixes and file extensions. Falls back to the `DefaultPlaceholder`
+/// when no custom placeholder is provided via the convenience initialiser.
+///
+/// Services are resolved through the SwiftUI environment (`imageService`, `loggingService`).
 struct AsyncImageDisk<Placeholder: View>: View {
     
     let imageName: String
@@ -37,6 +46,13 @@ struct AsyncImageDisk<Placeholder: View>: View {
     @State private var image: UIImage? = nil
     @ViewBuilder private let placeholder: Placeholder
     
+    /// Creates an instance with a fully customised name-building strategy.
+    /// - Parameters:
+    ///   - imageName: The base filename, without prefix or extension.
+    ///   - contentMode: How the loaded image is scaled inside its frame.
+    ///   - imageNamePrefix: Optional directory prefix prepended by `imageNameBuilder`.
+    ///   - imageNameBuilder: Closure that assembles the full path from prefix + base name.
+    ///   - placeholder: View shown while the image loads.
     init(
         imageName: String,
         contentMode: ContentMode = .fill,
@@ -51,6 +67,11 @@ struct AsyncImageDisk<Placeholder: View>: View {
         self.imageNameBuilder = imageNameBuilder
     }
     
+    /// Convenience initialiser that uses the default prefix and `.jpg` extension.
+    /// - Parameters:
+    ///   - imageName: The base filename without extension.
+    ///   - contentMode: How the loaded image is scaled inside its frame.
+    ///   - placeholder: View shown while the image loads.
     init(
         imageName: String,
         contentMode: ContentMode = .fill,
@@ -95,20 +116,27 @@ struct AsyncImageDisk<Placeholder: View>: View {
     }
 }
 
+/// Custom SwiftUI environment key that carries the shared `ImageServiceProtocol` instance
+/// down the view hierarchy without explicit prop drilling.
 private struct ImageServiceEnvironmentKey: EnvironmentKey {
     static let defaultValue: (any ImageServiceProtocol)? = nil
 }
 
+/// Custom SwiftUI environment key that carries the shared `LoggingServiceProtocol` instance
+/// down the view hierarchy.
 private struct LoggingServiceEnvironmentKey: EnvironmentKey {
     static let defaultValue: (any LoggingServiceProtocol)? = nil
 }
 
+/// Environment value accessors for shared image and logging services.
 extension EnvironmentValues {
+    /// The shared image-loading service injected at app startup.
     var imageService: (any ImageServiceProtocol)? {
         get { self[ImageServiceEnvironmentKey.self] }
         set { self[ImageServiceEnvironmentKey.self] = newValue }
     }
 
+    /// The shared logging service injected at app startup.
     var loggingService: (any LoggingServiceProtocol)? {
         get { self[LoggingServiceEnvironmentKey.self] }
         set { self[LoggingServiceEnvironmentKey.self] = newValue }

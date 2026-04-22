@@ -5,6 +5,11 @@
 
 import Foundation
 
+/// Concrete HTTP client that executes ``NetworkRequest`` values using `URLSession`.
+///
+/// Applies global defaults from ``NetworkConfiguration`` (timeout, headers) to every request
+/// and automatically retries transient failures — no-connection, timeout, and HTTP 5xx responses —
+/// up to `configuration.retryCount` times with a fixed `configuration.retryDelay` between attempts.
 final class NetworkService: NetworkServiceProtocol {
     
     // MARK: - Properties
@@ -15,6 +20,11 @@ final class NetworkService: NetworkServiceProtocol {
     
     // MARK: - Initialization
     
+    /// Creates a `NetworkService` with the given session, configuration, and encoder.
+    /// - Parameters:
+    ///   - session: The `URLSession` used to make requests. Defaults to `.shared`.
+    ///   - configuration: Global networking defaults. Defaults to ``NetworkConfiguration/default``.
+    ///   - encoder: The `JSONEncoder` used to serialise request bodies.
     init(
         session: URLSession = .shared,
         configuration: NetworkConfiguration = .default,
@@ -27,6 +37,15 @@ final class NetworkService: NetworkServiceProtocol {
     
     // MARK: - NetworkServiceProtocol
     
+    /// Sends the request, retrying on transient failures up to `configuration.retryCount` times.
+    ///
+    /// The retry loop sleeps `configuration.retryDelay` seconds between attempts. Only
+    /// ``NetworkError/noConnection``, ``NetworkError/timeout``, and HTTP 5xx responses trigger
+    /// a retry; all other errors are rethrown immediately without further attempts.
+    ///
+    /// - Parameter request: The ``NetworkRequest`` to execute.
+    /// - Returns: A ``NetworkResponse`` containing the server's data, status code, and headers.
+    /// - Throws: ``NetworkError`` on unrecoverable failures or after all retries are exhausted.
     func send(_ request: NetworkRequest) async throws -> NetworkResponse {
         let urlRequest = try buildURLRequest(from: request)
         
@@ -77,6 +96,8 @@ final class NetworkService: NetworkServiceProtocol {
     
     // MARK: - Private Methods
     
+    /// Constructs a `URLRequest` from a ``NetworkRequest``, merging global configuration defaults
+    /// with per-request overrides for headers and timeout, and appending any query parameters.
     private func buildURLRequest(from request: NetworkRequest) throws -> URLRequest {
         var url = request.url
         
@@ -120,10 +141,12 @@ final class NetworkService: NetworkServiceProtocol {
         return urlRequest
     }
     
+    /// Type-erases an `Encodable` value and encodes it to `Data` using the shared `JSONEncoder`.
     private func encodeBody(_ body: any Encodable) throws -> Data {
         return try encoder.encode(AnyEncodable(body))
     }
     
+    /// Maps a `URLError` to the closest semantic ``NetworkError``.
     private func mapURLError(_ error: URLError) -> NetworkError {
         switch error.code {
         case .notConnectedToInternet, .networkConnectionLost:
@@ -135,6 +158,10 @@ final class NetworkService: NetworkServiceProtocol {
         }
     }
     
+    /// Returns `true` if the error represents a transient condition worth retrying.
+    ///
+    /// Retryable: ``NetworkError/noConnection``, ``NetworkError/timeout``, HTTP 5xx status codes,
+    /// and the equivalent `URLError` connection/timeout codes.
     private func isRetryable(_ error: Error) -> Bool {
         if let networkError = error as? NetworkError {
             switch networkError {
@@ -162,13 +189,17 @@ final class NetworkService: NetworkServiceProtocol {
 
 // MARK: - AnyEncodable
 
+/// Type-erasing wrapper that lets `JSONEncoder` encode any `Encodable` value without
+/// requiring a concrete generic type at the call site.
 private struct AnyEncodable: Encodable {
     private let _encode: (Encoder) throws -> Void
     
+    /// Captures the wrapped value's `Encodable` implementation for later forwarding.
     init(_ wrapped: any Encodable) {
         _encode = wrapped.encode
     }
     
+    /// Forwards encoding to the stored closure from the wrapped value.
     func encode(to encoder: Encoder) throws {
         try _encode(encoder)
     }

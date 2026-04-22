@@ -5,6 +5,15 @@
 
 import SwiftUI
 
+/// The embedded camera scan page shown as the last step of onboarding.
+///
+/// Renders a state-driven layout based on `OnboardingViewModel.CameraPageState`:
+/// - `.capturing` — live `CameraCaptureView` with an overlay and "Type Instead" fallback
+/// - `.processing` — frozen image with a spinner and progress text
+/// - `.detected` — ingredient chips confirming what was found
+/// - `.noIngredientsFound` — retry card
+/// - `.permissionDenied` — Settings deep-link card
+/// - `.error` — error message card
 struct OnboardingCameraPage: View {
     @ObservedObject var viewModel: OnboardingViewModel
     @Environment(\.appTheme) private var theme
@@ -41,6 +50,7 @@ struct OnboardingCameraPage: View {
         .accessibilityIdentifier(AccessibilityID.Onboarding.cameraPage)
     }
 
+    /// Full-screen `CameraCaptureView` with an overlay bar and contextual instructions.
     private var capturingView: some View {
         ZStack(alignment: .top) {
             if viewModel.isCameraPage {
@@ -55,6 +65,7 @@ struct OnboardingCameraPage: View {
         }
     }
 
+    /// Top instruction bar overlaid on the live camera preview.
     private var cameraOverlay: some View {
         VStack(spacing: UI.Onboarding.cameraOverlaySpacing) {
             Text(Strings.Onboarding.scanPageTitle)
@@ -80,6 +91,7 @@ struct OnboardingCameraPage: View {
         )
     }
 
+    /// Full-screen overlay showing the frozen captured image and a spinner while AI detection runs.
     private func processingView(image: UIImage) -> some View {
         ZStack {
             Image(uiImage: image)
@@ -107,6 +119,7 @@ struct OnboardingCameraPage: View {
         }
     }
 
+    /// Success state card showing the detected ingredient chips before the flow auto-advances.
     private func detectedView(ingredients: [Ingredient]) -> some View {
         VStack(spacing: UI.Onboarding.cardSpacing) {
             Image(systemName: "checkmark.circle.fill")
@@ -156,6 +169,7 @@ struct OnboardingCameraPage: View {
         }
     }
 
+    /// Builds the fallback error card when ingredient detection fails.
     private func errorView(message: String) -> some View {
         stateCard(
             icon: Icons.Camera.errorCircle,
@@ -172,6 +186,7 @@ struct OnboardingCameraPage: View {
         }
     }
 
+    /// Shared card layout used for onboarding camera states with custom action content.
     private func stateCard<Actions: View>(
         icon: String,
         title: String,
@@ -203,6 +218,7 @@ struct OnboardingCameraPage: View {
         .padding(UI.Onboarding.cardPadding)
     }
 
+    /// Renders up to a capped number of detected ingredient chips in a wrapped grid.
     private func ingredientChips(_ ingredients: [Ingredient]) -> some View {
         let visibleIngredients = Array(ingredients.prefix(UI.Onboarding.chipMaxCount))
 
@@ -228,9 +244,11 @@ struct OnboardingCameraPage: View {
     }
 }
 
+/// Primary CTA button styling used in onboarding camera-state cards.
 private struct OnboardingPrimaryButtonModifier: ViewModifier {
     let theme: AppTheme
 
+    /// Applies the primary onboarding button visual treatment.
     func body(content: Content) -> some View {
         content
             .font(UI.Fonts.buttonLabel)
@@ -242,9 +260,11 @@ private struct OnboardingPrimaryButtonModifier: ViewModifier {
     }
 }
 
+/// Secondary CTA button styling used in onboarding camera-state cards.
 private struct OnboardingSecondaryButtonModifier: ViewModifier {
     let theme: AppTheme
 
+    /// Applies the secondary onboarding button visual treatment.
     func body(content: Content) -> some View {
         content
             .font(UI.Fonts.bodySemibold)
@@ -260,12 +280,14 @@ private struct OnboardingSecondaryButtonModifier: ViewModifier {
     }
 }
 
+/// Simple flow layout that groups items into rows of three for chip presentation.
 private struct FlowLayout<Data: RandomAccessCollection, Content: View>: View where Data.Element: Hashable {
     let items: Data
     let horizontalSpacing: CGFloat
     let verticalSpacing: CGFloat
     let content: (Data.Element) -> Content
 
+    /// Creates a row-based flow layout with caller-provided spacing and item content.
     init(
         items: Data,
         horizontalSpacing: CGFloat,

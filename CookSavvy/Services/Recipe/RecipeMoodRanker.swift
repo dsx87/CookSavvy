@@ -1,5 +1,9 @@
 import Foundation
 
+/// User-selectable mood filter that controls how the recipe list is reordered.
+///
+/// Each case maps to a distinct scoring profile in `RecipeMoodRanker` that biases
+/// results towards recipes fitting that mood's culinary character.
 enum RecipeMood: Int, CaseIterable, Identifiable {
     case cozy = 0
     case fresh = 1
@@ -9,6 +13,7 @@ enum RecipeMood: Int, CaseIterable, Identifiable {
 
     var id: Int { rawValue }
 
+    /// Localized display name used in the mood filter bar.
     var name: String {
         switch self {
         case .cozy:
@@ -24,6 +29,7 @@ enum RecipeMood: Int, CaseIterable, Identifiable {
         }
     }
 
+    /// SF Symbol name for the mood's tab icon.
     var icon: String {
         switch self {
         case .cozy:
@@ -40,7 +46,33 @@ enum RecipeMood: Int, CaseIterable, Identifiable {
     }
 }
 
+/// Stateless scoring engine that re-ranks a recipe list to match a selected `RecipeMood`.
+///
+/// ## Scoring approach
+///
+/// Each recipe is assigned an integer score based on its `MoodProfile`, which is a
+/// data-driven configuration describing three independent signal categories:
+///
+/// 1. **Keyword groups** — keywords matched against a composite text blob built from
+///    the recipe title, tagline, cuisine, and ingredient names. Each matching keyword
+///    contributes `weight` points (2 for standard groups, 3 for "featured" groups used
+///    by the `.bold` cuisine list).
+///
+/// 2. **Cook-time rules** — the first integer parsed from the recipe's time `AdditionalInfo`
+///    is checked against a `ClosedRange<Int>`. A match adds a small flat bonus, rewarding
+///    appropriate cook times (e.g., ≤15 min scores +6 for `.quick`).
+///
+/// 3. **Complexity rules** — the recipe's complexity `AdditionalInfo` string is compared
+///    against a `Set<ComplexityLevel>`. A match adds a flat bonus (e.g., easy complexity +2
+///    for `.quick`).
+///
+/// Ties in score preserve the original input order (stable sort via `enumerated()`).
+///
+/// All keyword lists, score weights, and cook-time ranges are centralised in the private
+/// `Keywords`, `Score`, and `CookTimeRange` enums so changes to the ranking logic
+/// are confined to those namespaces.
 enum RecipeMoodRanker {
+    /// Groups a keyword list with a per-match point value.
     private struct MoodProfile {
         let keywordGroups: [KeywordGroup]
         let textBonuses: [TextBonus]
@@ -48,31 +80,37 @@ enum RecipeMoodRanker {
         let complexityRules: [ComplexityRule]
     }
 
+    /// A set of keywords that each contribute `weight` points when found in searchable text.
     private struct KeywordGroup {
         let keywords: [String]
         let weight: Int
     }
 
+    /// A flat bonus applied when any keyword from the list is present in recipe text.
     private struct TextBonus {
         let keywords: [String]
         let score: Int
     }
 
+    /// Applies `score` points when the recipe's cook time (in minutes) falls within `range`.
     private struct CookTimeRule {
         let range: ClosedRange<Int>
         let score: Int
     }
 
+    /// Applies `score` points when the recipe's complexity matches one of the given `levels`.
     private struct ComplexityRule {
         let levels: Set<ComplexityLevel>
         let score: Int
     }
 
+    /// Normalised complexity values extracted from recipe `AdditionalInfo`.
     private enum ComplexityLevel: String {
         case easy
         case medium
     }
 
+    /// Centralised score constants — adjust here to tune ranking sensitivity per mood.
     private enum Score {
         static let standardKeywordMatch = 2
         static let featuredKeywordMatch = 3
@@ -86,6 +124,7 @@ enum RecipeMoodRanker {
         static let quickComplexityBonus = 2
     }
 
+    /// Keyword vocabularies for each mood, split into logical groups.
     private enum Keywords {
         static let cozy = ["baked", "broth", "chili", "curry", "noodle", "ramen", "roast", "soup", "stew", "warm"]
         static let cozyText = ["comfort", "home"]
@@ -96,6 +135,7 @@ enum RecipeMoodRanker {
         static let quick = ["bowl", "easy", "fast", "quick", "simple", "weeknight", "wrap"]
     }
 
+    /// Cook-time minute ranges used by `CookTimeRule` entries.
     private enum CookTimeRange {
         static let fresh = 0...20
         static let cozy = 20...Int.max
@@ -104,6 +144,8 @@ enum RecipeMoodRanker {
         static let quickShort = 16...25
     }
 
+    /// Pre-built mood profiles keyed by `RecipeMood`. Adding a new mood requires a
+    /// corresponding entry here with appropriate keyword groups, bonuses, and rules.
     private static let moodProfiles: [RecipeMood: MoodProfile] = [
         .cozy: MoodProfile(
             keywordGroups: [
@@ -163,6 +205,13 @@ enum RecipeMoodRanker {
         )
     ]
 
+    /// Returns `recipes` sorted by their relevance to `mood`, highest score first.
+    ///
+    /// Ties preserve the original input order (stable sort via `enumerated().offset`).
+    /// - Parameters:
+    ///   - recipes: The candidate recipe list to reorder.
+    ///   - mood: The mood filter selected by the user.
+    /// - Returns: The same recipes in mood-ranked order.
     static func rank(_ recipes: [Recipe], for mood: RecipeMood) -> [Recipe] {
         recipes
             .enumerated()
@@ -177,6 +226,12 @@ enum RecipeMoodRanker {
             .map(\.element)
     }
 
+    /// Computes the total mood score for a single recipe by summing keyword, text-bonus,
+    /// cook-time, and complexity contributions defined in the mood's `MoodProfile`.
+    /// - Parameters:
+    ///   - recipe: The recipe to score.
+    ///   - mood: The target mood whose profile is applied.
+    /// - Returns: Integer score; higher is a better match.
     private static func score(for recipe: Recipe, mood: RecipeMood) -> Int {
         let text = searchableText(for: recipe)
         let cookTime = cookTimeMinutes(for: recipe)
@@ -213,6 +268,8 @@ enum RecipeMoodRanker {
         return score
     }
 
+    /// Builds a single lowercased string from the recipe's title, tagline, cuisine, and
+    /// ingredient names — the search surface used by all keyword matching.
     private static func searchableText(for recipe: Recipe) -> String {
         let recipeIngredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
         var parts: [String] = [recipe.title]
@@ -226,6 +283,8 @@ enum RecipeMoodRanker {
         return parts.joined(separator: " ").lowercased()
     }
 
+    /// Extracts the numeric cook-time value (in minutes) from the recipe's `AdditionalInfo`.
+    /// Returns `nil` if no time info is present.
     private static func cookTimeMinutes(for recipe: Recipe) -> Int? {
         for info in recipe.additionalInfo.infos {
             if case .time(let cookTime) = info {
@@ -235,6 +294,7 @@ enum RecipeMoodRanker {
         return nil
     }
 
+    /// Returns the lowercased complexity string from the recipe's `AdditionalInfo`, or `nil` if absent.
     private static func complexityText(for recipe: Recipe) -> String? {
         for info in recipe.additionalInfo.infos {
             if case .complexity(let complexity) = info {
@@ -244,6 +304,12 @@ enum RecipeMoodRanker {
         return nil
     }
 
+    /// Counts keyword occurrences in `text`, multiplying each hit by `weight`.
+    /// - Parameters:
+    ///   - text: The composite searchable string for a recipe.
+    ///   - keywords: Keywords to search for.
+    ///   - weight: Points awarded per matched keyword.
+    /// - Returns: Cumulative score from all matched keywords.
     private static func keywordScore(in text: String, keywords: [String], weight: Int) -> Int {
         keywords.reduce(into: 0) { score, keyword in
             if text.contains(keyword) {
@@ -252,6 +318,8 @@ enum RecipeMoodRanker {
         }
     }
 
+    /// Extracts the first contiguous run of decimal digits from `value` and converts it to `Int`.
+    /// Used to parse cook-time strings such as `"25 min"` or `"1 hr 10 min"` → `1`.
     private static func firstInteger(in value: String) -> Int? {
         let digits = value
             .components(separatedBy: CharacterSet.decimalDigits.inverted)

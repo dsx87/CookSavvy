@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/// The SwiftUI application entry point.
 @main
 struct CookSavvyApp: App {
     var body: some Scene {
@@ -16,12 +17,23 @@ struct CookSavvyApp: App {
     }
 }
 
+/// Root view that bootstraps the app, applies theming, and handles startup errors.
+///
+/// This view handles all startup complexity: it detects UI test mode, applies an onboarding
+/// migration for users upgrading from pre-onboarding builds, and presents a blocking error
+/// screen if the container fails to initialize.
 private struct ThemedAppRoot: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(ThemePreference.storageKey) private var themePreferenceRawValue = ThemePreference.defaultValue.rawValue
     @State private var startupState: StartupState
 
+    /// Initializes the app container and coordinator, branching between UI test mode and normal launch.
+    ///
+    /// In DEBUG builds, if `--uitesting` is present in launch arguments, the container is
+    /// configured with mocked services and seeded test data. In all other cases the production
+    /// container is initialized. Any thrown error transitions the view to the `.failed` state,
+    /// rendering a blocking error screen instead of a partially initialized UI.
     init() {
         do {
             #if DEBUG
@@ -42,6 +54,7 @@ private struct ThemedAppRoot: View {
         }
     }
 
+    /// Resolves the active `ThemePreference` from the persisted raw value.
     private var themePreference: ThemePreference {
         ThemePreference.from(rawValue: themePreferenceRawValue)
     }
@@ -69,11 +82,18 @@ private struct ThemedAppRoot: View {
         }
     }
 
+    /// Dispatches scene-activation work (auth refresh, subscription refresh) to the container.
     private func handleSceneBecameActive() async {
         guard case .ready(let container, _) = startupState else { return }
         await container.handleSceneBecameActive()
     }
 
+    /// Migrates existing users to the onboarding-completed state on first launch after the
+    /// onboarding feature was introduced.
+    ///
+    /// If the `hasCompletedOnboarding` key is absent from UserDefaults (meaning the app
+    /// predates onboarding) and a database file already exists on disk, the user is treated as
+    /// having completed onboarding so they are not shown the walkthrough again.
     private static func applyOnboardingMigrationIfNeeded(defaults: UserDefaults = .standard) {
         guard defaults.object(forKey: "hasCompletedOnboarding") == nil else { return }
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
@@ -83,12 +103,18 @@ private struct ThemedAppRoot: View {
         }
     }
 
+    /// Tracks whether app startup succeeded or failed during container initialization.
     private enum StartupState {
+        /// The container and coordinator are ready to drive the UI.
         case ready(AppContainer, AppCoordinator)
+        /// Container initialization failed; the associated error is shown to the user.
         case failed(Error)
     }
 }
 
+/// The fully-initialized app UI shown when startup succeeds.
+///
+/// Injects shared environment values and routes between onboarding and the main tab interface.
 private struct ReadyAppView: View {
     let container: AppContainer
     @ObservedObject var coordinator: AppCoordinator
@@ -106,6 +132,7 @@ private struct ReadyAppView: View {
     }
 }
 
+/// A blocking full-screen error view shown when the app container fails to initialize.
 private struct StartupErrorView: View {
     @Environment(\.appTheme) private var theme
     let error: Error

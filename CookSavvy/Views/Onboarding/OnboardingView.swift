@@ -5,6 +5,10 @@
 
 import SwiftUI
 
+/// First-launch onboarding flow consisting of two static pages followed by an embedded camera page.
+///
+/// Uses a `TabView` with `.page` style for the swipeable page transitions. Bottom page dots and
+/// a "Next" / "Get Started" CTA are shown on static pages; the camera page renders its own controls.
 struct OnboardingView: View {
     @StateObject var viewModel: OnboardingViewModel
     @Environment(\.appTheme) private var theme
@@ -70,6 +74,7 @@ struct OnboardingView: View {
         }
     }
 
+    /// Layout for a single static intro page: centered symbol, title, and subtitle.
     private func pageView(_ page: OnboardingViewModel.Page) -> some View {
         VStack(spacing: UI.Onboarding.pageSpacing) {
             Spacer()
@@ -104,6 +109,7 @@ struct OnboardingView: View {
         }
     }
 
+    /// Horizontal dot row indicating the current page position.
     private var pageIndicator: some View {
         HStack(spacing: UI.Onboarding.indicatorSpacing) {
             ForEach(0..<viewModel.totalPages, id: \.self) { index in
@@ -132,16 +138,24 @@ struct OnboardingView: View {
     )
 }
 
+/// Preview-only detection service returning deterministic sample ingredients.
 private final class OnboardingPreviewDetectionService: IngredientDetectionServiceProtocol {
+    /// Returns stable preview ingredient output without running real ML/network logic.
     func detectIngredients(in image: UIImage) async throws -> [Ingredient] {
         [Ingredient(name: "Tomato"), Ingredient(name: "Eggs")]
     }
 }
 
+/// Preview-only scan tracker that always reports available quota.
 private final class OnboardingPreviewCameraScanTracker: CameraScanTrackerProtocol {
+    /// Always allows scans in previews.
     func canScan(limit: Int) -> Bool { true }
+    /// No-op for previews.
     func recordScan() {}
+    /// No-op for previews.
     func recordScanWithoutQuota() {}
+    /// Returns the static free-tier weekly limit in previews.
     func remainingScans(limit: Int) -> Int { CameraScanTracker.freeWeeklyLimit }
+    /// Returns zero because preview sessions are non-persistent.
     func totalScansRecorded() -> Int { 0 }
 }

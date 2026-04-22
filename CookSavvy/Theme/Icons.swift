@@ -1,33 +1,43 @@
 import Foundation
 
+/// Centralized SF Symbol name constants for the CookSavvy app, organized by screen or feature domain.
+///
+/// Using typed constants avoids typo-induced crashes at runtime and makes global symbol
+/// changes easy to apply. Access constants as `Icons.Screen.symbolName`.
 enum Icons {
 
+    /// Icons shared across multiple screens — errors and back navigation.
     enum Common {
         static let error = "exclamationmark.triangle"
         static let backButton = "chevron.left"
     }
 
+    /// Icons for the main tab bar items.
     enum Tab {
         static let discover = "compass.drawing"
         static let myKitchen = "fork.knife.circle.fill"
     }
 
+    /// Icons used within the ingredient search bar.
     enum SearchBar {
         static let camera = "camera"
         static let magnifying = "magnifyingglass"
         static let clear = "xmark.circle.fill"
     }
 
+    /// Icons for selected ingredient chips (remove action).
     enum SelectedIngredient {
         static let remove = "xmark"
     }
 
+    /// Icons for the Recipe Details screen (favorite toggle and share).
     enum RecipeDetails {
         static let favoriteFilled = "heart.fill"
         static let favoriteOutline = "heart"
         static let share = "square.and.arrow.up"
     }
 
+    /// Icons for the Settings screen.
     enum Settings {
         static let planCheckmark = "checkmark.circle.fill"
         static let trash = "trash"
@@ -36,6 +46,7 @@ enum Icons {
         static let manageSubscription = "arrow.up.forward.app"
     }
 
+    /// Icons for the Camera ingredient-detection screen.
     enum Camera {
         static let camera = "camera.fill"
         static let warning = "exclamationmark.triangle"
@@ -43,11 +54,13 @@ enum Icons {
         static let close = "xmark"
     }
 
+    /// Icons for the Upgrade / subscription paywall screen.
     enum Upgrade {
         static let crown = "crown.fill"
         static let checkmark = "checkmark.circle.fill"
     }
 
+    /// Icons for the Discover tab (ingredient selection and recipe results states).
     enum Discover {
         static let error = "exclamationmark.triangle.fill"
         static let clock = "clock"
@@ -69,6 +82,7 @@ enum Icons {
         static let badgeBeginner = "star.circle"
     }
 
+    /// Icons for the My Kitchen (Journey) screen.
     enum Journey {
         static let settings = "gear"
         static let forkKnife = "fork.knife"
@@ -85,6 +99,7 @@ enum Icons {
         static let chevronUp = "chevron.up"
     }
 
+    /// Icons for Cook Mode — the full-screen step-by-step cooking flow.
     enum CookMode {
         static let close = "xmark"
         static let previous = "chevron.left"
@@ -95,6 +110,7 @@ enum Icons {
         static let timer = "timer"
     }
 
+    /// Icons for the Create Recipe wizard.
     enum CreateRecipe {
         static let close = "xmark"
         static let minus = "minus.circle"
@@ -107,6 +123,7 @@ enum Icons {
         static let number = "number"
     }
 
+    /// Icons for the Shopping List sheet.
     enum ShoppingList {
         static let cart = "cart"
         static let cartBadgePlus = "cart.badge.plus"
@@ -115,6 +132,10 @@ enum Icons {
         static let trash = "trash"
     }
 
+    /// Icons representing dietary restriction types.
+    ///
+    /// Symbol choices reflect semantic meaning: `glutenFree` uses an exclusion (`xmark.circle.fill`),
+    /// and `nutFree` uses a warning triangle (`exclamationmark.triangle.fill`) to convey allergen severity.
     enum Dietary {
         static let vegetarian = "leaf.fill"
         static let vegan = "leaf.circle.fill"
@@ -125,6 +146,7 @@ enum Icons {
         static let kosher = "star.circle.fill"
     }
 
+    /// Icons for Sign in with Apple and account management in Settings.
     enum Auth {
         static let applelogo = "apple.logo"
         static let personCircle = "person.crop.circle"
@@ -132,6 +154,7 @@ enum Icons {
         static let checkmarkShield = "checkmark.shield"
     }
 
+    /// Icons representing recipe mood filter options on the Discover results state.
     enum Mood {
         static let cozy = "flame"
         static let fresh = "leaf"

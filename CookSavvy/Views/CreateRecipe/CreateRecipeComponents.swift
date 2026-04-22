@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// Selectable emoji bubble used in the recipe cover emoji picker.
 struct EmojiPickerCell: View {
     @Environment(\.appTheme) private var theme
     let emoji: String
@@ -26,6 +27,7 @@ struct EmojiPickerCell: View {
     }
 }
 
+/// Editable row for entering one instruction step in the create-recipe wizard.
 struct StepInputRow: View {
     @Environment(\.appTheme) private var theme
     let index: Int
@@ -72,6 +74,7 @@ struct StepInputRow: View {
     }
 }
 
+/// Selectable chip representing a cook-time preset in minutes.
 struct CookTimeChip: View {
     @Environment(\.appTheme) private var theme
     let time: Int
@@ -98,6 +101,7 @@ struct CookTimeChip: View {
     }
 }
 
+/// Selectable difficulty option button used in the details step.
 struct DifficultyButton: View {
     @Environment(\.appTheme) private var theme
     let title: String

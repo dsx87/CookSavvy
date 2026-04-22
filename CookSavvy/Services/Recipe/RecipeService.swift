@@ -18,6 +18,7 @@ final class RecipeService: RecipeServiceProtocol {
     /// Database interface for storing fetched recipes
     private let dbInterface: DBInterfaceProtocol
 
+    /// Feature-scoped logger for recipe service events
     private let logger: any LoggerProtocol
     
     /// Flag to control whether fetched recipes should be stored in DB
@@ -79,6 +80,7 @@ final class RecipeService: RecipeServiceProtocol {
 
     #if !DEBUG
     @available(*, unavailable, message: "The default RecipeService initializer uses MockLLMProvider and is DEBUG-only. Use init(dbInterface:sources:logger:shouldStoreRecipes:) in production.")
+    /// Unavailable in non-DEBUG builds to prevent accidental Mock provider wiring in production.
     convenience init(
         dbInterface: DBInterfaceProtocol? = nil,
         shouldStoreRecipes: Bool = true
@@ -165,10 +167,15 @@ final class RecipeService: RecipeServiceProtocol {
     }
     
     /// Fetches recipes from multiple sources and merges results
+    ///
+    /// Sources are iterated in a stable order (sorted by `rawValue`). Results are deduplicated
+    /// by title — the first source to return a given title wins. Per-source errors are caught
+    /// and recorded in `hadSourceFailures` rather than propagating, so a single failing source
+    /// never prevents results from other sources from being returned.
     /// - Parameters:
     ///   - ingredients: List of ingredients to search for
     ///   - sourceTypes: Set of sources to query
-    /// - Returns: Array of merged recipes from all sources
+    /// - Returns: A tuple of the merged recipe list and whether any source encountered an error
     func getRecipes(for ingredients: [Ingredient], from sourceTypes: Set<RecipeSourceType>) async throws -> (recipes: [Recipe], hadSourceFailures: Bool) {
         var allRecipes: [Recipe] = []
         var seenTitles: Set<String> = []

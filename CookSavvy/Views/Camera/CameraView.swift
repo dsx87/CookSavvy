@@ -6,6 +6,15 @@
 import SwiftUI
 import AVFoundation
 
+/// Camera screen for AI ingredient detection.
+///
+/// Renders different layouts based on `CameraViewModel.State`:
+/// - `.requestingPermission` — spinner while awaiting authorization
+/// - `.permissionDenied` — instructional screen with deep-link to Settings
+/// - `.capturing` — live `CameraCaptureView` (UIKit UIViewController wrapper)
+/// - `.processing` — frozen captured image with a loading overlay
+/// - `.noIngredientsFound` — empty-state prompt with retry option
+/// - `.error` — auto-dismissing error toast
 struct CameraView: View {
     @StateObject var viewModel: CameraViewModel
     
@@ -39,6 +48,7 @@ struct CameraView: View {
         }
     }
     
+    /// Full-screen instruction card shown when camera permission is denied or restricted.
     private var permissionDeniedView: some View {
         VStack(spacing: 24) {
             Image(systemName: Icons.Camera.camera)
@@ -86,6 +96,7 @@ struct CameraView: View {
         }
     }
     
+    /// Overlay shown during AI processing: displays the frozen captured image with a spinner.
     private func processingView(image: UIImage) -> some View {
         ZStack {
             Image(uiImage: image)
@@ -110,6 +121,7 @@ struct CameraView: View {
         }
     }
     
+    /// Empty-state view shown when AI detection found no ingredients in the captured image.
     private var noIngredientsView: some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -161,6 +173,7 @@ struct CameraView: View {
         }
     }
     
+    /// Brief error toast displayed at the bottom of the screen before auto-dismissal.
     private func errorToastView(message: String) -> some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -186,10 +199,12 @@ struct CameraView: View {
     }
 }
 
+/// SwiftUI wrapper around `CameraCaptureViewController`, bridging UIKit camera capture to SwiftUI.
 struct CameraCaptureView: UIViewControllerRepresentable {
     let onPhotoCaptured: (UIImage) -> Void
     var showsCloseButton: Bool = true
     
+    /// Creates and configures the UIKit camera controller used by this representable.
     func makeUIViewController(context: Context) -> CameraCaptureViewController {
         let controller = CameraCaptureViewController()
         controller.onPhotoCaptured = onPhotoCaptured
@@ -197,9 +212,14 @@ struct CameraCaptureView: UIViewControllerRepresentable {
         return controller
     }
     
+    /// No-op updater because camera configuration is set during controller creation.
     func updateUIViewController(_ uiViewController: CameraCaptureViewController, context: Context) {}
 }
 
+/// UIKit view controller managing the `AVCaptureSession` live preview and shutter button.
+///
+/// Sets up the rear wide-angle camera, adds a preview layer covering the full view,
+/// and lays out a round capture button and optional close button using Auto Layout.
 final class CameraCaptureViewController: UIViewController {
     var onPhotoCaptured: ((UIImage) -> Void)?
     var showsCloseButton: Bool = true
@@ -230,6 +250,7 @@ final class CameraCaptureViewController: UIViewController {
         return button
     }()
     
+    /// Sets up camera session and overlays once the view has loaded.
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
@@ -237,11 +258,13 @@ final class CameraCaptureViewController: UIViewController {
         setupUI()
     }
     
+    /// Keeps the preview layer frame in sync with view bounds changes.
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         previewLayer?.frame = view.bounds
     }
     
+    /// Configures the `AVCaptureSession` with a rear camera input, photo output, and preview layer.
     private func setupCamera() {
         let session = AVCaptureSession()
         session.sessionPreset = .photo
@@ -273,6 +296,7 @@ final class CameraCaptureViewController: UIViewController {
         }
     }
     
+    /// Adds the capture and (optionally) close buttons to the view hierarchy using Auto Layout.
     private func setupUI() {
         view.addSubview(captureButton)
         if showsCloseButton {
@@ -298,6 +322,7 @@ final class CameraCaptureViewController: UIViewController {
         NSLayoutConstraint.activate(constraints)
     }
     
+    /// Captures a still photo (or a blank simulator placeholder image in simulator builds).
     @objc private func capturePhoto() {
         guard !DeviceUtility.isSimulator else {
             self.onPhotoCaptured?(UIImage())
@@ -307,16 +332,20 @@ final class CameraCaptureViewController: UIViewController {
         photoOutput?.capturePhoto(with: settings, delegate: self)
     }
     
+    /// Dismisses the camera controller when the close button is tapped.
     @objc private func closeTapped() {
         dismiss(animated: true)
     }
     
+    /// Stops camera capture when the controller is deallocated.
     deinit {
         captureSession?.stopRunning()
     }
 }
 
+/// Handles AVCapture still-photo callbacks and forwards successful images to SwiftUI.
 extension CameraCaptureViewController: AVCapturePhotoCaptureDelegate {
+    /// Processes captured photo data and emits a `UIImage` via `onPhotoCaptured`.
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         guard error == nil,
               let data = photo.fileDataRepresentation(),

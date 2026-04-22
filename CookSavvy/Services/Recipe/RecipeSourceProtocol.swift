@@ -12,7 +12,8 @@ enum RecipeSourceType: String, Codable, CaseIterable, Sendable {
     case offline = "Offline"
     case online = "Online"
     case ai = "AI"
-    
+
+    /// Human-readable label for display in the UI
     var displayName: String { rawValue }
 }
 
@@ -32,6 +33,7 @@ protocol RecipeSourceProtocol {
     func isAvailable() async -> Bool
 }
 
+/// Source-type utility helpers for entitlement and readiness decisions.
 extension RecipeSourceType {
     /// Filters `sources` down to those the user can actually access given their subscription.
     /// Falls back to `[.offline]` if all enabled sources are gated.
@@ -54,10 +56,15 @@ extension RecipeSourceType {
 
 /// Error types for recipe fetching operations
 enum RecipeSourceError: Error, LocalizedError {
+    /// The requested source type is not configured or not currently usable.
     case sourceUnavailable(RecipeSourceType)
+    /// The source returned successfully but found no recipes matching the query.
     case noRecipesFound
+    /// A network-level failure occurred while contacting a remote source.
     case networkError(Error)
+    /// The remote source returned a response that could not be parsed.
     case invalidData
+    /// A read or write operation against the local SQLite database failed.
     case databaseError(Error)
     
     var errorDescription: String? {

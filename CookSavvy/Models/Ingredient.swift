@@ -7,28 +7,49 @@
 
 import Foundation
 
+/// Broad food-group categories used to organise ingredients in the UI.
 enum IngredientCategory: String, CaseIterable {
+    /// Meat, poultry, fish, seafood, eggs, and plant-based proteins.
     case proteins
+    /// Vegetables and legumes.
     case veggies
+    /// Milk, cheese, butter, yogurt, and other dairy products.
     case dairy
+    /// Grains, cereals, bread, pasta, and rice.
     case grains
+    /// Fresh and dried fruits.
     case fruits
+    /// Herbs, spices, seasonings, and condiments.
     case spices
+    /// Anything that does not fit a more specific category.
     case other
 }
 
+/// A single food ingredient identified by name.
+///
+/// Ingredients are stored in the database and referenced by recipes. The `emoji`
+/// property is populated lazily by ``IngredientEmojiProvider`` before display.
 struct Ingredient: Codable, Identifiable {
     
+    /// A placeholder ingredient with an empty name, used as a safe default value.
     static let empty: Ingredient = ""
     
+    /// The unique identifier for this ingredient, derived from its `name`.
     var id: String { name }
+    /// The canonical name of the ingredient (e.g. `"Chicken Breast"`).
     let name: String
+    /// Optional freeform description of the ingredient.
     let description: String?
+    /// Optional filename of the ingredient's photo asset.
     let pictureFileName: String?
+    /// Broad food group from the dataset (e.g. `"Protein"`, `"Vegetables"`).
     let foodGroup: String?
+    /// More specific subgroup within `foodGroup` (e.g. `"Poultry"`, `"Leafy Greens"`).
     let foodSubgroup: String?
+    /// Resolved emoji for display, populated by ``IngredientEmojiProvider``.
     var emoji: String?
     
+    /// Maps model property names to dataset field keys.
     enum CodingKeys: String, CodingKey {
         case name
         case description
@@ -37,6 +58,10 @@ struct Ingredient: Codable, Identifiable {
         case foodSubgroup = "food_subgroup"
     }
     
+    /// Derives a broad ``IngredientCategory`` by matching `foodGroup` against known keyword patterns.
+    ///
+    /// The mapping is intentionally liberal — any `foodGroup` containing `"protein"` or `"meat"`
+    /// resolves to `.proteins`, for example. Falls back to `.other` for unrecognised groups.
     var category: IngredientCategory {
         guard let group = foodGroup?.lowercased(), !group.isEmpty else { return .other }
         switch group {
@@ -57,6 +82,7 @@ struct Ingredient: Codable, Identifiable {
         }
     }
     
+    /// Creates a minimal ingredient with only a name; all other fields are `nil`.
     init(name: String) {
         self.name = name
         self.foodGroup = nil
@@ -67,15 +93,21 @@ struct Ingredient: Codable, Identifiable {
     }
 }
 
+/// Hashability allows ingredient values to be de-duplicated in sets and diffable collections.
 extension Ingredient: Hashable {}
+/// `Sendable` enables safe transfer of ingredient values across concurrency boundaries.
 extension Ingredient: Sendable {}
+/// `Sendable` conformance for category values used in async view-model code.
 extension IngredientCategory: Sendable {}
 
+/// String-literal conveniences for concise ingredient construction in tests and mocks.
 extension Ingredient: ExpressibleByStringLiteral {
+    /// Creates an ingredient from a grapheme-cluster string literal.
     init(extendedGraphemeClusterLiteral value: String) {
         self.init(name: value)
     }
     
+    /// Creates an ingredient from a regular string literal.
     init(stringLiteral value: StringLiteralType) {
         self.init(name: value)
     }
@@ -83,7 +115,9 @@ extension Ingredient: ExpressibleByStringLiteral {
 
 
 // MARK: - Full initializer for richer mocks
+/// Additional initializers used by previews and richer mock fixtures.
 extension Ingredient {
+    /// Creates an ingredient with all fields populated; used by test helpers and mock factories.
     init(name: String, description: String?, pictureFileName: String?, foodGroup: String?, foodSubgroup: String?, emoji: String? = nil) {
         self.name = name
         self.description = description
@@ -95,7 +129,9 @@ extension Ingredient {
 }
 
 // MARK: - Mock Factories for Testing
+/// Randomized mock factory helpers for design-time previews and tests.
 extension Ingredient {
+    /// Internal helper used by `mockRandom` to bundle name, group, and asset info.
     struct Entry { let name: String; let group: String; let subgroup: String; let picture: String? }
 
     /// Creates a single mock `Ingredient` with meaningful randomized values.

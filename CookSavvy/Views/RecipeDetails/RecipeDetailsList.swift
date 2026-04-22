@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/// Card-style section list used in recipe details for ingredients and steps.
 struct RecipeDetailsList: View {
     let title: String
     let items: [String]

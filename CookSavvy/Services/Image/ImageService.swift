@@ -9,6 +9,7 @@ import Foundation
 import UIKit
 import CryptoKit
 
+/// Internal constants that define cache sizing and dataset file naming conventions.
 private enum ImageServiceConstants {
     static let bytesPerPixel = 4.0
     static let defaultCacheSize = 100
@@ -20,17 +21,23 @@ private enum ImageServiceConstants {
     static let remoteSchemes = ["http://", "https://"]
 }
 
-/// LRU Cache wrapper for images
+/// In-memory image cache backed by `NSCache` with explicit byte-cost accounting.
+///
+/// Each image's cost is estimated as `width × height × 4 bytes` (RGBA). `NSCache` evicts
+/// entries automatically under memory pressure. A separate `keys` set enables an O(1)
+/// `count` property, since `NSCache` does not expose one directly.
 private class ImageCache {
     private let cache = NSCache<NSString, UIImage>()
     private var keys = Set<String>()
     private let lock = NSLock()
     
+    /// Creates an image cache with explicit object count and memory-cost limits.
     init(countLimit: Int, totalCostLimit: Int) {
         cache.countLimit = countLimit
         cache.totalCostLimit = totalCostLimit
     }
     
+    /// Stores `image` in the cache under `key`, using pixel-area cost for eviction weighting.
     func setImage(_ image: UIImage, forKey key: String) {
         let cost = Int(image.size.width * image.size.height * ImageServiceConstants.bytesPerPixel)
         lock.lock()
@@ -39,10 +46,12 @@ private class ImageCache {
         lock.unlock()
     }
     
+    /// Returns the cached image for `key`, or `nil` if not present or already evicted.
     func image(forKey key: String) -> UIImage? {
         return cache.object(forKey: key as NSString)
     }
     
+    /// Evicts all images from the cache and clears the key tracking set.
     func removeAll() {
         lock.lock()
         cache.removeAllObjects()
@@ -50,11 +59,13 @@ private class ImageCache {
         lock.unlock()
     }
     
+    /// Maximum number of images the cache will hold before `NSCache` begins evicting entries.
     var countLimit: Int {
         get { cache.countLimit }
         set { cache.countLimit = newValue }
     }
     
+    /// Approximate count of images tracked in the cache; may be slightly higher than actual if items were silently evicted by `NSCache`.
     var count: Int {
         lock.lock()
         defer { lock.unlock() }
@@ -62,14 +73,26 @@ private class ImageCache {
     }
 }
 
-/// Service for loading and caching recipe and ingredient images
+/// Loads and caches recipe and ingredient images using a two-tier cache strategy.
+///
+/// **Cache hierarchy (checked in order):**
+/// 1. In-memory `NSCache` — fastest path, automatically evicted under memory pressure.
+/// 2. Disk cache — Documents directory, keyed by file name (local assets) or SHA-256 hash (remote URLs).
+/// 3. ZIP extraction — extracts from the bundled dataset archive and writes to disk for future hits.
+///
+/// Remote URLs (`http`/`https`) are downloaded, persisted to disk under a SHA-256-derived filename,
+/// and returned from the disk cache on all subsequent requests, avoiding redundant network calls.
 final class ImageService: ImageServiceProtocol {
     
     // MARK: - Properties
     
+    /// Extracts image data from the bundled dataset ZIP file.
     private let imageExtractor: ImageExtractor
+    /// URL to the bundled dataset ZIP, used for extracting assets not yet on disk.
     private let zipFileURL: URL?
+    /// Shared file-manager instance used for all disk I/O.
     private let fileManager: FileManager
+    /// Root directory for the disk cache; maps to the app's Documents directory.
     private let imagesDirectory: URL
     
     /// LRU in-memory cache for loaded images
@@ -256,6 +279,8 @@ final class ImageService: ImageServiceProtocol {
     
     // MARK: - Private Methods
     
+    /// Reads an image from the disk cache (Documents directory) by file name.
+    /// - Returns: The decoded image, or `nil` if no file exists at the expected path.
     private func loadFromDisk(fileName: String) async throws -> UIImage? {
         let fileURL = imagesDirectory.appendingPathComponent(fileName)
         
@@ -267,6 +292,13 @@ final class ImageService: ImageServiceProtocol {
         return UIImage(data: data)
     }
     
+    /// Downloads a remote image and caches it to disk under a deterministic SHA-256-derived filename.
+    ///
+    /// Checks memory and disk cache before issuing a network request. On a successful download,
+    /// raw data is written to disk so the image is served from cache on all subsequent requests,
+    /// avoiding redundant network calls.
+    /// - Parameter urlString: An `http` or `https` URL string.
+    /// - Returns: The downloaded image, or `nil` if the request fails or the URL is malformed.
     private func loadRemoteImage(urlString: String) async throws -> UIImage? {
         let cacheKey = Self.diskCacheKey(for: urlString)
         
@@ -294,6 +326,14 @@ final class ImageService: ImageServiceProtocol {
         return image
     }
     
+    /// Derives a stable disk-cache filename from a remote URL by SHA-256 hashing the URL string.
+    ///
+    /// The hash ensures the filename is filesystem-safe regardless of the original URL content,
+    /// while still being deterministic — the same URL always maps to the same cache file.
+    /// The original path extension is preserved (defaulting to `.jpg`) so the file can be
+    /// decoded without additional metadata.
+    /// - Parameter urlString: The remote image URL.
+    /// - Returns: A hex-encoded SHA-256 digest with the original file extension appended.
     private static func diskCacheKey(for urlString: String) -> String {
         let hash = SHA256.hash(data: Data(urlString.utf8))
         let hex = hash.compactMap { String(format: "%02x", $0) }.joined()
@@ -303,6 +343,11 @@ final class ImageService: ImageServiceProtocol {
         return hex + ext
     }
     
+    /// Extracts a single image from the bundled dataset ZIP archive via `ImageExtractor`.
+    /// - Parameters:
+    ///   - fileName: The image filename to locate inside the archive.
+    ///   - zipURL: URL of the ZIP archive to search.
+    /// - Returns: The extracted image, or `nil` if the file is not found in the archive.
     private func extractFromZip(fileName: String, zipURL: URL) async throws -> UIImage? {
         do {
             let imageData = try await imageExtractor.extractImage(
@@ -322,10 +367,15 @@ final class ImageService: ImageServiceProtocol {
 
 // MARK: - Error Types
 
+/// Errors thrown by `ImageService` operations.
 enum ImageServiceError: Error, LocalizedError {
+    /// No image could be located for the given filename in memory, disk cache, or the ZIP archive.
     case imageNotFound(String)
+    /// A file was found but its data could not be decoded into a `UIImage`.
     case invalidImageData(String)
+    /// A disk read or write operation (cache hit, write, or directory listing) failed.
     case diskAccessFailed(Error)
+    /// Extracting image data from the bundled ZIP archive failed.
     case extractionFailed(Error)
     
     var errorDescription: String? {

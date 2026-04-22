@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// User-selectable appearance preference persisted in local settings.
 enum ThemePreference: String, CaseIterable, Identifiable {
     case light
     case dark
@@ -10,6 +11,7 @@ enum ThemePreference: String, CaseIterable, Identifiable {
 
     var id: Self { self }
 
+    /// Parses a persisted raw value and falls back to ``defaultValue`` when missing/invalid.
     static func from(rawValue: String?) -> ThemePreference {
         guard let rawValue else { return defaultValue }
         return ThemePreference(rawValue: rawValue) ?? defaultValue
@@ -37,6 +39,7 @@ enum ThemePreference: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Resolves the effective app theme for rendering given the current system color scheme.
     func resolvedTheme(for colorScheme: ColorScheme) -> AppTheme {
         switch self {
         case .light:

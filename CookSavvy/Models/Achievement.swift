@@ -1,30 +1,51 @@
 import Foundation
 
+/// Groups achievements by theme for display and filtering purposes.
 enum AchievementCategory: String, Hashable {
+    /// General cooking milestones such as streaks, recipe counts, and cumulative cooking time.
     case general
+    /// Milestones that reward minimising ingredient waste.
     case antiWaste
 }
 
+/// A cooking milestone that the user can earn through consistent app usage.
+///
+/// Each achievement tracks progress toward a numeric goal (`maxProgress`) and transitions
+/// to an unlocked state once `currentProgress` reaches that goal.
+/// The complete catalogue is defined in `allAchievements`.
 struct Achievement: Identifiable, Hashable {
+    /// Stable identifier used for persistence and equality checks.
     let id: String
+    /// Short display name shown on the achievement card (e.g. `"First Cook"`).
     let title: String
+    /// Human-readable description of the milestone required to earn the achievement.
     let description: String
+    /// Representative emoji displayed on the achievement card.
     let emoji: String
+    /// Hex colour string (e.g. `"#FF9500"`) used as the card's accent colour.
     let colorHex: String
+    /// The thematic group this achievement belongs to.
     let category: AchievementCategory
+    /// Total number of progress units required to unlock this achievement.
     let maxProgress: Int
+    /// The user's current progress toward `maxProgress`.
     var currentProgress: Int
+    /// Whether the user has fully completed this achievement.
     var isUnlocked: Bool
+    /// The timestamp when the achievement was unlocked, or `nil` if still locked.
     var unlockedAt: Date?
 
+    /// Equality is based solely on `id`, allowing mutable progress fields to change freely.
     static func == (lhs: Achievement, rhs: Achievement) -> Bool {
         lhs.id == rhs.id
     }
 
+    /// Hashes only `id` for consistency with the custom `==` implementation.
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 
+    /// A VoiceOver-friendly label describing whether the achievement is unlocked or in progress.
     var accessibilityLabel: String {
         if isUnlocked {
             return String(format: Strings.Accessibility.achievementUnlocked, title)
@@ -33,11 +54,13 @@ struct Achievement: Identifiable, Hashable {
         }
     }
 
+    /// The user's progress expressed as a fraction between `0.0` and `1.0`, clamped at `1.0` when complete.
     var progressFraction: Double {
         guard maxProgress > 0 else { return 0 }
         return min(Double(currentProgress) / Double(maxProgress), 1.0)
     }
 
+    /// The complete catalogue of achievements shipped with the app, each initialised with zero progress.
     static let allAchievements: [Achievement] = [
         Achievement(
             id: "first_cook",

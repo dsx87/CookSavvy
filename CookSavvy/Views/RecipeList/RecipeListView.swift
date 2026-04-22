@@ -1,5 +1,7 @@
 import SwiftUI
 
+/// Reusable "See All" screen showing a scrollable list of recipe rows.
+/// Used for saved, recent, and user-created recipe collections.
 struct RecipeListView: View {
     @Environment(\.appTheme) private var theme
     @StateObject var viewModel: RecipeListViewModel

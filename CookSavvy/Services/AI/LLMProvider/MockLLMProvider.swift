@@ -6,6 +6,12 @@
 import Foundation
 
 #if DEBUG
+/// Deterministic `LLMProviderProtocol` implementation for use in UI tests and DEBUG builds.
+///
+/// Returns pre-built JSON responses after an optional simulated network delay. The ingredient
+/// list and recipe data can be customised at initialisation time; defaults cover the most
+/// common happy-path test scenarios. Pass `shouldSucceed: false` to exercise error-handling
+/// paths without relying on real network failures.
 final class MockLLMProvider: LLMProviderProtocol {
     
     var name: String { "Mock" }
@@ -16,6 +22,13 @@ final class MockLLMProvider: LLMProviderProtocol {
     private let mockIngredientsResponse: String
     private let mockRecipesResponse: String
     
+    /// - Parameters:
+    ///   - simulatedDelay: Seconds to wait before returning a response. Defaults to 1.0.
+    ///   - shouldSucceed: When `false`, both request methods throw `LLMProviderError.unknown`.
+    ///   - mockIngredients: Ingredient names to include in the vision response. Defaults to a
+    ///     representative pantry list.
+    ///   - mockRecipes: Recipe data objects to include in the chat response. Defaults to two
+    ///     sample recipes.
     init(
         simulatedDelay: TimeInterval = 1.0,
         shouldSucceed: Bool = true,
@@ -51,14 +64,8 @@ final class MockLLMProvider: LLMProviderProtocol {
         self.mockRecipesResponse = Self.buildRecipesJSON(recipes)
     }
     
+    /// Returns the pre-built ingredients JSON after the simulated delay.
     func sendVisionRequest(
-        imageData: Data,
-        mimeType: String,
-        prompt: String,
-        responseFormat: LLMResponseFormat
-    ) async throws -> LLMResponse {
-        try await simulateDelay()
-        try checkSuccess()
         
         return LLMResponse(
             content: mockIngredientsResponse,
@@ -66,12 +73,8 @@ final class MockLLMProvider: LLMProviderProtocol {
         )
     }
     
+    /// Returns the pre-built recipes JSON after the simulated delay.
     func sendChatRequest(
-        messages: [LLMMessage],
-        responseFormat: LLMResponseFormat
-    ) async throws -> LLMResponse {
-        try await simulateDelay()
-        try checkSuccess()
         
         return LLMResponse(
             content: mockRecipesResponse,
@@ -79,10 +82,12 @@ final class MockLLMProvider: LLMProviderProtocol {
         )
     }
     
+    /// Suspends for `simulatedDelay` seconds to mimic real network latency.
     private func simulateDelay() async throws {
         try await Task.sleep(nanoseconds: UInt64(simulatedDelay * 1_000_000_000))
     }
     
+    /// Throws a simulated `LLMProviderError.unknown` when `shouldSucceed` is `false`.
     private func checkSuccess() throws {
         guard shouldSucceed else {
             throw LLMProviderError.unknown(NSError(
@@ -93,11 +98,15 @@ final class MockLLMProvider: LLMProviderProtocol {
         }
     }
     
+    /// Serialises a list of ingredient name strings into the `{"ingredients": [...]}` JSON
+    /// shape expected by `AIService.parseIngredientsResponse`.
     private static func buildIngredientsJSON(_ ingredients: [String]) -> String {
         let ingredientObjects = ingredients.map { "{ \"name\": \"\($0)\" }" }
         return "{ \"ingredients\": [\(ingredientObjects.joined(separator: ", "))] }"
     }
     
+    /// Serialises a list of `MockRecipeData` values into the `{"recipes": [...]}` JSON
+    /// shape expected by `AIService.parseRecipesResponse`.
     private static func buildRecipesJSON(_ recipes: [MockRecipeData]) -> String {
         let recipeObjects = recipes.map { recipe -> String in
             let ingredientsArray = recipe.ingredients.map { "\"\($0)\"" }.joined(separator: ", ")
@@ -118,6 +127,7 @@ final class MockLLMProvider: LLMProviderProtocol {
     }
 }
 
+/// Plain-data recipe description used to configure `MockLLMProvider` at initialisation time.
 struct MockRecipeData {
     let title: String
     let ingredients: [String]

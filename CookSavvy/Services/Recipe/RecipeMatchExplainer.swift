@@ -1,11 +1,30 @@
 import Foundation
 
+/// Stateless utility that explains how well a recipe matches the user's selected ingredients.
+///
+/// Used in recipe result cards to surface human-readable explanations such as
+/// "You have 4 of 6 ingredients · 20 min".
 enum RecipeMatchExplainer {
+
+    /// Snapshot of which recipe ingredients the user has versus which are missing.
     struct IngredientAvailability: Equatable {
+        /// Recipe ingredient names the user already has.
         let rescuedIngredientNames: [String]
+        /// Recipe ingredient names not present in the user's selection.
         let missingIngredientNames: [String]
     }
 
+    /// Builds a one-line explanation string for a recipe card.
+    ///
+    /// The explanation covers ingredient coverage and, when the cook time is under 30 minutes
+    /// and only minutes are involved (no hour component), appends a quick-meal suffix.
+    ///
+    /// Examples:
+    /// - `"You have all the ingredients · 15 min"`
+    /// - `"You have 3 of 5 ingredients"`
+    /// - Parameter recipe: The recipe being explained.
+    /// - Parameter missingIngredients: Ingredient names absent from the user's selection.
+    /// - Returns: A localised, human-readable match explanation.
     static func explain(
         recipe: Recipe,
         missingIngredients: [String]
@@ -28,6 +47,14 @@ enum RecipeMatchExplainer {
         return reason
     }
 
+    /// Returns the recipe ingredient names that are NOT covered by `selectedIngredients`.
+    ///
+    /// Matching uses a bidirectional substring check after normalisation, so "cherry tomato"
+    /// is considered matched by a selection containing "tomato", and vice-versa.
+    /// - Parameters:
+    ///   - recipe: The recipe whose ingredients are checked.
+    ///   - selectedIngredients: The user's current ingredient selection.
+    /// - Returns: Display-ready ingredient names absent from the user's selection, deduplicated.
     static func missingIngredients(recipe: Recipe, selectedIngredients: [Ingredient]) -> [String] {
         guard !selectedIngredients.isEmpty else { return [] }
         let queryNames = Set(selectedIngredients.map { normalizedIngredientName($0.name) }.filter { !$0.isEmpty })
@@ -47,6 +74,11 @@ enum RecipeMatchExplainer {
         return missing
     }
 
+    /// Computes ingredient availability from a list of already-matched (rescued) ingredient names.
+    /// - Parameters:
+    ///   - recipe: The recipe to analyse.
+    ///   - rescuedIngredients: Ingredients the user has that are used by the recipe.
+    /// - Returns: An `IngredientAvailability` split into rescued and missing names.
     static func ingredientAvailability(
         recipe: Recipe,
         rescuedIngredients: [Ingredient]
@@ -57,6 +89,11 @@ enum RecipeMatchExplainer {
         )
     }
 
+    /// Computes ingredient availability from a list of known-missing ingredient names.
+    /// - Parameters:
+    ///   - recipe: The recipe to analyse.
+    ///   - missingIngredientNames: Raw names of ingredients the user does not have.
+    /// - Returns: An `IngredientAvailability` split into rescued and missing names.
     static func ingredientAvailability(
         recipe: Recipe,
         missingIngredientNames: [String]
@@ -70,12 +107,14 @@ enum RecipeMatchExplainer {
         )
     }
 
+    /// Trims and lowercases an ingredient name for consistent comparison.
     static func normalizedIngredientName(_ value: String) -> String {
         value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 
     // MARK: - Private
 
+    /// Internal overload that computes availability from a set of already-matched names.
     private static func ingredientAvailability(
         recipe: Recipe,
         matchedIngredientNames: [String]
@@ -88,10 +127,14 @@ enum RecipeMatchExplainer {
         )
     }
 
+    /// Returns the effective ingredient list for a recipe, preferring `cleanedIngredients`.
     private static func availableIngredients(for recipe: Recipe) -> [Ingredient] {
         recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
     }
 
+    /// Parses a numeric cook-time in minutes from the recipe's time `AdditionalInfo`.
+    /// Returns `nil` when the time string contains "hr" or "hour" (to avoid misleading
+    /// quick-meal suffixes for hour-long recipes), or when no time info exists.
     private static func cookTimeMinutes(_ recipe: Recipe) -> Int? {
         for info in recipe.additionalInfo.infos {
             if case .time(let timeString) = info {

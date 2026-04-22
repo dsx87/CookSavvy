@@ -1,5 +1,14 @@
 import SwiftUI
 
+/// The Recipe Details screen.
+///
+/// Presents a scrollable layout with a full-width hero image followed by a content card containing:
+/// title, match reason chip, stats row, ingredient list with availability dots,
+/// step-by-step instructions, and a sticky "Start Cooking" CTA.
+///
+/// A floating back button and bookmark toggle are overlaid on the hero image.
+/// For premium users with missing ingredients, an "Add Missing to List" button appears in the
+/// ingredients section.
 struct RecipeDetailsView: View {
     @ObservedObject var viewModel: RecipeDetailsViewModel
     @Environment(\.appTheme) private var theme
@@ -55,6 +64,7 @@ struct RecipeDetailsView: View {
         )
     }
 
+    /// White rounded card below the hero image containing all recipe metadata and steps.
     private var contentCard: some View {
         VStack(alignment: .leading, spacing: UI.RecipeDetails.sectionSpacing) {
             recipeHeader
@@ -69,6 +79,7 @@ struct RecipeDetailsView: View {
         .offset(y: -UI.V2.contentOverlapOffset)
     }
 
+    /// Title, optional match-reason chip, and floating back/bookmark button row.
     private var recipeHeader: some View {
         VStack(alignment: .leading, spacing: UI.RecipeDetails.headerSpacing) {
             Text(viewModel.recipe.title)
@@ -99,6 +110,7 @@ struct RecipeDetailsView: View {
     // MARK: - Stats Row
 
     @ViewBuilder
+    /// Horizontal row of stat pills (cook time, calories, difficulty, servings, etc.).
     private var statsRow: some View {
         let infos = viewModel.recipe.additionalInfo.infos.filter(\.isNotEmpty)
         if !infos.isEmpty {
@@ -119,6 +131,7 @@ struct RecipeDetailsView: View {
 
     // MARK: - Ingredients
 
+    /// List of recipe ingredients, each with an availability dot, name, and quantity.
     private var ingredientsSection: some View {
         VStack(alignment: .leading, spacing: UI.RecipeDetails.ingredientsHeaderSpacing) {
             Text(Strings.RecipeDetails.sectionIngredients)
@@ -139,6 +152,7 @@ struct RecipeDetailsView: View {
         .accessibilityIdentifier(AccessibilityID.RecipeDetails.ingredientsSection)
     }
 
+    /// "Add Missing to List" button shown when there are missing ingredients and the user has premium.
     private var addToShoppingListButton: some View {
         Button {
             Task { await viewModel.addMissingToShoppingList() }
@@ -158,6 +172,7 @@ struct RecipeDetailsView: View {
         .accessibilityIdentifier(AccessibilityID.RecipeDetails.addToShoppingList)
     }
 
+    /// A single ingredient row with a status dot, ingredient name, and optional quantity.
     private func ingredientRow(at index: Int) -> some View {
         let ingredient = viewModel.recipe.ingredients[index]
         let status = viewModel.ingredientStatus(ingredient)
@@ -183,6 +198,7 @@ struct RecipeDetailsView: View {
         }
     }
 
+    /// Returns the dot color for an ingredient row: mint for available, rose for missing, divider for unknown.
     private func ingredientDotColor(for status: RecipeDetailsViewModel.IngredientStatus) -> Color {
         switch status {
         case .available: return theme.mint
@@ -191,6 +207,7 @@ struct RecipeDetailsView: View {
         }
     }
 
+    /// Returns the VoiceOver accessibility label for an ingredient status dot.
     private func ingredientDotAccessibilityLabel(for status: RecipeDetailsViewModel.IngredientStatus) -> String {
         switch status {
         case .available: return Strings.RecipeDetails.youHave
@@ -201,6 +218,7 @@ struct RecipeDetailsView: View {
 
     // MARK: - Steps
 
+    /// Numbered list of recipe steps.
     private var stepsSection: some View {
         VStack(alignment: .leading, spacing: UI.RecipeDetails.stepsHeaderSpacing) {
             Text(Strings.RecipeDetails.sectionSteps)
@@ -216,6 +234,7 @@ struct RecipeDetailsView: View {
         .accessibilityIdentifier(AccessibilityID.RecipeDetails.stepsSection)
     }
 
+    /// A card for a single cooking step with numbered badge and instruction text.
     private func stepCard(index: Int, step: Recipe.Step) -> some View {
         HStack(alignment: .top, spacing: UI.RecipeDetails.stepItemSpacing) {
             Text("\(index + 1)")
@@ -257,6 +276,7 @@ struct RecipeDetailsView: View {
     // MARK: - Start Cooking Button
 
     @ViewBuilder
+    /// Sticky "Start Cooking" CTA pinned to the bottom of the screen.
     private var startCookingButton: some View {
         Button {
             viewModel.startCooking()
@@ -289,6 +309,7 @@ struct RecipeDetailsView: View {
 
     // MARK: - Helpers
 
+    /// Returns the SF Symbol name for a given `AdditionalInfo.InfoType` stat.
     private func statIcon(for info: Recipe.AdditionalInfo.InfoType) -> String {
         switch info {
         case .time: return Icons.Discover.clock
@@ -299,6 +320,7 @@ struct RecipeDetailsView: View {
         }
     }
 
+    /// Returns the theme color for a given `AdditionalInfo.InfoType` stat icon.
     private func statColor(for info: Recipe.AdditionalInfo.InfoType) -> Color {
         switch info {
         case .time: return theme.accent
@@ -310,11 +332,14 @@ struct RecipeDetailsView: View {
     }
 }
 
+/// View-only helpers for presenting additional-info values in recipe details cards.
 extension Recipe.AdditionalInfo.InfoType {
+    /// Returns an icon-prefixed title/value tuple used by details info cells.
     var asTuple:(title: String, value: String) {
         (title:self.asEmoji + UI.RecipeDetails.infoTitleSeparator + self.title, value: stringValue)
     }
     
+    /// `true` when the info case carries meaningful data.
     var isNotEmpty: Bool {
         self != .empty
     }

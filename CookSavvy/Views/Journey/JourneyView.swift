@@ -1,5 +1,11 @@
 import SwiftUI
 
+/// The My Kitchen (Journey) tab's root view.
+///
+/// Displays a scrollable feed of personalised content sections:
+/// account status card, saved recipes carousel, shopping list shortcut,
+/// kitchen stats (all-time, monthly, weekly activity), My Recipes carousel,
+/// achievements section, and recent cooking activity.
 struct JourneyView: View {
     @Environment(\.appTheme) private var theme
     @StateObject var viewModel: JourneyViewModel
@@ -38,6 +44,7 @@ struct JourneyView: View {
         }
     }
 
+    /// Gear icon toolbar button that opens the Settings screen.
     private var settingsToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Button {
@@ -51,6 +58,7 @@ struct JourneyView: View {
         }
     }
 
+    /// Unified binding that is `true` when any alert (cook-again error or general error) is pending.
     private var alertBinding: Binding<Bool> {
         Binding(
             get: {
@@ -64,6 +72,7 @@ struct JourneyView: View {
         )
     }
 
+    /// Title string for the currently pending alert, prioritising cook-again errors.
     private var activeAlertTitle: String {
         if viewModel.cookAgainErrorMessage != nil {
             return Strings.Journey.cookAgainErrorTitle
@@ -71,6 +80,7 @@ struct JourneyView: View {
         return Strings.Errors.errorAlertTitle
     }
 
+    /// Body text for the currently pending alert.
     private var activeAlertMessage: String {
         if let cookAgainErrorMessage = viewModel.cookAgainErrorMessage {
             return cookAgainErrorMessage
@@ -78,11 +88,13 @@ struct JourneyView: View {
         return viewModel.errorMessage ?? ""
     }
 
+    /// Clears all currently active Journey alerts.
     private func dismissActiveAlert() {
         viewModel.dismissCookAgainError()
         viewModel.dismissError()
     }
 
+    /// Account status card — sign-in prompt for anonymous users, secured badge for Apple-linked accounts.
     @ViewBuilder
     private var accountCardSection: some View {
         if viewModel.isAuthAvailable {
@@ -256,6 +268,7 @@ struct JourneyView: View {
         }
     }
 
+    /// Individual stat tile used in both the all-time and monthly stats grids.
     private func journeyStat(value: String, label: String, icon: String, color: Color, accessibilityID: String) -> some View {
         VStack(spacing: UI.Journey.statItemSpacing) {
             Image(systemName: icon)
@@ -329,6 +342,7 @@ struct JourneyView: View {
         .accessibilityIdentifier(AccessibilityID.Journey.myRecipes)
     }
 
+    /// Seven capsule dots representing Mon–Sun; active days and today are highlighted differently.
     private var weeklyActivityDots: some View {
         HStack(spacing: UI.Journey.dayCircleSpacing) {
             ForEach(Array(viewModel.weekdayLabels.enumerated()), id: \.offset) { index, day in
@@ -385,6 +399,7 @@ struct JourneyView: View {
         .accessibilityIdentifier(AccessibilityID.Journey.achievements)
     }
 
+    /// Achievement badge showing an emoji, neon glow (if unlocked), and title label.
     private func achievementBadge(_ achievement: Achievement) -> some View {
         let color = Color(hex: achievement.colorHex)
         return VStack(spacing: UI.Journey.achievementBadgeLabelSpacing) {
@@ -481,6 +496,7 @@ struct JourneyView: View {
         .frostCard(cornerRadius: UI.Common.cardCornerRadius)
     }
 
+    /// Button that toggles expanded/collapsed achievement presentation modes.
     private func achievementsToggleButton(title: String, icon: String) -> some View {
         Button {
             viewModel.toggleAchievementsExpanded()
@@ -517,6 +533,7 @@ struct JourneyView: View {
         String(format: Strings.Journey.recipeCount, viewModel.userRecipes.count)
     }
 
+    /// "See All" button that navigates to the full recipe list for the given collection.
     private func seeAllButton(title: String, recipes: [Recipe]) -> some View {
         Button {
             viewModel.showRecipeList(title: title, recipes: recipes)
@@ -527,6 +544,7 @@ struct JourneyView: View {
         }
     }
 
+    /// Tappable `MiniRecipeCard` that navigates to recipe detail.
     private func recipeCard(_ recipe: Recipe) -> some View {
         MiniRecipeCard(recipe: recipe)
             .contentShape(Rectangle())
@@ -545,6 +563,7 @@ struct JourneyView: View {
         .buttonStyle(.plain)
     }
 
+    /// Tappable `UserMiniRecipeCard` for user-created recipes that navigates to recipe detail.
     private func userRecipeCard(_ recipe: Recipe) -> some View {
         UserMiniRecipeCard(recipe: recipe)
             .contentShape(Rectangle())
@@ -554,6 +573,7 @@ struct JourneyView: View {
             .accessibilityAddTraits(.isButton)
     }
 
+    /// Returns a closure that calls `cookAgain(session:)` on the view model when invoked.
     private func cookAgainAction(for session: CookingSession) -> () -> Void {
         {
             Task {

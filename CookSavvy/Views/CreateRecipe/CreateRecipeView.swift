@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// Create Recipe wizard view displaying the five-step form and a progress bar at the top.
 struct CreateRecipeView: View {
     @Environment(\.appTheme) private var theme
     @StateObject var viewModel: CreateRecipeViewModel

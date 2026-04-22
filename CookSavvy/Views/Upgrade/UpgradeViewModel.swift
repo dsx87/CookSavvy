@@ -6,13 +6,22 @@
 import Foundation
 import Combine
 
+/// ViewModel backing the Upgrade paywall screen.
+///
+/// Loads live pricing from StoreKit and manages the purchase flow for the CookSavvy+ plan.
+/// Calls `onDismiss` on successful purchase or explicit dismissal.
 @MainActor
 final class UpgradeViewModel: ObservableObject {
-    
+
+    /// The user's current subscription plan; updated live from the service.
     @Published private(set) var currentPlan: SubscriptionPlan = .free
+    /// `true` while a purchase request is in flight.
     @Published private(set) var isLoading: Bool = false
+    /// The error message to display when a purchase fails (non-`nil` triggers `showErrorAlert`).
     @Published private(set) var purchaseError: String?
+    /// Controls the purchase error alert.
     @Published var showErrorAlert: Bool = false
+    /// Cached localised price strings keyed by plan.
     @Published private(set) var priceByPlan: [SubscriptionPlan: String] = [:]
     
     private let subscriptionService: SubscriptionServiceProtocol
@@ -20,8 +29,10 @@ final class UpgradeViewModel: ObservableObject {
     private let onDismiss: () -> Void
     private var cancellables = Set<AnyCancellable>()
     
+    /// The plans shown on the paywall. Currently only `.premium` is offered.
     let availablePlans: [SubscriptionPlan] = [.premium]
     
+    /// Creates the paywall view model and subscribes to live plan updates.
     init(
         subscriptionService: SubscriptionServiceProtocol,
         analyticsService: AnalyticsServiceProtocol,
@@ -40,14 +51,20 @@ final class UpgradeViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
+    /// Explicit no-op deinitializer (kept for lifecycle parity with earlier implementations).
     deinit {
         
     }
     
+    /// Tracks an upgrade screen view impression for analytics.
     func trackScreenViewed() {
         analyticsService.track(.upgradeScreenViewed)
     }
 
+    /// Initiates a StoreKit purchase for the given plan.
+    ///
+    /// User-cancellation is silently ignored. All other errors set `purchaseError` and show the alert.
+    /// On success, tracks the purchase event and calls `onDismiss`.
     func purchase(_ plan: SubscriptionPlan) async {
         isLoading = true
         purchaseError = nil
@@ -69,6 +86,7 @@ final class UpgradeViewModel: ObservableObject {
         }
     }
     
+    /// Fetches localised price strings for all `availablePlans` and populates `priceByPlan`.
     func loadPrices() async {
         var prices: [SubscriptionPlan: String] = [:]
 
@@ -81,11 +99,13 @@ final class UpgradeViewModel: ObservableObject {
         priceByPlan = prices
     }
 
+    /// Tracks a dismiss event and calls `onDismiss`.
     func dismiss() {
         analyticsService.track(.upgradeDismissed)
         onDismiss()
     }
 
+    /// Returns the localised price string for a plan (e.g. "$4.99/month"), or a loading placeholder.
     func priceText(for plan: SubscriptionPlan) -> String {
         guard plan != .free else {
             return "Free"
@@ -98,6 +118,7 @@ final class UpgradeViewModel: ObservableObject {
         return "Loading price..."
     }
     
+    /// Returns the feature bullet points shown on the paywall card for the given plan.
     func featureDescription(for plan: SubscriptionPlan) -> [String] {
         switch plan {
         case .free:

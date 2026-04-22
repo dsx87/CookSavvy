@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/// Grid that renders up to four additional recipe metadata entries.
 struct RecipeDetailsAdditionalInfo: View {
     let info: Recipe.AdditionalInfo
     private var fixedInfos: [Recipe.AdditionalInfo.InfoType] {
@@ -42,6 +43,7 @@ struct RecipeDetailsAdditionalInfo: View {
     }
 }
 
+/// Single cell displaying one additional-info title/value pair.
 struct RecipeDetailsAdditionalInfoCell: View {
     let info: (title: String, value:String)
     @Environment(\.appTheme) private var theme

@@ -8,6 +8,7 @@
 import Foundation
 import GRDB
 
+/// Default query limits and look-back windows used throughout `UserDataService`.
 private enum UserDataServiceConstants {
     static let recentIngredientsLimit = 10
     static let recentRecipesLimit = 20
@@ -18,7 +19,11 @@ private enum UserDataServiceConstants {
     static let singleDayOffset = -1
 }
 
-/// Service for managing user-related data (recent items, favorites, search history)
+/// Manages all user-specific persistent data for CookSavvy.
+///
+/// Session data (cooking history, favorites, recent activity, user-created recipes) is
+/// persisted in the GRDB SQLite database via `DBInterfaceProtocol`. Lightweight scalar
+/// preferences (theme choice, high-match cook count) are stored in `UserDefaults`.
 final class UserDataService: UserDataServiceProtocol {
 
     // MARK: - Properties
@@ -26,6 +31,7 @@ final class UserDataService: UserDataServiceProtocol {
     private let dbInterface: DBInterfaceProtocol
     private let defaults: UserDefaults
 
+    /// UserDefaults keys for lightweight user metrics and preference storage.
     private enum Keys {
         static let highMatchRecipesCookedCount = "high_match_cooks_count"
         static let themePreference = ThemePreference.storageKey
@@ -33,6 +39,10 @@ final class UserDataService: UserDataServiceProtocol {
 
     // MARK: - Initialization
 
+    /// Creates a new `UserDataService`.
+    /// - Parameters:
+    ///   - dbInterface: The database layer used for persistent storage.
+    ///   - defaults: The `UserDefaults` store for scalar preferences (defaults to `.standard`).
     init(dbInterface: DBInterfaceProtocol, defaults: UserDefaults = .standard) {
         self.dbInterface = dbInterface
         self.defaults = defaults
@@ -97,6 +107,9 @@ final class UserDataService: UserDataServiceProtocol {
         return try dbInterface.getRecentRecipes(limit: limit)
     }
 
+    /// Fetches a recipe by its database ID.
+    /// - Parameter id: The primary key of the recipe in the database.
+    /// - Returns: The matching `Recipe`, or `nil` if none is found.
     func getRecipe(byID id: Int) async throws -> Recipe? {
         try dbInterface.getRecipe(byID: id)
     }
@@ -119,6 +132,9 @@ final class UserDataService: UserDataServiceProtocol {
     }
 
     /// Gets saved recipes, combining explicit favorites with user-created recipes.
+    ///
+    /// User-created recipes are always treated as implicitly saved, so this method merges both
+    /// sets and deduplicates by recipe ID to avoid showing the same recipe twice.
     func getSavedRecipes() async throws -> [Recipe] {
         let favorites = try dbInterface.getFavoriteRecipes()
         let userRecipes = try dbInterface.getUserCreatedRecipes()
@@ -189,6 +205,15 @@ final class UserDataService: UserDataServiceProtocol {
 
     // MARK: - Cooking Sessions
 
+    /// Records a completed cooking session for a recipe.
+    ///
+    /// In addition to persisting the session, increments the `highMatchRecipesCookedCount`
+    /// counter in `UserDefaults` when the recipe had no missing ingredients (i.e., a perfect
+    /// ingredient match), which feeds the achievement system.
+    /// - Parameters:
+    ///   - recipe: The recipe that was cooked.
+    ///   - duration: Time spent cooking, if tracked.
+    ///   - rating: User's rating (1–5), if provided.
     func markAsCooked(recipe: Recipe, duration: TimeInterval? = nil, rating: Int? = nil) async throws {
         guard let recipeId = try getRecipeId(byTitle: recipe.title) else {
             throw UserDataServiceError.recipeNotFound
@@ -208,6 +233,10 @@ final class UserDataService: UserDataServiceProtocol {
         }
     }
 
+    /// Derives the list of "rescued" ingredient names for a recipe.
+    ///
+    /// Rescued ingredients are those that were available but would otherwise have been wasted.
+    /// Returns `nil` when the recipe has no missing-ingredient metadata.
     private func rescuedIngredients(from recipe: Recipe) -> [String]? {
         guard let missing = recipe.missingIngredients else { return nil }
         return RecipeMatchExplainer
@@ -215,10 +244,13 @@ final class UserDataService: UserDataServiceProtocol {
             .rescuedIngredientNames
     }
 
+    /// Returns past cooking sessions in reverse chronological order.
+    /// - Parameter limit: Maximum number of sessions to return (default: 50).
     func getCookingSessions(limit: Int = UserDataServiceConstants.cookingSessionsLimit) async throws -> [CookingSession] {
         return try dbInterface.getCookingSessions(limit: limit)
     }
 
+    /// Returns the dates on which the user cooked something during the current calendar week.
     func getWeekCookingDates() async throws -> [Date] {
         let calendar = Calendar.current
         let now = Date()
@@ -229,6 +261,14 @@ final class UserDataService: UserDataServiceProtocol {
         return try dbInterface.getCookingSessionDates(from: weekStart, to: weekEnd)
     }
 
+    /// Calculates the user's current consecutive-day cooking streak.
+    ///
+    /// The algorithm fetches all cooking session dates within the past 365 days, collapses
+    /// them to unique calendar days, and walks backwards from today counting consecutive days.
+    /// To avoid breaking a streak that was maintained yesterday but not yet today, the walk
+    /// starts from yesterday when today has no cook session — i.e., the streak is preserved
+    /// until midnight of the day after the last cook.
+    /// - Returns: Number of consecutive days the user has cooked, or `0` if no sessions exist.
     func currentStreak() async throws -> Int {
         let calendar = Calendar.current
         let now = Date()
@@ -256,42 +296,54 @@ final class UserDataService: UserDataServiceProtocol {
         return streak
     }
 
+    /// Returns the total time the user has spent cooking across all sessions.
     func totalCookingTime() async throws -> TimeInterval {
         return try dbInterface.getTotalCookingDuration()
     }
 
+    /// Returns the total number of cooking sessions recorded (all-time).
     func recipesCooked() async throws -> Int {
         return try dbInterface.getCookingSessionCount()
     }
 
     // MARK: - User-Created Recipes
 
+    /// Returns all recipes created by the user.
     func getUserRecipes() async throws -> [Recipe] {
         return try dbInterface.getUserCreatedRecipes()
     }
 
+    /// Returns the number of recipes the user has created.
     func getUserRecipeCount() async throws -> Int {
         return try dbInterface.getUserCreatedRecipeCount()
     }
 
+    /// Returns the count of distinct ingredients the user has cooked with (all-time).
     func getDistinctIngredientsUsedCount() async throws -> Int {
         return try dbInterface.getDistinctCookedIngredientCount()
     }
 
+    /// Returns the number of recipes cooked during the current calendar month.
     func monthlyRecipesCooked() async throws -> Int {
         let (monthStart, monthEnd) = currentMonthRange()
         return try dbInterface.getCookingSessionCount(from: monthStart, to: monthEnd)
     }
 
+    /// Returns the count of distinct ingredients used in sessions during the current calendar month.
     func monthlyIngredientsRescued() async throws -> Int {
         let (monthStart, monthEnd) = currentMonthRange()
         return try dbInterface.getDistinctCookedIngredientCount(from: monthStart, to: monthEnd)
     }
 
+    /// Returns the number of times the user has cooked a recipe with no missing ingredients.
+    ///
+    /// Persisted in `UserDefaults` and incremented in `markAsCooked` when `missingIngredients`
+    /// is empty. Used by the achievement system.
     func getHighMatchRecipesCookedCount() -> Int {
         defaults.integer(forKey: Keys.highMatchRecipesCookedCount)
     }
 
+    /// Returns the start and end `Date` for the current calendar month.
     private func currentMonthRange() -> (Date, Date) {
         let calendar = Calendar.current
         let now = Date()
@@ -300,22 +352,32 @@ final class UserDataService: UserDataServiceProtocol {
         return (monthStart, monthEnd)
     }
 
+    /// Returns the user's persisted theme preference, defaulting to `.system` when unset.
     func getThemePreference() -> ThemePreference {
         ThemePreference.from(rawValue: defaults.string(forKey: Keys.themePreference))
     }
 
+    /// Persists the user's theme preference to `UserDefaults`.
+    /// - Parameter themePreference: The theme to apply app-wide.
     func setThemePreference(_ themePreference: ThemePreference) {
         defaults.set(themePreference.rawValue, forKey: Keys.themePreference)
     }
 
+    /// Inserts a new user-created recipe into the database.
+    /// - Parameter recipe: The recipe to save.
     func saveUserRecipe(_ recipe: Recipe) async throws {
         try dbInterface.insertUserRecipe(recipe)
     }
 
+    /// Updates an existing user-created recipe in the database.
+    /// - Parameter recipe: The recipe with updated fields.
     func updateUserRecipe(_ recipe: Recipe) async throws {
         try dbInterface.updateUserRecipe(recipe)
     }
 
+    /// Deletes a user-created recipe from the database.
+    /// - Parameter recipe: The recipe to delete.
+    /// - Throws: `UserDataServiceError.recipeNotFound` if the recipe cannot be located by title.
     func deleteUserRecipe(recipe: Recipe) async throws {
         guard let recipeId = try getRecipeId(byTitle: recipe.title) else {
             throw UserDataServiceError.recipeNotFound
@@ -349,7 +411,9 @@ final class UserDataService: UserDataServiceProtocol {
 
 // MARK: - Error Types
 
+/// Errors that can be thrown by `UserDataService` operations.
 enum UserDataServiceError: Error, LocalizedError {
+    /// The requested recipe could not be found in the database by its title.
     case recipeNotFound
 
     var errorDescription: String? {

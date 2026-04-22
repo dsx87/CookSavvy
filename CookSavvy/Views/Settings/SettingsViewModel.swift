@@ -8,40 +8,68 @@
 import SwiftUI
 import Combine
 
+/// Internal constants for Settings defaults, URLs, and query limits.
 private enum SettingsViewModelConstants {
     static let unknownValue = "Unknown"
     static let manageSubscriptionURL = "https://apps.apple.com/account/subscriptions"
     static let recentRecipeStatsLimit = 1000
 }
 
+/// ViewModel backing the Settings screen.
+///
+/// Aggregates all user-configurable and account-related state:
+/// - Current subscription plan (live-updated via publisher)
+/// - Database stats: total recipes, favourites, and recent recipe counts
+/// - Theme preference (light / dark / system)
+/// - Dietary restrictions (toggled per restriction)
+/// - Auth state (anonymous vs. Sign in with Apple) and sign-in/sign-out actions
+/// - Subscription restore and upgrade navigation
 @MainActor
 final class SettingsViewModel: ObservableObject {
     // MARK: - Published Properties
 
+    /// The user's current subscription plan (updated live from `SubscriptionServiceProtocol`).
     @Published private(set) var currentPlan: SubscriptionPlan = .free
+    /// Total number of recipes in the local database.
     @Published var recipeCount: Int = 0
+    /// Number of recipes the user has bookmarked/saved.
     @Published var favoriteCount: Int = 0
+    /// Number of recipes in the recent-recipes list.
     @Published var recentRecipeCount: Int = 0
+    /// `true` while any async operation (load/clear) is in progress.
     @Published var isLoading: Bool = false
+    /// Controls the "Clear Recent" confirmation alert.
     @Published var showClearRecentAlert: Bool = false
+    /// Controls the "Clear Favourites" confirmation alert.
     @Published var showClearFavoritesAlert: Bool = false
+    /// `true` while a restore-purchases request is in flight.
     @Published var isRestoringPurchases: Bool = false
+    /// Non-`nil` when a restore-purchases request fails.
     @Published var restoreError: String?
+    /// Non-`nil` when any general action fails; drives the error alert.
     @Published var errorMessage: String?
+    /// The user's selected app appearance preference.
     @Published var themePreference: ThemePreference = .defaultValue
+    /// The current authentication state (unknown / anonymous / signed in).
     @Published private(set) var authState: AuthState = .unknown
+    /// `true` when the current session is anonymous (not linked to Apple ID).
     @Published private(set) var isAnonymous: Bool = true
+    /// `true` while a Sign in with Apple flow is in flight.
     @Published var isSigningIn: Bool = false
+    /// Controls the sign-out confirmation alert.
     @Published var showSignOutConfirmation: Bool = false
 
+    /// `true` when auth is available on this device/build configuration.
     var isAuthAvailable: Bool {
         authService.isAuthAvailable
     }
 
+    /// `true` when the user has linked their account via Sign in with Apple.
     var isSignedInWithApple: Bool {
         !isAnonymous && currentUserId != nil
     }
 
+    /// The authenticated user ID when signed in with Apple, or `nil` for anonymous sessions.
     var currentUserId: String? {
         if case .signedIn(let userId) = authState {
             return userId
@@ -51,7 +79,9 @@ final class SettingsViewModel: ObservableObject {
 
     // MARK: - Properties
 
+    /// The app's marketing version string (e.g. "1.2.0").
     let appVersion: String
+    /// The build number string (e.g. "42").
     let buildNumber: String
 
     private let userDataService: UserDataServiceProtocol
@@ -67,6 +97,7 @@ final class SettingsViewModel: ObservableObject {
 
     // MARK: - Initialization
 
+    /// Creates a settings view model with persisted-user, subscription, and auth dependencies.
     init(
         userDataService: UserDataServiceProtocol,
         dbInterface: DBInterfaceProtocol,
@@ -129,15 +160,21 @@ final class SettingsViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
+    /// Navigates to the subscription upgrade paywall.
     func showUpgrade() {
         coordinator?.showUpgrade()
     }
 
+    /// Initiates a Sign in with Apple flow, writing any error to `errorMessage`.
     func signInWithApple() async {
         errorMessage = nil
         errorMessage = await signInWithAppleAction.signIn(context: .settings).errorMessage
     }
 
+    /// Signs out the current user and immediately creates a new anonymous session.
+    ///
+    /// Tracks the sign-out analytics event on success.
+    /// Sets `errorMessage` if sign-out or anonymous session creation fails.
     func signOut() async {
         errorMessage = nil
         do {
@@ -160,6 +197,7 @@ final class SettingsViewModel: ObservableObject {
         }
     }
     
+    /// Restores previously purchased subscriptions via StoreKit.
     func restorePurchases() async {
         isRestoringPurchases = true
         restoreError = nil
@@ -172,20 +210,24 @@ final class SettingsViewModel: ObservableObject {
         }
     }
     
+    /// Persists the selected theme preference and updates `themePreference`.
     func updateThemePreference(_ themePreference: ThemePreference) {
         guard self.themePreference != themePreference else { return }
         self.themePreference = themePreference
         userDataService.setThemePreference(themePreference)
     }
 
+    /// Returns `true` if the given dietary restriction is currently enabled.
     func isDietaryRestrictionActive(_ restriction: DietaryRestriction) -> Bool {
         dietaryPreferences.isActive(restriction)
     }
 
+    /// Toggles the active state of the given dietary restriction.
     func toggleDietaryRestriction(_ restriction: DietaryRestriction) {
         dietaryPreferences.toggle(restriction)
     }
 
+    /// Opens the App Store's subscription management page in Safari.
     // TODO: check the link
     func openManageSubscriptions() {
         if let url = URL(string: SettingsViewModelConstants.manageSubscriptionURL) {
@@ -195,6 +237,7 @@ final class SettingsViewModel: ObservableObject {
 
     // MARK: - Public Methods
 
+    /// Loads all database stats (recipe count, favourites, recent count) needed for the screen.
     func loadSettings() async {
         isLoading = true
         errorMessage = nil
@@ -211,6 +254,7 @@ final class SettingsViewModel: ObservableObject {
         }
     }
 
+    /// Clears the user's recent recipe history and reloads stats.
     func clearRecentData() async {
         isLoading = true
         errorMessage = nil
@@ -226,6 +270,7 @@ final class SettingsViewModel: ObservableObject {
         }
     }
 
+    /// Clears all saved/bookmarked recipes and reloads stats.
     func clearFavorites() async {
         isLoading = true
         errorMessage = nil
@@ -241,21 +286,25 @@ final class SettingsViewModel: ObservableObject {
         }
     }
 
+    /// Dismisses the error alert.
     func dismissError() {
         errorMessage = nil
     }
 
     // MARK: - Private Methods
 
+    /// Returns the total number of recipes in the local database.
     private func getRecipeCount() async throws -> Int {
         return try dbInterface.getRecipeCount()
     }
 
+    /// Returns the count of saved/favourited recipes.
     private func getFavoriteCount() async throws -> Int {
         let favorites = try await userDataService.getFavorites()
         return favorites.count
     }
 
+    /// Returns the count of recently viewed/cooked recipes (capped at `recentRecipeStatsLimit`).
     private func getRecentRecipeCount() async throws -> Int {
         let recent = try await userDataService.getRecentRecipes(limit: SettingsViewModelConstants.recentRecipeStatsLimit)
         return recent.count

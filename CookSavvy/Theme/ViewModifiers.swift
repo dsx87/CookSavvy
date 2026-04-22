@@ -1,5 +1,11 @@
 import SwiftUI
 
+/// Applies a frosted glass card appearance to any view.
+///
+/// The modifier fills the background with `theme.card`, clips to a rounded rectangle,
+/// and overlays a thin linear-gradient stroke that transitions from a bright highlight
+/// at the top-leading edge to a dark shadow at the bottom-trailing edge, simulating
+/// light glancing off a glass surface.
 struct FrostCardModifier: ViewModifier {
     @Environment(\.appTheme) private var theme
     let cornerRadius: CGFloat
@@ -22,6 +28,12 @@ struct FrostCardModifier: ViewModifier {
     }
 }
 
+/// Produces a layered neon-glow effect by stacking two drop shadows.
+///
+/// The inner layer is a tight, bright core glow (`innerOpacity`, `innerRadiusScale`);
+/// the outer layer is a softer, larger bloom with a slight downward offset
+/// (`outerOpacity`, `outerOffsetScale`). Both layers are scaled by `theme.shadowStrength`
+/// so the effect adapts gracefully between light and dark themes.
 struct NeonGlowModifier: ViewModifier {
     @Environment(\.appTheme) private var theme
     let color: Color
@@ -42,6 +54,10 @@ struct NeonGlowModifier: ViewModifier {
     }
 }
 
+/// Applies the standard section label style: small bold rounded font, uppercased text,
+/// wide letter-spacing, and `theme.text3` foreground color.
+///
+/// Use on `Text` views that head a content section (e.g. "SAVED RECIPES", "RECENT COOKS").
 struct SectionLabelModifier: ViewModifier {
     @Environment(\.appTheme) private var theme
 
@@ -54,15 +70,23 @@ struct SectionLabelModifier: ViewModifier {
     }
 }
 
+/// Convenience APIs for applying app-wide visual style modifiers.
 extension View {
+    /// Applies a frosted glass card background with a gradient border stroke.
+    /// - Parameter cornerRadius: The card corner radius. Defaults to `UI.V2.FrostCard.defaultCornerRadius`.
     func frostCard(cornerRadius: CGFloat = UI.V2.FrostCard.defaultCornerRadius) -> some View {
         modifier(FrostCardModifier(cornerRadius: cornerRadius))
     }
 
+    /// Applies a two-layer neon glow shadow effect.
+    /// - Parameters:
+    ///   - color: The glow color.
+    ///   - radius: The outer glow radius. Defaults to `UI.V2.NeonGlow.defaultRadius`.
     func neonGlow(_ color: Color, radius: CGFloat = UI.V2.NeonGlow.defaultRadius) -> some View {
         modifier(NeonGlowModifier(color: color, radius: radius))
     }
 
+    /// Applies the standard section label typography: small, bold, uppercased, wide-tracked, `text3` color.
     func sectionLabel() -> some View {
         modifier(SectionLabelModifier())
     }

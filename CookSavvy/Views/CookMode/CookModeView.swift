@@ -1,5 +1,10 @@
 import SwiftUI
 
+/// Full-screen Cook Mode view with step-by-step cooking navigation.
+///
+/// Shows a progress ring and dot indicator at the top, the current step text in the center,
+/// an optional countdown timer for timed steps, and prev/next navigation at the bottom.
+/// On finishing the last step, an overlay feedback card appears for star rating.
 struct CookModeView: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -32,6 +37,7 @@ struct CookModeView: View {
 
     // MARK: - Top Bar
 
+    /// Top bar with progress ring, step counter, recipe title, and close button.
     private var topBar: some View {
         HStack {
             Button { viewModel.dismiss() } label: {
@@ -78,6 +84,7 @@ struct CookModeView: View {
 
     // MARK: - Step Progress Dots
 
+    /// Horizontal row of dots showing which steps are completed, current, or pending.
     private var stepProgressDots: some View {
         HStack(spacing: UI.CookMode.dotsSpacing) {
             ForEach(0..<viewModel.stepCount, id: \.self) { i in
@@ -97,6 +104,7 @@ struct CookModeView: View {
 
     // MARK: - Step Content
 
+    /// The current step instruction text in a scrollable card.
     private var stepContent: some View {
         VStack(spacing: UI.CookMode.contentSpacing) {
             Text(viewModel.currentStepText)
@@ -117,6 +125,7 @@ struct CookModeView: View {
         }
     }
 
+    /// Circular countdown timer ring shown when the current step has a `timerMinutes` value.
     private func timerView(minutes: Int) -> some View {
         VStack(spacing: UI.CookMode.timerSpacing) {
             ZStack {
@@ -160,6 +169,7 @@ struct CookModeView: View {
 
     // MARK: - Feedback Overlay
 
+    /// Full-screen semi-transparent overlay containing the post-cook feedback card.
     private var feedbackOverlay: some View {
         ZStack {
             Color.black.opacity(UI.CookMode.feedbackOverlayOpacity)
@@ -226,6 +236,7 @@ struct CookModeView: View {
 
     // MARK: - Navigation Buttons
 
+    /// Prev / Next / Finish navigation row at the bottom of the screen.
     private var navigationButtons: some View {
         HStack(spacing: UI.CookMode.navigationSpacing) {
             Button {

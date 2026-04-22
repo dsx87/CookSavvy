@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+/// Settings screen listing plan info, usage stats, dietary restrictions, theme, account, and app info.
+struct SettingsView: View {
+
+/// Concrete settings content view implementation used by coordinators and previews.
 struct SettingsView: View {
     @ObservedObject var viewModel: SettingsViewModel
     @Environment(\.appTheme) private var theme
@@ -271,6 +275,7 @@ struct SettingsView: View {
         }
     }
 
+    /// Reusable statistic row showing a label and either value or loading spinner.
     private func statRow(label: String, value: Int) -> some View {
         HStack {
             Text(label)
@@ -328,6 +333,7 @@ struct SettingsView: View {
         }
     }
 
+    /// Reusable app-info row for static key/value metadata.
     private func infoRow(label: String, value: String) -> some View {
         HStack {
             Text(label)

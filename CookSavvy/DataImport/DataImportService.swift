@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// Internal constants used by ``DataImportService`` to locate and probe the bundled dataset.
 private enum DataImportServiceConstants {
     static let populationProbe = "a"
     static let populationProbeLimit = 1
@@ -16,6 +17,13 @@ private enum DataImportServiceConstants {
     static let datasetCSVName = "Food Ingredients and Recipe Dataset with Image Name Mapping.csv"
 }
 
+/// Orchestrates first-launch seeding of the local SQLite database from the bundled CSV dataset.
+///
+/// On each app start ``DatabaseInitializationService`` calls ``ensureRecipesImported()``, which
+/// performs a lightweight probe (searching for a common ingredient) to detect whether data has
+/// already been imported. If not, it extracts the bundled ZIP, parses the CSV, and bulk-inserts
+/// all recipes via ``DBInterfaceProtocol``. The flag ``isRecipesImported`` prevents redundant
+/// work within the same process lifetime.
 final class DataImportService: DataImportServiceProtocol {
 
     // MARK: - Properties
@@ -28,6 +36,11 @@ final class DataImportService: DataImportServiceProtocol {
 
     // MARK: - Initialization
 
+    /// Creates a ``DataImportService`` with the given dependencies.
+    /// - Parameters:
+    ///   - dbInterface: The database interface used to probe for existing data and insert recipes.
+    ///   - csvReader: The CSV parser used to decode the dataset. Defaults to a plain ``CSVParser``.
+    ///   - logger: A scoped logger for import progress and error reporting.
     init(
         dbInterface: DBInterfaceProtocol,
         csvReader: CSVParser = CSVParser(),
@@ -40,8 +53,15 @@ final class DataImportService: DataImportServiceProtocol {
 
     // MARK: - Public Methods
 
-    /// Ensures recipes are imported into the database from the CSV dataset
-    /// - Throws: Error if import fails
+    /// Ensures the recipe dataset has been imported into the database.
+    ///
+    /// Performs a lightweight probe by searching for a common ingredient. If matching recipes are
+    /// found the method returns immediately. Otherwise it extracts the bundled ZIP archive, parses
+    /// the CSV, and bulk-inserts all recipes. Subsequent calls within the same process lifetime
+    /// return immediately via the in-memory ``isRecipesImported`` flag.
+    ///
+    /// - Throws: ``DataImportError/datasetNotFound`` if the ZIP is missing from the app bundle,
+    ///   or any error thrown by the database or parser.
     func ensureRecipesImported() async throws {
         // Check if recipes already exist in database
         let commonIngredients = try dbInterface.searchIngredients(
@@ -90,8 +110,11 @@ final class DataImportService: DataImportServiceProtocol {
         isRecipesImported = true
     }
 
-    /// Forces a re-import of recipes from the CSV dataset
-    /// - Throws: Error if import fails
+    /// Clears the in-memory import flag and re-runs ``ensureRecipesImported()``.
+    ///
+    /// Useful during development or after a dataset update to force a full re-import
+    /// without restarting the app.
+    /// - Throws: Any error thrown by ``ensureRecipesImported()``.
     func forceReimportRecipes() async throws {
         isRecipesImported = false
         try await ensureRecipesImported()
@@ -100,8 +123,11 @@ final class DataImportService: DataImportServiceProtocol {
 
 // MARK: - Error Types
 
+/// Errors thrown during dataset import operations.
 enum DataImportError: Error, LocalizedError {
+    /// The recipe dataset ZIP file was not found in the app bundle.
     case datasetNotFound
+    /// The import operation failed due to an underlying error.
     case importFailed(Error)
 
     var errorDescription: String? {

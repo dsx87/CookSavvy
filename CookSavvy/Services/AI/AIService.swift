@@ -6,6 +6,13 @@
 import Foundation
 import os
 
+/// Concrete implementation of `AIServiceProtocol` that delegates all LLM work to an injected
+/// `LLMProviderProtocol`. `AIService` owns prompt construction, image MIME-type detection,
+/// input sanitization, and JSON response parsing — the provider only needs to send bytes and
+/// return raw text.
+///
+/// The provider is optional; when `nil` the service reports itself as unavailable, allowing
+/// the app to gracefully hide AI features rather than surfacing errors.
 final class AIService: AIServiceProtocol {
     
     private static let logger = Logger(
@@ -15,12 +22,25 @@ final class AIService: AIServiceProtocol {
     
     private let provider: LLMProviderProtocol?
 
+    /// Whether an LLM provider was injected and is ready to receive requests.
     var isAvailable: Bool { provider != nil }
 
+    /// - Parameter provider: The LLM backend to use. Pass `nil` to disable AI features
+    ///   without causing runtime errors (e.g., when API keys are absent).
     init(provider: LLMProviderProtocol?) {
         self.provider = provider
     }
 
+    /// Detects food ingredients from raw image bytes by sending a vision request to the LLM.
+    ///
+    /// The MIME type is sniffed from the image magic bytes so callers don't need to track the
+    /// format. `LLMProviderError`s are re-wrapped into `AIServiceError.providerError` to keep
+    /// the higher-level error contract stable across provider changes.
+    ///
+    /// - Parameter imageData: Raw image bytes. Must be non-empty.
+    /// - Returns: Detected `Ingredient` values parsed from the model's JSON response.
+    /// - Throws: `AIServiceError.invalidImageData`, `AIServiceError.noIngredientsDetected`,
+    ///   `AIServiceError.parsingFailed`, or `AIServiceError.providerError`.
     func detectIngredients(from imageData: Data) async throws -> [Ingredient] {
         guard !imageData.isEmpty else {
             throw AIServiceError.invalidImageData
@@ -64,6 +84,18 @@ final class AIService: AIServiceProtocol {
         }
     }
     
+    /// Generates AI-authored recipes for the given ingredients via a chat request to the LLM.
+    ///
+    /// Ingredient names are sanitized before being embedded in the prompt (newlines stripped,
+    /// length capped at 100 chars each) to prevent prompt injection and oversized payloads.
+    /// A system message establishes the chef persona so the model outputs structured JSON.
+    ///
+    /// - Parameters:
+    ///   - ingredients: The ingredients to cook with. Must be non-empty.
+    ///   - count: How many recipe suggestions to request.
+    /// - Returns: Parsed `Recipe` values from the model's JSON response.
+    /// - Throws: `AIServiceError.noIngredientsDetected`, `AIServiceError.noRecipesGenerated`,
+    ///   `AIServiceError.parsingFailed`, or `AIServiceError.providerError`.
     func generateRecipes(for ingredients: [Ingredient], count: Int) async throws -> [Recipe] {
         guard !ingredients.isEmpty else {
             throw AIServiceError.noIngredientsDetected
@@ -116,6 +148,14 @@ final class AIService: AIServiceProtocol {
         }
     }
     
+    /// Sniffs the MIME type from the first 12 magic bytes of image data.
+    ///
+    /// Inspects well-known byte signatures for JPEG (FF D8 FF), PNG (89 50 4E 47),
+    /// WebP (RIFF…WEBP), GIF (47 49 46), and HEIC (ftyp box at offset 4).
+    /// Defaults to `image/jpeg` for any unrecognised format.
+    ///
+    /// - Parameter data: Raw image bytes.
+    /// - Returns: A MIME type string suitable for multipart or base64 data-URL payloads.
     private func detectMimeType(from data: Data) -> String {
         guard data.count >= 12 else { return "image/jpeg" }
         
@@ -139,6 +179,8 @@ final class AIService: AIServiceProtocol {
         return "image/jpeg"
     }
 
+    /// Strips control characters and newlines from an ingredient name, then caps it at 100 characters.
+    /// Prevents prompt injection and avoids oversized tokens when ingredient names are user-supplied.
     private static func sanitizedIngredientName(_ name: String) -> String {
         let stripped = name
             .replacingOccurrences(of: "\n", with: " ")
@@ -149,6 +191,9 @@ final class AIService: AIServiceProtocol {
         return String(stripped.prefix(100))
     }
     
+    /// Decodes the LLM's JSON text into an array of `Ingredient` values.
+    /// - Throws: `AIServiceError.parsingFailed` if the content is not valid UTF-8 or does not
+    ///   conform to the expected `{"ingredients": [{"name": "..."}]}` shape.
     private func parseIngredientsResponse(_ content: String) throws -> [Ingredient] {
         guard let data = content.data(using: .utf8) else {
             throw AIServiceError.parsingFailed("Invalid UTF-8 content")
@@ -162,6 +207,9 @@ final class AIService: AIServiceProtocol {
         }
     }
     
+    /// Decodes the LLM's JSON text into an array of `Recipe` values.
+    /// - Throws: `AIServiceError.parsingFailed` if the content is not valid UTF-8 or does not
+    ///   conform to the expected `{"recipes": [...]}` shape.
     private func parseRecipesResponse(_ content: String) throws -> [Recipe] {
         guard let data = content.data(using: .utf8) else {
             throw AIServiceError.parsingFailed("Invalid UTF-8 content")
@@ -190,18 +238,22 @@ final class AIService: AIServiceProtocol {
     }
 }
 
+/// Top-level JSON wrapper decoded from the ingredient-detection LLM response.
 private struct IngredientsResponse: Decodable {
     let ingredients: [IngredientData]
 }
 
+/// Single ingredient entry inside an `IngredientsResponse`.
 private struct IngredientData: Decodable {
     let name: String
 }
 
+/// Top-level JSON wrapper decoded from the recipe-generation LLM response.
 private struct RecipesResponse: Decodable {
     let recipes: [RecipeData]
 }
 
+/// Single recipe entry inside a `RecipesResponse`.
 private struct RecipeData: Decodable {
     let title: String
     let ingredients: [String]
@@ -212,7 +264,10 @@ private struct RecipeData: Decodable {
     let calories: Int?
 }
 
+/// Prompt templates used by `AIService` when constructing LLM requests.
+/// Centralising prompts here makes them easy to iterate without touching request logic.
 private enum Prompts {
+    /// Prompt instructing the model to return detected ingredients as a JSON object.
     static let ingredientDetection = """
         Analyze this image and identify all food ingredients visible.
         Return a JSON object with an "ingredients" array containing objects with "name" field.
@@ -223,6 +278,7 @@ private enum Prompts {
         {"ingredients": [{"name": "Tomato"}, {"name": "Onion"}]}
         """
     
+    /// System message establishing the chef persona for the recipe-generation conversation.
     static let recipeSystemPrompt = """
         You are a professional chef assistant. Generate recipes based on available ingredients.
         Always respond with valid JSON in the specified format.
@@ -230,6 +286,10 @@ private enum Prompts {
         Include realistic cooking times, serving sizes, and calorie estimates.
         """
     
+    /// Builds the user turn for a recipe-generation chat, embedding the ingredient list and count.
+    /// - Parameters:
+    ///   - ingredients: Comma-separated, sanitized ingredient names.
+    ///   - count: Number of recipes to generate.
     static func recipeGeneration(ingredients: String, count: Int) -> String {
         """
         Generate \(count) recipes using these ingredients: \(ingredients)

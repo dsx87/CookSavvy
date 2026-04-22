@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// A compact weekday indicator showing active state and 'today' highlight used in Journey's weekly streak UI.
 struct WeekdayDotView: View {
     @Environment(\.appTheme) private var theme
     let isActive: Bool
@@ -45,6 +46,8 @@ struct WeekdayDotView: View {
     }
 }
 
+/// A capsule-styled progress bar used to display achievement progress.
+/// The filled portion width corresponds to `progressFraction`.
 struct AchievementProgressBar: View {
     @Environment(\.appTheme) private var theme
     let color: Color
@@ -65,6 +68,7 @@ struct AchievementProgressBar: View {
     }
 }
 
+/// A row representing a previous cooking session, showing recipe title, relative date, duration, and a 'Cook Again' action.
 struct ActivitySessionRow: View {
     @Environment(\.appTheme) private var theme
     let session: CookingSession
@@ -147,6 +151,7 @@ struct ActivitySessionRow: View {
         .accessibilityIdentifier(AccessibilityID.Journey.cookAgainButton(session.id))
     }
 
+    /// Formats a date as localized relative text such as "2 hours ago".
     private func relativeDate(_ date: Date) -> String {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .full
@@ -162,6 +167,7 @@ struct ActivitySessionRow: View {
     }
 }
 
+/// Shortcut card to access the shopping list; shows premium CTA when locked.
 struct ShoppingListShortcutCard: View {
     @Environment(\.appTheme) private var theme
     let isPremium: Bool
@@ -181,6 +187,7 @@ struct ShoppingListShortcutCard: View {
         isPremium ? Strings.Journey.openList : Strings.Journey.unlockShoppingList
     }
 
+    /// Shared card layout for the shopping list shortcut content.
     private func cardContent() -> some View {
         HStack(spacing: UI.Journey.shortcutContentSpacing) {
             shortcutIcon
@@ -230,6 +237,7 @@ struct ShoppingListShortcutCard: View {
     }
 }
 
+/// Small card prompting the user to create a recipe and used in the Journey collection.
 struct CreateRecipeCard: View {
     @Environment(\.appTheme) private var theme
 
@@ -266,6 +274,7 @@ struct CreateRecipeCard: View {
     }
 }
 
+/// A compact wrapper for user-created recipe cards which overlays an edit icon.
 struct UserMiniRecipeCard: View {
     @Environment(\.appTheme) private var theme
     let recipe: Recipe

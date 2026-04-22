@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// Shared recipe-image fallback rules and deterministic styling constants.
 private enum RecipeImageStyle {
     static let placeholderImageName = "recipe_placeholder"
     static let defaultEmoji = "🍽️"
@@ -14,6 +15,7 @@ private enum RecipeImageStyle {
         ("cake", "🍰"),
     ]
 
+    /// Resolves the fallback emoji for a recipe when no explicit emoji is available.
     static func emoji(for recipe: Recipe) -> String {
         if let emoji = recipe.emoji { return emoji }
         let title = recipe.title.lowercased()
@@ -24,6 +26,9 @@ private enum RecipeImageStyle {
     }
 }
 
+/// Presents the visual image for a recipe, falling back to a deterministic gradient with
+/// an emoji when no disk image is available. The gradient palette is derived from a hash of
+/// the recipe title so each recipe always maps to the same colour pair.
 struct RecipeImage: View {
     @Environment(\.appTheme) private var theme
     let recipe: Recipe
@@ -60,6 +65,7 @@ struct RecipeImage: View {
         .clipped()
     }
 
+    /// Deterministic gradient pair for this recipe, computed from a hash of the recipe title.
     private var gradientColors: [Color] {
         let hash = recipe.title.unicodeScalars.reduce(0) { $0 &+ Int($1.value) }
         let index = abs(hash) % UI.Components.gradientPairCount
@@ -76,6 +82,8 @@ struct RecipeImage: View {
     }
 }
 
+/// A compact card showing a recipe's image, title, and cook time.
+/// Used in horizontal scroll strips on the Discover and My Kitchen screens.
 struct MiniRecipeCard: View {
     @Environment(\.appTheme) private var theme
     let recipe: Recipe
@@ -109,6 +117,7 @@ struct MiniRecipeCard: View {
         .accessibilityLabel(cookTimeText.isEmpty ? recipe.title : "\(recipe.title), \(cookTimeText)")
     }
 
+    /// Extracts the first time-type info string from the recipe's additional info, if present.
     private var cookTimeText: String {
         for info in recipe.additionalInfo.infos {
             if case .time(let t) = info { return t }
@@ -117,6 +126,9 @@ struct MiniRecipeCard: View {
     }
 }
 
+/// A full-width list row presenting a recipe with its thumbnail, title, tagline, match/missing
+/// ingredient badges, meta-info pills (time, calories, rating), and a bookmark badge.
+/// Used in both recipe search results and "See All" lists.
 struct RecipeRow: View {
     @Environment(\.appTheme) private var theme
     let recipe: Recipe
@@ -146,18 +158,8 @@ struct RecipeRow: View {
         )
     }
 
+    /// The main text+badge content column: title, tagline, match reason, missing ingredients, meta row, and badges.
     private var recipeContent: some View {
-        VStack(alignment: .leading, spacing: UI.Components.RecipeRow.contentSpacing) {
-            Text(recipe.title)
-                .font(UI.Fonts.recipeRowTitle)
-                .foregroundStyle(theme.text1)
-                .lineLimit(UI.Components.RecipeRow.titleLineLimit)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            if let tagline = recipe.tagline {
-                Text(tagline)
-                    .font(UI.Fonts.caption)
-                    .foregroundStyle(theme.text2)
                     .lineLimit(UI.Components.RecipeRow.taglineLineLimit)
             }
 
@@ -271,6 +273,7 @@ struct RecipeRow: View {
             )
     }
 
+    /// Builds a tinted capsule label used for time/calorie metadata pills.
     private func rowMetaLabel(_ text: String, systemImage: String, tint: Color) -> some View {
         Label(text, systemImage: systemImage)
             .font(UI.Fonts.tinyCaptionMedium)
@@ -280,6 +283,7 @@ struct RecipeRow: View {
             .background(tint.opacity(UI.Components.RecipeRow.Meta.backgroundOpacity), in: Capsule())
     }
 
+    /// Builds the rating pill used in recipe rows.
     private func rowRating(_ rating: Double) -> some View {
         HStack(spacing: UI.Components.RecipeRow.Meta.ratingSpacing) {
             StarRating(rating: rating)
@@ -293,6 +297,8 @@ struct RecipeRow: View {
     }
 }
 
+/// The styled square thumbnail shown on the leading side of a `RecipeRow`.
+/// Applies saturation/contrast tweaks and a coloured gradient overlay for visual polish.
 private struct RecipeRowThumbnailView: View {
     @Environment(\.appTheme) private var theme
     let recipe: Recipe
@@ -359,6 +365,8 @@ private struct RecipeRowThumbnailView: View {
     }
 }
 
+/// Displays contextual attribute badges (Quick, Easy, Beginner Friendly) derived from
+/// a recipe's cook time, complexity level, and ingredient count.
 struct RecipeBadges: View {
     @Environment(\.appTheme) private var theme
     let recipe: Recipe
@@ -380,11 +388,13 @@ struct RecipeBadges: View {
         }
     }
 
+    /// `true` when the recipe's cook time is at or below the quick threshold defined in `UI.RecipeBadge`.
     private var isQuick: Bool {
         guard let minutes = recipe.cookTimeMinutes else { return false }
         return minutes <= UI.RecipeBadge.quickThresholdMinutes
     }
 
+    /// `true` when the recipe's complexity is "easy" or "low".
     private var isEasy: Bool {
         for info in recipe.additionalInfo.infos {
             if case .complexity(let level) = info {
@@ -394,11 +404,13 @@ struct RecipeBadges: View {
         return false
     }
 
+    /// `true` when the recipe has a small number of ingredients, within the beginner-friendly cap.
     private var isBeginnerFriendly: Bool {
         let ingredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
         return ingredients.count > 0 && ingredients.count <= UI.RecipeBadge.beginnerMaxIngredients
     }
 
+    /// Builds a colored contextual badge for recipe attributes.
     private func badge(_ text: String, icon: String, color: Color) -> some View {
         Label(text, systemImage: icon)
             .font(UI.Fonts.tinyCaption)

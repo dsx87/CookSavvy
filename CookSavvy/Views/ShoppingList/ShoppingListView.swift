@@ -5,6 +5,7 @@
 
 import SwiftUI
 
+/// Full-screen shopping list view. Supports grouped items, marking checked, deleting, and clearing completed items.
 struct ShoppingListView: View {
     @ObservedObject var viewModel: ShoppingListViewModel
     @Environment(\.appTheme) private var theme
@@ -79,6 +80,7 @@ struct ShoppingListView: View {
         .background(theme.bg)
     }
 
+    /// Section header view for an optional recipe-title group.
     private func groupHeader(_ title: String?) -> some View {
         Group {
             if let title {
@@ -92,6 +94,7 @@ struct ShoppingListView: View {
 
     // MARK: - Item Row
 
+    /// Single shopping row with check/uncheck and swipe-to-delete actions.
     private func itemRow(_ item: ShoppingItem) -> some View {
         HStack(spacing: UI.ShoppingList.checkboxSpacing) {
             Button {

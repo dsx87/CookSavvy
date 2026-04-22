@@ -1,6 +1,11 @@
 import SwiftUI
 
+/// Color construction conveniences used by theme and design tokens.
 extension Color {
+    /// Creates a `Color` from a CSS-style hex string, with or without a leading `#`.
+    ///
+    /// Expects a 6-digit RGB hex value (e.g. `"#FF9500"` or `"FF9500"`).
+    /// - Parameter hex: The hex colour string to parse.
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
         let scanner = Scanner(string: hex)

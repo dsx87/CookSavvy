@@ -1,5 +1,15 @@
 import SwiftUI
 
+/// The Discover tab's root view, managing a two-state layout via animated transitions.
+///
+/// **State 1 — Ingredient Selection** (`ingredientSelectionState`): header, search bar, camera button,
+/// selected-ingredient strip, homepage carousels (recent, saved, suggested, collections),
+/// category filter chips, and the ingredient grid. A sticky "Find Recipes" CTA appears once any
+/// ingredient is selected.
+///
+/// **State 2 — Recipe Results** (`resultsState`): selected-ingredient strip, mood filter, "use it all"
+/// toggle, dietary-restriction pills, optional error banner, a hero best-match card, and a list of
+/// additional recipe rows.
 struct DiscoverView: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -27,6 +37,7 @@ struct DiscoverView: View {
 
     // MARK: - State 1: Ingredient Selection
 
+    /// The full ingredient-selection screen: search bar, carousels, category chips, and ingredient grid.
     private var ingredientSelectionState: some View {
         ZStack(alignment: .bottom) {
             VStack(spacing: 0) {
@@ -59,6 +70,7 @@ struct DiscoverView: View {
         }
     }
     
+    /// Sticky "Find Recipes" CTA pinned to the bottom of the ingredient-selection state.
     private var searchButton: some View {
         Button {
             withAnimation(UI.Anim.springNav) {
@@ -80,6 +92,7 @@ struct DiscoverView: View {
         .accessibilityIdentifier(AccessibilityID.Discover.findRecipesButton)
     }
 
+    /// Camera icon button in the search bar; shows a weekly scan count badge for free-tier users.
     private var cameraButton: some View {
         Button {
             viewModel.showCamera()
@@ -397,6 +410,7 @@ struct DiscoverView: View {
 
     // MARK: - State 2: Recipe Results
 
+    /// Toggle pill that filters results to recipes where no ingredients are missing.
     private var useItAllToggle: some View {
         Button {
             withAnimation(UI.Anim.springBouncy) {
@@ -419,6 +433,7 @@ struct DiscoverView: View {
         .accessibilityLabel(viewModel.useItAllFilter ? Strings.Accessibility.useItAllActive : Strings.Accessibility.useItAllInactive)
     }
 
+    /// Full recipe-results screen: selected-ingredient strip, mood/dietary filters, and recipe list.
     private var resultsState: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: UI.Discover.sectionSpacing) {
@@ -442,6 +457,7 @@ struct DiscoverView: View {
         }
     }
 
+    /// Horizontal strip of removable dietary-restriction filter pills (only shown when restrictions are active).
     @ViewBuilder
     private var dietaryFilterPills: some View {
         if !viewModel.activeDietaryRestrictions.isEmpty {
@@ -627,6 +643,7 @@ struct DiscoverView: View {
         }
     }
 
+    /// Overlay content rendered on top of the featured recipe hero image.
     private func featuredHeroOverlay(for recipe: Recipe) -> some View {
         VStack(alignment: .leading, spacing: UI.Discover.featuredInfoSpacing) {
             if recipe.missingIngredients != nil || recipe.matchPercentage != nil {
@@ -693,6 +710,7 @@ struct DiscoverView: View {
 
     // MARK: - Helpers
 
+    /// Extracts the first cook-time label from a recipe's additional info entries.
     private func cookTimeLabel(_ recipe: Recipe) -> String? {
         for info in recipe.additionalInfo.infos {
             if case .time(let cookTime) = info { return cookTime }
@@ -700,6 +718,7 @@ struct DiscoverView: View {
         return nil
     }
 
+    /// Extracts the first complexity label from a recipe's additional info entries.
     private func complexityLabel(_ recipe: Recipe) -> String? {
         for info in recipe.additionalInfo.infos {
             if case .complexity(let complexity) = info { return complexity }
@@ -707,6 +726,7 @@ struct DiscoverView: View {
         return nil
     }
 
+    /// Builds the featured hero's match badge and match-details popover trigger.
     private func matchIndicator(recipe: Recipe, matchingIngredients: [String]) -> some View {
         let total = recipe.cleanedIngredients.isEmpty ? recipe.ingredients.count : recipe.cleanedIngredients.count
         let missing = recipe.missingIngredients?.count ?? 0
@@ -739,6 +759,7 @@ struct DiscoverView: View {
     }
 }
 
+/// Compact card showing a curated collection's gradient, emoji, title, and subtitle.
 private struct CollectionCard: View {
     @Environment(\.appTheme) private var theme
     let collection: CuratedCollection
@@ -782,6 +803,7 @@ private struct CollectionCard: View {
     }
 }
 
+/// Popover content listing ingredient names used for the current match explanation.
 private struct MatchDetailsPopover: View {
     @Environment(\.appTheme) private var theme
     let ingredients: [String]

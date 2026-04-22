@@ -3,23 +3,41 @@ import SwiftUI
 
 // MARK: - Protocol
 
+/// Interface for retrieving curated recipe collections shown on the Discover screen.
 protocol CuratedCollectionServiceProtocol {
+
+    /// Returns the collections to display in the current calendar week.
+    /// - Parameter isPremium: When `true`, returns 3 rotated collections; otherwise 1.
     func getCollectionsForThisWeek(isPremium: Bool) -> [CuratedCollection]
+
+    /// Fetches recipes that satisfy the filter criteria of `collection`.
+    /// - Parameter collection: The curated collection whose criteria define the query.
+    /// - Returns: Recipes matching all of the collection's filter constraints.
+    /// - Throws: `RecipeSourceError.databaseError` on read failures.
     func getRecipes(for collection: CuratedCollection) async throws -> [Recipe]
 }
 
 // MARK: - Implementation
 
+/// Manages the catalogue of curated recipe collections and fetches their recipes from the database.
+///
+/// Collections are statically defined and surfaced to users via a weekly rotation driven by
+/// `Calendar.current.weekOfYear`, so the featured collections change automatically each week
+/// without any server-side configuration.
 final class CuratedCollectionService: CuratedCollectionServiceProtocol {
 
+    /// Database interface used to query recipes matching collection criteria.
     private let dbInterface: DBInterfaceProtocol
 
+    /// - Parameter dbInterface: Database interface for recipe queries.
     init(dbInterface: DBInterfaceProtocol) {
         self.dbInterface = dbInterface
     }
 
     // MARK: - All Collections
 
+    /// The complete catalogue of curated collections. Add new collections here; the weekly
+    /// rotation selects 3 from this list using the current `weekOfYear` as an offset.
     private static let allCollections: [CuratedCollection] = [
         CuratedCollection(
             id: "five_ingredient_dinners",
@@ -76,6 +94,12 @@ final class CuratedCollectionService: CuratedCollectionServiceProtocol {
 
     // MARK: - Weekly Rotation
 
+    /// Returns the collections to show in the current calendar week.
+    ///
+    /// The starting index into `allCollections` is derived from `weekOfYear % count`, cycling
+    /// through the catalogue so each week features a different set. Free users see only the
+    /// first collection from the rotated set; Premium users see all three.
+    /// - Parameter isPremium: Controls how many collections are returned (1 vs. 3).
     func getCollectionsForThisWeek(isPremium: Bool) -> [CuratedCollection] {
         let weekOfYear = Calendar.current.component(.weekOfYear, from: Date())
         let all = Self.allCollections
@@ -86,6 +110,12 @@ final class CuratedCollectionService: CuratedCollectionServiceProtocol {
 
     // MARK: - Recipe Fetching
 
+    /// Fetches and filters recipes that satisfy the collection's `FilterCriteria`.
+    ///
+    /// If the criteria include ingredient or cuisine keywords, the database is queried with
+    /// those keywords as synthetic ingredients. When no keywords are present, all recipes are
+    /// loaded and then filtered in-memory by `maxIngredientCount`, `maxCookTime`, and
+    /// `complexityLevel`.
     func getRecipes(for collection: CuratedCollection) async throws -> [Recipe] {
         let criteria = collection.filterCriteria
         let keywords = criteria.ingredientKeywords ?? criteria.cuisineKeywords ?? []
@@ -122,7 +152,9 @@ final class CuratedCollectionService: CuratedCollectionServiceProtocol {
 
 // MARK: - Recipe Cook Time Helper
 
+/// Recipe-level helpers local to curated collection filtering.
 private extension Recipe {
+    /// Extracts the recipe's complexity level string from its `AdditionalInfo`, or `nil` if absent.
     var complexityLevel: String? {
         for info in additionalInfo.infos {
             if case .complexity(let level) = info { return level }

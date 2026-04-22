@@ -1,9 +1,18 @@
 import SwiftUI
 
+/// Centralised layout constants for the CookSavvy app.
+///
+/// All magic numbers — padding, spacing, sizes, opacities, and animation durations — live
+/// inside domain-specific nested structs so every screen draws from a single source of truth.
+/// Access constants as `UI.Domain.constant`, e.g. `UI.Common.horizontalPadding`.
 struct UI {
 
     // MARK: - Fonts
 
+    /// Typography constants — a curated set of shared `Font` values for the app.
+    ///
+    /// Fixed-size fonts are used for most text. `bodyScaled` and `stepContent` use semantic
+    /// system fonts to honour the user's Dynamic Type accessibility size preference.
     struct Fonts {
         // Titles
         static let heroTitle: Font = .system(size: 34, weight: .bold, design: .rounded)
@@ -55,6 +64,7 @@ struct UI {
 
     // MARK: - Animations
 
+    /// Named SwiftUI animation presets for consistent motion behaviour across the app.
     struct Anim {
         static let springDefault: SwiftUI.Animation = .spring(response: 0.35)
         static let springNav: SwiftUI.Animation = .spring(response: 0.4, dampingFraction: 0.8)
@@ -68,6 +78,10 @@ struct UI {
 
     // MARK: - Common
 
+    /// General-purpose layout constants reused across many screens.
+    ///
+    /// `bottomSpacerMinLength` reserves space at the bottom of scrollable content
+    /// to prevent the last item being obscured by the tab bar.
     struct Common {
         static let stackSpacing: CGFloat = 16
         static let contentSpacing: CGFloat = 16
@@ -94,6 +108,7 @@ struct UI {
 
     // MARK: - Onboarding
 
+    /// Layout constants for the first-launch onboarding flow.
     struct Onboarding {
         static let pageSpacing: CGFloat = 32
         static let pageHorizontalPadding: CGFloat = 32
@@ -113,7 +128,10 @@ struct UI {
         static let cardPadding: CGFloat = 24
         static let cardMaxWidth: CGFloat = 360
         static let chipSpacing: CGFloat = 8
+        /// Maximum number of detected ingredient chips displayed on the camera scan result overlay.
         static let chipMaxCount: Int = 6
+        /// A 1.5-second hold expressed in nanoseconds for `Task.sleep`, keeping the success state
+        /// visible before automatically advancing to the next screen.
         static let successDelayNanoseconds: UInt64 = 1_500_000_000
         static let iconSize: CGFloat = 80
         static let stateIconSize: CGFloat = 60
@@ -123,6 +141,7 @@ struct UI {
 
     // MARK: - RecipeCell
 
+    /// Layout constants for compact recipe list rows.
     struct RecipeCell {
         static let listRowSpacing: CGFloat = 18
         static let horizontalSpacing: CGFloat = 12
@@ -132,14 +151,17 @@ struct UI {
         static let verticalPadding: CGFloat = 4
         static let titleLineLimit: Int = 2
         static let ingredientsSpacing: CGFloat = 6
+        /// Number of ingredient chips shown inline before an overflow count badge appears.
         static let maxVisibleIngredients: Int = 3
         static let maxChipWidth: CGFloat = 100
+        /// Prefix character for the overflow ingredient count badge, e.g. "+2".
         static let extraIngredientsPrefix = "+"
         static let spacerMinLength: CGFloat = 0
     }
 
     // MARK: - IngredientChip
 
+    /// Layout constants for ingredient chip views in the ingredient picker grid.
     struct IngredientChip {
         static let lineLimit: Int = 1
         static let horizontalPadding: CGFloat = 10
@@ -149,6 +171,10 @@ struct UI {
 
     // MARK: - RecipeDetails
 
+    /// Layout constants for the Recipe Details screen.
+    ///
+    /// Covers the hero image, ingredient list, step cards, floating action buttons,
+    /// and the sticky "Start Cooking" CTA.
     struct RecipeDetails {
         static let imageHeight: CGFloat = 250
         static let cardCornerRadius: CGFloat = 10
@@ -195,19 +221,24 @@ struct UI {
 
     // MARK: - Settings
 
+    /// Layout constants for the Settings screen.
     struct Settings {
         static let planInfoSpacing: CGFloat = 4
     }
 
     // MARK: - DiskImage
 
+    /// File-path constants for loading bundled food images from the app bundle.
     struct DiskImage {
+        /// Path prefix for bundled food image assets. The double segment mirrors the nested
+        /// folder structure created when the image dataset was imported into the bundle.
         static let defaultPrefix = "Food Images/Food Images/"
         static let defaultExtension = ".jpg"
     }
 
     // MARK: - V2
 
+    /// Top-level V2 design-system constants not tied to a single component.
     struct V2 {
         static let heroImageHeight: CGFloat = 340
         static let miniCardWidth: CGFloat = 140
@@ -215,22 +246,33 @@ struct UI {
         static let recipeRowImageSize: CGFloat = 92
         static let avatarSize: CGFloat = 80
         static let cookModeTimerSize: CGFloat = 120
+        /// Distance (in points) the scrollable content card slides up over the hero image,
+        /// creating the layered depth effect on the Recipe Details screen.
         static let contentOverlapOffset: CGFloat = 32
+        /// Top padding that positions floating back/bookmark buttons below the status bar.
         static let floatingButtonTopPadding: CGFloat = 56
 
+        /// Layout constants for the `FrostCardModifier`.
         struct FrostCard {
             static let strokeWidth: CGFloat = 0.5
             static let defaultCornerRadius: CGFloat = 20
         }
 
+        /// Tuning constants for the `NeonGlowModifier` two-layer shadow effect.
+        ///
+        /// The inner layer uses `innerRadiusScale` (40% of the outer radius) for a tight core glow;
+        /// the outer layer uses `outerOffsetScale` (25% of the outer radius) as a downward y-offset.
         struct NeonGlow {
             static let defaultRadius: CGFloat = 12
             static let innerOpacity: Double = 0.6
+            /// The inner shadow radius as a fraction of the outer radius (0.4 = 40%), producing a tight core glow.
             static let innerRadiusScale: CGFloat = 0.4
             static let outerOpacity: Double = 0.3
+            /// The outer shadow y-offset as a fraction of the outer radius (0.25 = 25%), simulating downward cast light.
             static let outerOffsetScale: CGFloat = 0.25
         }
 
+        /// Layout constants for the `SectionLabelModifier`.
         struct SectionLabel {
             static let tracking: CGFloat = 1.5
         }
@@ -238,6 +280,7 @@ struct UI {
 
     // MARK: - RecipeList
 
+    /// Layout constants for the Recipe List "See All" screen.
     struct RecipeList {
         static let stackSpacing: CGFloat = 12
         static let horizontalPadding: CGFloat = 20
@@ -246,6 +289,10 @@ struct UI {
 
     // MARK: - CookMode
 
+    /// Layout constants for Cook Mode — the full-screen step-by-step cooking flow.
+    ///
+    /// Covers the progress ring, step navigation buttons, step timer, and the
+    /// done/rating feedback overlay.
     struct CookMode {
         static let topBarTopPadding: CGFloat = 16
         static let horizontalPadding: CGFloat = 20
@@ -278,8 +325,13 @@ struct UI {
 
     // MARK: - Discover
 
+    /// Layout constants for the Discover tab (ingredient selection and recipe results states).
+    ///
+    /// Includes grid dimensions, search bar, mood filter pills, collection cards,
+    /// match badge, and the "Find Dinner" CTA button.
     struct Discover {
         static let chefEmoji = "🧑‍🍳"
+        /// Solid accent colors and two-stop gradients for each recipe mood filter pill.
         struct Mood {
             static let cozyColor = Color(red: 1.0, green: 0.55, blue: 0.20)
             static let cozyGradient = [cozyColor, Color(red: 0.85, green: 0.30, blue: 0.15)]
@@ -342,6 +394,7 @@ struct UI {
         static let useItAllPaddingV: CGFloat = 8
         static let chefEmojiSize: CGFloat = 20
 
+        /// Dimensions and gradient colors for the "This Week's Collections" card strip on the Discover screen.
         struct Collection {
             static let cardWidth: CGFloat = 140
             static let cardHeight: CGFloat = 100
@@ -364,6 +417,9 @@ struct UI {
             static let freshEnd = Color(red: 0.50, green: 0.90, blue: 0.62)
         }
 
+        /// Returns the solid accent color for the given recipe mood.
+        /// - Parameter mood: The mood to resolve a color for.
+        /// - Returns: A `Color` matching the mood's visual identity.
         static func moodColor(for mood: RecipeMood) -> Color {
             switch mood {
             case .cozy:
@@ -379,6 +435,9 @@ struct UI {
             }
         }
 
+        /// Returns a two-stop gradient color array for the given recipe mood.
+        /// - Parameter mood: The mood to resolve a gradient for.
+        /// - Returns: An array of two `Color` values (start, end) for the mood's gradient.
         static func moodGradient(for mood: RecipeMood) -> [Color] {
             switch mood {
             case .cozy:
@@ -397,6 +456,11 @@ struct UI {
 
     // MARK: - Components (V2Components)
 
+    /// Layout constants for reusable shared components in `Views/Shared/`.
+    ///
+    /// Covers `RecipeImage`, `MiniRecipeCard`, `RecipeRow` and its sub-components,
+    /// category chips, ingredient bubbles, selected chips, mood pills, star ratings,
+    /// stat pills, and the add/create recipe cards.
     struct Components {
         // RecipeImage
         static let recipeImageDefaultHeight: CGFloat = 200
@@ -413,6 +477,7 @@ struct UI {
         static let miniCardIconSpacing: CGFloat = 4
         static let miniCardTitleLineLimit: Int = 1
         // RecipeRow
+        /// Layout constants for the full-width `RecipeRow` card component.
         struct RecipeRow {
             static let spacing: CGFloat = 14
             static let contentSpacing: CGFloat = 8
@@ -421,6 +486,7 @@ struct UI {
             static let titleLineLimit: Int = 2
             static let taglineLineLimit: Int = 2
 
+            /// Shadow and background-layer constants for the `RecipeRow` card container.
             struct Card {
                 static let accentShadowOpacity: Double = 0.10
                 static let shadowRadius: CGFloat = 18
@@ -433,6 +499,10 @@ struct UI {
                 static let borderOpacity: Double = 0.9
             }
 
+            /// Visual-processing and shadow constants for the recipe thumbnail image inside `RecipeRow`.
+            ///
+            /// Slight saturation and contrast boosts (`saturation`, `contrast`) enhance food photography.
+            /// Tinted overlays (`overlaySkyOpacity`, `overlayAccentOpacity`) add warmth without washing out colors.
             struct Thumbnail {
                 static let inset: CGFloat = 3
                 static let saturation: Double = 1.04
@@ -451,11 +521,13 @@ struct UI {
                 static let secondaryShadowY: CGFloat = 4
             }
 
+            /// Layout constants for the floating bookmark button overlaid on `RecipeRow`.
             struct Bookmark {
                 static let size: CGFloat = 34
                 static let backgroundOpacity: Double = 0.72
             }
 
+            /// Layout constants for the metadata pill (rating, time) overlaid on `RecipeRow`.
             struct Meta {
                 static let paddingH: CGFloat = 8
                 static let paddingV: CGFloat = 5
@@ -505,6 +577,10 @@ struct UI {
 
     // MARK: - Journey
 
+    /// Layout constants for the My Kitchen (Journey) screen.
+    ///
+    /// Covers the stats grid, weekly activity dots, achievement badges,
+    /// recent activity feed, shopping list shortcut card, and the account sign-in card.
     struct Journey {
         static let sectionSpacing: CGFloat = 24
         static let horizontalPadding: CGFloat = 20
@@ -565,10 +641,13 @@ struct UI {
 
     // MARK: - CreateRecipe
 
+    /// Layout constants for the five-step Create Recipe wizard.
     struct CreateRecipe {
         static let minServings = 1
         static let maxServings = 12
+        /// Available cook-time presets (in minutes) displayed as selectable chips in the Details step.
         static let cookTimeOptions = [5, 10, 15, 20, 30, 45, 60, 90]
+        /// Allowed line-count range for step text input fields — grows from 3 to 6 lines before scrolling.
         static let stepTextLineLimit = 3...6
         static let horizontalPadding: CGFloat = 24
         static let topPadding: CGFloat = 24
@@ -634,17 +713,21 @@ struct UI {
 
     // MARK: - RecipeBadge
 
+    /// Thresholds and layout constants for recipe badge labels ("Quick", "Easy", "Beginner").
     struct RecipeBadge {
         static let spacing: CGFloat = 4
         static let paddingH: CGFloat = 8
         static let paddingV: CGFloat = 4
         static let backgroundOpacity: Double = 0.12
+        /// Recipes at or under this cook time (in minutes) are awarded the "Quick" badge.
         static let quickThresholdMinutes: Int = 20
+        /// Recipes with this many ingredients or fewer are awarded the "Beginner" badge.
         static let beginnerMaxIngredients: Int = 5
     }
 
     // MARK: - ShoppingList
 
+    /// Layout constants for the Shopping List sheet.
     struct ShoppingList {
         static let horizontalPadding: CGFloat = 20
         static let checkboxSize: CGFloat = 22
@@ -656,6 +739,7 @@ struct UI {
 
     // MARK: - Upgrade
 
+    /// Layout constants for the Upgrade / subscription paywall screen.
     struct Upgrade {
         static let headerSpacing: CGFloat = 24
         static let contentSpacing: CGFloat = 16
@@ -674,6 +758,7 @@ struct UI {
         static let shadowY: CGFloat = 2
     }
 
+    /// Layout constants for Sign in with Apple and account-related UI elements.
     struct Auth {
         static let signInButtonHeight: CGFloat = 50
         static let signInButtonCornerRadius: CGFloat = 12

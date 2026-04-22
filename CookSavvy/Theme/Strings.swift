@@ -1,7 +1,14 @@
 import Foundation
 
+/// Centralized localized string constants for the CookSavvy app, organized by screen or feature domain.
+///
+/// Each nested enum corresponds to a screen or feature area and vends `String` values backed by
+/// `Localizable.xcstrings` (Xcode 15+ String Catalog) via `String(localized:defaultValue:)`.
+/// Access strings as `Strings.Screen.key` — the localization key is the first argument, and
+/// `defaultValue` serves as the English fallback.
 enum Strings {
 
+    /// Strings shared across multiple screens — standard actions and time formatting.
     enum Common {
         static let ok = String(localized: "common.ok", defaultValue: "OK")
         static let cancel = String(localized: "common.cancel", defaultValue: "Cancel")
@@ -9,6 +16,7 @@ enum Strings {
         static let minutesCompact = String(localized: "common.minutesCompact", defaultValue: "%lldm")
     }
 
+    /// User-facing error messages shown in alerts and inline error states.
     enum Errors {
         static let loadFailed = String(localized: "errors.loadFailed", defaultValue: "We couldn't load this right now.")
         static let actionFailed = String(localized: "errors.actionFailed", defaultValue: "That action didn't go through. Please try again.")
@@ -23,16 +31,19 @@ enum Strings {
         static let errorAlertTitle = String(localized: "errors.errorAlertTitle", defaultValue: "Something went wrong")
     }
 
+    /// Strings for the blocking startup-failure view shown when the database cannot be opened.
     enum Startup {
         static let title = String(localized: "startup.title", defaultValue: "CookSavvy couldn't start")
         static let message = String(localized: "startup.message", defaultValue: "The app could not open its local database. Please restart the app.")
     }
 
+    /// Tab bar item labels.
     enum Tab {
         static let discover = String(localized: "tab.discover", defaultValue: "Discover")
         static let journey = String(localized: "tab.journey", defaultValue: "My Kitchen")
     }
 
+    /// Strings for the Recipe Details screen.
     enum RecipeDetails {
         static let ingredientsTitle = String(localized: "recipeDetails.ingredientsTitle", defaultValue: "🛒 Ingredients")
         static let instructionsTitle = String(localized: "recipeDetails.instructionsTitle", defaultValue: "🧑‍🍳 Instructions")
@@ -43,6 +54,7 @@ enum Strings {
         static let sectionSteps = String(localized: "recipeDetails.sectionSteps", defaultValue: "STEPS")
     }
 
+    /// Strings for the Settings screen, including appearance, subscription, data management, and app info sections.
     enum Settings {
         static let navigationTitle = String(localized: "settings.navigationTitle", defaultValue: "Settings")
         static let appearanceHeader = String(localized: "settings.appearanceHeader", defaultValue: "Appearance")
@@ -74,6 +86,7 @@ enum Strings {
         static let restoreFailed = String(localized: "settings.restoreFailed", defaultValue: "Restore Failed")
     }
 
+    /// Strings for the Camera ingredient-detection screen.
     enum Camera {
         static let accessRequired = String(localized: "camera.accessRequired", defaultValue: "Camera Access Required")
         static let accessDescription = String(localized: "camera.accessDescription", defaultValue: "Please allow camera access in Settings to scan ingredients")
@@ -84,6 +97,7 @@ enum Strings {
         static let tryAgain = String(localized: "camera.tryAgain", defaultValue: "Try Again")
     }
 
+    /// Strings for the Upgrade / subscription paywall screen.
     enum Upgrade {
         static let navigationTitle = String(localized: "upgrade.navigationTitle", defaultValue: "Upgrade")
         static let done = String(localized: "upgrade.done", defaultValue: "Done")
@@ -96,6 +110,10 @@ enum Strings {
         static let unknownError = String(localized: "upgrade.unknownError", defaultValue: "An unknown error occurred")
     }
 
+    /// Strings for the Discover tab (ingredient selection and recipe results states).
+    ///
+    /// Time-of-day greetings, ingredient grid labels, match badge text, collection
+    /// titles, and empty/no-results state copy are all housed here.
     enum Discover {
         static let greetingMorning = String(localized: "discover.greetingMorning", defaultValue: "What needs using up? ☀️")
         static let greetingAfternoon = String(localized: "discover.greetingAfternoon", defaultValue: "Let's use what you've got 🌤️")
@@ -153,6 +171,7 @@ enum Strings {
         static let badgeBeginner = String(localized: "discover.badgeBeginner", defaultValue: "Beginner")
     }
 
+    /// Strings for the My Kitchen (Journey) screen, including stats, achievements, shopping list shortcuts, and account section.
     enum Journey {
         static let navigationTitle = String(localized: "journey.navigationTitle", defaultValue: "My Kitchen")
         static let recipesCooked = String(localized: "journey.recipesCooked", defaultValue: "Recipes\nCooked")
@@ -192,6 +211,7 @@ enum Strings {
         static let accountSecured = String(localized: "journey.accountSecured", defaultValue: "Your recipes and preferences are backed up")
     }
 
+    /// Strings for Cook Mode — the full-screen step-by-step cooking flow with timer and rating prompt.
     enum CookMode {
         static let stepOf = String(localized: "cookMode.stepOf", defaultValue: "Step %lld of %lld")
         static let startTimer = String(localized: "cookMode.startTimer", defaultValue: "Start Timer")
@@ -204,6 +224,7 @@ enum Strings {
         static let skipRating = String(localized: "cookMode.skipRating", defaultValue: "Skip")
     }
 
+    /// Strings for the five-step Create Recipe wizard (name, ingredients, steps, details, review).
     enum CreateRecipe {
         static let nameYourRecipe = String(localized: "createRecipe.nameYourRecipe", defaultValue: "Name Your Recipe")
         static let addIngredients = String(localized: "createRecipe.addIngredients", defaultValue: "Add Ingredients")
@@ -238,12 +259,14 @@ enum Strings {
         static let difficultyHard = String(localized: "createRecipe.difficultyHard", defaultValue: "Hard")
     }
 
+    /// Strings for the Recipe List "See All" destination screen.
     enum RecipeList {
         static let recentRecipes = String(localized: "recipeList.recentRecipes", defaultValue: "Recent Recipes")
         static let savedRecipes = String(localized: "recipeList.savedRecipes", defaultValue: "Saved Recipes")
         static let myRecipes = String(localized: "recipeList.myRecipes", defaultValue: "My Recipes")
     }
 
+    /// Strings for the first-launch Onboarding flow (intro pages, camera scan page, permission denied state).
     enum Onboarding {
         static let page1Title = String(localized: "onboarding.page1Title", defaultValue: "Dinner, Decided")
         static let page1Subtitle = String(localized: "onboarding.page1Subtitle", defaultValue: "Tell us what you have. We'll find what to make.")
@@ -265,6 +288,7 @@ enum Strings {
         static let skip = String(localized: "onboarding.skip", defaultValue: "Skip")
     }
 
+    /// Strings for the Shopping List sheet (navigation, empty state, item grouping).
     enum ShoppingList {
         static let navigationTitle = String(localized: "shoppingList.navigationTitle", defaultValue: "Shopping List")
         static let clearDone = String(localized: "shoppingList.clearDone", defaultValue: "Clear Done")
@@ -274,6 +298,7 @@ enum Strings {
         static let otherGroup = String(localized: "shoppingList.otherGroup", defaultValue: "Other")
     }
 
+    /// Strings for the Dietary Preferences section in Settings.
     enum Dietary {
         static let sectionTitle = String(localized: "dietary.sectionTitle", defaultValue: "Dietary Preferences")
         static let vegetarian = String(localized: "dietary.vegetarian", defaultValue: "Vegetarian")
@@ -293,6 +318,7 @@ enum Strings {
         static let sectionFooter = String(localized: "dietary.sectionFooter", defaultValue: "Active filters are applied to recipe search results.")
     }
 
+    /// Strings for the mood filter pill row on the Discover results state.
     enum MoodFilter {
         static let cozy = String(localized: "moodFilter.cozy", defaultValue: "Cozy")
         static let fresh = String(localized: "moodFilter.fresh", defaultValue: "Fresh")
@@ -302,6 +328,7 @@ enum Strings {
         static let refineByMood = String(localized: "moodFilter.refineByMood", defaultValue: "REFINE BY MOOD")
     }
 
+    /// Strings for Sign in with Apple and account management in Settings.
     enum Auth {
         static let accountHeader = String(localized: "auth.accountHeader", defaultValue: "Account")
         static let signInWithApple = String(localized: "auth.signInWithApple", defaultValue: "Sign in with Apple")
@@ -315,6 +342,7 @@ enum Strings {
         static let signOutGuestFailed = String(localized: "auth.signOutGuestFailed", defaultValue: "You've been signed out, but we couldn't restore a guest session. Online features may be unavailable until you're back online.")
     }
 
+    /// Accessibility labels for VoiceOver and assistive technology support, organized by interaction type.
     enum Accessibility {
         static let ingredientSelected = String(localized: "accessibility.ingredientSelected", defaultValue: "%@, selected")
         static let ingredientNotSelected = String(localized: "accessibility.ingredientNotSelected", defaultValue: "%@, double tap to add")

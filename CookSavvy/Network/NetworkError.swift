@@ -5,13 +5,21 @@
 
 import Foundation
 
+/// Errors thrown by ``NetworkService`` during request execution or response handling.
 enum NetworkError: Error, LocalizedError {
+    /// The URL could not be constructed or was malformed.
     case invalidURL
+    /// The device has no active network connection.
     case noConnection
+    /// The request exceeded its allowed time limit.
     case timeout
+    /// The server returned a non-2xx HTTP status code.
     case httpError(statusCode: Int, data: Data?)
+    /// The response body could not be decoded into the expected type.
     case decodingFailed(Error)
+    /// The request body could not be serialised to JSON.
     case encodingFailed(Error)
+    /// An unexpected error not covered by the other cases.
     case unknown(Error)
     
     var errorDescription: String? {

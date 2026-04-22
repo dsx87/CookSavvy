@@ -7,40 +7,75 @@
 
 import Foundation
 
-/// Dependency injection container holding shared service instances
-
+/// Central dependency injection container that owns all shared service instances for the app.
+///
+/// `AppContainer` is a `@MainActor` class that wires every service together at startup.
+/// Services are created once, stored as protocol-typed properties, and injected into coordinators
+/// and view models. Construction is throwing — a database failure or other critical error
+/// propagates up and renders a blocking startup error screen instead of allowing the app to
+/// continue in a degraded state.
+///
+/// In DEBUG builds the container can be replaced with an in-memory variant (``makeInMemory``)
+/// or a fully deterministic UI-test variant (``configureForUITesting(_:)``).
 @MainActor
 final class AppContainer {
-    
+
     // MARK: - Services
+
+    /// GRDB SQLite database layer; the single source of persistent storage for the app.
     let dbInterface: DBInterfaceProtocol
+    /// Ingredient search and management backed by the database.
     let ingredientsService: IngredientsServiceProtocol
+    /// Recipe search across offline, online, and AI sources.
     let recipeService: RecipeServiceProtocol
+    /// Image loading and disk caching.
     let imageService: ImageServiceProtocol
+    /// CSV dataset import into the database.
     let dataImportService: DataImportServiceProtocol
+    /// User-specific data — favorites, recent recipes, and cooking sessions.
     let userDataService: UserDataServiceProtocol
+    /// Seeds the database on first launch and tracks initialization readiness.
     let databaseInitService: DatabaseInitializationServiceProtocol
+    /// Raw HTTP request execution used by network-dependent services.
     let networkService: NetworkServiceProtocol
+    /// AI-powered ingredient detection and recipe generation.
     let aiService: AIServiceProtocol
+    /// Bridges `AIService` for the camera ingredient-detection flow.
     let ingredientDetectionService: IngredientDetectionServiceProtocol
+    /// StoreKit 2 subscription management; `MockSubscriptionService` in DEBUG builds.
     let subscriptionService: SubscriptionServiceProtocol
+    /// Tracks free-tier weekly camera scan usage via UserDefaults.
     let cameraScanTracker: CameraScanTrackerProtocol
+    /// Shopping list CRUD backed by the database.
     let shoppingListService: ShoppingListServiceProtocol
+    /// Personalized recipe suggestions derived from cooking history.
     let recommendationService: RecipeRecommendationServiceProtocol
+    /// Event analytics; `MockAnalyticsService` in DEBUG builds, `AnalyticsService` in RELEASE.
     let analyticsService: AnalyticsServiceProtocol
+    /// Creates feature-scoped `os.Logger` instances for structured logging.
     let loggingService: LoggingServiceProtocol
+    /// Authentication service; Supabase when configured, mock in DEBUG, no-op in RELEASE without keys.
     let authService: AuthServiceProtocol
+    /// Orchestrates the Sign in with Apple flow end-to-end.
     let signInWithAppleAction: SignInWithAppleActionProtocol
+    /// Persisted user dietary filter settings.
     let dietaryPreferences: DietaryPreferences
+    /// Curated recipe collection management backed by the database.
     let curatedCollectionService: CuratedCollectionServiceProtocol
 
     // MARK: - Initialization
 
-    /// Creates the app-wide singleton-backed container.
+    /// Creates and wires all production services.
     ///
-    /// This initializer remains internal for the current singleton lifecycle. Avoid constructing
-    /// additional app containers outside the composition root or focused tests; each container owns
-    /// independent service instances and database connections.
+    /// Initialization order matters: logging and analytics are created first so that subsequent
+    /// services can receive a logger. The database is opened next since most services depend on it.
+    /// Auth is wired conditionally — Supabase when configured, mock in DEBUG, no-op in RELEASE
+    /// without keys. `RecipeService` is composed from three pluggable sources (offline, online, AI).
+    /// Finally, `databaseInitService.startInitialization()` kicks off asynchronous first-launch
+    /// seeding in the background.
+    ///
+    /// - Throws: Propagates any `DBInterface` initialization error, preventing a partially
+    ///   initialized container from being used.
     internal init() throws {
         let loggingService = LoggingService()
         self.loggingService = loggingService
@@ -150,6 +185,10 @@ final class AppContainer {
     }
 
     #if DEBUG
+    /// Designated memberwise initializer used by DEBUG factory methods to inject pre-built services.
+    ///
+    /// Bypasses the normal construction logic so tests and previews can supply arbitrary
+    /// protocol implementations for every dependency.
     private init(
         dbInterface: DBInterfaceProtocol,
         ingredientsService: IngredientsServiceProtocol,
@@ -201,6 +240,18 @@ final class AppContainer {
     #endif
 
     #if DEBUG
+    /// Creates an in-memory container suitable for unit tests and SwiftUI previews.
+    ///
+    /// Uses a transient `DBInterface` and mock implementations for subscription, auth, and AI so
+    /// that no persistent state is created or required. `databaseInitService.markReadyForTesting()`
+    /// is called synchronously so callers do not need to await initialization.
+    ///
+    /// - Parameters:
+    ///   - subscriptionPlan: The subscription plan to seed into `MockSubscriptionService`.
+    ///   - authState: The initial auth state to seed into `MockAuthService`.
+    ///   - isAnonymous: Whether the mock user is treated as anonymous.
+    /// - Returns: A fully initialized `AppContainer` backed by in-memory storage.
+    /// - Throws: `DBInterface` initialization errors (unlikely in in-memory mode).
     @MainActor
     static func makeInMemory(
         subscriptionPlan: SubscriptionPlan = .free,
@@ -267,6 +318,14 @@ final class AppContainer {
         return container
     }
 
+    /// Creates a deterministic container pre-seeded for UI tests based on the supplied configuration.
+    ///
+    /// Delegates to ``makeInMemory`` then runs ``UITestDataSeeder`` to populate the database
+    /// according to the flags present in `config` (cooking history, favorites, shopping items, etc.).
+    ///
+    /// - Parameter config: Parsed launch-argument configuration from `UITestConfiguration`.
+    /// - Returns: A container ready for UI testing.
+    /// - Throws: Database initialization errors.
     @MainActor
     static func configureForUITesting(_ config: UITestConfiguration) throws -> AppContainer {
         let subscriptionPlan: SubscriptionPlan = config.isPremiumUser ? .premium : .free
@@ -283,6 +342,9 @@ final class AppContainer {
     }
     #endif
 
+    /// Refreshes auth session and subscription status concurrently when the scene becomes active.
+    ///
+    /// Both tasks are awaited in parallel using `async let` to minimize latency on each activation.
     func handleSceneBecameActive() async {
         async let authRefresh: Void = authService.startSessionIfNeeded()
         async let subscriptionRefresh: Void = subscriptionService.refreshSubscriptionStatus()

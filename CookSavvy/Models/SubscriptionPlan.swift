@@ -5,10 +5,16 @@
 
 import Foundation
 
+/// The user's subscription tier, determining which recipe sources and features are accessible.
+///
+/// Plans are ordered by value (`free < premium`), enabling comparisons with `<`.
 enum SubscriptionPlan: String, CaseIterable, Codable, Comparable {
+    /// The default, unpaid tier with local recipe discovery only.
     case free = "Free"
+    /// The paid CookSavvy+ tier with unlimited recipes, camera scanning, and AI features.
     case premium = "Premium"
 
+    /// Localised display name shown in the Settings and Upgrade screens.
     var displayName: String {
         switch self {
         case .free: return "Free"
@@ -16,6 +22,7 @@ enum SubscriptionPlan: String, CaseIterable, Codable, Comparable {
         }
     }
 
+    /// Short description of what the plan includes.
     var description: String {
         switch self {
         case .free: return "Basic recipe discovery"
@@ -23,6 +30,7 @@ enum SubscriptionPlan: String, CaseIterable, Codable, Comparable {
         }
     }
 
+    /// The StoreKit product identifier used to purchase this plan, or `nil` for the free tier.
     var productIdentifier: String? {
         switch self {
         case .free: return nil
@@ -31,6 +39,7 @@ enum SubscriptionPlan: String, CaseIterable, Codable, Comparable {
     }
 
 
+    /// Numeric tier value used to implement `Comparable` ordering.
     private var tier: Int {
         switch self {
         case .free: return 0
@@ -38,21 +47,29 @@ enum SubscriptionPlan: String, CaseIterable, Codable, Comparable {
         }
     }
 
+    /// Orders plans by tier value so that `free < premium`.
     static func < (lhs: SubscriptionPlan, rhs: SubscriptionPlan) -> Bool {
         lhs.tier < rhs.tier
     }
 }
 
+/// Premium-gated features that require an active CookSavvy+ subscription.
 enum PaidFeature {
+    /// AI-powered camera scanning for ingredient detection.
     case cameraIngredientDetection
+    /// Access to the Supabase-backed online recipe catalogue.
     case onlineRecipes
+    /// Access to AI-generated recipes.
     case aiRecipes
+    /// The shopping list for missing ingredients.
     case shoppingList
 
+    /// The set of subscription plans that unlock this feature.
     var requiredPlans: Set<SubscriptionPlan> {
         return [.premium]
     }
 
+    /// Display name shown on the Upgrade screen for this feature.
     var displayName: String {
         switch self {
         case .cameraIngredientDetection: return "Camera Scanning"

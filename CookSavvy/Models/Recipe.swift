@@ -8,32 +8,54 @@
 import Foundation
 import CoreTransferable
 
+/// The core recipe model representing a dish with ingredients, steps, and metadata.
+///
+/// A `Recipe` may originate from the local SQLite database (`OfflineRecipeSource`),
+/// the Supabase backend (`OnlineRecipeSource`), or be AI-generated (`AIRecipeSource`).
+/// Optional fields such as `matchPercentage` and `missingIngredients` are populated
+/// by the recommendation engine at query time and are not persisted.
 struct Recipe {
 
+    /// A single instruction step, optionally paired with a countdown timer.
     struct Step: Codable, Hashable {
+        /// The instruction text shown to the user in Cook Mode.
         let text: String
+        /// Optional timer duration in minutes suggested for this step.
         let timerMinutes: Int?
 
+        /// Creates a step with instruction text and an optional timer.
         init(text: String, timerMinutes: Int? = nil) {
             self.text = text
             self.timerMinutes = timerMinutes
         }
 
+        /// Creates a step from a plain text string with no timer.
         init(plainText string: String) {
             self.text = string
             self.timerMinutes = nil
         }
     }
 
+    /// A collection of structured metadata items shown in the recipe stats row.
+    ///
+    /// Holds any combination of time, servings, complexity, and calorie values.
+    /// Only non-`nil` values passed to the designated initialiser are included.
     struct AdditionalInfo: Codable, Hashable {
         
+        /// Discriminated union representing one piece of recipe metadata.
         enum InfoType: Codable, Hashable {
+            /// Total cook time as a human-readable string (e.g. `"30 min"`).
             case time(String)
+            /// Number of servings.
             case servings(Int)
+            /// Difficulty label (e.g. `"Easy"`, `"Medium"`, `"Hard"`).
             case complexity(String)
+            /// Approximate calorie count.
             case calories(Int)
+            /// Sentinel value used when a slot in the stats row has no data.
             case empty
             
+            /// Short label displayed above the value in the stats row.
             var title: String {
                 switch self {
                 case .time(_): "Time"
@@ -44,6 +66,7 @@ struct Recipe {
                 }
             }
             
+            /// Emoji icon representing this info type in the stats row.
             var asEmoji: String {
                 switch self {
                 case .time(_): "⏱️"
@@ -54,6 +77,7 @@ struct Recipe {
                 }
             }
             
+            /// The info's underlying value as a string, suitable for display in the stats row.
             var stringValue: String {
                 switch self {
                 case .time(let string): string
@@ -65,14 +89,19 @@ struct Recipe {
             }
         }
         
+        /// An `AdditionalInfo` instance with no metadata, used as a safe default.
         static let empty = AdditionalInfo()
+        /// A pre-populated instance used in SwiftUI previews and tests.
         static let mock = AdditionalInfo(time: "10 Min", servings: 2, complexity: "Low", calories: 250)
+        /// The ordered list of info items to display in the stats row.
         let infos: [InfoType]
         
+        /// Creates an empty `AdditionalInfo` with no metadata items.
         init() {
             self.infos = []
         }
         
+        /// Creates an `AdditionalInfo` from optional metadata values; only non-`nil` values are included.
         init(time: String?, servings: Int?, complexity: String?, calories: Int?) {
             var infos: [InfoType] = []
             if let time { infos.append(.time(time)) }
@@ -82,29 +111,48 @@ struct Recipe {
             self.infos = infos
         }
         
+        /// Creates an `AdditionalInfo` from a pre-built array of info items.
         init(availableInfos: [InfoType]) {
             self.infos = availableInfos
         }
     }
     
+    /// The display title of the recipe.
     let title: String
+    /// The full ingredient list as parsed from the data source, may include quantities and notes.
     let ingredients: [Ingredient]
+    /// Ordered preparation steps.
     let instructions: [Step]
+    /// Image asset name or URL string used to load the hero image.
     let image: String
+    /// Normalised ingredient list with quantities and notes stripped, used for matching.
     let cleanedIngredients: [Ingredient]
+    /// Structured metadata (time, servings, complexity, calories) shown in the stats row.
     let additionalInfo: AdditionalInfo
+    /// The data source that produced this recipe (offline, online, or AI).
     var source: RecipeSourceType?
+    /// Short marketing hook shown on recipe cards (e.g. `"Ready in 20 minutes"`).
     var tagline: String?
+    /// User-assigned rating (0.0–5.0), persisted in the database.
     var userRating: Double?
+    /// Rating sourced from the remote API, if available.
     var apiRating: Double?
+    /// Author name, populated for user-created and API-sourced recipes.
     var author: String?
+    /// `true` when the recipe was created by the user through the Create Recipe wizard.
     var isUserCreated: Bool
+    /// Emoji representing the recipe's main ingredient or cuisine, used on cards.
     var emoji: String?
+    /// Cuisine label (e.g. `"Italian"`, `"Mexican"`), sourced from the API or user input.
     var cuisine: String?
+    /// How well this recipe matches the user's current ingredient selection (0.0–1.0).
     var matchPercentage: Double?
+    /// Human-readable explanation of why this recipe was recommended.
     var matchReason: String?
+    /// Ingredients required by the recipe that the user has not selected.
     var missingIngredients: [String]?
 
+    /// Creates a recipe where instructions are provided as pre-structured `Step` values.
     init(
         title: String,
         ingredients: [Ingredient],
@@ -143,6 +191,7 @@ struct Recipe {
         self.missingIngredients = missingIngredients
     }
 
+    /// Creates a recipe where instructions are provided as plain strings; each string is wrapped in a `Step`.
     init(
         title: String,
         ingredients: [Ingredient],
@@ -184,22 +233,33 @@ struct Recipe {
     }
 
     // Mock init
+    /// Creates a recipe using ``mockRandom()``; used in SwiftUI previews.
     init() {
         self = Self.mockRandom()
     }
 }
 
+/// Identifiable conformance for SwiftUI lists and navigation.
 extension Recipe: Identifiable {
+    /// Uses `title` as the stable identifier; recipe titles are unique within the local dataset.
     var id: String { title }
 }
 
+/// Hashability enables recipe de-duplication and set operations.
 extension Recipe: Hashable {}
+/// `Sendable` conformance for recipe values transferred across task boundaries.
 extension Recipe: Sendable {}
+/// `Sendable` conformance for nested `Step` values.
 extension Recipe.Step: Sendable {}
+/// `Sendable` conformance for nested additional-info payloads.
 extension Recipe.AdditionalInfo: Sendable {}
+/// `Sendable` conformance for additional-info discriminated union cases.
 extension Recipe.AdditionalInfo.InfoType: Sendable {}
 
+/// Derived metadata helpers built from recipe content.
 extension Recipe {
+    /// The recipe's cook time in minutes, derived by parsing the `time` entry in `additionalInfo`.
+    /// Returns `nil` when no time info is present or the format cannot be parsed.
     var cookTimeMinutes: Int? {
         for info in additionalInfo.infos {
             if case .time(let timeString) = info {
@@ -260,8 +320,10 @@ extension Recipe {
     }
 }
 
+/// Custom codable behavior for CSV/API compatibility.
 extension Recipe: Codable {
     
+    /// Custom `CodingKeys` mapping Swift property names to the CSV/JSON field names used in the dataset.
     enum CodingKeys: String, CodingKey {
         case title = "Title"
         case ingredients = "Ingredients"
@@ -271,6 +333,14 @@ extension Recipe: Codable {
         case additionalInfo = "additionalInfo"
     }
     
+    /// Decodes a recipe from either a CSV-backed JSON representation or a structured API response.
+    ///
+    /// The `instructions` field is decoded with three-way fallback:
+    /// 1. An array of `Step` objects (structured API format).
+    /// 2. An array of plain strings (simple API format).
+    /// 3. A single newline-delimited string (CSV legacy format).
+    ///
+    /// Optional runtime fields (`source`, `matchPercentage`, etc.) are always initialised to `nil`.
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.title = try container.decode(String.self, forKey: .title)
@@ -305,11 +375,13 @@ extension Recipe: Codable {
 
 // MARK: - Transferable (Sharing)
 
+/// Share-sheet integration using plain-text recipe representation.
 extension Recipe: Transferable {
     static var transferRepresentation: some TransferRepresentation {
         ProxyRepresentation { $0.shareText }
     }
 
+    /// A plaintext representation of the recipe used by the system share sheet.
     var shareText: String {
         var lines = [title, "", "Ingredients:"]
         lines += ingredients.map { "- \($0.name)" }
@@ -321,6 +393,7 @@ extension Recipe: Transferable {
 }
 
 // MARK: - Mock Factories for Testing
+/// Randomized mock recipe builders for previews and test fixtures.
 extension Recipe {
     /// Creates a single mock `Recipe` with meaningful randomized values.
     /// - Parameter rng: Optional random number generator for deterministic tests.
@@ -330,6 +403,7 @@ extension Recipe {
         let mains = ["Chicken", "Pasta", "Salmon", "Tofu", "Veggie Stir-Fry", "Beef", "Quinoa Bowl", "Lentil Curry", "Shrimp", "Mushroom Risotto"]
         let methods = ["Baked", "Pan-Seared", "One-Pot", "Sheet-Pan", "Air-Fried", "Slow-Cooked", "Grilled"]
 
+        /// Picks a random element from `array` using the supplied RNG.
         func pick<T>(_ array: [T]) -> T { array.randomElement(using: &rng)! }
 
         let title = "\(pick(methods)) \(pick(adjectives)) \(pick(mains))"

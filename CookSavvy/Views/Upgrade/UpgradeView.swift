@@ -5,6 +5,10 @@
 
 import SwiftUI
 
+/// Subscription upgrade paywall screen showing the CookSavvy+ plan features and a purchase button.
+struct UpgradeView: View {
+
+/// Concrete paywall view implementation hosting plan cards and purchase CTA.
 struct UpgradeView: View {
     @ObservedObject var viewModel: UpgradeViewModel
     @Environment(\.appTheme) private var theme
@@ -66,6 +70,7 @@ struct UpgradeView: View {
         .padding(.vertical)
     }
 
+    /// Builds a plan card wired to the view model purchase action and accessibility ids.
     private func planCard(for plan: SubscriptionPlan) -> some View {
         let card = PlanCard(
             plan: plan,
@@ -88,6 +93,7 @@ struct UpgradeView: View {
     }
 }
 
+/// Reusable visual card representing one subscription plan on the upgrade screen.
 struct PlanCard: View {
     let plan: SubscriptionPlan
     let features: [String]

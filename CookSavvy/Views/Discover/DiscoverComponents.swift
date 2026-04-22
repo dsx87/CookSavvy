@@ -1,5 +1,7 @@
 import SwiftUI
 
+/// A styled chip button for selecting an ingredient category.
+/// Displays the category emoji and name with selection state feedback (color, border).
 struct CategoryChip: View {
     @Environment(\.appTheme) private var theme
     let category: IngredientCategory
@@ -41,6 +43,8 @@ struct CategoryChip: View {
     }
 }
 
+/// A bubble-grid cell for ingredient selection.
+/// Shows ingredient emoji, name, and animated selection state with optional motion reduction.
 struct IngredientBubble: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -75,6 +79,8 @@ struct IngredientBubble: View {
     }
 }
 
+/// A removable chip displaying a selected ingredient.
+/// Shows emoji, name, and a remove button for deselection.
 struct SelectedChip: View {
     @Environment(\.appTheme) private var theme
     let ingredient: Ingredient
@@ -103,6 +109,8 @@ struct SelectedChip: View {
     }
 }
 
+/// A mood filter selection pill with icon and neon glow when selected.
+/// Used in recipe results to filter by cooking mood (e.g. "Quick", "Comforting").
 struct MoodPill: View {
     @Environment(\.appTheme) private var theme
     let name: String
@@ -140,6 +148,8 @@ struct MoodPill: View {
     }
 }
 
+/// A dashed-border card prompting the user to create a custom ingredient or recipe.
+/// Appears in ingredient/recipe grid as a call-to-action cell.
 struct AddYourOwnCard: View {
     @Environment(\.appTheme) private var theme
 

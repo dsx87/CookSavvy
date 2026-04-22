@@ -5,21 +5,31 @@
 
 import SwiftUI
 
+/// Coordinator for the Settings screen, managing the settings view and upgrade sheet presentation.
+///
+/// `SettingsCoordinator` is a child of `AppCoordinator`, shared between the standalone
+/// `SettingsCoordinatorView` (used when Settings is its own navigation root) and
+/// `JourneySettingsDestination` (used when Settings is pushed within the Journey stack).
 @MainActor
 final class SettingsCoordinator: ObservableObject {
-    
+
     private let container: AppContainer
+    /// Navigation stack path (reserved for future settings sub-screens).
     @Published var navigationPath = NavigationPath()
+    /// The currently presented sheet destination, if any.
     @Published var presentedSheet: SheetDestination?
-    
+
+    /// - Parameter container: The shared app DI container.
     init(container: AppContainer) {
         self.container = container
     }
-    
+
+    /// Builds and returns the root coordinator view for Settings.
     func start() -> some View {
         SettingsCoordinatorView(coordinator: self)
     }
-    
+
+    /// Creates a `SettingsViewModel` wired to this coordinator for navigation callbacks.
     func makeSettingsViewModel() -> SettingsViewModel {
         SettingsViewModel(
             userDataService: container.userDataService,
@@ -34,14 +44,17 @@ final class SettingsCoordinator: ObservableObject {
         )
     }
     
+    /// Presents the upgrade sheet.
     func showUpgrade() {
         presentedSheet = .upgrade
     }
-    
+
+    /// Dismisses the active sheet.
     func dismissSheet() {
         presentedSheet = nil
     }
-    
+
+    /// Creates an `UpgradeViewModel` that dismisses the sheet on completion.
     func makeUpgradeViewModel() -> UpgradeViewModel {
         UpgradeViewModel(
             subscriptionService: container.subscriptionService,
@@ -53,10 +66,13 @@ final class SettingsCoordinator: ObservableObject {
     }
 }
 
+/// Destination enums owned by ``SettingsCoordinator``.
 extension SettingsCoordinator {
+    /// Sheet destinations presented from the Settings screen.
     enum SheetDestination: Identifiable {
+        /// CookSavvy+ upgrade prompt.
         case upgrade
-        
+
         var id: String {
             switch self {
             case .upgrade: return "upgrade"
@@ -65,10 +81,13 @@ extension SettingsCoordinator {
     }
 }
 
+/// Internal SwiftUI coordinator view that hosts the Settings navigation stack and applies
+/// sheet presentations driven by `SettingsCoordinator`.
 struct SettingsCoordinatorView: View {
     @ObservedObject var coordinator: SettingsCoordinator
     @StateObject private var viewModel: SettingsViewModel
     
+    /// Creates the coordinator view and pins the settings view model as a state object.
     init(coordinator: SettingsCoordinator) {
         self.coordinator = coordinator
         _viewModel = StateObject(wrappedValue: coordinator.makeSettingsViewModel())

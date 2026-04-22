@@ -1,5 +1,7 @@
 import SwiftUI
 
+/// A row of 1–5 star icons representing a numeric rating.
+/// Supports half-star display and rounds to the nearest 0.5 for accessibility labelling.
 struct StarRating: View {
     @Environment(\.appTheme) private var theme
     let rating: Double
@@ -16,12 +18,15 @@ struct StarRating: View {
         .accessibilityLabel(String(format: Strings.Accessibility.rating, ratingString))
     }
 
+    /// Rating value rounded to the nearest 0.5, clamped to [0, 5], formatted for VoiceOver.
     private var ratingString: String {
         let floored = min(max(floor(rating * 2) / 2, 0), 5)
         return floored == floored.rounded() ? "\(Int(floored))" : String(format: "%.1f", floored)
     }
 }
 
+/// A vertically stacked icon + value + label pill used in the recipe details stats row.
+/// Expands to fill its parent width so multiple pills share available space equally.
 struct StatPill: View {
     @Environment(\.appTheme) private var theme
     let icon: String
