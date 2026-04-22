@@ -21,10 +21,6 @@ enum APIKeyConfiguration {
         getValue(for: "GEMINI_API_KEY")
     }
     
-    static var spoonacularKey: String? {
-        getValue(for: "SPOONACULAR_API_KEY")
-    }
-    
     private static func getValue(for key: String) -> String? {
         guard let path = Bundle.main.path(forResource: plistName, ofType: "plist") else {
             logger.warning("APIKeys.plist not found in app bundle. AI provider keys unavailable.")

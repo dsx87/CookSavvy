@@ -11,6 +11,7 @@ final class MockSubscriptionService: SubscriptionServiceProtocol {
     private let _currentPlan: CurrentValueSubject<SubscriptionPlan, Never>
 
     var currentPlan: SubscriptionPlan { _currentPlan.value }
+    private(set) var refreshCallCount = 0
 
     var currentPlanPublisher: AnyPublisher<SubscriptionPlan, Never> {
         _currentPlan.eraseToAnyPublisher()
@@ -25,7 +26,7 @@ final class MockSubscriptionService: SubscriptionServiceProtocol {
     }
     
     func refreshSubscriptionStatus() async {
-        // No-op for mock
+        refreshCallCount += 1
     }
     
     func purchase(_ plan: SubscriptionPlan) async throws {

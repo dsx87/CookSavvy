@@ -13,7 +13,7 @@ final class ShoppingListServiceTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
-        db = DBInterface(inMemory: true)
+        db = try DBInterface(inMemory: true)
         service = ShoppingListService(dbInterface: db)
     }
 

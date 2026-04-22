@@ -51,9 +51,31 @@ xcodebuild test -scheme CookSavvy -destination 'platform=iOS Simulator,name=iPho
 
 These items are independent of each other and can be done in parallel. None requires an architectural change. Fix all of them before any Phase 1 work.
 
+**Phase 0 completion verification — 2026-04-22**
+
+- `xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build` — passed.
+- `xcodebuild test -scheme CookSavvy -destination 'platform=iOS Simulator,name=iPhone 16' -testPlan UnitTests` — attempted; Xcode could not find an iPhone 16 destination for `OS:latest` on this machine.
+- `xcodebuild test -scheme CookSavvy -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' -testPlan UnitTests` — passed, 302 selected tests, 0 failures.
+- UI tests were not run.
+
+**Code-review follow-up verification — 2026-04-22**
+
+- Removed the last production `AppContainer.shared` read from `AsyncImageDisk`; `ImageServiceProtocol` and `LoggingServiceProtocol` are now injected through SwiftUI environment values at the ready app root.
+- `AppContainer.handleSceneBecameActive()` now starts auth and subscription refresh concurrently.
+- `DBInterface.init(inMemory: false)` now delegates to the normal on-disk initializer instead of silently creating an in-memory database.
+- `AppContainer.init()` is explicitly internal and documented as singleton lifecycle construction.
+- `DefaultImageStore.thumbnail(for:size:)` now generates bounded thumbnail data when the stored payload is an image.
+- `CSVDecoder` logs skipped malformed rows through `LoggingService` with `LogCategory.csvParser`.
+- The DEBUG-only `RecipeService` convenience initializer remains gated behind `#if DEBUG`.
+- `AppContainerLifecycleTests` now uses `AppContainer.makeInMemory()` instead of `UITestConfiguration`.
+- `CSVZipAdapter.importAll` checks cancellation before emitting initial `0` progress.
+- Verification: generic iOS Simulator build passed; `UnitTests` passed on `iPhone 16,OS=18.5` with 303 selected tests and 0 failures. The unpinned `iPhone 16` unit-test command still fails on this machine because Xcode resolves it to `OS:latest`, while only iOS 18.5 exists for that simulator name.
+
 ---
 
 ### [P0-1] Replace `try!` force-tries in DBInterface init
+
+**Status:** ✅ Completed — 2026-04-22. `DBInterface` initialization is now throwing, schema setup errors propagate, `AppContainer` construction is throwing, and `CookSavvyApp` renders an explicit blocking startup failure state instead of falling back to in-memory storage. Added coverage for invalid database paths and startup lifecycle behavior. Verified with the Phase 0 completion commands above.
 
 **Severity:** 🔴 Critical — app crash on any init failure  
 **Files:** `CookSavvy/Services/Database/DBInterface.swift` lines 63, 68, 74, 76  
@@ -77,6 +99,8 @@ Each `try!` becomes `try`. Database-open/schema failures propagate through app s
 ---
 
 ### [P0-2] Fix data race on `recipeCache`
+
+**Status:** ✅ Completed — 2026-04-22. `DBInterface` now guards all `recipeCache` reads, writes, evictions, and clears behind a private serial cache queue without holding it during GRDB work. Added concurrent in-memory cache access coverage. Verified with the Phase 0 completion commands above.
 
 **Severity:** 🔴 Critical — data corruption under concurrent reads/writes  
 **Files:** `CookSavvy/Services/Database/DBInterface.swift` lines 31, 341–408, 882  
@@ -112,6 +136,8 @@ The cache is accessed only from a single serialised context. The simplest correc
 
 ### [P0-3] Fix `CSVParser` force-casts
 
+**Status:** ✅ Completed — 2026-04-22. `CSVParser` no longer force-casts Foundation generic decoding paths, malformed row decoding is skipped with parser logging, and malformed headers/empty files still throw. Added CSV tests for malformed rows plus `Date`, `Data`, and `URL` decoding failures. Verified with the Phase 0 completion commands above.
+
 **Severity:** 🔴 Critical — parsing crash on type mismatch  
 **Files:** `CookSavvy/DataImport/CSVParser.swift` lines 241, 243, 249  
 **Parallel:** Yes
@@ -131,6 +157,8 @@ The cache is accessed only from a single serialised context. The simplest correc
 ---
 
 ### [P0-4] Sanitize ingredient names before LLM prompt interpolation
+
+**Status:** ✅ Completed — 2026-04-22. `AIService` sanitizes ingredient names before recipe-generation prompt interpolation by stripping newlines, carriage returns, null bytes, trimming whitespace, dropping empty values, and truncating each ingredient to 100 characters. Added a capturing LLM provider unit test. Verified with the Phase 0 completion commands above.
 
 **Severity:** 🔴 Critical — prompt injection  
 **Files:** `CookSavvy/Services/AI/AIService.swift` lines 74–76  
@@ -166,6 +194,8 @@ Ingredient names are sanitised before interpolation. Sanitisation rules: strip n
 
 ### [P0-5] Remove direct Spoonacular awareness from the iOS app
 
+**Status:** ✅ Completed — 2026-04-22. Removed direct Spoonacular provider/model source, mapper tests, iOS API-key configuration, unit-test plan entries, and stale active architecture docs. Online recipes are documented and wired through the Supabase backend provider only. Verified with the Phase 0 completion commands above.
+
 **Severity:** 🔴 Critical — backend abstraction leak / secret-handling risk  
 **Files:** `CookSavvy/Network/RecipeAPIProvider/SpoonacularProvider.swift`, `CookSavvy/Network/RecipeAPIProvider/SpoonacularModels.swift`, API-key config readers/docs that mention Spoonacular  
 **Parallel:** Yes
@@ -188,6 +218,8 @@ The iOS app talks only to the app backend abstraction (`SupabaseRecipeAPIProvide
 ---
 
 ### [P0-6] Refresh subscription status when app returns to foreground
+
+**Status:** ✅ Completed — 2026-04-22. Added `AppContainer.handleSceneBecameActive()` and wired ready app startup plus active scene transitions to start auth if needed and refresh subscription status. `MockSubscriptionService` tracks refresh calls for focused unit coverage. Verified with the Phase 0 completion commands above.
 
 **Severity:** 🔴 Critical — cancelled subscriptions not reflected until restart  
 **Files:** `CookSavvy/Services/Subscription/StoreKitSubscriptionService.swift`, `CookSavvy/App/CookSavvyApp.swift`  
@@ -218,6 +250,8 @@ The iOS app talks only to the app backend abstraction (`SupabaseRecipeAPIProvide
 ---
 
 ### [P0-7] Uncomment and fix DatasetImportingTests
+
+**Status:** ✅ Completed — 2026-04-22. Replaced the disabled dataset-import tests with compiling in-memory/temp-directory coverage, and implemented minimal ZIP detection, archive validation, progress/cancellation, image-store content-hash dedupe, thumbnail reads, and coordinator delegation. Verified with the Phase 0 completion commands above.
 
 **Severity:** 🔴 Critical — data import is entirely untested  
 **Files:** `CookSavvyTests/DatasetImportingTests.swift`  
@@ -425,6 +459,8 @@ Once all services are updated:
 ---
 
 ### [P1-2] Remove `AppContainer.shared` from views and coordinators
+
+**Status:** Partially completed — 2026-04-22. Current app source no longer reads `AppContainer.shared` from views or coordinators. `AsyncImageDisk` receives image/logging services through SwiftUI environment values, `AppCoordinator` owns the injected container, and `TabContainerView` is navigation-only. The singleton is still assigned inside `AppContainer` startup/factory code and should be deprecated or deleted in a later cleanup.
 
 **Severity:** 🟡 High — breaks DI, hidden dependencies, blocks test isolation  
 **Files:** `CookSavvy/Views/Shared/TabContainerView.swift:13`, `CookSavvy/Views/Shared/AsyncImageDisk.swift:85`, `CookSavvy/Coordinators/AppCoordinator.swift:45–47`, `CookSavvy/App/CookSavvyApp.swift:55,60`  

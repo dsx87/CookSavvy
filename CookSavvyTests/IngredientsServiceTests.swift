@@ -117,8 +117,8 @@ final class IngredientsServiceTests: XCTestCase {
     
     // MARK: - Initialization Tests
     
-    func testDefaultInitialization() {
-        ingredientsService = IngredientsService()
+    func testDefaultInitialization() throws {
+        ingredientsService = try IngredientsService()
         XCTAssertNotNil(ingredientsService)
     }
     
@@ -446,7 +446,7 @@ final class IngredientsServiceTests: XCTestCase {
     // MARK: - Integration Tests with Real DB
     
     func testIntegrationWithRealDatabase() async throws {
-        let realDB = DBInterface(inMemory: true)
+        let realDB = try DBInterface(inMemory: true)
         ingredientsService = IngredientsService(
             dbInterface: realDB,
             ingredientsFileName: "Food",
@@ -468,7 +468,7 @@ final class IngredientsServiceTests: XCTestCase {
     }
     
     func testIntegrationSearchPerformance() throws {
-        let realDB = DBInterface(inMemory: true)
+        let realDB = try DBInterface(inMemory: true)
         ingredientsService = IngredientsService(dbInterface: realDB)
         
         // Pre-load ingredients

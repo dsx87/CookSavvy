@@ -16,7 +16,7 @@ final class RecipeRecommendationServiceTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
         mockUserDataService = MockUserDataService()
-        db = DBInterface(inMemory: true)
+        db = try DBInterface(inMemory: true)
         mockDBInitService = MockDatabaseInitService()
         service = RecipeRecommendationService(
             userDataService: mockUserDataService,

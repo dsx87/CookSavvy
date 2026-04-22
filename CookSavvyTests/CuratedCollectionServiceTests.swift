@@ -6,9 +6,9 @@ final class CuratedCollectionServiceTests: XCTestCase {
     private var service: CuratedCollectionService!
     private var db: DBInterface!
 
-    override func setUp() {
-        super.setUp()
-        db = DBInterface(inMemory: true)
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        db = try DBInterface(inMemory: true)
         service = CuratedCollectionService(dbInterface: db)
     }
 

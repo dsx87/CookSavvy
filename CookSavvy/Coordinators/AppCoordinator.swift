@@ -9,13 +9,18 @@ import SwiftUI
 final class AppCoordinator: ObservableObject {
 
     @Published var hasCompletedOnboarding: Bool = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+    private let container: AppContainer
     private var pendingOnboardingIngredients: [Ingredient]?
 
     private var _discoverCoordinator: DiscoverCoordinator?
     private var _journeyCoordinator: JourneyCoordinator?
     private var _settingsCoordinator: SettingsCoordinator?
+
+    init(container: AppContainer) {
+        self.container = container
+    }
     
-    func discoverCoordinator(container: AppContainer) -> DiscoverCoordinator {
+    func discoverCoordinator() -> DiscoverCoordinator {
         if let existing = _discoverCoordinator { return existing }
         let coordinator = DiscoverCoordinator(
             container: container,
@@ -25,15 +30,15 @@ final class AppCoordinator: ObservableObject {
         return coordinator
     }
     
-    func journeyCoordinator(container: AppContainer) -> JourneyCoordinator {
+    func journeyCoordinator() -> JourneyCoordinator {
         if let existing = _journeyCoordinator { return existing }
-        let settings = settingsCoordinator(container: container)
+        let settings = settingsCoordinator()
         let coordinator = JourneyCoordinator(container: container, settingsCoordinator: settings)
         _journeyCoordinator = coordinator
         return coordinator
     }
     
-    private func settingsCoordinator(container: AppContainer) -> SettingsCoordinator {
+    private func settingsCoordinator() -> SettingsCoordinator {
         if let existing = _settingsCoordinator { return existing }
         let coordinator = SettingsCoordinator(container: container)
         _settingsCoordinator = coordinator
@@ -42,9 +47,9 @@ final class AppCoordinator: ObservableObject {
     
     func makeOnboardingViewModel() -> OnboardingViewModel {
         OnboardingViewModel(
-            analyticsService: AppContainer.shared.analyticsService,
-            ingredientDetectionService: AppContainer.shared.ingredientDetectionService,
-            cameraScanTracker: AppContainer.shared.cameraScanTracker,
+            analyticsService: container.analyticsService,
+            ingredientDetectionService: container.ingredientDetectionService,
+            cameraScanTracker: container.cameraScanTracker,
             onComplete: { [weak self] ingredients in
                 self?.pendingOnboardingIngredients = ingredients.isEmpty ? nil : ingredients
                 self?.hasCompletedOnboarding = true

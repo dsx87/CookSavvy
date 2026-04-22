@@ -89,6 +89,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 - `AppContainer`: `@MainActor` singleton holding all shared service instances
 - Services initialized once and exposed via protocol-typed dependencies in coordinators and view models
 - Shared cross-cutting services such as `LoggingServiceProtocol` are resolved in `AppContainer`, and feature-specific `LoggerProtocol` instances are injected into view models
+- Construction is throwing; startup database/container failures render a blocking startup error instead of falling back to in-memory storage
 - Maintains single source of truth for app-wide dependencies
 - TODO: refactor away from singleton pattern
 
@@ -106,10 +107,9 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 - **Network Layer**: `NetworkServiceProtocol` / `NetworkService`, `NetworkConfiguration`, `URLBuilder`, `NetworkRequest`, `NetworkResponse`, `NetworkError`, `HTTPMethod`
 - **Supabase Layer** (`Services/Supabase/`): `SupabaseConfiguration`, `SupabaseClientProviderProtocol` / `SupabaseClientProvider`, `SupabaseLLMProvider`, `SupabaseRecipeAPIProvider`, `SupabaseRecipeDTOs`, `SupabaseServiceAssembly`
 - **Recipe Sources** — `RecipeSourceProtocol` → `OfflineRecipeSource`, `OnlineRecipeSource` (via `RecipeAPIProviderProtocol`), `AIRecipeSource`
-- **Recipe API Providers** (`Network/RecipeAPIProvider/`):
-  - `RecipeAPIProviderProtocol` — common interface for online recipe APIs
-  - `SpoonacularProvider` — Spoonacular API integration (complexSearch endpoint)
-  - `SpoonacularModels` — DTOs + mapper to convert API responses to `Recipe`
+- **Recipe API Providers**:
+  - `RecipeAPIProviderProtocol` — common backend provider interface for online recipes
+  - `SupabaseRecipeAPIProvider` — app runtime implementation for the `search-recipes` backend flow
   - `RecipeAPIProviderError` — shared error types
 - `OnlineRecipeSource` delegates to a pluggable `RecipeAPIProviderProtocol` (nil = unavailable)
 - All services conform to protocols for testability
@@ -128,7 +128,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
   - `OnlineRecipeSource` receives `SupabaseRecipeAPIProvider` for the `search-recipes` backend flow when Supabase is configured
 - **API keys** stored in `Support/APIKeys.plist` (gitignored)
   - Active Supabase keys: `SUPABASE_URL`, `SUPABASE_ANON_KEY`
-  - Legacy direct-provider keys still exist in code/config readers but are not used by the active app wiring: `OPENAI_API_KEY`, `GEMINI_API_KEY`, `SPOONACULAR_API_KEY`
+  - Legacy direct LLM keys still exist in code/config readers but are not used by the active app wiring: `OPENAI_API_KEY`, `GEMINI_API_KEY`
 - **Supabase runtime wiring**:
   - Swift package dependency: `supabase-swift`
   - `SupabaseConfiguration` reads optional `SUPABASE_URL` and `SUPABASE_ANON_KEY` placeholders from `APIKeys.plist`
@@ -261,9 +261,7 @@ CookSavvy/
 │   ├── HTTPMethod.swift
 │   ├── URLBuilder.swift
 │   └── RecipeAPIProvider/
-│       ├── RecipeAPIProviderProtocol.swift
-│       ├── SpoonacularProvider.swift
-│       └── SpoonacularModels.swift
+│       └── RecipeAPIProviderProtocol.swift
 ├── DataImport/
 │   ├── DataImportService.swift
 │   ├── CSVParser.swift
@@ -340,7 +338,6 @@ CookSavvyTests/                        — Unit + integration tests
 ├── AchievementEvaluatorTests.swift
 ├── URLBuilderTests.swift
 ├── NetworkServiceTests.swift
-├── SpoonacularMapperTests.swift
 ├── IngredientTests.swift
 ├── RecipeModelTests.swift
 ├── UserDataServiceTests.swift

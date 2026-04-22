@@ -29,51 +29,59 @@ final class DBInterface: DBInterfaceProtocol {
     
     // MARK: - Recipe caching
     private var recipeCache: [String: Recipe] = [:]
+    private let cacheQueue = DispatchQueue(label: "com.cooksavvy.database.recipe-cache")
     private let maxRecipeCacheSize = 100
 
     private static let recipeColumns = "r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.cleaned_ingredients_json, r.additional_info_json, r.source, r.tagline, r.user_rating, r.api_rating, r.author, r.is_user_created, r.emoji, r.cuisine"
 
     // MARK: - Init
-    init() {
-        let writer: DatabaseWriter
-        do {
-            // 1. Define database path in Application Support
-            let fileManager = FileManager.default
-            let appSupportURL = try fileManager.url(
-                for: .applicationSupportDirectory,
-                in: .userDomainMask,
-                appropriateFor: nil,
-                create: true
-            )
-            let directoryURL = appSupportURL.appendingPathComponent("CookSavvy", isDirectory: true)
-            try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
-            let databaseURL = directoryURL.appendingPathComponent("db.sqlite")
-
-            // 2. Configure database
-            var configuration = Configuration()
-            configuration.prepareDatabase { db in
-                try db.execute(sql: "PRAGMA foreign_keys = ON;")
-            }
-
-            // 3. Create DatabasePool
-            writer = try DatabasePool(path: databaseURL.path, configuration: configuration)
-        } catch {
-            Self.logger.error("Database creation failed: \(error.localizedDescription). Falling back to in-memory.")
-            let configuration = Configuration()
-            writer = try! DatabaseQueue(path: ":memory:", configuration: configuration)
-        }
-        
-        self.dbWriter = writer
-        self.testHelpers = nil
-        try! createSchema()
+    convenience init() throws {
+        let fileManager = FileManager.default
+        let appSupportURL = try fileManager.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )
+        let directoryURL = appSupportURL.appendingPathComponent("CookSavvy", isDirectory: true)
+        try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        let databaseURL = directoryURL.appendingPathComponent("db.sqlite")
+        try self.init(databaseURL: databaseURL)
     }
     
     /// Initializer for testing to force in-memory
-    init(inMemory: Bool) {
-        let configuration = Configuration()
-        self.dbWriter = try! DatabaseQueue(path: ":memory:", configuration: configuration)
-        self.testHelpers = inMemory ? DBTestHelpers() : nil
-        try! createSchema()
+    convenience init(inMemory: Bool) throws {
+        guard inMemory else {
+            try self.init()
+            return
+        }
+
+        var configuration = Configuration()
+        configuration.prepareDatabase { db in
+            try db.execute(sql: "PRAGMA foreign_keys = ON;")
+        }
+        let writer = try DatabaseQueue(path: ":memory:", configuration: configuration)
+        try self.init(dbWriter: writer, testHelpers: DBTestHelpers())
+    }
+
+    convenience init(databaseURL: URL) throws {
+        var configuration = Configuration()
+        configuration.prepareDatabase { db in
+            try db.execute(sql: "PRAGMA foreign_keys = ON;")
+        }
+        let writer = try DatabasePool(path: databaseURL.path, configuration: configuration)
+        try self.init(dbWriter: writer, testHelpers: nil)
+    }
+
+    private init(dbWriter: DatabaseWriter, testHelpers: DBTestHelpers?) throws {
+        self.dbWriter = dbWriter
+        self.testHelpers = testHelpers
+        do {
+            try createSchema()
+        } catch {
+            Self.logger.error("Database schema creation failed: \(error.localizedDescription)")
+            throw DatabaseError.initializationError(error)
+        }
     }
 
     // MARK: - Schema
@@ -338,7 +346,7 @@ final class DBInterface: DBInterfaceProtocol {
         for row in rows {
             let title: String = row["title"]
             
-            if let cachedRecipe = recipeCache[title] {
+            if let cachedRecipe = cachedRecipe(forTitle: title) {
                 results.append(cachedRecipe)
                 continue
             }
@@ -389,7 +397,7 @@ final class DBInterface: DBInterfaceProtocol {
 
     private func cachedRecipe(from row: Row) throws -> Recipe {
         let title: String = row["title"]
-        if let cachedRecipe = recipeCache[title] {
+        if let cachedRecipe = cachedRecipe(forTitle: title) {
             return cachedRecipe
         }
 
@@ -399,13 +407,31 @@ final class DBInterface: DBInterfaceProtocol {
     }
     
     private func cacheRecipe(_ recipe: Recipe) {
-        // Enforce cache size limit with simple FIFO
-        if recipeCache.count >= maxRecipeCacheSize {
-            if let firstKey = recipeCache.keys.first {
-                recipeCache.removeValue(forKey: firstKey)
+        cacheQueue.sync {
+            // Enforce cache size limit with simple FIFO
+            if recipeCache.count >= maxRecipeCacheSize {
+                if let firstKey = recipeCache.keys.first {
+                    recipeCache.removeValue(forKey: firstKey)
+                }
             }
+            recipeCache[recipe.title] = recipe
         }
-        recipeCache[recipe.title] = recipe
+    }
+
+    private func cachedRecipe(forTitle title: String) -> Recipe? {
+        cacheQueue.sync { recipeCache[title] }
+    }
+
+    private func clearRecipeCache() {
+        cacheQueue.sync {
+            recipeCache.removeAll()
+        }
+    }
+
+    private func removeCachedRecipe(forTitle title: String) {
+        cacheQueue.sync {
+            _ = recipeCache.removeValue(forKey: title)
+        }
     }
 
     func insertIngredients(_ ingredients: [Ingredient]) throws {
@@ -481,9 +507,9 @@ final class DBInterface: DBInterfaceProtocol {
             try db.execute(sql: "DELETE FROM ingredients;")
             try db.execute(sql: "DELETE FROM shopping_items;")
 
-            testHelpers?.clearVariants()
-            recipeCache.removeAll()
         }
+        testHelpers?.clearVariants()
+        clearRecipeCache()
     }
 
     func clearRecentData() throws {
@@ -879,7 +905,7 @@ final class DBInterface: DBInterfaceProtocol {
                 )
             }
         }
-        recipeCache.removeValue(forKey: recipe.title)
+        removeCachedRecipe(forTitle: recipe.title)
     }
 
     func deleteUserRecipe(recipeId: Int) throws {

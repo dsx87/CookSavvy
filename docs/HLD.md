@@ -36,7 +36,7 @@ CookSavvy is a hobby iOS recipe app. Users select or scan ingredients, receive r
 | Tier | Display Name | Product ID | Recipe Sources | Ingredient Detection | Camera |
 |------|-------------|------------|----------------|----------------------|--------|
 | Free | Free | — | `OfflineRecipeSource` (local SQLite only) | Manual text input | 5 scans/week (`CameraScanTracker`, UserDefaults, resets when `Calendar.current` enters a new week/year) |
-| Premium | CookSavvy+ | `com.cooksavvy.subscription.premium` | `OfflineRecipeSource` + `OnlineRecipeSource` (Spoonacular/Supabase) + `AIRecipeSource` | Unlimited AI photo recognition | Unlimited |
+| Premium | CookSavvy+ | `com.cooksavvy.subscription.premium` | `OfflineRecipeSource` + `OnlineRecipeSource` (Supabase backend) + `AIRecipeSource` | Unlimited AI photo recognition | Unlimited |
 
 ### Gated Features (`PaidFeature` enum)
 
@@ -76,8 +76,8 @@ CookSavvy is a hobby iOS recipe app. Users select or scan ingredients, receive r
 │          DATA LAYER                │  │        EXTERNAL SYSTEMS             │
 │  GRDB/SQLite (9 tables + FTS5)    │  │  Supabase Edge Functions            │
 │  UserDefaults (CameraScanTracker) │  │  Supabase Auth (Anon + SIWA)        │
-│  Disk Cache (ImageService)        │  │  Spoonacular API (legacy)           │
-│  Keychain/plist (APIKeys.plist)   │  │  OpenAI/Gemini (legacy direct)      │
+│  Disk Cache (ImageService)        │  │  OpenAI/Gemini (legacy direct)      │
+│  Keychain/plist (APIKeys.plist)   │  │                                     │
 │                                    │  │  StoreKit 2 (App Store)             │
 └────────────────────────────────────┘  └─────────────────────────────────────┘
 ```
@@ -136,7 +136,13 @@ CookSavvyApp (entry point)
 
 ## 4. AppContainer / Dependency Injection
 
-`AppContainer` is a `@MainActor` singleton that creates and owns every service. Coordinators and ViewModels receive protocol-typed references — never the concrete type.
+`AppContainer` is a `@MainActor` composition root that creates and owns every service. It still assigns the legacy `AppContainer.shared` singleton during startup and DEBUG in-memory factory creation, but production views and coordinators receive dependencies explicitly through the coordinator chain or SwiftUI environment values. Coordinators and ViewModels receive protocol-typed references — never the concrete type.
+
+Database startup is fail-fast: `DBInterface` construction is throwing, `AppContainer` construction is throwing, and `CookSavvyApp` stores startup as either `ready(AppContainer, AppCoordinator)` or `failed(Error)`. A failed database open/schema setup renders a blocking startup error surface instead of continuing with a fallback in-memory database.
+
+When the ready app becomes active, the root lifecycle calls `AppContainer.handleSceneBecameActive()`, which starts auth if needed and refreshes subscription status concurrently.
+
+Shared leaf views that need cross-cutting services avoid the singleton. For example, `AsyncImageDisk` receives `ImageServiceProtocol` and `LoggingServiceProtocol` through SwiftUI environment values injected from the ready app root.
 
 ```
                               ┌────────────────┐
@@ -341,7 +347,6 @@ RecipeSourceProtocol                   IngredientDetectionServiceProtocol
   └──▶ AIRecipeSource                  CameraScanTrackerProtocol
                                          └──▶ CameraScanTracker (UserDefaults)
 RecipeAPIProviderProtocol
-  ├──▶ SpoonacularProvider (legacy)
   └──▶ SupabaseRecipeAPIProvider       USER DATA DOMAIN
                                        ────────────────
 RecipeRecommendationServiceProtocol    UserDataServiceProtocol
@@ -512,10 +517,10 @@ User      DiscoverView    DiscoverVM     RecipeService    Offline   Online    AI
     │   Adapter        │  │(RecipeSourceProt)│
     └──────────────────┘  └──────────────────┘
 
-    Legacy (not used in active RELEASE path):
-    ┌────────────────┐ ┌────────────────┐ ┌──────────────────┐
-    │ OpenAIProvider │ │ GeminiProvider │ │SpoonacularProvider│
-    └────────────────┘ └────────────────┘ └──────────────────┘
+    Legacy direct LLM providers (not used in active RELEASE path):
+    ┌────────────────┐ ┌────────────────┐
+    │ OpenAIProvider │ │ GeminiProvider │
+    └────────────────┘ └────────────────┘
 
     API Keys: APIKeys.plist (SUPABASE_URL, SUPABASE_ANON_KEY) — gitignored
 ```
@@ -612,6 +617,10 @@ User      DiscoverView    DiscoverVM     RecipeService    Offline   Online    AI
 
   CameraScanTracker (UserDefaults):
     week/year = Calendar.current │ resets on locale calendar week boundary │ max 5/week free
+
+  Foreground lifecycle:
+    CookSavvyApp scenePhase .active -> AppContainer.handleSceneBecameActive()
+    -> authService.startSessionIfNeeded() + subscriptionService.refreshSubscriptionStatus() concurrently
 ```
 
 ---

@@ -23,6 +23,11 @@ enum Strings {
         static let errorAlertTitle = String(localized: "errors.errorAlertTitle", defaultValue: "Something went wrong")
     }
 
+    enum Startup {
+        static let title = String(localized: "startup.title", defaultValue: "CookSavvy couldn't start")
+        static let message = String(localized: "startup.message", defaultValue: "The app could not open its local database. Please restart the app.")
+    }
+
     enum Tab {
         static let discover = String(localized: "tab.discover", defaultValue: "Discover")
         static let journey = String(localized: "tab.journey", defaultValue: "My Kitchen")

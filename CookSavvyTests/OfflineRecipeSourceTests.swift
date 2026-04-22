@@ -14,7 +14,7 @@ final class OfflineRecipeSourceTests: XCTestCase {
     var offlineSource: OfflineRecipeSource!
     
     override func setUpWithError() throws {
-        dbInterface = DBInterface(inMemory: true)
+        dbInterface = try DBInterface(inMemory: true)
         offlineSource = OfflineRecipeSource(dbInterface: dbInterface)
     }
 
@@ -175,8 +175,8 @@ final class OfflineRecipeSourceTests: XCTestCase {
     
     // MARK: - Convenience Initializer Test
     
-    func testConvenienceInitializer() async {
-        let source = OfflineRecipeSource()
+    func testConvenienceInitializer() async throws {
+        let source = try OfflineRecipeSource()
         XCTAssertEqual(source.sourceType, .offline)
         
         let available = await source.isAvailable()

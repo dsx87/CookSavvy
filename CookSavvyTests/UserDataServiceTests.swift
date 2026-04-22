@@ -15,7 +15,7 @@ final class UserDataServiceTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
-        db = DBInterface(inMemory: true)
+        db = try DBInterface(inMemory: true)
         testDefaults = UserDefaults(suiteName: defaultsSuiteName)!
         service = UserDataService(dbInterface: db, defaults: testDefaults)
     }

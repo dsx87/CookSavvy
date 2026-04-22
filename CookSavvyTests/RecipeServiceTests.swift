@@ -52,7 +52,7 @@ final class RecipeServiceTests: XCTestCase {
     var recipeService: RecipeService!
     
     override func setUpWithError() throws {
-        dbInterface = DBInterface(inMemory: true)
+        dbInterface = try DBInterface(inMemory: true)
     }
     
     override func tearDownWithError() throws {
@@ -63,8 +63,8 @@ final class RecipeServiceTests: XCTestCase {
     
     // MARK: - Initialization Tests
     
-    func testDefaultInitialization() {
-        recipeService = RecipeService()
+    func testDefaultInitialization() throws {
+        recipeService = try RecipeService()
         XCTAssertNotNil(recipeService)
     }
     
@@ -191,8 +191,8 @@ final class RecipeServiceTests: XCTestCase {
     
     // MARK: - Source Availability Tests
     
-    func testIsSourceAvailableForAvailableSource() async {
-        recipeService = RecipeService(dbInterface: dbInterface)
+    func testIsSourceAvailableForAvailableSource() async throws {
+        recipeService = try RecipeService(dbInterface: dbInterface)
         
         let available = await recipeService.isSourceAvailable(.offline)
         XCTAssertTrue(available)
@@ -254,7 +254,7 @@ final class RecipeServiceTests: XCTestCase {
     // MARK: - Store Recipes Tests
     
     func testStoreRecipesManually() throws {
-        recipeService = RecipeService(dbInterface: dbInterface)
+        recipeService = try RecipeService(dbInterface: dbInterface)
         
         let recipes = Recipe.mocks(count: 3)
         try recipeService.storeRecipes(recipes)
@@ -264,14 +264,14 @@ final class RecipeServiceTests: XCTestCase {
     }
     
     func testStoreEmptyRecipesIsNoop() throws {
-        recipeService = RecipeService(dbInterface: dbInterface)
+        recipeService = try RecipeService(dbInterface: dbInterface)
         
         // Should not throw
         try recipeService.storeRecipes([])
     }
     
     func testGetStoredRecipes() throws {
-        recipeService = RecipeService(dbInterface: dbInterface)
+        recipeService = try RecipeService(dbInterface: dbInterface)
         
         let chicken: Ingredient = "Chicken"
         let recipe = Recipe(
@@ -291,7 +291,7 @@ final class RecipeServiceTests: XCTestCase {
     }
     
     func testGetStoredRecipesWithNoMatches() throws {
-        recipeService = RecipeService(dbInterface: dbInterface)
+        recipeService = try RecipeService(dbInterface: dbInterface)
         
         let stored = try recipeService.getStoredRecipes(for: ["NonExistent"])
         XCTAssertTrue(stored.isEmpty)
@@ -300,7 +300,7 @@ final class RecipeServiceTests: XCTestCase {
     // MARK: - Integration Tests
     
     func testFullWorkflowOfflineSource() async throws {
-        recipeService = RecipeService(dbInterface: dbInterface)
+        recipeService = try RecipeService(dbInterface: dbInterface)
         
         // 1. Store recipes manually
         let chicken: Ingredient = "Chicken"

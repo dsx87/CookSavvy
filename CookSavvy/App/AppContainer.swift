@@ -11,13 +11,6 @@ import Foundation
 
 @MainActor
 final class AppContainer {
-
-    // TODO: redo this in non singleton way
-    #if DEBUG
-    static private(set) var shared: AppContainer = AppContainer()
-    #else
-    static let shared: AppContainer = AppContainer()
-    #endif
     
     // MARK: - Services
     let dbInterface: DBInterfaceProtocol
@@ -43,7 +36,12 @@ final class AppContainer {
 
     // MARK: - Initialization
 
-    private init() {
+    /// Creates the app-wide singleton-backed container.
+    ///
+    /// This initializer remains internal for the current singleton lifecycle. Avoid constructing
+    /// additional app containers outside the composition root or focused tests; each container owns
+    /// independent service instances and database connections.
+    internal init() throws {
         let loggingService = LoggingService()
         self.loggingService = loggingService
 
@@ -54,7 +52,7 @@ final class AppContainer {
         #endif
         self.analyticsService = analyticsService
 
-        let db = DBInterface()
+        let db = try DBInterface()
         self.dbInterface = db
 
         let ingredients = IngredientsService(dbInterface: db)
@@ -204,9 +202,13 @@ final class AppContainer {
 
     #if DEBUG
     @MainActor
-    static func configureForUITesting(_ config: UITestConfiguration) {
+    static func makeInMemory(
+        subscriptionPlan: SubscriptionPlan = .free,
+        authState: AuthState = .signedIn(userId: "mock-anonymous-user"),
+        isAnonymous: Bool = true
+    ) throws -> AppContainer {
         let loggingService = LoggingService()
-        let db = DBInterface(inMemory: true)
+        let db = try DBInterface(inMemory: true)
         let ingredients = IngredientsService(dbInterface: db)
         let dataImport = DataImportService(
             dbInterface: db,
@@ -231,7 +233,6 @@ final class AppContainer {
             ingredientsService: ingredients,
             dataImportService: dataImport
         )
-        let subscriptionPlan: SubscriptionPlan = config.isPremiumUser ? .premium : .free
         let analyticsService = MockAnalyticsService()
 
         let container = AppContainer(
@@ -255,19 +256,36 @@ final class AppContainer {
             ),
             loggingService: loggingService,
             authService: MockAuthService(
-                initialState: config.isSignedInWithApple
-                    ? .signedIn(userId: "mock-apple-user")
-                    : .signedIn(userId: "mock-anonymous-user"),
-                isAnonymous: !config.isSignedInWithApple,
+                initialState: authState,
+                isAnonymous: isAnonymous,
                 analyticsService: analyticsService
             ),
             analyticsService: analyticsService
         )
 
-        UITestDataSeeder(db: db).seed(config: config)
         databaseInitService.markReadyForTesting()
+        return container
+    }
 
-        AppContainer.shared = container
+    @MainActor
+    static func configureForUITesting(_ config: UITestConfiguration) throws -> AppContainer {
+        let subscriptionPlan: SubscriptionPlan = config.isPremiumUser ? .premium : .free
+        let container = try makeInMemory(
+            subscriptionPlan: subscriptionPlan,
+            authState: config.isSignedInWithApple
+                ? .signedIn(userId: "mock-apple-user")
+                : .signedIn(userId: "mock-anonymous-user"),
+            isAnonymous: !config.isSignedInWithApple
+        )
+
+        UITestDataSeeder(db: container.dbInterface).seed(config: config)
+        return container
     }
     #endif
+
+    func handleSceneBecameActive() async {
+        async let authRefresh: Void = authService.startSessionIfNeeded()
+        async let subscriptionRefresh: Void = subscriptionService.refreshSubscriptionStatus()
+        _ = await (authRefresh, subscriptionRefresh)
+    }
 }

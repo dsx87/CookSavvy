@@ -3063,6 +3063,28 @@
         }
       }
     },
+    "startup.message" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The app could not open its local database. Please restart the app."
+          }
+        }
+      }
+    },
+    "startup.title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "CookSavvy couldn't start"
+          }
+        }
+      }
+    },
     "tab.discover" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {

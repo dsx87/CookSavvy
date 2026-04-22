@@ -48,10 +48,17 @@ final class RecipeService: RecipeServiceProtocol {
     ///   - dbInterface: Database interface for storing recipes (default: new DBInterface)
     ///   - shouldStoreRecipes: Whether to automatically store fetched recipes in DB (default: true)
     convenience init(
-        dbInterface: DBInterfaceProtocol = DBInterface(),
+        dbInterface: DBInterfaceProtocol? = nil,
         shouldStoreRecipes: Bool = true
-    ) {
-        let offlineSource = OfflineRecipeSource(dbInterface: dbInterface)
+    ) throws {
+        let resolvedDB: DBInterfaceProtocol
+        if let dbInterface {
+            resolvedDB = dbInterface
+        } else {
+            resolvedDB = try DBInterface()
+        }
+
+        let offlineSource = OfflineRecipeSource(dbInterface: resolvedDB)
         let onlineSource = OnlineRecipeSource()
         let aiSource = AIRecipeSource(aiService: AIService(provider: MockLLMProvider()))
 
@@ -62,11 +69,21 @@ final class RecipeService: RecipeServiceProtocol {
         ]
 
         self.init(
-            dbInterface: dbInterface,
+            dbInterface: resolvedDB,
             sources: sources,
             logger: LoggingService().makeLogger(category: .recipeService),
             shouldStoreRecipes: shouldStoreRecipes
         )
+    }
+    #endif
+
+    #if !DEBUG
+    @available(*, unavailable, message: "The default RecipeService initializer uses MockLLMProvider and is DEBUG-only. Use init(dbInterface:sources:logger:shouldStoreRecipes:) in production.")
+    convenience init(
+        dbInterface: DBInterfaceProtocol? = nil,
+        shouldStoreRecipes: Bool = true
+    ) throws {
+        fatalError("DEBUG-only initializer")
     }
     #endif
     

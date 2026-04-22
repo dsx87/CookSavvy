@@ -340,26 +340,27 @@ struct SettingsView: View {
 
 #if DEBUG
 #Preview {
-    let dbInterface = DBInterface()
-    let authService = MockAuthService(initialState: .signedIn(userId: "mock-user"))
-    let analyticsService = MockAnalyticsService()
-    return SettingsView(
-        viewModel: SettingsViewModel(
-            userDataService: UserDataService(dbInterface: dbInterface),
-            dbInterface: dbInterface,
-            subscriptionService: MockSubscriptionService(),
-            dietaryPreferences: DietaryPreferences(),
-            authService: authService,
-            analyticsService: analyticsService,
-            signInWithAppleAction: SignInWithAppleAction(
+    if let dbInterface = try? DBInterface() {
+        let authService = MockAuthService(initialState: .signedIn(userId: "mock-user"))
+        let analyticsService = MockAnalyticsService()
+        SettingsView(
+            viewModel: SettingsViewModel(
+                userDataService: UserDataService(dbInterface: dbInterface),
+                dbInterface: dbInterface,
+                subscriptionService: MockSubscriptionService(),
+                dietaryPreferences: DietaryPreferences(),
                 authService: authService,
                 analyticsService: analyticsService,
-                logger: LoggingService().makeLogger(category: .authService),
-                appleSignInManager: MockAppleSignInManager()
-            ),
-            logger: LoggingService().makeLogger(category: .settingsViewModel),
-            coordinator: nil
+                signInWithAppleAction: SignInWithAppleAction(
+                    authService: authService,
+                    analyticsService: analyticsService,
+                    logger: LoggingService().makeLogger(category: .authService),
+                    appleSignInManager: MockAppleSignInManager()
+                ),
+                logger: LoggingService().makeLogger(category: .settingsViewModel),
+                coordinator: nil
+            )
         )
-    )
+    }
 }
 #endif

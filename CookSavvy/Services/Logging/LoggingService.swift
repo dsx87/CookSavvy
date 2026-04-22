@@ -15,6 +15,7 @@ enum LogCategory: String {
     case authService = "AuthService"
     case dietaryPreferences = "DietaryPreferences"
     case asyncImageDisk = "AsyncImageDisk"
+    case csvParser = "CSVParser"
 }
 
 protocol LoggerProtocol {

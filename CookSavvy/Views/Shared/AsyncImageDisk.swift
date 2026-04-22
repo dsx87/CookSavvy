@@ -32,6 +32,8 @@ struct AsyncImageDisk<Placeholder: View>: View {
     let contentMode: ContentMode
     private var imageNamePrefix: String?
     private let imageNameBuilder: ((String?, String) -> String)
+    @Environment(\.imageService) private var imageService
+    @Environment(\.loggingService) private var loggingService
     @State private var image: UIImage? = nil
     @ViewBuilder private let placeholder: Placeholder
     
@@ -81,13 +83,35 @@ struct AsyncImageDisk<Placeholder: View>: View {
         }
         .task {
             let fullImageName = imageNameBuilder(self.imageNamePrefix, self.imageName)
+            guard let imageService else { return }
             do {
-                self.image = try await AppContainer.shared.imageService.loadImage(named: fullImageName)
+                self.image = try await imageService.loadImage(named: fullImageName)
             } catch {
-                let logger = AppContainer.shared.loggingService.makeLogger(category: .asyncImageDisk)
-                logger.error("Failed to load disk image \(fullImageName): \(error)")
+                loggingService?
+                    .makeLogger(category: .asyncImageDisk)
+                    .error("Failed to load disk image \(fullImageName): \(error)")
             }
         }
+    }
+}
+
+private struct ImageServiceEnvironmentKey: EnvironmentKey {
+    static let defaultValue: (any ImageServiceProtocol)? = nil
+}
+
+private struct LoggingServiceEnvironmentKey: EnvironmentKey {
+    static let defaultValue: (any LoggingServiceProtocol)? = nil
+}
+
+extension EnvironmentValues {
+    var imageService: (any ImageServiceProtocol)? {
+        get { self[ImageServiceEnvironmentKey.self] }
+        set { self[ImageServiceEnvironmentKey.self] = newValue }
+    }
+
+    var loggingService: (any LoggingServiceProtocol)? {
+        get { self[LoggingServiceEnvironmentKey.self] }
+        set { self[LoggingServiceEnvironmentKey.self] = newValue }
     }
 }
 

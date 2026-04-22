@@ -10,7 +10,6 @@ import SwiftUI
 struct TabContainerView: View {
     @ObservedObject var coordinator: AppCoordinator
     @Environment(\.appTheme) var theme
-    var container: AppContainer { AppContainer.shared }
     
     var body: some View {
         TabView {
@@ -21,7 +20,7 @@ struct TabContainerView: View {
     }
 
     private var discoverTab: some View {
-        coordinator.discoverCoordinator(container: container).start()
+        coordinator.discoverCoordinator().start()
             .tabItem {
                 Image(systemName: Icons.Tab.discover)
                 Text(Strings.Tab.discover)
@@ -30,7 +29,7 @@ struct TabContainerView: View {
     }
 
     private var journeyTab: some View {
-        coordinator.journeyCoordinator(container: container).start()
+        coordinator.journeyCoordinator().start()
             .tabItem {
                 Image(systemName: Icons.Tab.myKitchen)
                 Text(Strings.Tab.journey)
@@ -40,5 +39,7 @@ struct TabContainerView: View {
 }
 
 #Preview {
-    TabContainerView(coordinator: AppCoordinator())
+    if let container = try? AppContainer() {
+        TabContainerView(coordinator: AppCoordinator(container: container))
+    }
 }

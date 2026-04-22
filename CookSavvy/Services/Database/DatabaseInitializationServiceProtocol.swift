@@ -5,4 +5,8 @@ protocol DatabaseInitializationServiceProtocol: AnyObject {
     func startInitialization()
     func waitForIngredients() async
     func waitForRecipes() async
+
+    #if DEBUG
+    func markReadyForTesting()
+    #endif
 }

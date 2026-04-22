@@ -36,7 +36,7 @@ final class IngredientsService: IngredientsServiceProtocol {
     ///   - ingredientsFileName: Name of the JSON file containing ingredients (default: "Food")
     ///   - ingredientsFileExtension: File extension (default: "json")
     init(
-        dbInterface: DBInterfaceProtocol = DBInterface(),
+        dbInterface: DBInterfaceProtocol,
         ingredientsFileName: String = IngredientsServiceConstants.defaultFileName,
         ingredientsFileExtension: String = IngredientsServiceConstants.defaultFileExtension
     ) {
@@ -44,6 +44,20 @@ final class IngredientsService: IngredientsServiceProtocol {
         self.ingredientsFileName = ingredientsFileName
         self.ingredientsFileExtension = ingredientsFileExtension
     }
+
+    #if DEBUG
+    convenience init(
+        ingredientsFileName: String = IngredientsServiceConstants.defaultFileName,
+        ingredientsFileExtension: String = IngredientsServiceConstants.defaultFileExtension
+    ) throws {
+        let dbInterface = try DBInterface()
+        self.init(
+            dbInterface: dbInterface,
+            ingredientsFileName: ingredientsFileName,
+            ingredientsFileExtension: ingredientsFileExtension
+        )
+    }
+    #endif
     
     // MARK: - Public Methods
     

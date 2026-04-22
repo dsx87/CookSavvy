@@ -15,24 +15,24 @@ final class SettingsViewModelAuthTests: XCTestCase {
     private var sut: SettingsViewModel!
     private var cancellables: Set<AnyCancellable>!
 
-    override func setUp() {
-        super.setUp()
+    override func setUpWithError() throws {
+        try super.setUpWithError()
         cancellables = []
         mockAuth = MockAuthService(initialState: .signedIn(userId: "anon-user"), isAnonymous: true)
         mockAnalytics = MockAnalyticsService()
-        sut = makeViewModel(authService: mockAuth)
+        sut = try makeViewModel(authService: mockAuth)
     }
 
-    override func tearDown() {
+    override func tearDownWithError() throws {
         cancellables = nil
         sut = nil
         mockAuth = nil
         mockAnalytics = nil
-        super.tearDown()
+        try super.tearDownWithError()
     }
 
-    private func makeViewModel(authService: MockAuthService) -> SettingsViewModel {
-        let db = DBInterface(inMemory: true)
+    private func makeViewModel(authService: MockAuthService) throws -> SettingsViewModel {
+        let db = try DBInterface(inMemory: true)
         return SettingsViewModel(
             userDataService: MockUserDataService(),
             dbInterface: db,
@@ -58,9 +58,9 @@ final class SettingsViewModelAuthTests: XCTestCase {
         XCTAssertNotNil(sut.currentUserId)
     }
 
-    func testInitialSignedInState() {
+    func testInitialSignedInState() throws {
         let auth = MockAuthService(initialState: .signedIn(userId: "apple-user"), isAnonymous: false)
-        let vm = makeViewModel(authService: auth)
+        let vm = try makeViewModel(authService: auth)
         XCTAssertFalse(vm.isAnonymous)
         XCTAssertEqual(vm.currentUserId, "apple-user")
     }

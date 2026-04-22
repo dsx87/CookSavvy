@@ -21,9 +21,12 @@ final class OfflineRecipeSource: RecipeSourceProtocol {
     }
     
     /// Convenience initializer that creates a new DBInterface
-    convenience init() {
-        self.init(dbInterface: DBInterface())
+    #if DEBUG
+    convenience init() throws {
+        let dbInterface = try DBInterface()
+        self.init(dbInterface: dbInterface)
     }
+    #endif
     
     func fetchRecipes(for ingredients: [Ingredient]) async throws -> [Recipe] {
         guard !ingredients.isEmpty else {

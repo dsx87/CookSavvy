@@ -50,6 +50,10 @@ final class MockDatabaseInitService: DatabaseInitializationServiceProtocol {
     func waitForIngredients() async {}
 
     func waitForRecipes() async {}
+
+    func markReadyForTesting() {
+        state = .ready
+    }
 }
 
 // MARK: - MockIngredientsService

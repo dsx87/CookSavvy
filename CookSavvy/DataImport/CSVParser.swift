@@ -90,6 +90,8 @@ final class CSVParser {
 /// let models: [MyModel] = try decoder.decode([MyModel].self, from: csvString)
 /// ```
 public struct CSVDecoder {
+    private static let logger: any LoggerProtocol = LoggingService().makeLogger(category: .csvParser)
+
     // MARK: Configuration
     public enum DateDecodingStrategy {
         case deferredToDate
@@ -134,10 +136,16 @@ public struct CSVDecoder {
         }
 
         var decodedRows: [T] = []
+        var rowNumber = 1
         while let values = reader.next() {
+            rowNumber += 1
             let row = makeRow(headers: headers, values: values)
             let decoder = RowDecoder(row: row, options: makeOptions())
-            decodedRows.append(try T(from: decoder))
+            do {
+                decodedRows.append(try T(from: decoder))
+            } catch {
+                Self.logger.warning("Skipping malformed CSV row \(rowNumber): \(error.localizedDescription)")
+            }
         }
 
         return decodedRows
@@ -237,16 +245,26 @@ public struct CSVDecoder {
 
             func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T : Decodable {
                 // If T is Decodable but not a primitive, attempt to decode using nested RowDecoder
-                if T.self == Date.self || T.self == NSDate.self {
-                    return try decodeDate(for: key) as! T
-                } else if T.self == Data.self || T.self == NSData.self {
-                    return try decodeData(for: key) as! T
-                } else if T.self == URL.self || T.self == NSURL.self {
+                if T.self == Date.self {
+                    return try castDecodedValue(decodeDate(for: key), to: T.self, key: key)
+                } else if T.self == NSDate.self {
+                    return try castDecodedValue(decodeDate(for: key) as NSDate, to: T.self, key: key)
+                } else if T.self == Data.self {
+                    return try castDecodedValue(decodeData(for: key), to: T.self, key: key)
+                } else if T.self == NSData.self {
+                    return try castDecodedValue(decodeData(for: key) as NSData, to: T.self, key: key)
+                } else if T.self == URL.self {
                     let s = try trimmedString(for: key)
                     guard let url = URL(string: s) else {
                         throw DecodingError.dataCorrupted(.init(codingPath: codingPath + [key], debugDescription: "Invalid URL string: \(s)"))
                     }
-                    return url as! T
+                    return try castDecodedValue(url, to: T.self, key: key)
+                } else if T.self == NSURL.self {
+                    let s = try trimmedString(for: key)
+                    guard let url = NSURL(string: s) else {
+                        throw DecodingError.dataCorrupted(.init(codingPath: codingPath + [key], debugDescription: "Invalid URL string: \(s)"))
+                    }
+                    return try castDecodedValue(url, to: T.self, key: key)
                 }
 
                 // Nested/complex type: use same row and delegate
@@ -358,6 +376,16 @@ public struct CSVDecoder {
 
             private func typeMismatch(_ t: Any.Type, _ raw: String, _ key: Key) -> DecodingError {
                 DecodingError.typeMismatch(t, .init(codingPath: codingPath + [key], debugDescription: "Cannot convert value \"\(raw)\" to \(t)") )
+            }
+
+            private func castDecodedValue<T, Value>(_ value: Value, to type: T.Type, key: Key) throws -> T {
+                guard let typedValue = value as? T else {
+                    throw DecodingError.typeMismatch(
+                        T.self,
+                        .init(codingPath: codingPath + [key], debugDescription: "Decoded value cannot be represented as \(T.self)")
+                    )
+                }
+                return typedValue
             }
         }
     }

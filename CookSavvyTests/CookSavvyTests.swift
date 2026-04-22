@@ -13,7 +13,7 @@ final class DBInterfaceTests: XCTestCase {
     var dbInterface: DBInterface!
 //    var mockRecipes: [Recipe] = []
     override func setUpWithError() throws {
-        dbInterface = DBInterface(inMemory: true)
+        dbInterface = try DBInterface(inMemory: true)
     }
 
     override func tearDownWithError() throws {
@@ -78,6 +78,40 @@ final class DBInterfaceTests: XCTestCase {
     }
 
     // MARK: - Additional robustness tests
+
+    func testInitializationThrowsForInvalidDatabasePath() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("CookSavvyInvalidDBPath_\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+
+        XCTAssertThrowsError(try DBInterface(databaseURL: directory))
+    }
+
+    func testConcurrentRecipeCacheAccessDoesNotCrash() throws {
+        let recipes = Recipe.mocks(count: 25)
+        try dbInterface.insertRecipes(recipes)
+        let ingredients = Array(recipes.flatMap(\.ingredients).prefix(20))
+        let lock = NSLock()
+        var errors: [Error] = []
+
+        DispatchQueue.concurrentPerform(iterations: 100) { index in
+            do {
+                if index.isMultiple(of: 3) {
+                    _ = try dbInterface.getAllRecipes(offset: 0, limit: 25)
+                } else if index.isMultiple(of: 5), let id = try dbInterface.getRecipeId(byTitle: recipes[index % recipes.count].title) {
+                    _ = try dbInterface.getRecipe(byID: id)
+                } else {
+                    _ = try dbInterface.getRecipes(byIngredients: ingredients, offset: 0, limit: 25)
+                }
+            } catch {
+                lock.lock()
+                errors.append(error)
+                lock.unlock()
+            }
+        }
+
+        XCTAssertTrue(errors.isEmpty)
+    }
 
     func testGetRecipesWithEmptyIngredientsReturnsEmpty() throws {
         let result = try dbInterface.getRecipes(byIngredients: [], offset: 0, limit: 20)

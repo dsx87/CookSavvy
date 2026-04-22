@@ -50,4 +50,55 @@ final class CSVDecoderTests: XCTestCase {
         XCTAssertFalse(decodedRows.isEmpty)
     }
 
+    func testMalformedRowsAreSkippedDuringArrayDecoding() throws {
+        struct Row: Decodable {
+            let id: Int
+            let name: String
+        }
+
+        let csv = """
+        id,name
+        1,Salt
+        bad,Pepper
+        2,Oil
+        """
+
+        let rows = try decoder.decode([Row].self, from: csv)
+        XCTAssertEqual(rows.map(\.id), [1, 2])
+    }
+
+    func testGenericFoundationTypesDecodeWithoutForceCasts() throws {
+        struct Row: Decodable {
+            let date: Date
+            let data: Data
+            let url: URL
+        }
+
+        let payload = Data("hello".utf8).base64EncodedString()
+        let csv = """
+        date,data,url
+        42,\(payload),https://example.com
+        """
+
+        decoder.dateDecodingStrategy = .secondsSince1970
+        let row = try decoder.decode(Row.self, from: csv)
+
+        XCTAssertEqual(row.date.timeIntervalSince1970, 42)
+        XCTAssertEqual(row.data, Data("hello".utf8))
+        XCTAssertEqual(row.url.absoluteString, "https://example.com")
+    }
+
+    func testInvalidGenericFoundationValuesThrowWhenDecodingSingleRow() throws {
+        struct Row: Decodable {
+            let url: URL
+        }
+
+        let csv = """
+        url
+        http://[::1
+        """
+
+        XCTAssertThrowsError(try decoder.decode(Row.self, from: csv))
+    }
+
 }

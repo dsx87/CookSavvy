@@ -72,7 +72,13 @@ final class AIService: AIServiceProtocol {
             throw AIServiceError.providerError(.invalidAPIKey)
         }
 
-        let ingredientNames = ingredients.map { $0.name }.joined(separator: ", ")
+        let ingredientNames = ingredients
+            .map { Self.sanitizedIngredientName($0.name) }
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
+        guard !ingredientNames.isEmpty else {
+            throw AIServiceError.noIngredientsDetected
+        }
         let prompt = Prompts.recipeGeneration(ingredients: ingredientNames, count: count)
 
         let messages: [LLMMessage] = [
@@ -131,6 +137,16 @@ final class AIService: AIServiceProtocol {
         
         Self.logger.warning("Unknown image format (magic: \(bytes[0...3].map { String(format: "%02X", $0) }.joined())), defaulting to JPEG")
         return "image/jpeg"
+    }
+
+    private static func sanitizedIngredientName(_ name: String) -> String {
+        let stripped = name
+            .replacingOccurrences(of: "\n", with: " ")
+            .replacingOccurrences(of: "\r", with: " ")
+            .replacingOccurrences(of: "\u{0000}", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard stripped.count > 100 else { return stripped }
+        return String(stripped.prefix(100))
     }
     
     private func parseIngredientsResponse(_ content: String) throws -> [Ingredient] {

@@ -11,6 +11,7 @@ import Combine
 final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
 
     private let _currentPlan = CurrentValueSubject<SubscriptionPlan, Never>(.free)
+    private let refreshCoordinator = SubscriptionRefreshCoordinator()
 
     var currentPlan: SubscriptionPlan { _currentPlan.value }
 
@@ -28,8 +29,8 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
         self.logger = logger
         loadCachedPlan()
         transactionListener = listenForTransactions()
-        Task {
-            await refreshSubscriptionStatus()
+        Task { [weak self] in
+            await self?.refreshSubscriptionStatus()
         }
     }
     
@@ -44,6 +45,12 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
     }
     
     func refreshSubscriptionStatus() async {
+        await refreshCoordinator.run { [weak self] in
+            await self?.performRefreshSubscriptionStatus()
+        }
+    }
+
+    private func performRefreshSubscriptionStatus() async {
         await loadProducts()
         await updateSubscriptionStatus()
     }
@@ -160,5 +167,23 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
     
     private func cachePlan(_ plan: SubscriptionPlan) {
         UserDefaults.standard.set(plan.rawValue, forKey: cacheKey)
+    }
+}
+
+private actor SubscriptionRefreshCoordinator {
+    private var task: Task<Void, Never>?
+
+    func run(_ operation: @escaping () async -> Void) async {
+        if let task {
+            await task.value
+            return
+        }
+
+        let task = Task {
+            await operation()
+        }
+        self.task = task
+        await task.value
+        self.task = nil
     }
 }
