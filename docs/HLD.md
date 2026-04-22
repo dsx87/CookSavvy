@@ -1,6 +1,6 @@
 # CookSavvy — High-Level Design (HLD)
 
-> Generated from source code analysis. All names, properties, and relationships reflect the actual implementation.
+> Generated from source code analysis.
 
 ---
 
@@ -25,7 +25,6 @@
 17. [Theme System](#17-theme-system)
 18. [Build Configuration Matrix](#18-build-configuration-matrix)
 19. [ViewModel State Summary](#19-viewmodel-state-summary)
-
 ---
 
 ## 1. App Overview
@@ -36,7 +35,7 @@ CookSavvy is a hobby iOS recipe app. Users select or scan ingredients, receive r
 
 | Tier | Display Name | Product ID | Recipe Sources | Ingredient Detection | Camera |
 |------|-------------|------------|----------------|----------------------|--------|
-| Free | Free | — | `OfflineRecipeSource` (local SQLite only) | Manual text input | 5 scans/week (`CameraScanTracker`, UserDefaults, resets each Monday) |
+| Free | Free | — | `OfflineRecipeSource` (local SQLite only) | Manual text input | 5 scans/week (`CameraScanTracker`, UserDefaults, resets when `Calendar.current` enters a new week/year) |
 | Premium | CookSavvy+ | `com.cooksavvy.subscription.premium` | `OfflineRecipeSource` + `OnlineRecipeSource` (Spoonacular/Supabase) + `AIRecipeSource` | Unlimited AI photo recognition | Unlimited |
 
 ### Gated Features (`PaidFeature` enum)
@@ -207,7 +206,7 @@ Camera RecipeDetails ──▶ CookMode (fullscreen)            │
 ┌──────────────────────────┐     ┌──────────────────┐     ┌──────────────────┐
 │        Recipe            │     │   RecipeStep      │     │  AdditionalInfo  │
 ├──────────────────────────┤     ├──────────────────┤     ├──────────────────┤
-│ PK title: String         │────▶│ text: String      │     │ time: String     │
+│ id: String (= title)     │────▶│ text: String      │     │ time: String     │
 │    image: String         │  *  │ timerMinutes: Int  │     │ servings: Int    │
 │    tagline: String       │     └──────────────────┘     │ complexity: Str  │
 │    author: String        │──────────────────────────────▶│ calories: Int    │
@@ -255,7 +254,7 @@ Camera RecipeDetails ──▶ CookMode (fullscreen)            │
 | `five_created` | 📚 | Five Created | 5 | .general |
 | `fifty_recipes` | 👑 | Fifty Recipes | 50 | .general |
 | `hour_cooking` | ⏰ | Hour Cooking | 10 | .general |
-| `fridge_cleaner` | ♻️ | Fridge Cleaner | 1 | .antiWaste |
+| `fridge_cleaner` | ♻️ | Fridge Cleaner | 5 | .antiWaste |
 | `ingredient_master` | 🧑‍🍳 | Ingredient Master | 50 | .antiWaste |
 | `scan_pro` | 📸 | Scan Pro | 20 | .antiWaste |
 
@@ -324,7 +323,7 @@ Camera RecipeDetails ──▶ CookMode (fullscreen)            │
 | `cooking_sessions` | `idx_cooking_sessions_date` | `cooked_at DESC` | — |
 | `shopping_items` | `idx_shopping_items_added` | `added_at DESC` | — |
 
-> All date/time columns store Unix timestamps as `INTEGER`. In-memory recipe cache: max 100 items. `ingredients_rescued_json` in `cooking_sessions` added via migration.
+> All date/time columns store Unix timestamps as `INTEGER`. In-memory recipe cache: max 100 items. While the app has no production users, prefer destructive development schema resets over accumulating migrations for schema redesigns.
 
 ---
 
@@ -357,8 +356,9 @@ CuratedCollectionServiceProtocol       ShoppingListServiceProtocol
 AUTH DOMAIN                            SUBSCRIPTION DOMAIN
 ───────────                            ───────────────────
 AuthServiceProtocol                    SubscriptionServiceProtocol
-  ├──▶ SupabaseAuthService (RELEASE)     ├──▶ StoreKitSubscriptionService (RELEASE)
-  ├──▶ MockAuthService (DEBUG)           └──▶ MockSubscriptionService (DEBUG)
+  ├──▶ SupabaseAuthService (keys)        ├──▶ StoreKitSubscriptionService (RELEASE)
+  ├──▶ MockAuthService (DEBUG no-keys/UITest)
+  │                                      └──▶ MockSubscriptionService (DEBUG)
   └──▶ NoOpAuthService (RELEASE/no-keys)
 
 SupabaseClientProviderProtocol         AI DOMAIN
@@ -367,8 +367,8 @@ SupabaseClientProviderProtocol         AI DOMAIN
 AppleSignInManager                       └──▶ AIService
   (ASAuthorizationController + nonce)
                                        LLMProviderProtocol
-NETWORK DOMAIN                           ├──▶ MockLLMProvider (DEBUG/UITest)
-──────────────                           ├──▶ SupabaseLLMProvider (RELEASE)
+NETWORK DOMAIN                           ├──▶ MockLLMProvider (UITest)
+──────────────                           ├──▶ SupabaseLLMProvider (if keys)
 NetworkServiceProtocol                   ├──▶ OpenAIProvider (legacy)
   └──▶ NetworkService                    └──▶ GeminiProvider (legacy)
 
@@ -445,9 +445,9 @@ User      DiscoverView    DiscoverVM     RecipeService    Offline   Online    AI
                      │              │     ┌─────┘     ┌────┘
                      │              │     ▼           ▼
                      │              │  ┌──────────┐ ┌──────────────┐
-                     │              │  │ Supabase │ │ Mock (DEBUG) │
+                     │              │  │ Supabase │ │ Mock (UITest)│
                      │              │  │ edge fn  │ │ or Supabase  │
-                     │              │  │ (RELEASE)│ │   (RELEASE)  │
+                     │              │  │(if keys) │ │   (if keys)  │
                      │              │  └────┬─────┘ └──────┬───────┘
                      ▼              ▼       ▼              ▼
                   ┌───────────────────────────────────────────────┐
@@ -473,18 +473,18 @@ User      DiscoverView    DiscoverVM     RecipeService    Offline   Online    AI
 
 ```
                      ┌───────────────────────┐
-                     │  Build Configuration  │
+                     │ Runtime Configuration │
                      └───┬──────┬────────┬───┘
                          │      │        │
-        DEBUG/UITest ────┘      │        └──── RELEASE + no keys
+          UI Testing ────┘      │        └──── No Supabase keys
                                 │
-                         RELEASE + keys
+                         Supabase configured
                                 │
           ┌─────────────────────┼────────────────────────┐
           ▼                     ▼                        ▼
 ┌──────────────────┐  ┌─────────────────────┐  ┌──────────────────┐
-│ MockLLMProvider  │  │SupabaseServiceAssembly│ │ MockLLMProvider  │
-│ (deterministic)  │  └────┬────────┬────────┘ │ (fallback)       │
+│ MockLLMProvider  │  │SupabaseServiceAssembly│ │ No LLM provider │
+│ (deterministic)  │  └────┬────────┬────────┘ │ (unavailable)    │
 └────────┬─────────┘       │        │          └────────┬─────────┘
          │                 ▼        ▼                   │
          │  ┌─────────────────┐  ┌──────────────────┐   │
@@ -525,64 +525,42 @@ User      DiscoverView    DiscoverVM     RecipeService    Offline   Online    AI
 ## 12. Authentication System
 
 ```
-                       ┌────────────┐
-                       │ App Start  │
-                       └─────┬──────┘
-                             ▼
-                  ┌─────────────────────┐
-                  │ Build config +      │
-                  │ Supabase keys?      │
-                  └──┬──────┬───────┬───┘
-                     │      │       │
-        DEBUG ───────┘      │       └──── RELEASE + no keys
-                            │
-                     RELEASE + keys
-                            │
-     ┌──────────────┐       │        ┌──────────────┐
-     │MockAuthService│◄─────┘───────▶│NoOpAuthService│
-     │(configurable) │               │(no-op)        │
-     └──────────────┘                └──────────────┘
-                            │
-                            ▼
-                   ┌─────────────────┐
-                   │SupabaseAuthServ │
-                   └───────┬─────────┘
-                           ▼
-                  ┌──────────────────┐     ┌──────────────────┐
-                  │ Existing session?│──No─▶│signInAnonymously │
-                  └───────┬──────────┘     │(auto on launch)  │
-                     Yes  │                └────────┬─────────┘
-                          ▼                         │
-                  ┌──────────────────┐              │
-                  │ Restore session  │◄─────────────┘
-                  └───────┬──────────┘
-                          ▼
-                  ┌──────────────────┐
-                  │  Anonymous User  │
-                  │  (supabase UUID) │
-                  └───────┬──────────┘
-                          │
-            ┌─────────────┼──────────────────┐
-            ▼                                ▼
-  ┌────────────────────┐           ┌─────────────────┐
-  │Sign in with Apple  │           │    Sign Out      │
-  │(AppleSignInManager)│           │  (clear session) │
-  └────────┬───────────┘           └────────┬────────┘
-           ▼                                │
-  SHA256 nonce ──▶ ASAuthorizationController │
-           │                                │
-           ▼                                │
-  Apple ID credential ──▶ identityToken     │
-           │                                │
-           ▼                                │
-  SupabaseAuthService.linkIdentity          │
-  (anon → Apple account)                    │
-           │                                │
-           ▼                                ▼
-  ┌──────────────────┐         ┌───────────────────┐
-  │   Named User     │         │signInAnonymously  │
-  │(persistent Apple)│         │  (fresh session)  │
-  └──────────────────┘         └───────────────────┘
+  App Start
+      │
+      ▼
+  Runtime configuration
+      ├── UI testing or DEBUG without Supabase keys ──▶ MockAuthService
+      ├── RELEASE without Supabase keys ──────────────▶ NoOpAuthService
+      └── Supabase keys configured ───────────────────▶ SupabaseAuthService
+                                                          │
+                                                          ▼
+                                                Existing session?
+                                                    │        │
+                                                  Yes        No
+                                                    │        ▼
+                                                    │  signInAnonymously
+                                                    │        │
+                                                    ▼        ▼
+                                                Anonymous User
+                                                (supabase UUID)
+                                                    │
+                         ┌──────────────────────────┴──────────────────────────┐
+                         ▼                                                     ▼
+              Sign in with Apple                                           Sign Out
+              (AppleSignInManager)                                      (clear session)
+                         │                                                     │
+                         ▼                                                     ▼
+              SHA256 nonce + ASAuthorizationController                 signInAnonymously
+                         │
+                         ▼
+              Apple ID credential -> identityToken
+                         │
+                         ▼
+              SupabaseAuthService.linkIdentity
+              (anonymous -> Apple account)
+                         │
+                         ▼
+              Named User (persistent Apple)
 
   AuthState (SettingsViewModel):
     .unauthenticated │ .anonymous │ .authenticated (Apple ID)
@@ -633,7 +611,7 @@ User      DiscoverView    DiscoverVM     RecipeService    Offline   Online    AI
                                            .premium unlocked
 
   CameraScanTracker (UserDefaults):
-    weekKey = ISO week + year │ resets Monday │ max 5/week free
+    week/year = Calendar.current │ resets on locale calendar week boundary │ max 5/week free
 ```
 
 ---
@@ -826,46 +804,23 @@ User      DiscoverView    DiscoverVM     RecipeService    Offline   Online    AI
 
 ## 18. Build Configuration Matrix
 
-```
-┌────────────────────────┐  ┌────────────────────────┐  ┌────────────────────────┐
-│   DEBUG / UI Testing   │  │  RELEASE + Supabase    │  │  RELEASE + no keys     │
-│                        │  │        keys            │  │                        │
-├────────────────────────┤  ├────────────────────────┤  ├────────────────────────┤
-│ LLM:  MockLLMProvider  │  │ LLM:  SupabaseLLM     │  │ LLM:  MockLLMProvider  │
-│       (deterministic)  │  │  via ServiceAssembly   │  │       (fallback)       │
-│                        │  │                        │  │                        │
-│ API:  offline only     │  │ API:  SupabaseRecipe   │  │ API:  offline only     │
-│                        │  │  APIProvider           │  │                        │
-│ Auth: MockAuthService  │  │ Auth: SupabaseAuth     │  │ Auth: NoOpAuthService  │
-│       (configurable)   │  │  anon + SIWA linking   │  │       (no-op)          │
-│                        │  │                        │  │                        │
-│ Sub:  MockSubscription │  │ Sub:  StoreKit 2       │  │ Sub:  StoreKit 2       │
-│       (configurable)   │  │  SubscriptionService   │  │  SubscriptionService   │
-│                        │  │                        │  │                        │
-│ AI:   MockLLMProvider  │  │ AI:   SupabaseLLM via  │  │ AI:   none             │
-│                        │  │  AIIngredientAdapter   │  │                        │
-│ Seed: UITestDataSeeder │  │ Seed: DBInitService    │  │ Seed: DBInitService    │
-│  (from launch args)    │  │                        │  │                        │
-└────────────────────────┘  └────────────────────────┘  └────────────────────────┘
-```
+| Runtime | LLM / AI | Recipe API | Auth | Subscription | Database |
+|---------|----------|------------|------|--------------|----------|
+| Normal DEBUG + Supabase keys | `SupabaseLLMProvider` through `SupabaseServiceAssembly` | `SupabaseRecipeAPIProvider` | `SupabaseAuthService` | `MockSubscriptionService` | `DatabaseInitializationService` |
+| Normal DEBUG + no Supabase keys | unavailable (`AIService` has nil provider) | offline only | `MockAuthService` | `MockSubscriptionService` | `DatabaseInitializationService` |
+| UI Testing DEBUG | `MockLLMProvider` | offline only (`OnlineRecipeSource(provider: nil)`) | `MockAuthService` | `MockSubscriptionService` from launch args | in-memory DB + `UITestDataSeeder` |
+| RELEASE + Supabase keys | `SupabaseLLMProvider` through `SupabaseServiceAssembly` | `SupabaseRecipeAPIProvider` | `SupabaseAuthService` | `StoreKitSubscriptionService` | `DatabaseInitializationService` |
+| RELEASE + no Supabase keys | unavailable (`AIService` has nil provider) | offline only | `NoOpAuthService` | `StoreKitSubscriptionService` | `DatabaseInitializationService` |
 
-| Concern | DEBUG / UI Testing | RELEASE + keys | RELEASE no keys |
-|---------|-------------------|----------------|-----------------|
-| LLM Provider | `MockLLMProvider` | `SupabaseLLMProvider` | `MockLLMProvider` |
-| Recipe API | offline only | `SupabaseRecipeAPIProvider` | offline only |
-| Auth Service | `MockAuthService` | `SupabaseAuthService` | `NoOpAuthService` |
-| Subscription | `MockSubscriptionService` | `StoreKitSubscriptionService` | `StoreKitSubscriptionService` |
-| AI Ingredient Detection | `MockLLMProvider` | `SupabaseLLMProvider` via SIWA | none |
-| DB Seeding | `UITestDataSeeder` (launch args) | `DatabaseInitializationService` | `DatabaseInitializationService` |
-| API Keys source | — | `APIKeys.plist` (gitignored) | — |
+API keys come from gitignored `Support/APIKeys.plist` placeholders: `SUPABASE_URL` and `SUPABASE_ANON_KEY`. Legacy direct-provider keys still exist in code/config readers but are not used by active app wiring.
 
 **UI Test launch arguments** parsed by `UITestConfiguration` (DEBUG-only):
 
 | Argument | Effect |
 |----------|--------|
 | `--uitesting` | enables deterministic bootstrapping |
-| `--skip-onboarding` | skips onboarding |
-| `--fresh-install` | forces onboarding |
+| `--skip-onboarding` | skips onboarding unless paired with `--fresh-install` |
+| `--fresh-install` | forces first-launch onboarding |
 | `--premium-user` | `MockSubscriptionService` starts as `.premium` |
 | `--with-cooking-history` | seeds deterministic `cooking_sessions` |
 | `--with-favorites` | seeds `favorite_recipes` |
@@ -881,29 +836,32 @@ User      DiscoverView    DiscoverVM     RecipeService    Offline   Online    AI
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│ DiscoverViewModel (16 @Published)                                      │
+│ DiscoverViewModel (21 @Published)                                      │
 │ selectedIngredients · selectedMood · searchText · selectedCategory      │
 │ popularIngredients · recentRecipes · savedRecipes · searchResultRecipes │
 │ isSearching · searchError · homeLoadError · isLoadingIngredients        │
 │ showResults · useItAllFilter · suggestedRecipes · suggestionReason      │
-│ activeDietaryRestrictions · collections                                 │
+│ activeDietaryRestrictions · collections · loadingCollectionID           │
+│ isMatchInfoPopoverPresented · shownIngredients                          │
 │ Services: IngredientsServ, RecipeServ, UserDataServ, SubscriptionServ, │
 │   DatabaseInitServ, CameraScanTracker, RecommendationServ,             │
 │   AnalyticsServ, DietaryPrefs, CuratedCollectionServ                   │
 └─────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────┐
-│ JourneyViewModel (11 @Published)                                       │
+│ JourneyViewModel (17 @Published)                                       │
 │ recipesCooked · dayStreak · hoursCooking · uniqueIngredientsUsed       │
 │ monthlyRecipesCooked · monthlyIngredientsRescued                       │
 │ savedRecipes · userRecipes · weekCookingDates                          │
 │ achievements · isAchievementsExpanded · recentSessions                  │
+│ isLoading · cookAgainErrorMessage · errorMessage                        │
+│ isAnonymous · isSigningIn                                               │
 │ Services: UserDataServ, SubscriptionServ, CameraScanTracker,           │
-│   AnalyticsServ                                                        │
+│   AuthServ, SignInWithAppleAction, Logger                              │
 └─────────────────────────────────────────────────────────────────────────┘
 
 ┌───────────────────────────────┐  ┌──────────────────────────────────────┐
-│ RecipeDetailsVM (3 @Pub)      │  │ CookModeVM (6 @Pub)                 │
+│ RecipeDetailsVM (4 @Pub)      │  │ CookModeVM (6 @Pub)                 │
 │ recipe · isFavorite ·         │  │ currentStep · timerSeconds ·        │
 │ isLoadingFavorite · errorMsg  │  │ timerRunning · completedSteps ·     │
 │ Svc: UserData, ShoppingList,  │  │ showFeedback · feedbackRating       │
@@ -911,7 +869,7 @@ User      DiscoverView    DiscoverVM     RecipeService    Offline   Online    AI
 └───────────────────────────────┘  └──────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────┐
-│ CreateRecipeViewModel (10 @Published)                                  │
+│ CreateRecipeViewModel (13 @Published)                                  │
 │ currentStep · recipeName · selectedEmoji · tagline                      │
 │ ingredientRows · stepRows                                              │
 │ cookTimeMinutes · servings · difficulty · cuisine                       │
@@ -920,10 +878,10 @@ User      DiscoverView    DiscoverVM     RecipeService    Offline   Online    AI
 └─────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────┐
-│ SettingsViewModel (12 @Published)                                      │
+│ SettingsViewModel (15 @Published)                                      │
 │ currentPlan · authState · isAnonymous · themePreference                 │
 │ recipeCount · favoriteCount · recentRecipeCount                        │
-│ isLoading · isRestoringPurchases · restoreError                        │
+│ isLoading · isRestoringPurchases · restoreError · errorMessage          │
 │ showClearRecentAlert · showClearFavoritesAlert                          │
 │ isSigningIn · showSignOutConfirmation                                   │
 │ Svc: UserData, DBInterface, Subscription, DietaryPrefs, Auth, Analytics│
@@ -957,12 +915,12 @@ User      DiscoverView    DiscoverVM     RecipeService    Offline   Online    AI
 
 | ViewModel | @Published Properties | Key Services |
 |-----------|-----------------------|-------------|
-| `DiscoverViewModel` | 16 | IngredientsService, RecipeService, UserDataService, SubscriptionService, CameraScanTracker, RecommendationService, AnalyticsService, DietaryPreferences, CuratedCollectionService, DatabaseInitService |
-| `JourneyViewModel` | 11 | UserDataService, SubscriptionService, CameraScanTracker, AnalyticsService |
-| `RecipeDetailsViewModel` | 3 (+`errorMessage`) | UserDataService, ShoppingListService, SubscriptionService, AnalyticsService |
+| `DiscoverViewModel` | 21 | IngredientsService, RecipeService, UserDataService, SubscriptionService, CameraScanTracker, RecommendationService, AnalyticsService, DietaryPreferences, CuratedCollectionService, DatabaseInitService |
+| `JourneyViewModel` | 17 | UserDataService, SubscriptionService, CameraScanTracker, AuthService, SignInWithAppleAction, Logger |
+| `RecipeDetailsViewModel` | 4 | UserDataService, ShoppingListService, SubscriptionService, AnalyticsService |
 | `CookModeViewModel` | 6 | UserDataService, AnalyticsService |
-| `CreateRecipeViewModel` | 10 | UserDataService |
-| `SettingsViewModel` | 12 | UserDataService, DBInterface, SubscriptionService, DietaryPreferences, AuthService, AnalyticsService |
+| `CreateRecipeViewModel` | 13 | UserDataService |
+| `SettingsViewModel` | 15 | UserDataService, DBInterface, SubscriptionService, DietaryPreferences, AuthService, AnalyticsService, SignInWithAppleAction |
 | `OnboardingViewModel` | 2 | IngredientDetectionService, CameraScanTracker, AnalyticsService |
 | `ShoppingListViewModel` | 3 | ShoppingListService |
 | `CameraViewModel` | 2 | IngredientDetectionService |
