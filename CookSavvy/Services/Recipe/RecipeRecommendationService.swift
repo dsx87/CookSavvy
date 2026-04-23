@@ -17,16 +17,16 @@ private enum RecommendationConstants {
 /// ## Algorithm
 ///
 /// 1. Fetch up to `sessionSampleLimit` recent cooking sessions and all favourites in parallel.
-/// 2. Build an `ingredientCounts` frequency map by scanning each recipe's ingredients and title
-///    against a curated list of `knownIngredients` (protein and staple keywords).
+/// 2. Build an `ingredientCounts` frequency map from favourite-recipe ingredients and ingredients
+///    pulled from recent cooking sessions.
 ///    - Ingredients in **favourites** contribute `favoriteWeight` (2) — stronger signal.
 ///    - Ingredients in **sessions** contribute `highlyRatedWeight` (2) if the session rating
 ///      is ≥ `highlyRatedThreshold` (4), otherwise `standardSessionWeight` (1).
-/// 3. Identify the single top-scoring ingredient (`topIngredient`).
-/// 4. Query the database for up to `candidateLimit` recipes containing `topIngredient`.
-/// 5. Filter out recipes cooked in the most recent `recentSessionWindow` (10) sessions
+/// 3. Query the database for up to `candidateLimit` recipes containing the highest-affinity ingredients.
+/// 4. Filter out recipes cooked in the most recent `recentSessionWindow` (10) sessions
 ///    to avoid repetition.
-/// 6. Return up to `limit` recipes with a localised reason string explaining the suggestion.
+/// 5. Rank candidates with `RecipeMatchRanker` and return up to `limit` recipes with a localised
+///    reason string explaining the strongest ingredient signal.
 final class RecipeRecommendationService: RecipeRecommendationServiceProtocol {
     /// Provides access to the user's cooking history and favourites.
     private let userDataService: UserDataServiceProtocol
@@ -34,14 +34,6 @@ final class RecipeRecommendationService: RecipeRecommendationServiceProtocol {
     private let dbInterface: DBInterfaceProtocol
     /// Awaited before querying to ensure the bundled recipe dataset is loaded.
     private let databaseInitService: DatabaseInitializationServiceProtocol
-
-    /// Protein and staple ingredient keywords scanned against recipe titles and ingredient names
-    /// when building the frequency map. Kept small and high-signal to avoid noise.
-    private static let knownIngredients = [
-        "chicken", "beef", "pork", "lamb", "fish", "salmon", "tuna",
-        "shrimp", "turkey", "tofu", "lentil", "pasta", "rice",
-        "potato", "mushroom", "tomato", "egg", "noodle"
-    ]
 
     /// - Parameters:
     ///   - userDataService: Source of cooking history and favourites.
@@ -60,7 +52,7 @@ final class RecipeRecommendationService: RecipeRecommendationServiceProtocol {
     /// Returns personalised recipe suggestions with a human-readable reason string.
     ///
     /// Returns an empty result (not an error) when the user has no history or favourites,
-    /// or when no known ingredient appears in their history.
+    /// or when no affinity ingredients can be extracted from that history.
     /// - Parameter limit: Maximum number of recipes to return (default: 5).
     /// - Returns: Up to `limit` suggested recipes and an optional localised reason string
     ///   such as "Suggested because you often cook with Chicken".
@@ -77,13 +69,8 @@ final class RecipeRecommendationService: RecipeRecommendationServiceProtocol {
         var ingredientCounts: [String: Int] = [:]
 
         for recipe in favorites {
-            let ingredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
-            for ingredient in ingredients {
-                let nameLower = ingredient.name.lowercased()
-                for keyword in Self.knownIngredients where nameLower.contains(keyword) {
-                    ingredientCounts[keyword, default: 0] += RecommendationConstants.favoriteWeight
-                    break
-                }
+            for ingredient in affinityIngredients(from: recipe) {
+                ingredientCounts[ingredient, default: 0] += RecommendationConstants.favoriteWeight
             }
         }
 
@@ -91,26 +78,87 @@ final class RecipeRecommendationService: RecipeRecommendationServiceProtocol {
             let weight = (session.rating ?? 0) >= RecommendationConstants.highlyRatedThreshold
                 ? RecommendationConstants.highlyRatedWeight
                 : RecommendationConstants.standardSessionWeight
-            let titleLower = session.recipeTitle.lowercased()
-            for keyword in Self.knownIngredients where titleLower.contains(keyword) {
-                ingredientCounts[keyword, default: 0] += weight
+
+            for ingredient in try affinityIngredients(from: session) {
+                ingredientCounts[ingredient, default: 0] += weight
             }
         }
 
-        guard let topIngredient = ingredientCounts.max(by: { $0.value < $1.value })?.key else {
+        let rankedIngredients = ingredientCounts
+            .sorted { lhs, rhs in
+                if lhs.value != rhs.value {
+                    return lhs.value > rhs.value
+                }
+                return lhs.key.localizedCaseInsensitiveCompare(rhs.key) == .orderedAscending
+            }
+            .map(\.key)
+
+        guard let topIngredient = rankedIngredients.first else {
             return ([], nil)
         }
 
+        let affinityKeywords = Array(rankedIngredients.prefix(max(limit, RecommendationConstants.defaultLimit)))
         let recentlyCookedTitles = Set(sessions.prefix(RecommendationConstants.recentSessionWindow).map { $0.recipeTitle.lowercased() })
         let candidates = try dbInterface.getRecipes(
-            byIngredients: [Ingredient(name: topIngredient)],
+            byIngredients: affinityKeywords.map(Ingredient.init(name:)),
             offset: 0,
             limit: RecommendationConstants.candidateLimit
         )
 
-        let fresh = candidates.filter { !recentlyCookedTitles.contains($0.title.lowercased()) }
+        let fresh = candidates
+            .filter { !recentlyCookedTitles.contains($0.title.lowercased()) }
+            .map { recipe in
+                var rankedRecipe = recipe
+                let recipeIngredients = ingredientNames(for: recipe)
+                // Reuse the shared match ranker by projecting affinity keywords into missing ingredients.
+                let matchedKeywords = Set(affinityKeywords.filter { keyword in
+                    recipeIngredients.contains { ingredient in
+                        ingredient.contains(keyword) || keyword.contains(ingredient)
+                    }
+                })
+                rankedRecipe.missingIngredients = affinityKeywords.filter { !matchedKeywords.contains($0) }
+                return rankedRecipe
+            }
+        let ranked = RecipeMatchRanker.rank(fresh)
         let reason = String(format: Strings.Discover.suggestedBecause, topIngredient.capitalized)
-        return (Array(fresh.prefix(limit)), reason)
+        return (Array(ranked.prefix(limit)), reason)
     }
 
+    /// Builds affinity keywords from favourited recipes and session-backed recipe ingredients.
+    private func affinityIngredients(from recipe: Recipe) -> Set<String> {
+        Set(ingredientNames(for: recipe))
+    }
+
+    /// Uses the session's recipe ingredients when the recipe still exists, falling back to title tokens otherwise.
+    private func affinityIngredients(from session: CookingSession) throws -> Set<String> {
+        if let recipe = try dbInterface.getRecipe(byID: session.recipeId) {
+            return affinityIngredients(from: recipe)
+        }
+
+        return fallbackTitleIngredients(from: session.recipeTitle)
+    }
+
+    private func ingredientNames(for recipe: Recipe) -> [String] {
+        let ingredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
+        return ingredients
+            .map(\.name)
+            .map(normalizeIngredientName)
+            .filter { !$0.isEmpty }
+    }
+
+    private func fallbackTitleIngredients(from title: String) -> Set<String> {
+        let stopWords: Set<String> = ["and", "with", "the", "a", "an", "of", "in", "for"]
+        let tokens = title
+            .lowercased()
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.count >= 3 && !stopWords.contains($0) }
+        return Set(tokens)
+    }
+
+    private func normalizeIngredientName(_ value: String) -> String {
+        value
+            .lowercased()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 }

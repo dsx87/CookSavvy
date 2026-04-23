@@ -197,6 +197,7 @@ CookSavvy/
 ├── Services/
 │   ├── Recipe/
 │   │   ├── RecipeService.swift
+│   │   ├── RecipeMatchRanker.swift
 │   │   ├── RecipeMoodRanker.swift
 │   │   ├── RecipeRecommendationService.swift  — personalized suggestions from cooking history
 │   │   ├── RecipeSourceProtocol.swift — Protocol + RecipeSourceType + errors
@@ -332,6 +333,7 @@ CookSavvyTests/                        — Unit + integration tests
 ├── CVSDecoderTests.swift
 ├── DatasetImportingTests.swift
 ├── RecipeMoodRankerTests.swift
+├── RecipeMatchRankerTests.swift
 ├── RecipeRecommendationServiceTests.swift
 ├── CameraScanTrackerTests.swift
 ├── ShoppingListServiceTests.swift

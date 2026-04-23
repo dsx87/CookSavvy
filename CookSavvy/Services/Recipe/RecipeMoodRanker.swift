@@ -226,13 +226,8 @@ enum RecipeMoodRanker {
             .map(\.element)
     }
 
-    /// Computes the total mood score for a single recipe by summing keyword, text-bonus,
-    /// cook-time, and complexity contributions defined in the mood's `MoodProfile`.
-    /// - Parameters:
-    ///   - recipe: The recipe to score.
-    ///   - mood: The target mood whose profile is applied.
-    /// - Returns: Integer score; higher is a better match.
-    private static func score(for recipe: Recipe, mood: RecipeMood) -> Int {
+    /// Returns the integer mood score used by composite rankers to break ties.
+    static func score(for recipe: Recipe, mood: RecipeMood) -> Int {
         let text = searchableText(for: recipe)
         let cookTime = cookTimeMinutes(for: recipe)
         let complexity = complexityText(for: recipe).flatMap(ComplexityLevel.init(rawValue:))
@@ -288,7 +283,7 @@ enum RecipeMoodRanker {
     private static func cookTimeMinutes(for recipe: Recipe) -> Int? {
         for info in recipe.additionalInfo.infos {
             if case .time(let cookTime) = info {
-                return firstInteger(in: cookTime)
+                return extractCookTimeMinutes(from: cookTime)
             }
         }
         return nil
@@ -316,6 +311,11 @@ enum RecipeMoodRanker {
                 score += weight
             }
         }
+    }
+
+    /// Extracts the first contiguous run of decimal digits from `value` and converts it to `Int`.
+    static func extractCookTimeMinutes(from value: String) -> Int? {
+        firstInteger(in: value)
     }
 
     /// Extracts the first contiguous run of decimal digits from `value` and converts it to `Int`.

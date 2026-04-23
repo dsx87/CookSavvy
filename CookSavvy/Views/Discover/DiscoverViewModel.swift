@@ -160,27 +160,20 @@ final class DiscoverViewModel: ObservableObject {
     /// The sorted, mood-filtered, and diet-filtered recipe list derived from `searchResultRecipes`.
     ///
     /// Filtering pipeline:
-    /// 1. Applies `RecipeMoodRanker` when a mood is selected; otherwise sorts by fewest missing ingredients.
+    /// 1. Applies `RecipeMatchRanker`, optionally refined by `selectedMood`.
     /// 2. Removes recipes containing blocked ingredient keywords for active dietary restrictions.
     /// 3. When `useItAllFilter` is on, keeps only perfect-match recipes (falls back to all if none qualify).
     var filteredRecipes: [Recipe] {
         guard !searchResultRecipes.isEmpty else { return [] }
 
-        let moodFiltered: [Recipe]
-        if let selectedMood {
-            moodFiltered = RecipeMoodRanker.rank(searchResultRecipes, for: selectedMood)
-        } else {
-            moodFiltered = searchResultRecipes.sorted { lhs, rhs in
-                (lhs.missingIngredients?.count ?? Int.max) < (rhs.missingIngredients?.count ?? Int.max)
-            }
-        }
+        let rankedRecipes = RecipeMatchRanker.rank(searchResultRecipes, mood: selectedMood)
 
         let dietFiltered: [Recipe]
         if activeDietaryRestrictions.isEmpty {
-            dietFiltered = moodFiltered
+            dietFiltered = rankedRecipes
         } else {
             let blockedKeywords = activeDietaryRestrictions.flatMap { $0.filterKeywords }
-            dietFiltered = moodFiltered.filter { recipe in
+            dietFiltered = rankedRecipes.filter { recipe in
                 let ingredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
                 let ingredientText = ingredients.map { $0.name.lowercased() }.joined(separator: " ")
                 return !blockedKeywords.contains { ingredientText.contains($0) }

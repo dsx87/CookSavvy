@@ -56,6 +56,25 @@ final class DiscoverViewModelTests: XCTestCase {
         )
     }
 
+    private func makeRankedRecipe(
+        title: String,
+        ingredientNames: [String],
+        missingIngredients: [String],
+        tagline: String? = nil
+    ) -> Recipe {
+        let ingredients = ingredientNames.map(Ingredient.init(name:))
+        return Recipe(
+            title: title,
+            ingredients: ingredients,
+            instructions: ["Cook"],
+            image: "",
+            cleanedIngredients: ingredients,
+            additionalInfo: .empty,
+            tagline: tagline,
+            missingIngredients: missingIngredients
+        )
+    }
+
     func testToggleIngredient() {
         let vm = makeViewModel()
         let ingredient = Ingredient(name: "Tomato")
@@ -108,16 +127,22 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.filteredRecipes.first?.title, "Warm Chicken Soup")
     }
 
-    func testDefaultSortingPutsFewerMissingIngredientsFirst() {
+    func testDefaultSortingPrefersCoverageOverMissingCountAlone() {
         let vm = makeViewModel()
-        var fewerMissing = Recipe.mockRandom()
-        fewerMissing.missingIngredients = ["Salt"]
-        var moreMissing = Recipe.mockRandom()
-        moreMissing.missingIngredients = ["Salt", "Pepper", "Garlic"]
+        let betterCoverage = makeRankedRecipe(
+            title: "Better Coverage",
+            ingredientNames: ["chicken", "rice", "lemon"],
+            missingIngredients: []
+        )
+        let worseCoverageButOneMissing = makeRankedRecipe(
+            title: "One Missing",
+            ingredientNames: ["chicken", "rice", "lemon", "herbs"],
+            missingIngredients: ["herbs"]
+        )
 
-        vm.searchResultRecipes = [moreMissing, fewerMissing]
+        vm.searchResultRecipes = [worseCoverageButOneMissing, betterCoverage]
 
-        XCTAssertEqual(vm.filteredRecipes.first?.missingIngredients?.count, 1)
+        XCTAssertEqual(vm.filteredRecipes.first?.title, betterCoverage.title)
     }
 
     func testHasNoResultsWhenSearchCompletesEmpty() {
@@ -153,6 +178,31 @@ final class DiscoverViewModelTests: XCTestCase {
 
         XCTAssertNotNil(vm.filteredRecipes.first?.missingIngredients)
         XCTAssertNil(vm.filteredRecipes.last?.missingIngredients)
+    }
+
+    func testMoodScoreRefinesEqualQualityMatchesWithoutOverridingCoverage() {
+        let vm = makeViewModel()
+        let betterCoverage = makeRankedRecipe(
+            title: "Better Coverage",
+            ingredientNames: ["tomato", "basil", "mozzarella"],
+            missingIngredients: []
+        )
+        let cozyTieBreaker = makeRankedRecipe(
+            title: "Cozy Soup",
+            ingredientNames: ["tomato", "basil", "mozzarella", "broth"],
+            missingIngredients: ["broth"],
+            tagline: "warm comfort bowl"
+        )
+        let neutralTie = makeRankedRecipe(
+            title: "Neutral Pasta",
+            ingredientNames: ["tomato", "basil", "mozzarella", "cream"],
+            missingIngredients: ["cream"]
+        )
+
+        vm.searchResultRecipes = [neutralTie, cozyTieBreaker, betterCoverage]
+        vm.selectedMood = .cozy
+
+        XCTAssertEqual(vm.filteredRecipes.map(\.title), [betterCoverage.title, cozyTieBreaker.title, neutralTie.title])
     }
 
     func testClearIngredientsResets() {

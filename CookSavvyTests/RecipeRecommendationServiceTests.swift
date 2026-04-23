@@ -47,6 +47,11 @@ final class RecipeRecommendationServiceTests: XCTestCase {
         )
     }
 
+    private func insertRecipes(_ recipes: [Recipe]) throws -> [Int] {
+        try db.insertRecipes(recipes)
+        return try recipes.compactMap { try db.getRecipeId(byTitle: $0.title) }
+    }
+
     private var sessionIdCounter = 1
 
     private func makeCookingSession(recipeTitle: String, recipeId: Int = 1, rating: Int? = nil) -> CookingSession {
@@ -63,60 +68,53 @@ final class RecipeRecommendationServiceTests: XCTestCase {
 
     // MARK: - Tests
 
-    func testFavoritesDriveSuggestions() async throws {
-        // A favorite chicken recipe should cause the service to weight "chicken"
-        // and return DB recipes containing chicken
-        let chickenRecipe = makeRecipe(title: "Chicken Tikka", ingredients: ["chicken", "yogurt"])
-        mockUserDataService.stubbedFavorites = [chickenRecipe]
+    func testMultipleAffinityIngredientsAreUsed() async throws {
+        mockUserDataService.stubbedFavorites = [
+            makeRecipe(title: "Chicken Rice Bowl", ingredients: ["chicken", "rice"])
+        ]
         mockUserDataService.stubbedCookingSessions = []
 
-        // Insert a chicken recipe into the DB so recommendations can find it
-        try db.insertRecipes([makeRecipe(title: "Chicken Stir Fry", ingredients: ["chicken", "peppers"])])
+        try db.insertRecipes([
+            makeRecipe(title: "Chicken Skillet", ingredients: ["chicken"]),
+            makeRecipe(title: "Rice Pilaf", ingredients: ["rice"])
+        ])
 
         let result = try await service.getSuggestions()
-        XCTAssertFalse(result.recipes.isEmpty, "Expected at least one chicken-based suggestion")
-        XCTAssertTrue(
-            result.recipes.contains { $0.title == "Chicken Stir Fry" },
-            "Expected 'Chicken Stir Fry' to appear in suggestions driven by chicken favorite"
-        )
+        XCTAssertTrue(result.recipes.contains { $0.title == "Chicken Skillet" })
+        XCTAssertTrue(result.recipes.contains { $0.title == "Rice Pilaf" })
     }
 
     func testHighlyRatedSessionsBoostWeight() async throws {
-        // Three high-rated salmon sessions (rating 5) vs one low-rated tofu session (rating 2).
-        // Salmon accumulates more weight so the service should pick salmon as top keyword.
-        let highRated1 = makeCookingSession(recipeTitle: "Grilled Salmon", recipeId: 1, rating: 5)
-        let highRated2 = makeCookingSession(recipeTitle: "Salmon Salad", recipeId: 2, rating: 5)
-        let highRated3 = makeCookingSession(recipeTitle: "Salmon Soup", recipeId: 3, rating: 5)
-        let lowRated = makeCookingSession(recipeTitle: "Tofu Stir Fry", recipeId: 4, rating: 2)
-        mockUserDataService.stubbedCookingSessions = [highRated1, highRated2, highRated3, lowRated]
-        mockUserDataService.stubbedFavorites = []
-
-        // Insert a salmon recipe in the DB that isn't in the recent session list
-        try db.insertRecipes([
+        let recipeIDs = try insertRecipes([
+            makeRecipe(title: "Salmon Plate", ingredients: ["salmon", "rice"]),
+            makeRecipe(title: "Salmon Noodles", ingredients: ["salmon", "noodle"]),
+            makeRecipe(title: "Tofu Bowl", ingredients: ["tofu", "rice"]),
             makeRecipe(title: "Pan-Seared Salmon", ingredients: ["salmon"]),
             makeRecipe(title: "Crispy Tofu Bowl", ingredients: ["tofu"])
         ])
 
+        let highRated1 = makeCookingSession(recipeTitle: "Salmon Plate", recipeId: recipeIDs[0], rating: 5)
+        let highRated2 = makeCookingSession(recipeTitle: "Salmon Noodles", recipeId: recipeIDs[1], rating: 5)
+        let lowRated = makeCookingSession(recipeTitle: "Tofu Bowl", recipeId: recipeIDs[2], rating: 2)
+        mockUserDataService.stubbedCookingSessions = [highRated1, highRated2, lowRated]
+        mockUserDataService.stubbedFavorites = []
+
         let result = try await service.getSuggestions()
-        XCTAssertFalse(result.recipes.isEmpty, "Expected at least one suggestion from highly-rated salmon sessions")
-        XCTAssertTrue(
-            result.recipes.contains { $0.title == "Pan-Seared Salmon" },
-            "Highly-rated salmon sessions should surface 'Pan-Seared Salmon'"
-        )
+        XCTAssertEqual(result.recipes.first?.title, "Pan-Seared Salmon")
     }
 
     func testRecentlyCookedFiltered() async throws {
-        // Recently cooked recipe should be excluded from suggestions
-        let session = makeCookingSession(recipeTitle: "Chicken Soup", recipeId: 1)
+        let ids = try insertRecipes([
+            makeRecipe(title: "Chicken Soup", ingredients: ["chicken"]),
+            makeRecipe(title: "Chicken Salad", ingredients: ["chicken"])
+        ])
+        let session = makeCookingSession(recipeTitle: "Chicken Soup", recipeId: ids[0])
         mockUserDataService.stubbedCookingSessions = [session]
         mockUserDataService.stubbedFavorites = []
 
-        // Insert the same recipe title into DB
-        try db.insertRecipes([makeRecipe(title: "Chicken Soup", ingredients: ["chicken"])])
-
         let result = try await service.getSuggestions()
-        // Chicken Soup should be filtered out as recently cooked
         XCTAssertFalse(result.recipes.contains { $0.title.lowercased() == "chicken soup" })
+        XCTAssertTrue(result.recipes.contains { $0.title == "Chicken Salad" })
     }
 
     func testEmptyHistoryReturnsEmpty() async throws {
@@ -129,7 +127,6 @@ final class RecipeRecommendationServiceTests: XCTestCase {
     }
 
     func testLimitParameterRespected() async throws {
-        // Seed many chicken recipes in DB
         let recipes = (1...10).map { i in
             makeRecipe(title: "Chicken Dish \(i)", ingredients: ["chicken"])
         }
@@ -142,5 +139,19 @@ final class RecipeRecommendationServiceTests: XCTestCase {
         let limit = 3
         let result = try await service.getSuggestions(limit: limit)
         XCTAssertLessThanOrEqual(result.recipes.count, limit)
+    }
+
+    func testFallsBackToSessionTitleWhenRecipeLookupFails() async throws {
+        mockUserDataService.stubbedFavorites = []
+        mockUserDataService.stubbedCookingSessions = [
+            makeCookingSession(recipeTitle: "Mushroom Pasta", recipeId: 999, rating: 5)
+        ]
+        try db.insertRecipes([
+            makeRecipe(title: "Creamy Mushroom Pasta", ingredients: ["mushroom", "pasta"])
+        ])
+
+        let result = try await service.getSuggestions()
+        XCTAssertEqual(result.recipes.first?.title, "Creamy Mushroom Pasta")
+        XCTAssertEqual(result.reason, String(format: Strings.Discover.suggestedBecause, "Mushroom"))
     }
 }
