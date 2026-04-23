@@ -5,7 +5,7 @@
 
 import Foundation
 
-/// Low-level abstraction over a single LLM backend (OpenAI, Gemini, Supabase proxy, or mock).
+/// Low-level abstraction over the app's backend LLM proxy or deterministic test mock.
 ///
 /// Each conforming type is responsible for encoding requests into the format expected by its
 /// API, executing the network call, and decoding the raw response into an `LLMResponse`.
@@ -15,7 +15,7 @@ import Foundation
 /// `AIService` holds an optional reference to this protocol; all higher-level AI features
 /// are built on top of these two primitive operations.
 protocol LLMProviderProtocol {
-    /// Human-readable identifier for logging and debugging (e.g. "OpenAI", "Gemini", "Mock").
+    /// Human-readable identifier for logging and debugging (e.g. "Supabase", "Mock").
     var name: String { get }
 
     /// Returns `true` for mock implementations. Used by `AppContainer` to skip real network

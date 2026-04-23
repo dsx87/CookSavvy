@@ -22,7 +22,7 @@ Important corrections:
 - Recipe identity must be fixed **before** splitting the database layer. Otherwise the repository refactor will encode the current title-based identity problem and require a second broad data-layer rewrite.
 - Server-side Supabase subscription/rate-limit enforcement is an external dependency. The iOS app can document and call it, but the security fix is incomplete until edge functions enforce it.
 - Spoonacular is a backend-only implementation detail. The iOS app should not know which third-party recipe API the backend uses, and should not compile/test direct Spoonacular request code.
-- Legacy direct LLM providers (`OpenAIProvider`, `GeminiProvider`) should either be deleted or kept behind explicit DEBUG/test-only wiring. Moving any provider API key from query string to header does not make a mobile-shipped key secret.
+- Legacy direct LLM providers have been removed; keep model-provider keys in backend secrets. Moving any provider API key from query string to header does not make a mobile-shipped key secret.
 - StoreKit, auth, database, and recipe-search fixes need acceptance tests or focused unit tests. UI tests must still not be run by agents.
 
 ### Non-Goals For This Development Stage
@@ -1597,9 +1597,7 @@ After P1-3 (UUID identity), update `UITestDataSeeder` to look up recipes by dete
 - `DataImportService.swift:82` — replace the flagged loop with the upsert approach from P3-8
 
 ### [P6-16] Remove dead direct-provider code: `OpenAIProvider`, `GeminiProvider`
-`SpoonacularProvider` is removed by P0-5 because recipe providers are backend-only. The remaining direct LLM providers are compiled but not instantiated in active runtime paths. Either add explicit DEBUG/test-only wiring with tests, or delete them if they are permanently superseded by Supabase edge functions. Keeping dead code with no tests increases the maintenance surface without benefit.
-
-Also remove unused API-key reader paths and stale docs for legacy direct-provider keys if nothing references them.
+Done for the direct LLM clients: `OpenAIProvider`, `GeminiProvider`, and the unused legacy API-key reader were removed after Supabase edge functions became the runtime AI path. Continue tracking any remaining backend-superseded recipe provider cleanup separately.
 
 ### [P6-17] Remove or implement `noPurchasesToRestore`
 `SubscriptionError.noPurchasesToRestore` is currently dead code after `AppStore.sync()`. Either remove the enum case and localized string, or implement an explicit post-sync entitlement check that throws it when there are no active/restorable transactions.

@@ -59,7 +59,7 @@ Generated: 2026-04-22
 | 35 | **Subscription** | StoreKit `noPurchasesToRestore` error case is dead code — never thrown after `AppStore.sync()` | `SubscriptionServiceProtocol.swift:25` |
 | 36 | **Subscription** | Stale cached subscription plan used indefinitely if `refreshSubscriptionStatus()` fails on launch | `StoreKitSubscriptionService.swift:154–163` |
 | 37 | **Supabase** | Auth errors from Supabase mapped as `.unknown` instead of `.invalidAPIKey` | `SupabaseLLMProvider.swift:76–91` |
-| 38 | **Dead Code** | `OpenAIProvider`, `GeminiProvider`, `SpoonacularProvider` are compiled but never instantiated — maintenance burden without test coverage | `Services/AI/LLMProvider/`, `Network/RecipeAPIProvider/` |
+| 38 | **Dead Code** | Legacy direct provider cleanup is partially complete; audit any remaining backend-superseded client code before release | `Services/AI/`, `Network/RecipeAPIProvider/` |
 | 39 | **Testing** | Mocks always succeed (never throw errors) — no testing of source unavailability, network failure, or empty collections | `MockServices.swift` |
 | 40 | **Testing** | No end-to-end integration tests for critical flows: auth→subscription, scan→search, cook→stats→achievement | Tests directory |
 | 41 | **UI** | `CameraView` uses raw `Color.black`, `Color.white`, `Color.orange`, `Color.red` instead of theme tokens | `CameraView.swift:14, 46, 51, 80, 96, 120, 180` |

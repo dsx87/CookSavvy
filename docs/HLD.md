@@ -373,9 +373,9 @@ AppleSignInManager                       └──▶ AIService
   (ASAuthorizationController + nonce)
                                        LLMProviderProtocol
 NETWORK DOMAIN                           ├──▶ MockLLMProvider (UITest)
-──────────────                           ├──▶ SupabaseLLMProvider (if keys)
-NetworkServiceProtocol                   ├──▶ OpenAIProvider (legacy)
-  └──▶ NetworkService                    └──▶ GeminiProvider (legacy)
+──────────────                           └──▶ SupabaseLLMProvider (if keys)
+NetworkServiceProtocol
+  └──▶ NetworkService
 
                                        SupabaseServiceAssembly
 INFRASTRUCTURE                           ├──▶ SupabaseLLMProvider
@@ -516,11 +516,6 @@ User      DiscoverView    DiscoverVM     RecipeService    Offline   Online    AI
     │AIIngredientDetect│  │  AIRecipeSource  │
     │   Adapter        │  │(RecipeSourceProt)│
     └──────────────────┘  └──────────────────┘
-
-    Legacy direct LLM providers (not used in active RELEASE path):
-    ┌────────────────┐ ┌────────────────┐
-    │ OpenAIProvider │ │ GeminiProvider │
-    └────────────────┘ └────────────────┘
 
     API Keys: APIKeys.plist (SUPABASE_URL, SUPABASE_ANON_KEY) — gitignored
 ```

@@ -66,7 +66,13 @@ final class MockLLMProvider: LLMProviderProtocol {
     
     /// Returns the pre-built ingredients JSON after the simulated delay.
     func sendVisionRequest(
-        
+        imageData: Data,
+        mimeType: String,
+        prompt: String,
+        responseFormat: LLMResponseFormat
+    ) async throws -> LLMResponse {
+        try await simulateDelay()
+        try checkSuccess()
         return LLMResponse(
             content: mockIngredientsResponse,
             tokensUsed: TokenUsage(promptTokens: 100, completionTokens: 50, totalTokens: 150)
@@ -75,7 +81,11 @@ final class MockLLMProvider: LLMProviderProtocol {
     
     /// Returns the pre-built recipes JSON after the simulated delay.
     func sendChatRequest(
-        
+        messages: [LLMMessage],
+        responseFormat: LLMResponseFormat
+    ) async throws -> LLMResponse {
+        try await simulateDelay()
+        try checkSuccess()
         return LLMResponse(
             content: mockRecipesResponse,
             tokensUsed: TokenUsage(promptTokens: 200, completionTokens: 300, totalTokens: 500)

@@ -7,7 +7,7 @@ import Foundation
 
 /// A single turn in a multi-message chat conversation sent to an LLM.
 struct LLMMessage {
-    /// Conversation participant roles mirroring the OpenAI / Gemini message role conventions.
+    /// Conversation participant roles sent to the backend LLM edge-function contract.
     enum Role: String, Codable {
         /// Sets behavioural instructions for the model (e.g., "You are a chef assistant").
         case system

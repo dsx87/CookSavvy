@@ -118,9 +118,8 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 - `AIServiceProtocol` / `AIService` — main AI interface for ingredient detection and recipe generation
 - `AIIngredientDetectionAdapter` — bridges `AIServiceProtocol` to `IngredientDetectionServiceProtocol`
 - **LLM Provider layer** (`Services/AI/LLMProvider/`):
-  - `LLMProviderProtocol` — common interface
-  - `OpenAIProvider` — OpenAI API integration
-  - `GeminiProvider` — Google Gemini API integration
+  - `LLMProviderProtocol` — common interface for backend-proxied AI calls
+  - `SupabaseLLMProvider` — app runtime implementation for Supabase Edge Functions
   - `MockLLMProvider` — mock retained for UI testing and DEBUG-only helpers
   - `LLMModels`, `LLMProviderError` — shared types
 - **Provider selection** (in `AppContainer`):
@@ -128,7 +127,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
   - `OnlineRecipeSource` receives `SupabaseRecipeAPIProvider` for the `search-recipes` backend flow when Supabase is configured
 - **API keys** stored in `Support/APIKeys.plist` (gitignored)
   - Active Supabase keys: `SUPABASE_URL`, `SUPABASE_ANON_KEY`
-  - Legacy direct LLM keys still exist in code/config readers but are not used by the active app wiring: `OPENAI_API_KEY`, `GEMINI_API_KEY`
+  - Direct OpenAI/Gemini keys are not read by the app; model provider keys live in backend secrets
 - **Supabase runtime wiring**:
   - Swift package dependency: `supabase-swift`
   - `SupabaseConfiguration` reads optional `SUPABASE_URL` and `SUPABASE_ANON_KEY` placeholders from `APIKeys.plist`
@@ -184,8 +183,7 @@ CookSavvy/
 │   ├── CookSavvyApp.swift           — App entry point
 │   ├── AppContainer.swift            — DI container (singleton)
 │   ├── UITestConfiguration.swift     — DEBUG-only UI test launch-argument parsing
-│   ├── UITestDataSeeder.swift        — DEBUG-only deterministic UI test data seeding
-│   └── APIKeyConfiguration.swift     — API key reading from plist
+│   └── UITestDataSeeder.swift        — DEBUG-only deterministic UI test data seeding
 ├── Models/
 │   ├── ShoppingItem.swift            — Shopping list item (id, name, isChecked, addedAt, recipeTitle)
 │   ├── Recipe.swift                 — Recipe + Recipe.Step + AdditionalInfo
@@ -237,8 +235,6 @@ CookSavvy/
 │   │       ├── LLMProviderProtocol.swift
 │   │       ├── LLMProviderError.swift
 │   │       ├── LLMModels.swift
-│   │       ├── OpenAIProvider.swift
-│   │       ├── GeminiProvider.swift
 │   │       └── MockLLMProvider.swift
 │   ├── Supabase/
 │   │   ├── SupabaseConfiguration.swift
