@@ -328,6 +328,18 @@ enum Strings {
         static let refineByMood = String(localized: "moodFilter.refineByMood", defaultValue: "REFINE BY MOOD")
     }
 
+    /// Strings for result filters on the Discover results state.
+    enum RecipeFilter {
+        static let filterByTime = String(localized: "recipeFilter.filterByTime", defaultValue: "FILTER BY TIME")
+        static let filterByDifficulty = String(localized: "recipeFilter.filterByDifficulty", defaultValue: "FILTER BY DIFFICULTY")
+        static let quick = String(localized: "recipeFilter.quick", defaultValue: "Quick")
+        static let mediumTime = String(localized: "recipeFilter.mediumTime", defaultValue: "30-60 min")
+        static let long = String(localized: "recipeFilter.long", defaultValue: "60+ min")
+        static let easy = String(localized: "recipeFilter.easy", defaultValue: "Easy")
+        static let mediumDifficulty = String(localized: "recipeFilter.mediumDifficulty", defaultValue: "Medium")
+        static let hard = String(localized: "recipeFilter.hard", defaultValue: "Hard")
+    }
+
     /// Strings for Sign in with Apple and account management in Settings.
     enum Auth {
         static let accountHeader = String(localized: "auth.accountHeader", defaultValue: "Account")
@@ -364,6 +376,8 @@ enum Strings {
         static let clearSearch = String(localized: "accessibility.clearSearch", defaultValue: "Clear search")
         static let useItAllActive = String(localized: "accessibility.useItAllActive", defaultValue: "Use It All filter, active")
         static let useItAllInactive = String(localized: "accessibility.useItAllInactive", defaultValue: "Use It All filter, inactive")
+        static let filterSelected = String(localized: "accessibility.filterSelected", defaultValue: "%@ filter, selected")
+        static let filterNotSelected = String(localized: "accessibility.filterNotSelected", defaultValue: "%@ filter, double tap to apply")
         static let weekdayActive = String(localized: "accessibility.weekdayActive", defaultValue: "%@, cooked")
         static let weekdayInactive = String(localized: "accessibility.weekdayInactive", defaultValue: "%@, no activity")
         static let settingsButton = String(localized: "accessibility.settingsButton", defaultValue: "Settings")

@@ -75,6 +75,24 @@ final class DiscoverViewModelTests: XCTestCase {
         )
     }
 
+    private func makeFilterRecipe(
+        title: String,
+        time: String?,
+        complexity: String?,
+        tagline: String? = nil
+    ) -> Recipe {
+        Recipe(
+            title: title,
+            ingredients: [Ingredient(name: "tomato")],
+            instructions: ["Cook"],
+            image: "",
+            cleanedIngredients: [Ingredient(name: "tomato")],
+            additionalInfo: .init(time: time, servings: nil, complexity: complexity, calories: nil),
+            tagline: tagline,
+            missingIngredients: []
+        )
+    }
+
     func testToggleIngredient() {
         let vm = makeViewModel()
         let ingredient = Ingredient(name: "Tomato")
@@ -205,11 +223,96 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.filteredRecipes.map(\.title), [betterCoverage.title, cozyTieBreaker.title, neutralTie.title])
     }
 
+    func testCookTimeQuickFilterIncludesUnderThirtyOnly() {
+        let vm = makeViewModel()
+        let quick = makeFilterRecipe(title: "Fast Pasta", time: "29 min", complexity: nil)
+        let boundary = makeFilterRecipe(title: "Thirty Minute Stew", time: "30 min", complexity: nil)
+        let medium = makeFilterRecipe(title: "Weeknight Bake", time: "45 min", complexity: nil)
+
+        vm.searchResultRecipes = [boundary, quick, medium]
+        vm.selectedCookTimeFilter = .quick
+
+        XCTAssertEqual(vm.filteredRecipes.map(\.title), [quick.title])
+    }
+
+    func testCookTimeMediumFilterIncludesThirtyThroughSixty() {
+        let vm = makeViewModel()
+        let short = makeFilterRecipe(title: "Short Salad", time: "29 min", complexity: nil)
+        let lowerBoundary = makeFilterRecipe(title: "Thirty Minute Soup", time: "30 min", complexity: nil)
+        let upperBoundary = makeFilterRecipe(title: "One Hour Roast", time: "60 min", complexity: nil)
+        let long = makeFilterRecipe(title: "Slow Braise", time: "61 min", complexity: nil)
+
+        vm.searchResultRecipes = [short, lowerBoundary, upperBoundary, long]
+        vm.selectedCookTimeFilter = .medium
+
+        XCTAssertEqual(vm.filteredRecipes.map(\.title), [lowerBoundary.title, upperBoundary.title])
+    }
+
+    func testCookTimeLongFilterIncludesOverSixtyOnly() {
+        let vm = makeViewModel()
+        let boundary = makeFilterRecipe(title: "One Hour Roast", time: "60 min", complexity: nil)
+        let long = makeFilterRecipe(title: "Slow Braise", time: "1 hr 15 min", complexity: nil)
+
+        vm.searchResultRecipes = [boundary, long]
+        vm.selectedCookTimeFilter = .long
+
+        XCTAssertEqual(vm.filteredRecipes.map(\.title), [long.title])
+    }
+
+    func testCookTimeFilterExcludesUnknownTimesOnlyWhenActive() {
+        let vm = makeViewModel()
+        let unknown = makeFilterRecipe(title: "Mystery Dinner", time: nil, complexity: nil)
+        let unparseable = makeFilterRecipe(title: "Eventually Pasta", time: "eventually", complexity: nil)
+        let quick = makeFilterRecipe(title: "Fast Pasta", time: "20 min", complexity: nil)
+
+        vm.searchResultRecipes = [unknown, unparseable, quick]
+        XCTAssertEqual(Set(vm.filteredRecipes.map(\.title)), Set([unknown.title, unparseable.title, quick.title]))
+
+        vm.selectedCookTimeFilter = .quick
+
+        XCTAssertEqual(vm.filteredRecipes.map(\.title), [quick.title])
+    }
+
+    func testComplexityFiltersMatchCaseInsensitively() {
+        let vm = makeViewModel()
+        let easy = makeFilterRecipe(title: "Simple Bowl", time: nil, complexity: "EASY")
+        let medium = makeFilterRecipe(title: "Balanced Curry", time: nil, complexity: "medium")
+        let hard = makeFilterRecipe(title: "Project Lasagna", time: nil, complexity: "Hard")
+
+        vm.searchResultRecipes = [easy, medium, hard]
+
+        vm.selectedComplexityFilter = .easy
+        XCTAssertEqual(vm.filteredRecipes.map(\.title), [easy.title])
+
+        vm.selectedComplexityFilter = .medium
+        XCTAssertEqual(vm.filteredRecipes.map(\.title), [medium.title])
+
+        vm.selectedComplexityFilter = .hard
+        XCTAssertEqual(vm.filteredRecipes.map(\.title), [hard.title])
+    }
+
+    func testCookTimeAndComplexityCombineWithMoodFiltering() {
+        let vm = makeViewModel()
+        let neutralQuickEasy = makeFilterRecipe(title: "Tomato Toast", time: "20 min", complexity: "Easy")
+        let cozyMediumEasy = makeFilterRecipe(title: "Cozy Tomato Soup", time: "45 min", complexity: "Easy", tagline: "warm comfort bowl")
+        let cozyQuickEasy = makeFilterRecipe(title: "Cozy Tomato Melt", time: "20 min", complexity: "Easy", tagline: "warm comfort")
+
+        vm.searchResultRecipes = [neutralQuickEasy, cozyMediumEasy, cozyQuickEasy]
+        vm.selectedMood = .cozy
+        vm.selectedCookTimeFilter = .quick
+        vm.selectedComplexityFilter = .easy
+
+        XCTAssertEqual(vm.filteredRecipes.map(\.title), [cozyQuickEasy.title, neutralQuickEasy.title])
+    }
+
     func testClearIngredientsResets() {
         let vm = makeViewModel()
         vm.selectedIngredients = [Ingredient(name: "Onion")]
         vm.searchResultRecipes = [Recipe.mockRandom()]
         vm.showResults = true
+        vm.selectedMood = .cozy
+        vm.selectedCookTimeFilter = .quick
+        vm.selectedComplexityFilter = .easy
 
         vm.clearIngredients()
 
@@ -217,6 +320,28 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertTrue(vm.searchResultRecipes.isEmpty)
         XCTAssertFalse(vm.showResults)
         XCTAssertNil(vm.selectedMood)
+        XCTAssertNil(vm.selectedCookTimeFilter)
+        XCTAssertNil(vm.selectedComplexityFilter)
+    }
+
+    func testRemovingLastIngredientResetsResultFiltersAndExitsResults() {
+        let vm = makeViewModel()
+        let ingredient = Ingredient(name: "Onion")
+        vm.selectedIngredients = [ingredient]
+        vm.searchResultRecipes = [Recipe.mockRandom()]
+        vm.showResults = true
+        vm.selectedMood = .cozy
+        vm.selectedCookTimeFilter = .medium
+        vm.selectedComplexityFilter = .hard
+
+        vm.removeIngredient(ingredient)
+
+        XCTAssertTrue(vm.selectedIngredients.isEmpty)
+        XCTAssertTrue(vm.searchResultRecipes.isEmpty)
+        XCTAssertFalse(vm.showResults)
+        XCTAssertNil(vm.selectedMood)
+        XCTAssertNil(vm.selectedCookTimeFilter)
+        XCTAssertNil(vm.selectedComplexityFilter)
     }
 
     func testShowCameraFreeUserWithScans() {

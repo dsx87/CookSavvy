@@ -160,6 +160,16 @@ struct RecipeRow: View {
 
     /// The main text+badge content column: title, tagline, match reason, missing ingredients, meta row, and badges.
     private var recipeContent: some View {
+        VStack(alignment: .leading, spacing: UI.Components.RecipeRow.contentSpacing) {
+            Text(recipe.title)
+                .font(UI.Fonts.recipeRowTitle)
+                .foregroundStyle(theme.text1)
+                .lineLimit(UI.Components.RecipeRow.titleLineLimit)
+
+            if let tagline = recipe.tagline, !tagline.isEmpty {
+                Text(tagline)
+                    .font(UI.Fonts.tinyCaption)
+                    .foregroundStyle(theme.text2)
                     .lineLimit(UI.Components.RecipeRow.taglineLineLimit)
             }
 

@@ -61,6 +61,16 @@ enum AccessibilityID {
             "discover.mood.\(AccessibilityID.token(name))"
         }
 
+        /// Returns the id for a cook-time filter control by name.
+        static func cookTimeFilter(_ name: String) -> String {
+            "discover.filter.time.\(AccessibilityID.token(name))"
+        }
+
+        /// Returns the id for a complexity filter control by name.
+        static func complexityFilter(_ name: String) -> String {
+            "discover.filter.complexity.\(AccessibilityID.token(name))"
+        }
+
         /// Returns the id for a recipe card/row by recipe title.
         static func recipe(_ title: String) -> String {
             "discover.recipe.\(AccessibilityID.token(title))"

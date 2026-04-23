@@ -124,6 +124,28 @@
         }
       }
     },
+    "accessibility.filterNotSelected" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ filter, double tap to apply"
+          }
+        }
+      }
+    },
+    "accessibility.filterSelected" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ filter, selected"
+          }
+        }
+      }
+    },
     "accessibility.ingredientNotSelected" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -2652,6 +2674,94 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "You need this"
+          }
+        }
+      }
+    },
+    "recipeFilter.easy" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Easy"
+          }
+        }
+      }
+    },
+    "recipeFilter.filterByDifficulty" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "FILTER BY DIFFICULTY"
+          }
+        }
+      }
+    },
+    "recipeFilter.filterByTime" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "FILTER BY TIME"
+          }
+        }
+      }
+    },
+    "recipeFilter.hard" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Hard"
+          }
+        }
+      }
+    },
+    "recipeFilter.long" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "60+ min"
+          }
+        }
+      }
+    },
+    "recipeFilter.mediumDifficulty" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Medium"
+          }
+        }
+      }
+    },
+    "recipeFilter.mediumTime" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "30-60 min"
+          }
+        }
+      }
+    },
+    "recipeFilter.quick" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Quick"
           }
         }
       }

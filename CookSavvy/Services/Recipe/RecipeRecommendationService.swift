@@ -119,7 +119,14 @@ final class RecipeRecommendationService: RecipeRecommendationServiceProtocol {
                 rankedRecipe.missingIngredients = affinityKeywords.filter { !matchedKeywords.contains($0) }
                 return rankedRecipe
             }
-        let ranked = RecipeMatchRanker.rank(fresh)
+        let ranked = fresh.sorted { lhs, rhs in
+            let lhsScore = weightedAffinityScore(for: lhs, ingredientCounts: ingredientCounts)
+            let rhsScore = weightedAffinityScore(for: rhs, ingredientCounts: ingredientCounts)
+            if lhsScore != rhsScore {
+                return lhsScore > rhsScore
+            }
+            return RecipeMatchRanker.compare(lhs, rhs)
+        }
         let reason = String(format: Strings.Discover.suggestedBecause, topIngredient.capitalized)
         return (Array(ranked.prefix(limit)), reason)
     }
@@ -154,6 +161,17 @@ final class RecipeRecommendationService: RecipeRecommendationServiceProtocol {
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { $0.count >= 3 && !stopWords.contains($0) }
         return Set(tokens)
+    }
+
+    /// Scores a candidate using the weighted affinity map so highly rated history beats weak matches.
+    private func weightedAffinityScore(for recipe: Recipe, ingredientCounts: [String: Int]) -> Int {
+        let recipeIngredients = ingredientNames(for: recipe)
+        return ingredientCounts.reduce(0) { score, entry in
+            let matches = recipeIngredients.contains { ingredient in
+                ingredient.contains(entry.key) || entry.key.contains(ingredient)
+            }
+            return matches ? score + entry.value : score
+        }
     }
 
     private func normalizeIngredientName(_ value: String) -> String {

@@ -148,6 +148,40 @@ struct MoodPill: View {
     }
 }
 
+/// A compact result-filter pill used for time and difficulty filters.
+struct RecipeFilterPill: View {
+    let name: String
+    let isSelected: Bool
+    let accessibilityIdentifier: String
+
+    var body: some View {
+        Text(name)
+            .font(UI.Fonts.smallButton)
+            .foregroundStyle(isSelected ? .white : UI.Discover.Mood.freshColor)
+            .padding(.horizontal, UI.Components.moodPillPaddingH)
+            .padding(.vertical, UI.Components.moodPillPaddingV)
+            .background(
+                Capsule()
+                    .fill(isSelected ? AnyShapeStyle(
+                        LinearGradient(colors: UI.Discover.Mood.freshGradient, startPoint: .leading, endPoint: .trailing)
+                    ) : AnyShapeStyle(UI.Discover.Mood.freshColor.opacity(UI.Components.moodPillUnselectedOpacity)))
+            )
+            .overlay(
+                Capsule()
+                    .strokeBorder(
+                        isSelected ? Color.clear : UI.Discover.Mood.freshColor.opacity(UI.Components.moodPillBorderOpacity),
+                        lineWidth: UI.Common.borderWidth
+                    )
+            )
+            .neonGlow(isSelected ? UI.Discover.Mood.freshColor : .clear, radius: isSelected ? UI.Components.moodPillGlowRadius : 0)
+            .accessibilityIdentifier(accessibilityIdentifier)
+            .accessibilityLabel(isSelected
+                ? String(format: Strings.Accessibility.filterSelected, name)
+                : String(format: Strings.Accessibility.filterNotSelected, name))
+            .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+}
+
 /// A dashed-border card prompting the user to create a custom ingredient or recipe.
 /// Appears in ingredient/recipe grid as a call-to-action cell.
 struct AddYourOwnCard: View {

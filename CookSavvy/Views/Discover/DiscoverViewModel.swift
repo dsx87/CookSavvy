@@ -1,5 +1,79 @@
 import SwiftUI
 
+/// Single-select cook-time buckets for client-side Discover result filtering.
+///
+/// Each bucket operates on `Recipe.cookTimeMinutes`, so recipes with missing or
+/// unparseable cook times remain visible until the user actively chooses a time filter.
+enum RecipeCookTimeFilter: Int, CaseIterable, Identifiable {
+    case quick = 0
+    case medium = 1
+    case long = 2
+
+    var id: Int { rawValue }
+
+    var title: String {
+        switch self {
+        case .quick:
+            return Strings.RecipeFilter.quick
+        case .medium:
+            return Strings.RecipeFilter.mediumTime
+        case .long:
+            return Strings.RecipeFilter.long
+        }
+    }
+
+    func includes(_ minutes: Int) -> Bool {
+        switch self {
+        case .quick:
+            return minutes < 30
+        case .medium:
+            return (30...60).contains(minutes)
+        case .long:
+            return minutes > 60
+        }
+    }
+}
+
+/// Single-select recipe complexity filter for Discover results.
+///
+/// Matching is intentionally case-insensitive because recipe metadata can arrive
+/// from local CSV data or backend providers with different capitalization.
+enum RecipeComplexityFilter: String, CaseIterable, Identifiable {
+    case easy
+    case medium
+    case hard
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .easy:
+            return Strings.RecipeFilter.easy
+        case .medium:
+            return Strings.RecipeFilter.mediumDifficulty
+        case .hard:
+            return Strings.RecipeFilter.hard
+        }
+    }
+
+    func matches(_ complexity: String) -> Bool {
+        complexity.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare(rawValue) == .orderedSame
+    }
+}
+
+/// Display-ready metadata label for the Discover featured recipe hero.
+struct DiscoverHeroLabel: Identifiable {
+    let id: String
+    let title: String
+    let icon: String
+}
+
+/// Display-ready match badge content for the Discover featured recipe hero.
+struct DiscoverMatchBadgeState {
+    let label: String
+    let matchingIngredients: [String]
+}
+
 /// ViewModel backing the Discover screen — the app's primary recipe discovery flow.
 ///
 /// Manages a two-state UI: the ingredient-selection landing screen and the recipe-results screen.
@@ -18,6 +92,10 @@ final class DiscoverViewModel: ObservableObject {
     @Published var selectedIngredients: [Ingredient] = []
     /// The currently active mood filter applied to recipe results (`nil` = no filter).
     @Published var selectedMood: RecipeMood? = nil
+    /// The active cook-time bucket applied to recipe results (`nil` = no time filter).
+    @Published var selectedCookTimeFilter: RecipeCookTimeFilter? = nil
+    /// The active complexity level applied to recipe results (`nil` = no difficulty filter).
+    @Published var selectedComplexityFilter: RecipeComplexityFilter? = nil
     /// Text entered in the ingredient search bar; triggers a debounced ingredient grid refresh.
     @Published var searchText = "" {
         didSet {
@@ -157,35 +235,50 @@ final class DiscoverViewModel: ObservableObject {
         }
     }
 
-    /// The sorted, mood-filtered, and diet-filtered recipe list derived from `searchResultRecipes`.
+    /// The sorted and post-filtered recipe list derived from `searchResultRecipes`.
     ///
     /// Filtering pipeline:
     /// 1. Applies `RecipeMatchRanker`, optionally refined by `selectedMood`.
     /// 2. Removes recipes containing blocked ingredient keywords for active dietary restrictions.
-    /// 3. When `useItAllFilter` is on, keeps only perfect-match recipes (falls back to all if none qualify).
+    /// 3. Applies active cook-time and complexity filters, excluding unknown metadata only while active.
+    /// 4. When `useItAllFilter` is on, keeps only perfect-match recipes (falls back to all if none qualify).
     var filteredRecipes: [Recipe] {
         guard !searchResultRecipes.isEmpty else { return [] }
 
         let rankedRecipes = RecipeMatchRanker.rank(searchResultRecipes, mood: selectedMood)
 
-        let dietFiltered: [Recipe]
+        var filtered: [Recipe]
         if activeDietaryRestrictions.isEmpty {
-            dietFiltered = rankedRecipes
+            filtered = rankedRecipes
         } else {
             let blockedKeywords = activeDietaryRestrictions.flatMap { $0.filterKeywords }
-            dietFiltered = rankedRecipes.filter { recipe in
+            filtered = rankedRecipes.filter { recipe in
                 let ingredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
                 let ingredientText = ingredients.map { $0.name.lowercased() }.joined(separator: " ")
                 return !blockedKeywords.contains { ingredientText.contains($0) }
             }
         }
 
+        if let selectedCookTimeFilter {
+            filtered = filtered.filter { recipe in
+                guard let minutes = recipe.cookTimeMinutes else { return false }
+                return selectedCookTimeFilter.includes(minutes)
+            }
+        }
+
+        if let selectedComplexityFilter {
+            filtered = filtered.filter { recipe in
+                guard let complexity = recipe.firstComplexityLabel else { return false }
+                return selectedComplexityFilter.matches(complexity)
+            }
+        }
+
         if useItAllFilter {
-            let perfect = dietFiltered.filter { $0.missingIngredients?.isEmpty == true }
+            let perfect = filtered.filter { $0.missingIngredients?.isEmpty == true }
             if !perfect.isEmpty { return perfect }
         }
 
-        return dietFiltered
+        return filtered
     }
 
     /// The top result from `filteredRecipes`, displayed as the hero card.
@@ -237,6 +330,70 @@ final class DiscoverViewModel: ObservableObject {
         return Strings.Discover.allIngredients
     }
 
+    /// Categories exposed in the Discover chip row, excluding the catch-all bucket.
+    var visibleCategories: [IngredientCategory] {
+        IngredientCategory.allCases.filter { $0 != .other }
+    }
+
+    /// Returns `true` when the category chip should render as selected.
+    func isCategorySelected(_ category: IngredientCategory) -> Bool {
+        selectedCategory == category
+    }
+
+    /// Returns `true` when the ingredient bubble should render as selected.
+    func isIngredientSelected(_ ingredient: Ingredient) -> Bool {
+        selectedIngredients.contains { $0.id == ingredient.id }
+    }
+
+    /// Returns `true` when the mood pill should render as selected.
+    func isMoodSelected(_ mood: RecipeMood) -> Bool {
+        selectedMood == mood
+    }
+
+    /// Returns `true` when the cook-time pill should render as selected.
+    func isCookTimeFilterSelected(_ filter: RecipeCookTimeFilter) -> Bool {
+        selectedCookTimeFilter == filter
+    }
+
+    /// Returns `true` when the complexity pill should render as selected.
+    func isComplexityFilterSelected(_ filter: RecipeComplexityFilter) -> Bool {
+        selectedComplexityFilter == filter
+    }
+
+    /// Builds the metadata labels shown over the featured recipe image.
+    func heroLabels(for recipe: Recipe) -> [DiscoverHeroLabel] {
+        var labels: [DiscoverHeroLabel] = []
+        if let cookTime = recipe.firstCookTimeLabel {
+            labels.append(DiscoverHeroLabel(id: "time", title: cookTime, icon: Icons.Discover.clock))
+        }
+        if let complexity = recipe.firstComplexityLabel {
+            labels.append(DiscoverHeroLabel(id: "complexity", title: complexity, icon: Icons.Discover.chartBar))
+        }
+        return labels
+    }
+
+    /// Returns the rating value shown over the featured recipe image, if one is available.
+    func heroRating(for recipe: Recipe) -> Double? {
+        recipe.apiRating ?? recipe.userRating
+    }
+
+    /// Builds the match badge state for a featured recipe, or `nil` when the recipe has no match metadata.
+    func matchBadgeState(for recipe: Recipe) -> DiscoverMatchBadgeState? {
+        guard recipe.missingIngredients != nil || recipe.matchPercentage != nil else { return nil }
+
+        let total = recipe.cleanedIngredients.isEmpty ? recipe.ingredients.count : recipe.cleanedIngredients.count
+        let missing = recipe.missingIngredients?.count ?? 0
+        let matched = max(0, total - missing)
+        let label = recipe.missingIngredients?.isEmpty == true
+            ? Strings.Discover.matchLabelAll
+            : String(format: Strings.Discover.matchLabel, Int64(matched), Int64(total))
+
+        return DiscoverMatchBadgeState(
+            label: label,
+            matchingIngredients: matchingIngredientNames(for: recipe)
+        )
+    }
+
     // MARK: - Actions
 
     /// Loads all homepage data concurrently: popular ingredients, recent/saved recipes, suggestions, and collections.
@@ -275,7 +432,7 @@ final class DiscoverViewModel: ObservableObject {
     }
 
     /// Toggles the selection state of an ingredient and re-runs the search if results are showing.
-    /// Clears results and resets the mood filter when the last ingredient is deselected.
+    /// Clears results and resets result filters when the last ingredient is deselected.
     /// - Parameter ingredient: The ingredient to toggle.
     func toggleIngredient(_ ingredient: Ingredient) {
         if let idx = selectedIngredients.firstIndex(where: { $0.id == ingredient.id }) {
@@ -291,7 +448,7 @@ final class DiscoverViewModel: ObservableObject {
         if !hasIngredients {
             showResults = false
             searchResultRecipes = []
-            selectedMood = nil
+            resetResultFilters()
         }
         //searchText = ""
     }
@@ -308,7 +465,7 @@ final class DiscoverViewModel: ObservableObject {
         if !hasIngredients {
             showResults = false
             searchResultRecipes = []
-            selectedMood = nil
+            resetResultFilters()
         }
     }
 
@@ -316,7 +473,7 @@ final class DiscoverViewModel: ObservableObject {
     func clearIngredients() {
         selectedIngredients.removeAll()
         searchResultRecipes = []
-        selectedMood = nil
+        resetResultFilters()
         showResults = false
     }
 
@@ -339,10 +496,29 @@ final class DiscoverViewModel: ObservableObject {
         selectedMood = selectedMood == mood ? nil : mood
     }
 
+    /// Toggles a single cook-time filter bucket; selecting the active bucket clears it.
+    /// - Parameter filter: The cook-time bucket to toggle.
+    func toggleCookTimeFilter(_ filter: RecipeCookTimeFilter) {
+        selectedCookTimeFilter = selectedCookTimeFilter == filter ? nil : filter
+    }
+
+    /// Toggles a single complexity filter; selecting the active level clears it.
+    /// - Parameter filter: The complexity level to toggle.
+    func toggleComplexityFilter(_ filter: RecipeComplexityFilter) {
+        selectedComplexityFilter = selectedComplexityFilter == filter ? nil : filter
+    }
+
     /// Toggles the active ingredient category; clearing it reverts the grid to all ingredients.
     /// - Parameter category: The category to toggle.
     func toggleCategory(_ category: IngredientCategory) {
         selectedCategory = selectedCategory == category ? nil : category
+    }
+
+    /// Clears all result-only filters that should not survive a new empty ingredient state.
+    private func resetResultFilters() {
+        selectedMood = nil
+        selectedCookTimeFilter = nil
+        selectedComplexityFilter = nil
     }
 
     // MARK: - Navigation
@@ -596,5 +772,27 @@ final class DiscoverViewModel: ObservableObject {
     /// Returns `true` if the given token matches the live refresh token and the task has not been cancelled.
     private func isCurrentRefresh(_ token: Int) -> Bool {
         !Task.isCancelled && token == ingredientRefreshToken
+    }
+}
+
+private extension Recipe {
+    /// The first cook-time label stored on the recipe, if provided by its source.
+    var firstCookTimeLabel: String? {
+        for info in additionalInfo.infos {
+            if case .time(let cookTime) = info {
+                return cookTime
+            }
+        }
+        return nil
+    }
+
+    /// The first complexity label stored on the recipe, if provided by its source.
+    var firstComplexityLabel: String? {
+        for info in additionalInfo.infos {
+            if case .complexity(let complexity) = info {
+                return complexity
+            }
+        }
+        return nil
     }
 }

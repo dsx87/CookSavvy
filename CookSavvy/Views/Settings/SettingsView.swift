@@ -7,9 +7,6 @@
 
 import SwiftUI
 
-/// Settings screen listing plan info, usage stats, dietary restrictions, theme, account, and app info.
-struct SettingsView: View {
-
 /// Concrete settings content view implementation used by coordinators and previews.
 struct SettingsView: View {
     @ObservedObject var viewModel: SettingsViewModel

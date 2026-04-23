@@ -329,15 +329,13 @@ struct DiscoverView: View {
     private var categoryFilter: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: UI.Discover.categoryChipSpacing) {
-                ForEach(IngredientCategory.allCases, id: \.self) { category in
-                    if category != .other {
-                        CategoryChip(category: category, isSelected: viewModel.selectedCategory == category)
-                            .onTapGesture {
-                                withAnimation(UI.Anim.easeQuick) {
-                                    viewModel.toggleCategory(category)
-                                }
+                ForEach(viewModel.visibleCategories, id: \.self) { category in
+                    CategoryChip(category: category, isSelected: viewModel.isCategorySelected(category))
+                        .onTapGesture {
+                            withAnimation(UI.Anim.easeQuick) {
+                                viewModel.toggleCategory(category)
                             }
-                    }
+                        }
                 }
             }
         }
@@ -354,22 +352,33 @@ struct DiscoverView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, UI.Discover.loadingPadding)
             } else {
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: UI.Discover.gridItemSpacing), count: UI.Discover.gridColumnCount), spacing: UI.Discover.gridSpacing) {
-                    ForEach(viewModel.shownIngredients) { ingredient in
-                        IngredientBubble(
-                            ingredient: ingredient,
-                            isSelected: viewModel.selectedIngredients.contains(where: { $0.id == ingredient.id })
-                        )
-                        .onTapGesture {
-                            withAnimation(UI.Anim.springQuick) {
-                                viewModel.toggleIngredient(ingredient)
-                            }
-                        }
+                ingredientGridContent
+            }
+        }
+        .accessibilityIdentifier(AccessibilityID.Discover.ingredientGrid)
+    }
+
+    private var ingredientGridContent: some View {
+        LazyVGrid(columns: ingredientGridColumns, spacing: UI.Discover.gridSpacing) {
+            ForEach(viewModel.shownIngredients) { ingredient in
+                IngredientBubble(
+                    ingredient: ingredient,
+                    isSelected: viewModel.isIngredientSelected(ingredient)
+                )
+                .onTapGesture {
+                    withAnimation(UI.Anim.springQuick) {
+                        viewModel.toggleIngredient(ingredient)
                     }
                 }
             }
         }
-        .accessibilityIdentifier(AccessibilityID.Discover.ingredientGrid)
+    }
+
+    private var ingredientGridColumns: [GridItem] {
+        Array(
+            repeating: GridItem(.flexible(), spacing: UI.Discover.gridItemSpacing),
+            count: UI.Discover.gridColumnCount
+        )
     }
 
     private var discoverEmptyState: some View {
@@ -440,6 +449,8 @@ struct DiscoverView: View {
                 resultsHeader
                 selectedIngredientsStrip
                 moodFilter
+                timeFilter
+                complexityFilter
                 useItAllToggle
                 dietaryFilterPills
                 if viewModel.searchError != nil {
@@ -593,20 +604,83 @@ struct DiscoverView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: UI.Discover.moodPillSpacing) {
                     ForEach(RecipeMood.allCases) { mood in
-                        MoodPill(
-                            name: mood.name,
-                            icon: mood.icon,
-                            color: UI.Discover.moodColor(for: mood),
-                            gradient: UI.Discover.moodGradient(for: mood),
-                            isSelected: viewModel.selectedMood == mood
-                        )
-                        .onTapGesture {
-                            withAnimation(UI.Anim.springBouncy) {
-                                viewModel.toggleMood(mood)
-                            }
-                        }
+                        moodPill(for: mood)
                     }
                 }
+            }
+        }
+    }
+
+    private func moodPill(for mood: RecipeMood) -> some View {
+        MoodPill(
+            name: mood.name,
+            icon: mood.icon,
+            color: UI.Discover.moodColor(for: mood),
+            gradient: UI.Discover.moodGradient(for: mood),
+            isSelected: viewModel.isMoodSelected(mood)
+        )
+        .onTapGesture {
+            withAnimation(UI.Anim.springBouncy) {
+                viewModel.toggleMood(mood)
+            }
+        }
+    }
+
+    private var timeFilter: some View {
+        recipeFilterRow(title: Strings.RecipeFilter.filterByTime) {
+            ForEach(RecipeCookTimeFilter.allCases) { filter in
+                cookTimePill(for: filter)
+            }
+        }
+    }
+
+    private var complexityFilter: some View {
+        recipeFilterRow(title: Strings.RecipeFilter.filterByDifficulty) {
+            ForEach(RecipeComplexityFilter.allCases) { filter in
+                complexityPill(for: filter)
+            }
+        }
+    }
+
+    private func recipeFilterRow<Content: View>(
+        title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: UI.Discover.moodPillSpacing) {
+            Text(title)
+                .sectionLabel()
+                .accessibilityAddTraits(.isHeader)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: UI.Discover.moodPillSpacing) {
+                    content()
+                }
+            }
+        }
+    }
+
+    private func cookTimePill(for filter: RecipeCookTimeFilter) -> some View {
+        RecipeFilterPill(
+            name: filter.title,
+            isSelected: viewModel.isCookTimeFilterSelected(filter),
+            accessibilityIdentifier: AccessibilityID.Discover.cookTimeFilter(filter.title)
+        )
+        .onTapGesture {
+            withAnimation(UI.Anim.springBouncy) {
+                viewModel.toggleCookTimeFilter(filter)
+            }
+        }
+    }
+
+    private func complexityPill(for filter: RecipeComplexityFilter) -> some View {
+        RecipeFilterPill(
+            name: filter.title,
+            isSelected: viewModel.isComplexityFilterSelected(filter),
+            accessibilityIdentifier: AccessibilityID.Discover.complexityFilter(filter.title)
+        )
+        .onTapGesture {
+            withAnimation(UI.Anim.springBouncy) {
+                viewModel.toggleComplexityFilter(filter)
             }
         }
     }
@@ -646,25 +720,13 @@ struct DiscoverView: View {
     /// Overlay content rendered on top of the featured recipe hero image.
     private func featuredHeroOverlay(for recipe: Recipe) -> some View {
         VStack(alignment: .leading, spacing: UI.Discover.featuredInfoSpacing) {
-            if recipe.missingIngredients != nil || recipe.matchPercentage != nil {
-                matchIndicator(recipe: recipe, matchingIngredients: viewModel.matchingIngredientNames(for: recipe))
+            if let state = viewModel.matchBadgeState(for: recipe) {
+                matchIndicator(state: state)
             }
             Text(recipe.title)
                 .font(UI.Fonts.title)
                 .foregroundStyle(.white)
-            HStack(spacing: UI.Discover.featuredLabelSpacing) {
-                if let time = cookTimeLabel(recipe) {
-                    Label(time, systemImage: Icons.Discover.clock)
-                }
-                if let complexity = complexityLabel(recipe) {
-                    Label(complexity, systemImage: Icons.Discover.chartBar)
-                }
-                if let rating = recipe.apiRating ?? recipe.userRating {
-                    StarRating(rating: rating)
-                }
-            }
-            .font(UI.Fonts.smallCaptionMedium)
-            .foregroundStyle(.white.opacity(UI.Discover.whiteOpacity085))
+            featuredHeroMetadata(for: recipe)
         }
         .padding(UI.Discover.featuredInfoPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -678,6 +740,19 @@ struct DiscoverView: View {
                 startPoint: .bottom, endPoint: .top
             )
         )
+    }
+
+    private func featuredHeroMetadata(for recipe: Recipe) -> some View {
+        HStack(spacing: UI.Discover.featuredLabelSpacing) {
+            ForEach(viewModel.heroLabels(for: recipe)) { label in
+                Label(label.title, systemImage: label.icon)
+            }
+            if let rating = viewModel.heroRating(for: recipe) {
+                StarRating(rating: rating)
+            }
+        }
+        .font(UI.Fonts.smallCaptionMedium)
+        .foregroundStyle(.white.opacity(UI.Discover.whiteOpacity085))
     }
 
     @ViewBuilder
@@ -708,37 +783,12 @@ struct DiscoverView: View {
         }
     }
 
-    // MARK: - Helpers
-
-    /// Extracts the first cook-time label from a recipe's additional info entries.
-    private func cookTimeLabel(_ recipe: Recipe) -> String? {
-        for info in recipe.additionalInfo.infos {
-            if case .time(let cookTime) = info { return cookTime }
-        }
-        return nil
-    }
-
-    /// Extracts the first complexity label from a recipe's additional info entries.
-    private func complexityLabel(_ recipe: Recipe) -> String? {
-        for info in recipe.additionalInfo.infos {
-            if case .complexity(let complexity) = info { return complexity }
-        }
-        return nil
-    }
-
     /// Builds the featured hero's match badge and match-details popover trigger.
-    private func matchIndicator(recipe: Recipe, matchingIngredients: [String]) -> some View {
-        let total = recipe.cleanedIngredients.isEmpty ? recipe.ingredients.count : recipe.cleanedIngredients.count
-        let missing = recipe.missingIngredients?.count ?? 0
-        let matched = max(0, total - missing)
-        let label: String = recipe.missingIngredients?.isEmpty == true
-            ? Strings.Discover.matchLabelAll
-            : String(format: Strings.Discover.matchLabel, Int64(matched), Int64(total))
-
-        return HStack(spacing: UI.Discover.matchBadgeSpacing) {
+    private func matchIndicator(state: DiscoverMatchBadgeState) -> some View {
+        HStack(spacing: UI.Discover.matchBadgeSpacing) {
             Image(systemName: Icons.Discover.matchBadge)
                 .font(UI.Fonts.tinyCaption)
-            Text(label)
+            Text(state.label)
                 .font(UI.Fonts.smallCaptionBold)
             Button {
                 viewModel.isMatchInfoPopoverPresented = true
@@ -749,7 +799,7 @@ struct DiscoverView: View {
             }
             .buttonStyle(.plain)
             .popover(isPresented: $viewModel.isMatchInfoPopoverPresented) {
-                MatchDetailsPopover(ingredients: matchingIngredients)
+                MatchDetailsPopover(ingredients: state.matchingIngredients)
             }
         }
         .foregroundStyle(.white)
