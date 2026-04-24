@@ -219,6 +219,33 @@ struct UI {
         static let addToListCornerRadius: CGFloat = 10
     }
 
+    // MARK: - ShareCard
+
+    /// Fixed-size layout constants for the 4:5 PNG recipe share card.
+    struct ShareCard {
+        static let width: CGFloat = 1080
+        static let height: CGFloat = 1350
+        static let renderScale: CGFloat = 1
+        static let contentPadding: CGFloat = 72
+        static let contentSpacing: CGFloat = 24
+        static let metadataSpacing: CGFloat = 16
+        static let metadataHorizontalPadding: CGFloat = 26
+        static let metadataVerticalPadding: CGFloat = 14
+        static let metadataBackgroundOpacity: Double = 0.22
+        static let secondaryTextOpacity: Double = 0.82
+        static let topOverlayOpacity: Double = 0.08
+        static let bottomOverlayOpacity: Double = 0.72
+        static let titleLineLimit: Int = 3
+        static let titleMinimumScale: CGFloat = 0.72
+        static let fallbackCircleOpacity: CGFloat = 0.16
+        static let fallbackEmojiSize: CGFloat = 230
+        static let fallbackImageScale: CGFloat = 1
+        static let fallbackImageSize = CGSize(width: 1080, height: 1350)
+        static let titleFont: Font = .system(size: 84, weight: .bold, design: .rounded)
+        static let metadataFont: Font = .system(size: 34, weight: .semibold, design: .rounded)
+        static let brandFont: Font = .system(size: 28, weight: .bold, design: .rounded)
+    }
+
     // MARK: - Settings
 
     /// Layout constants for the Settings screen.

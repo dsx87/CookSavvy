@@ -229,13 +229,31 @@ final class MockCuratedCollectionService: CuratedCollectionServiceProtocol {
 final class MockImageService: ImageServiceProtocol {
 
     var memoryCacheCount: Int = 0
+    var stubbedRecipeImage: UIImage?
+    var stubbedNamedImages: [String: UIImage] = [:]
+    var shouldThrowRecipeImage = false
+    var loadRecipeImageCallCount = 0
+    var loadNamedImageCalls: [String] = []
 
-    func loadImage(for recipe: Recipe) async throws -> UIImage? { nil }
+    func loadImage(for recipe: Recipe) async throws -> UIImage? {
+        loadRecipeImageCallCount += 1
+        if shouldThrowRecipeImage {
+            throw MockServiceError.requestedFailure
+        }
+        return stubbedRecipeImage
+    }
     func loadImage(for ingredient: Ingredient) async throws -> UIImage? { nil }
-    func loadImage(named fileName: String) async throws -> UIImage? { nil }
+    func loadImage(named fileName: String) async throws -> UIImage? {
+        loadNamedImageCalls.append(fileName)
+        return stubbedNamedImages[fileName]
+    }
     func loadImages(for recipes: [Recipe]) async throws -> [String: UIImage] { [:] }
     func prefetchImages(for recipes: [Recipe]) async {}
     func clearCache() {}
     func clearDiskCache(fileName: String?) throws {}
     func imageExists(named fileName: String) -> Bool { false }
+}
+
+enum MockServiceError: Error {
+    case requestedFailure
 }

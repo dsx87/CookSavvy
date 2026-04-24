@@ -40,6 +40,10 @@ final class RecipeDetailsViewModel: ObservableObject {
     @Published var isLoadingFavorite: Bool = false
     /// Non-`nil` when any action fails; drives the error alert.
     @Published var errorMessage: String?
+    /// Generated PNG image used as the primary system share-sheet item.
+    @Published private(set) var shareCard: RecipeShareCard?
+    /// `true` until the visual share card has rendered.
+    @Published private(set) var isPreparingShareCard: Bool = true
 
     // MARK: - Properties
 
@@ -48,6 +52,7 @@ final class RecipeDetailsViewModel: ObservableObject {
     private let userDataService: UserDataServiceProtocol
     private let shoppingListService: ShoppingListServiceProtocol
     private let subscriptionService: SubscriptionServiceProtocol
+    private let shareCardGenerator: RecipeShareCardGenerating
     private let analyticsService: AnalyticsServiceProtocol
     private let logger: any LoggerProtocol
     private weak var coordinator: (any RecipeDetailsCoordinating)?
@@ -79,6 +84,7 @@ final class RecipeDetailsViewModel: ObservableObject {
         userDataService: UserDataServiceProtocol,
         shoppingListService: ShoppingListServiceProtocol,
         subscriptionService: SubscriptionServiceProtocol,
+        shareCardGenerator: RecipeShareCardGenerating,
         analyticsService: AnalyticsServiceProtocol,
         logger: any LoggerProtocol,
         coordinator: (any RecipeDetailsCoordinating)?
@@ -88,6 +94,7 @@ final class RecipeDetailsViewModel: ObservableObject {
         self.userDataService = userDataService
         self.shoppingListService = shoppingListService
         self.subscriptionService = subscriptionService
+        self.shareCardGenerator = shareCardGenerator
         self.analyticsService = analyticsService
         self.logger = logger
         self.coordinator = coordinator
@@ -95,6 +102,9 @@ final class RecipeDetailsViewModel: ObservableObject {
         // Load data on init
         Task {
             await loadData()
+        }
+        Task {
+            await prepareShareCard()
         }
     }
 
@@ -104,6 +114,13 @@ final class RecipeDetailsViewModel: ObservableObject {
     func loadData() async {
         await loadFavoriteStatus()
         await recordView()
+    }
+
+    /// Pre-renders the share-sheet image so tapping Share presents a ready PNG item.
+    func prepareShareCard() async {
+        isPreparingShareCard = true
+        shareCard = await shareCardGenerator.makeShareCard(for: recipe)
+        isPreparingShareCard = false
     }
 
     /// Persists or removes this recipe from the user's favourites, toggling `isFavorite`.

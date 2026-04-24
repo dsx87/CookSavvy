@@ -35,11 +35,7 @@ struct RecipeDetailsView: View {
         }
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
-                ShareLink(item: viewModel.recipe, preview: SharePreview(viewModel.recipe.title)) {
-                    Image(systemName: Icons.RecipeDetails.share)
-                        .foregroundStyle(theme.text2)
-                }
-                .accessibilityLabel(Strings.Accessibility.shareRecipe)
+                shareButton
                 Button {
                     Task { await viewModel.toggleFavorite() }
                 } label: {
@@ -50,6 +46,29 @@ struct RecipeDetailsView: View {
                 .accessibilityIdentifier(AccessibilityID.RecipeDetails.bookmarkButton)
                 .accessibilityLabel(viewModel.isFavorite ? Strings.Accessibility.removeFromFavorites : Strings.Accessibility.addToFavorites)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var shareButton: some View {
+        if let shareCard = viewModel.shareCard {
+            ShareLink(
+                item: shareCard,
+                subject: Text(viewModel.recipe.title),
+                message: Text(viewModel.recipe.shareText),
+                preview: SharePreview(viewModel.recipe.title)
+            ) {
+                Image(systemName: Icons.RecipeDetails.share)
+                    .foregroundStyle(theme.text2)
+            }
+            .accessibilityLabel(Strings.Accessibility.shareRecipe)
+        } else {
+            Button {} label: {
+                Image(systemName: Icons.RecipeDetails.share)
+                    .foregroundStyle(theme.text2)
+            }
+            .disabled(viewModel.isPreparingShareCard)
+            .accessibilityLabel(Strings.Accessibility.shareRecipe)
         }
     }
 

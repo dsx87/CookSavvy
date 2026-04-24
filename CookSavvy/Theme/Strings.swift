@@ -54,6 +54,12 @@ enum Strings {
         static let sectionSteps = String(localized: "recipeDetails.sectionSteps", defaultValue: "STEPS")
     }
 
+    /// Strings rendered into recipe share-card images.
+    enum ShareCard {
+        static let brand = String(localized: "shareCard.brand", defaultValue: "CookSavvy")
+        static let ingredientsCount = String(localized: "shareCard.ingredientsCount", defaultValue: "%lld ingredients")
+    }
+
     /// Strings for the Settings screen, including appearance, subscription, data management, and app info sections.
     enum Settings {
         static let navigationTitle = String(localized: "settings.navigationTitle", defaultValue: "Settings")

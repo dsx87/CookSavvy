@@ -20,12 +20,26 @@ private final class SpyRecipeDetailsCoordinator: RecipeDetailsCoordinating {
 }
 
 @MainActor
+private final class SpyRecipeShareCardGenerator: RecipeShareCardGenerating {
+    var makeShareCardCallCount = 0
+    var requestedRecipes: [Recipe] = []
+    let stubbedCard = RecipeShareCard(title: "Stub", pngData: Data([0x89, 0x50, 0x4E, 0x47]))
+
+    func makeShareCard(for recipe: Recipe) async -> RecipeShareCard {
+        makeShareCardCallCount += 1
+        requestedRecipes.append(recipe)
+        return stubbedCard
+    }
+}
+
+@MainActor
 final class RecipeDetailsViewModelTests: XCTestCase {
 
     var mockUserDataService: MockUserDataService!
     var mockShoppingListService: MockShoppingListService!
     var freeSubscription: MockSubscriptionService!
     var premiumSubscription: MockSubscriptionService!
+    private var shareCardGenerator: SpyRecipeShareCardGenerator!
 
     override func setUp() {
         super.setUp()
@@ -33,6 +47,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         mockShoppingListService = MockShoppingListService()
         freeSubscription = MockSubscriptionService(initialPlan: .free)
         premiumSubscription = MockSubscriptionService(initialPlan: .premium)
+        shareCardGenerator = SpyRecipeShareCardGenerator()
     }
 
     override func tearDown() {
@@ -40,6 +55,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         mockShoppingListService = nil
         freeSubscription = nil
         premiumSubscription = nil
+        shareCardGenerator = nil
         super.tearDown()
     }
 
@@ -68,6 +84,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
             userDataService: mockUserDataService,
             shoppingListService: mockShoppingListService,
             subscriptionService: subscription ?? freeSubscription,
+            shareCardGenerator: shareCardGenerator,
             analyticsService: MockAnalyticsService(),
             logger: MockLogger(),
             coordinator: nil
@@ -172,6 +189,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
             userDataService: mockUserDataService,
             shoppingListService: mockShoppingListService,
             subscriptionService: premiumSubscription,
+            shareCardGenerator: shareCardGenerator,
             analyticsService: MockAnalyticsService(),
             logger: MockLogger(),
             coordinator: spy
@@ -192,6 +210,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
             userDataService: mockUserDataService,
             shoppingListService: mockShoppingListService,
             subscriptionService: freeSubscription,
+            shareCardGenerator: shareCardGenerator,
             analyticsService: MockAnalyticsService(),
             logger: MockLogger(),
             coordinator: spy
@@ -226,6 +245,18 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         await vm.addMissingToShoppingList()
 
         XCTAssertEqual(vm.errorMessage, Strings.Errors.shoppingListAddFailed)
+    }
+
+    func testShareCardPreparationCallsGenerator() async {
+        let recipe = makeRecipe(title: "Shareable Pasta")
+        let vm = makeViewModel(recipe: recipe)
+
+        for _ in 0..<10 { await Task.yield() }
+
+        XCTAssertEqual(shareCardGenerator.makeShareCardCallCount, 1)
+        XCTAssertEqual(shareCardGenerator.requestedRecipes.first?.title, "Shareable Pasta")
+        XCTAssertEqual(vm.shareCard, shareCardGenerator.stubbedCard)
+        XCTAssertFalse(vm.isPreparingShareCard)
     }
 }
 

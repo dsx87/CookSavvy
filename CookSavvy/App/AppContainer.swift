@@ -30,6 +30,8 @@ final class AppContainer {
     let recipeService: RecipeServiceProtocol
     /// Image loading and disk caching.
     let imageService: ImageServiceProtocol
+    /// Branded PNG recipe share-card generation.
+    let recipeShareCardGenerator: RecipeShareCardGenerating
     /// CSV dataset import into the database.
     let dataImportService: DataImportServiceProtocol
     /// User-specific data — favorites, recent recipes, and cooking sessions.
@@ -97,7 +99,9 @@ final class AppContainer {
         )
         
         self.ingredientsService = ingredients
-        self.imageService = ImageService()
+        let imageService = ImageService()
+        self.imageService = imageService
+        self.recipeShareCardGenerator = RecipeShareCardGenerator(imageService: imageService)
         self.dataImportService = dataImport
         self.userDataService = UserDataService(dbInterface: db)
         
@@ -194,6 +198,7 @@ final class AppContainer {
         ingredientsService: IngredientsServiceProtocol,
         recipeService: RecipeServiceProtocol,
         imageService: ImageServiceProtocol,
+        recipeShareCardGenerator: RecipeShareCardGenerating? = nil,
         dataImportService: DataImportServiceProtocol,
         userDataService: UserDataServiceProtocol,
         databaseInitService: DatabaseInitializationServiceProtocol,
@@ -213,6 +218,7 @@ final class AppContainer {
         self.ingredientsService = ingredientsService
         self.recipeService = recipeService
         self.imageService = imageService
+        self.recipeShareCardGenerator = recipeShareCardGenerator ?? RecipeShareCardGenerator(imageService: imageService)
         self.dataImportService = dataImportService
         self.userDataService = userDataService
         self.databaseInitService = databaseInitService

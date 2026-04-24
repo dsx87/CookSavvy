@@ -53,6 +53,7 @@ final class JourneyCoordinator: ObservableObject, JourneyCoordinating, RecipeLis
             userDataService: container.userDataService,
             shoppingListService: container.shoppingListService,
             subscriptionService: container.subscriptionService,
+            shareCardGenerator: container.recipeShareCardGenerator,
             analyticsService: container.analyticsService,
             logger: container.loggingService.makeLogger(category: .recipeDetailsViewModel),
             coordinator: self

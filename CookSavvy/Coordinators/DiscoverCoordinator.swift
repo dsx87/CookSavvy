@@ -47,6 +47,7 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating, Re
             userDataService: container.userDataService,
             shoppingListService: container.shoppingListService,
             subscriptionService: container.subscriptionService,
+            shareCardGenerator: container.recipeShareCardGenerator,
             analyticsService: container.analyticsService,
             logger: container.loggingService.makeLogger(category: .recipeDetailsViewModel),
             coordinator: self

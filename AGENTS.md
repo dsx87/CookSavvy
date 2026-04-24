@@ -100,7 +100,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 
 ### Service Layer
 - **Data Services**: `RecipeServiceProtocol` / `RecipeService`, `IngredientsServiceProtocol` / `IngredientsService`, `UserDataServiceProtocol` / `UserDataService`
-- **Infrastructure**: `ImageServiceProtocol` / `ImageService`, `DatabaseInitializationServiceProtocol` / `DatabaseInitializationService`, `DataImportServiceProtocol` / `DataImportService`, `CSVParser`
+- **Infrastructure**: `ImageServiceProtocol` / `ImageService`, `RecipeShareCardGenerating` / `RecipeShareCardGenerator`, `DatabaseInitializationServiceProtocol` / `DatabaseInitializationService`, `DataImportServiceProtocol` / `DataImportService`, `CSVParser`
 - **Cross-cutting**: `LoggingServiceProtocol` / `LoggingService` creates feature-scoped `LoggerProtocol` instances backed by `os.Logger`
 - **Feature Services**: `ShoppingListServiceProtocol` / `ShoppingListService`, `RecipeRecommendationServiceProtocol` / `RecipeRecommendationService`, `CameraScanTrackerProtocol` / `CameraScanTracker`, `IngredientDetectionServiceProtocol` (impl: `AIIngredientDetectionAdapter`), `SubscriptionServiceProtocol` (impl: `StoreKitSubscriptionService` / `MockSubscriptionService`)
 - **Auth Services**: `AuthServiceProtocol`, `SupabaseAuthService`, `MockAuthService`, `NoOpAuthService` (RELEASE fallback when Supabase keys are missing), `SignInWithAppleAction` (shared SIWA flow, analytics, concurrency guard), `AppleSignInManager` / `AppleSignInManaging` (ASAuthorizationController + SHA256 nonce for SIWA flow)
@@ -208,6 +208,9 @@ CookSavvy/
 │   ├── Image/
 │   │   ├── ImageService.swift
 │   │   └── ImageExtractor.swift
+│   ├── Sharing/
+│   │   ├── RecipeShareCard.swift
+│   │   └── RecipeShareCardGenerator.swift
 │   ├── Logging/
 │   │   └── LoggingService.swift
 │   ├── UserData/
