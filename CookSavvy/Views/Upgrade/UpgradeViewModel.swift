@@ -108,27 +108,27 @@ final class UpgradeViewModel: ObservableObject {
     /// Returns the localised price string for a plan (e.g. "$4.99/month"), or a loading placeholder.
     func priceText(for plan: SubscriptionPlan) -> String {
         guard plan != .free else {
-            return "Free"
+            return Strings.Upgrade.freePrice
         }
 
         if let price = priceByPlan[plan] {
-            return "\(price)/month"
+            return String(format: Strings.Upgrade.monthlyPriceFormat, price)
         }
 
-        return "Loading price..."
+        return Strings.Upgrade.loadingPrice
     }
     
     /// Returns the feature bullet points shown on the paywall card for the given plan.
     func featureDescription(for plan: SubscriptionPlan) -> [String] {
         switch plan {
         case .free:
-            return ["Basic recipe discovery"]
+            return [Strings.Upgrade.freeFeatureBasicDiscovery]
         case .premium:
             return [
-                "Unlimited recipe sources",
-                "Camera ingredient scanning",
-                "AI-powered features",
-                "Priority suggestions"
+                Strings.Upgrade.premiumFeatureScanFridge,
+                Strings.Upgrade.premiumFeatureNeverMissIngredient,
+                Strings.Upgrade.premiumFeatureShoppingLists,
+                Strings.Upgrade.premiumFeatureSmarterSuggestions
             ]
         }
     }

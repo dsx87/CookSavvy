@@ -3314,6 +3314,50 @@
         }
       }
     },
+    "upgrade.freeFeatureBasicDiscovery" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Basic recipe discovery"
+          }
+        }
+      }
+    },
+    "upgrade.freePrice" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Free"
+          }
+        }
+      }
+    },
+    "upgrade.loadingPrice" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Loading price..."
+          }
+        }
+      }
+    },
+    "upgrade.monthlyPriceFormat" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@/month"
+          }
+        }
+      }
+    },
     "upgrade.navigationTitle" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -3332,6 +3376,50 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Purchase Failed"
+          }
+        }
+      }
+    },
+    "upgrade.premiumFeatureNeverMissIngredient" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Never miss an ingredient"
+          }
+        }
+      }
+    },
+    "upgrade.premiumFeatureScanFridge" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Scan your fridge in seconds"
+          }
+        }
+      }
+    },
+    "upgrade.premiumFeatureShoppingLists" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Build shopping lists from missing items"
+          }
+        }
+      }
+    },
+    "upgrade.premiumFeatureSmarterSuggestions" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Get smarter dinner suggestions"
           }
         }
       }
@@ -3364,7 +3452,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Faster dinner decisions with more recipes and camera scanning"
+            "value" : "Turn what's in your kitchen into dinner faster."
           }
         }
       }

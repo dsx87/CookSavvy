@@ -109,11 +109,19 @@ enum Strings {
         static let done = String(localized: "upgrade.done", defaultValue: "Done")
         static let autoRenew = String(localized: "upgrade.autoRenew", defaultValue: "Subscriptions auto-renew monthly until cancelled.")
         static let unlockTitle = String(localized: "upgrade.unlockTitle", defaultValue: "Upgrade to CookSavvy+")
-        static let unlockSubtitle = String(localized: "upgrade.unlockSubtitle", defaultValue: "Faster dinner decisions with more recipes and camera scanning")
+        static let unlockSubtitle = String(localized: "upgrade.unlockSubtitle", defaultValue: "Turn what's in your kitchen into dinner faster.")
         static let current = String(localized: "upgrade.current", defaultValue: "Current")
         static let subscribe = String(localized: "upgrade.subscribe", defaultValue: "Subscribe")
         static let purchaseFailed = String(localized: "upgrade.purchaseFailed", defaultValue: "Purchase Failed")
         static let unknownError = String(localized: "upgrade.unknownError", defaultValue: "An unknown error occurred")
+        static let freePrice = String(localized: "upgrade.freePrice", defaultValue: "Free")
+        static let loadingPrice = String(localized: "upgrade.loadingPrice", defaultValue: "Loading price...")
+        static let monthlyPriceFormat = String(localized: "upgrade.monthlyPriceFormat", defaultValue: "%@/month")
+        static let freeFeatureBasicDiscovery = String(localized: "upgrade.freeFeatureBasicDiscovery", defaultValue: "Basic recipe discovery")
+        static let premiumFeatureScanFridge = String(localized: "upgrade.premiumFeatureScanFridge", defaultValue: "Scan your fridge in seconds")
+        static let premiumFeatureNeverMissIngredient = String(localized: "upgrade.premiumFeatureNeverMissIngredient", defaultValue: "Never miss an ingredient")
+        static let premiumFeatureShoppingLists = String(localized: "upgrade.premiumFeatureShoppingLists", defaultValue: "Build shopping lists from missing items")
+        static let premiumFeatureSmarterSuggestions = String(localized: "upgrade.premiumFeatureSmarterSuggestions", defaultValue: "Get smarter dinner suggestions")
     }
 
     /// Strings for the Discover tab (ingredient selection and recipe results states).
