@@ -63,6 +63,8 @@ enum PaidFeature {
     case aiRecipes
     /// The shopping list for missing ingredients.
     case shoppingList
+    /// Premium monthly My Kitchen insights, including approximate savings.
+    case monthlyCookingInsights
 
     /// The set of subscription plans that unlock this feature.
     var requiredPlans: Set<SubscriptionPlan> {
@@ -76,6 +78,7 @@ enum PaidFeature {
         case .onlineRecipes: return "Extended Recipes"
         case .aiRecipes: return "AI Recipes"
         case .shoppingList: return "Shopping List"
+        case .monthlyCookingInsights: return "Monthly Cooking Insights"
         }
     }
 }

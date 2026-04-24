@@ -53,6 +53,8 @@ protocol UserDataServiceProtocol: AnyObject {
     func monthlyRecipesCooked() async throws -> Int
     /// - SeeAlso: `UserDataService.monthlyIngredientsRescued()`
     func monthlyIngredientsRescued() async throws -> Int
+    /// - SeeAlso: `UserDataService.monthlyCookingInsights()`
+    func monthlyCookingInsights() async throws -> MonthlyCookingInsights
     /// - SeeAlso: `UserDataService.getHighMatchRecipesCookedCount()`
     func getHighMatchRecipesCookedCount() -> Int
     /// - SeeAlso: `UserDataService.getThemePreference()`

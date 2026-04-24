@@ -85,6 +85,43 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertEqual(vm.hoursCooking, 2.0, accuracy: 0.01)
     }
 
+    func testPremiumUsersExposeMonthlyInsights() async {
+        subscriptionService.setPlan(.premium)
+
+        let vm = makeViewModel()
+        await vm.loadData()
+
+        XCTAssertTrue(vm.showsMonthlyInsights)
+    }
+
+    func testFreeUsersDoNotExposeMonthlyInsights() async {
+        subscriptionService.setPlan(.free)
+
+        let vm = makeViewModel()
+        await vm.loadData()
+
+        XCTAssertFalse(vm.showsMonthlyInsights)
+    }
+
+    func testMonthlyInsightsLoadedFromService() async {
+        mockUserDataService.stubbedMonthlyCookingInsights = MonthlyCookingInsights(
+            mealsCooked: 14,
+            uniqueIngredientsUsed: 47,
+            estimatedSavingsAmount: 56,
+            currencyCode: "USD",
+            isApproximate: true
+        )
+
+        let vm = makeViewModel()
+        await vm.loadData()
+
+        XCTAssertEqual(vm.monthlyInsights.mealsCooked, 14)
+        XCTAssertEqual(vm.monthlyInsights.uniqueIngredientsUsed, 47)
+        XCTAssertEqual(vm.monthlyInsights.estimatedSavingsAmount, 56)
+        XCTAssertEqual(vm.monthlySavingsSummary, "~$56 saved vs takeout")
+        XCTAssertEqual(vm.monthlySavingsCaveat, "Approximate estimate based on $4 per cooked meal.")
+    }
+
     func testUserRecipesLoaded() async {
         let recipes = Recipe.mocks(count: 3)
         mockUserDataService.stubbedUserRecipes = recipes

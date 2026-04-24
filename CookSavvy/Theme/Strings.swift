@@ -213,6 +213,9 @@ enum Strings {
         static let thisMonth = String(localized: "journey.thisMonth", defaultValue: "THIS MONTH")
         static let monthlyMeals = String(localized: "journey.monthlyMeals", defaultValue: "Meals\nCooked")
         static let monthlyRescued = String(localized: "journey.monthlyRescued", defaultValue: "Ingredients\nRescued")
+        static let monthlyInsights = String(localized: "journey.monthlyInsights", defaultValue: "Monthly insights")
+        static let monthlySavingsSummary = String(localized: "journey.monthlySavingsSummary", defaultValue: "%@ saved vs takeout")
+        static let monthlySavingsCaveat = String(localized: "journey.monthlySavingsCaveat", defaultValue: "Approximate estimate based on $4 per cooked meal.")
         static let signIn = String(localized: "journey.signIn", defaultValue: "Sign In")
         static let accountSecured = String(localized: "journey.accountSecured", defaultValue: "Your recipes and preferences are backed up")
     }

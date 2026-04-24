@@ -311,8 +311,40 @@ struct JourneyView: View {
                     accessibilityID: AccessibilityID.Journey.Stats.monthlyIngredients
                 )
             }
+            if viewModel.showsMonthlyInsights {
+                monthlyInsightsCard
+            }
         }
         .accessibilityIdentifier(AccessibilityID.Journey.monthlyStats)
+    }
+
+    private var monthlyInsightsCard: some View {
+        HStack(alignment: .top, spacing: UI.Journey.shortcutContentSpacing) {
+            Image(systemName: Icons.Journey.savings)
+                .font(.system(size: UI.Journey.statIconSize, weight: .semibold))
+                .foregroundStyle(theme.gold)
+                .frame(width: UI.Journey.accountCardIconSize, height: UI.Journey.accountCardIconSize)
+
+            VStack(alignment: .leading, spacing: UI.Journey.shortcutTextSpacing) {
+                Text(Strings.Journey.monthlyInsights)
+                    .font(UI.Fonts.captionSemibold)
+                    .foregroundStyle(theme.text2)
+                Text(viewModel.monthlySavingsSummary)
+                    .font(UI.Fonts.bodySemibold)
+                    .foregroundStyle(theme.text1)
+                    .accessibilityIdentifier(AccessibilityID.Journey.Stats.monthlySavings)
+                Text(viewModel.monthlySavingsCaveat)
+                    .font(UI.Fonts.tinyCaption)
+                    .foregroundStyle(theme.text3)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(UI.Journey.accountCardPadding)
+        .frostCard(cornerRadius: UI.Common.cardCornerRadius)
+        .accessibilityIdentifier(AccessibilityID.Journey.monthlyInsights)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(Strings.Journey.monthlyInsights): \(viewModel.monthlySavingsSummary). \(viewModel.monthlySavingsCaveat)")
     }
 
     private var weeklyActivityContent: some View {

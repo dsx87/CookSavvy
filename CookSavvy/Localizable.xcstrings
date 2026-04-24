@@ -11,6 +11,16 @@
         }
       }
     },
+    "%@: %@. %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$@. %3$@"
+          }
+        }
+      }
+    },
     "%lld" : {
 
     },
@@ -2104,6 +2114,17 @@
         }
       }
     },
+    "journey.monthlyInsights" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Monthly insights"
+          }
+        }
+      }
+    },
     "journey.monthlyMeals" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -2122,6 +2143,28 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Ingredients\nRescued"
+          }
+        }
+      }
+    },
+    "journey.monthlySavingsCaveat" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Approximate estimate based on $4 per cooked meal."
+          }
+        }
+      }
+    },
+    "journey.monthlySavingsSummary" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ saved vs takeout"
           }
         }
       }
@@ -2678,28 +2721,6 @@
         }
       }
     },
-    "shareCard.brand" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "CookSavvy"
-          }
-        }
-      }
-    },
-    "shareCard.ingredientsCount" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%lld ingredients"
-          }
-        }
-      }
-    },
     "recipeFilter.easy" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -3125,6 +3146,28 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Version"
+          }
+        }
+      }
+    },
+    "shareCard.brand" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "CookSavvy"
+          }
+        }
+      }
+    },
+    "shareCard.ingredientsCount" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%lld ingredients"
           }
         }
       }

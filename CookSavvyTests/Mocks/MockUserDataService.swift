@@ -29,6 +29,13 @@ final class MockUserDataService: UserDataServiceProtocol {
     var stubbedDistinctIngredientsUsedCount: Int = 0
     var stubbedMonthlyRecipesCooked: Int = 0
     var stubbedMonthlyIngredientsRescued: Int = 0
+    var stubbedMonthlyCookingInsights = MonthlyCookingInsights(
+        mealsCooked: 0,
+        uniqueIngredientsUsed: 0,
+        estimatedSavingsAmount: 0,
+        currencyCode: "USD",
+        isApproximate: true
+    )
     var stubbedHighMatchRecipesCookedCount: Int = 0
     var stubbedThemePreference: ThemePreference = .system
     var shouldThrow: Error?
@@ -165,6 +172,11 @@ final class MockUserDataService: UserDataServiceProtocol {
     func monthlyIngredientsRescued() async throws -> Int {
         if let error = shouldThrow { throw error }
         return stubbedMonthlyIngredientsRescued
+    }
+
+    func monthlyCookingInsights() async throws -> MonthlyCookingInsights {
+        if let error = shouldThrow { throw error }
+        return stubbedMonthlyCookingInsights
     }
 
     func getHighMatchRecipesCookedCount() -> Int {

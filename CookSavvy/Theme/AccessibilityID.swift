@@ -136,6 +136,7 @@ enum AccessibilityID {
         static let achievementsAntiWaste = "journey.achievementsAntiWaste"
         static let recentActivity = "journey.recentActivity"
         static let monthlyStats = "journey.monthlyStats"
+        static let monthlyInsights = "journey.monthlyInsights"
 
         /// Returns the id for a "Cook Again" button tied to a specific session.
         static func cookAgainButton(_ sessionID: Int) -> String {
@@ -149,6 +150,7 @@ enum AccessibilityID {
             static let hoursCooking = "journey.stats.hoursCooking"
             static let monthlyMeals = "journey.stats.monthlyMeals"
             static let monthlyIngredients = "journey.stats.monthlyIngredients"
+            static let monthlySavings = "journey.stats.monthlySavings"
         }
     }
 

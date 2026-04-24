@@ -335,6 +335,21 @@ final class UserDataService: UserDataServiceProtocol {
         return try dbInterface.getDistinctCookedIngredientCount(from: monthStart, to: monthEnd)
     }
 
+    /// Returns a premium monthly cooking summary with an approximate savings estimate.
+    func monthlyCookingInsights() async throws -> MonthlyCookingInsights {
+        let mealsCooked = try await monthlyRecipesCooked()
+        let uniqueIngredientsUsed = try await monthlyIngredientsRescued()
+        // Origin: prod/tickets/TICKET_GRAPH.md T-023 / D-033 use 14 meals ~= $56 saved, so v1 estimates $4 per cooked meal.
+        let estimatedSavingsPerCookedMeal = 4
+        return MonthlyCookingInsights(
+            mealsCooked: mealsCooked,
+            uniqueIngredientsUsed: uniqueIngredientsUsed,
+            estimatedSavingsAmount: mealsCooked * estimatedSavingsPerCookedMeal,
+            currencyCode: "USD",
+            isApproximate: true
+        )
+    }
+
     /// Returns the number of times the user has cooked a recipe with no missing ingredients.
     ///
     /// Persisted in `UserDefaults` and incremented in `markAsCooked` when `missingIngredients`

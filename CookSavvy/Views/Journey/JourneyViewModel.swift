@@ -39,6 +39,14 @@ final class JourneyViewModel: ObservableObject {
     @Published var monthlyRecipesCooked: Int = 0
     /// Number of ingredients "rescued" (used in cooking) in the current calendar month.
     @Published var monthlyIngredientsRescued: Int = 0
+    /// Premium current-month summary with approximate savings.
+    @Published private(set) var monthlyInsights = MonthlyCookingInsights(
+        mealsCooked: 0,
+        uniqueIngredientsUsed: 0,
+        estimatedSavingsAmount: 0,
+        currencyCode: "USD",
+        isApproximate: true
+    )
     /// Recipes the user has bookmarked/saved, shown in the saved recipes carousel.
     @Published var savedRecipes: [Recipe] = []
     /// Recipes created by the user, shown in the My Recipes carousel.
@@ -61,6 +69,8 @@ final class JourneyViewModel: ObservableObject {
     @Published private(set) var isAnonymous: Bool = true
     /// `true` while a Sign in with Apple request is in flight.
     @Published var isSigningIn: Bool = false
+    /// The current subscription plan, mirrored from `SubscriptionServiceProtocol` for reactive premium UI.
+    @Published private(set) var currentPlan: SubscriptionPlan = .free
 
     /// `true` when auth is available on this device/build (may be hidden on unsupported configurations).
     var isAuthAvailable: Bool {
@@ -102,6 +112,7 @@ final class JourneyViewModel: ObservableObject {
 
         isAnonymous = authService.isAnonymous
         isSigningIn = signInWithAppleAction.isSigningIn
+        currentPlan = subscriptionService.currentPlan
         authService.authStatePublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
@@ -112,6 +123,12 @@ final class JourneyViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isSigningIn in
                 self?.isSigningIn = isSigningIn
+            }
+            .store(in: &cancellables)
+        subscriptionService.currentPlanPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] plan in
+                self?.currentPlan = plan
             }
             .store(in: &cancellables)
     }
@@ -143,6 +160,21 @@ final class JourneyViewModel: ObservableObject {
     /// `true` when the user's subscription tier includes the shopping list feature.
     var subscriptionHasShoppingListAccess: Bool {
         subscriptionService.canAccessFeature(.shoppingList)
+    }
+
+    /// `true` when the premium-only monthly insights card should be visible.
+    var showsMonthlyInsights: Bool {
+        currentPlan == .premium || subscriptionService.canAccessFeature(.monthlyCookingInsights)
+    }
+
+    /// Approximate monthly savings text shown in the premium insights card.
+    var monthlySavingsSummary: String {
+        String(format: Strings.Journey.monthlySavingsSummary, monthlySavingsText)
+    }
+
+    /// Caveat copy for the fixed savings estimate.
+    var monthlySavingsCaveat: String {
+        monthlyInsights.isApproximate ? Strings.Journey.monthlySavingsCaveat : ""
     }
 
     /// Monday-indexed single-character day labels for the weekly activity dot row.
@@ -279,8 +311,10 @@ final class JourneyViewModel: ObservableObject {
             let totalSeconds = try await userDataService.totalCookingTime()
             hoursCooking = totalSeconds / 3600.0
             uniqueIngredientsUsed = try await userDataService.getDistinctIngredientsUsedCount()
-            monthlyRecipesCooked = try await userDataService.monthlyRecipesCooked()
-            monthlyIngredientsRescued = try await userDataService.monthlyIngredientsRescued()
+            let insights = try await userDataService.monthlyCookingInsights()
+            monthlyInsights = insights
+            monthlyRecipesCooked = insights.mealsCooked
+            monthlyIngredientsRescued = insights.uniqueIngredientsUsed
         } catch {
             logger.error("Failed to load journey stats: \(String(describing: error))")
             errorMessage = Strings.Errors.journeyLoadFailed
@@ -375,5 +409,17 @@ final class JourneyViewModel: ObservableObject {
     /// Sets a localized "cook again" failure message for the dedicated alert.
     private func presentCookAgainError() {
         cookAgainErrorMessage = Strings.Journey.cookAgainErrorMessage
+    }
+
+    /// Formats the fixed USD estimate with a leading `~` to reinforce that it is approximate.
+    private var monthlySavingsText: String {
+        let amount: String
+        switch monthlyInsights.currencyCode {
+        case "USD":
+            amount = "$\(monthlyInsights.estimatedSavingsAmount)"
+        default:
+            amount = "\(monthlyInsights.currencyCode) \(monthlyInsights.estimatedSavingsAmount)"
+        }
+        return monthlyInsights.isApproximate ? "~\(amount)" : amount
     }
 }
