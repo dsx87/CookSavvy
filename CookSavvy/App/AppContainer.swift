@@ -50,6 +50,8 @@ final class AppContainer {
     let cameraScanTracker: CameraScanTrackerProtocol
     /// Shopping list CRUD backed by the database.
     let shoppingListService: ShoppingListServiceProtocol
+    /// Free pantry staple CRUD backed by the database.
+    let pantryService: PantryServiceProtocol
     /// Personalized recipe suggestions derived from cooking history.
     let recommendationService: RecipeRecommendationServiceProtocol
     /// Event analytics; `MockAnalyticsService` in DEBUG builds, `AnalyticsService` in RELEASE.
@@ -174,6 +176,7 @@ final class AppContainer {
 
         self.cameraScanTracker = CameraScanTracker()
         self.shoppingListService = ShoppingListService(dbInterface: db)
+        self.pantryService = PantryService(dbInterface: db)
         self.recommendationService = RecipeRecommendationService(
             userDataService: self.userDataService,
             dbInterface: db,
@@ -208,6 +211,7 @@ final class AppContainer {
         subscriptionService: SubscriptionServiceProtocol,
         cameraScanTracker: CameraScanTrackerProtocol,
         shoppingListService: ShoppingListServiceProtocol,
+        pantryService: PantryServiceProtocol,
         recommendationService: RecipeRecommendationServiceProtocol,
         loggingService: LoggingServiceProtocol,
         authService: AuthServiceProtocol,
@@ -228,6 +232,7 @@ final class AppContainer {
         self.subscriptionService = subscriptionService
         self.cameraScanTracker = cameraScanTracker
         self.shoppingListService = shoppingListService
+        self.pantryService = pantryService
         self.recommendationService = recommendationService
         self.analyticsService = analyticsService
         self.loggingService = loggingService
@@ -306,6 +311,7 @@ final class AppContainer {
             subscriptionService: MockSubscriptionService(initialPlan: subscriptionPlan),
             cameraScanTracker: CameraScanTracker(),
             shoppingListService: ShoppingListService(dbInterface: db),
+            pantryService: PantryService(dbInterface: db),
             recommendationService: RecipeRecommendationService(
                 userDataService: userDataService,
                 dbInterface: db,

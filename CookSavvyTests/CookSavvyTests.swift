@@ -212,6 +212,77 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertEqual(res.first?.title, r.title)
     }
 
+    // MARK: - Pantry tests
+
+    func testAddAndFetchPantryItems() throws {
+        let salt = Ingredient(name: "Salt", description: nil, pictureFileName: nil, foodGroup: "Spices", foodSubgroup: nil)
+        let oliveOil = Ingredient(name: "Olive Oil", description: nil, pictureFileName: nil, foodGroup: "Pantry", foodSubgroup: nil)
+        try dbInterface.insertIngredients([salt, oliveOil])
+
+        try dbInterface.addPantryItem(salt)
+        try dbInterface.addPantryItem(oliveOil)
+
+        let pantryItems = try dbInterface.getPantryItems()
+        XCTAssertEqual(Set(pantryItems.map(\.name)), Set(["Salt", "Olive Oil"]))
+        XCTAssertTrue(try dbInterface.isPantryItem(salt))
+    }
+
+    func testAddPantryItemDedupesCaseInsensitively() throws {
+        let salt = Ingredient(name: "Salt", description: nil, pictureFileName: nil, foodGroup: "Spices", foodSubgroup: nil)
+        try dbInterface.insertIngredients([salt])
+
+        try dbInterface.addPantryItem(Ingredient(name: "salt"))
+        try dbInterface.addPantryItem(Ingredient(name: "SALT"))
+
+        let pantryItems = try dbInterface.getPantryItems()
+        XCTAssertEqual(pantryItems.map(\.name), ["Salt"])
+    }
+
+    func testRemovePantryItem() throws {
+        let salt = Ingredient(name: "Salt")
+        try dbInterface.insertIngredients([salt])
+        try dbInterface.addPantryItem(salt)
+
+        try dbInterface.removePantryItem(Ingredient(name: "salt"))
+
+        XCTAssertFalse(try dbInterface.isPantryItem(salt))
+        XCTAssertTrue(try dbInterface.getPantryItems().isEmpty)
+    }
+
+    func testPantryItemsPersistWithinDatabaseInstance() throws {
+        let flour = Ingredient(name: "Flour", description: nil, pictureFileName: nil, foodGroup: "Grains", foodSubgroup: nil)
+        try dbInterface.insertIngredients([flour])
+        try dbInterface.addPantryItem(flour)
+
+        let fetched = try dbInterface.getPantryItems()
+
+        XCTAssertEqual(fetched, [flour])
+    }
+
+    func testClearDatabaseRemovesPantryItems() throws {
+        let sugar = Ingredient(name: "Sugar")
+        try dbInterface.insertIngredients([sugar])
+        try dbInterface.addPantryItem(sugar)
+
+        try dbInterface.clearDatabase()
+
+        XCTAssertTrue(try dbInterface.getPantryItems().isEmpty)
+    }
+
+    func testPantryServicePersistsThroughDatabase() async throws {
+        let pepper = Ingredient(name: "Pepper")
+        try dbInterface.insertIngredients([pepper])
+        let service = PantryService(dbInterface: dbInterface)
+
+        try await service.addItem(pepper)
+        let containsPepper = try await service.contains(Ingredient(name: "pepper"))
+        XCTAssertTrue(containsPepper)
+
+        try await service.removeItem(pepper)
+        let remainingItems = try await service.getItems()
+        XCTAssertTrue(remainingItems.isEmpty)
+    }
+
     // MARK: - Removal tests (pending implementation)
 
     func testRemoveSpecificIngredientByName() throws {

@@ -12,6 +12,7 @@ final class DiscoverViewModelTests: XCTestCase {
     var mockSubscriptionService: MockSubscriptionService!
     var mockDBInitService: MockDatabaseInitService!
     var mockCameraScanTracker: MockCameraScanTracker!
+    var mockPantryService: MockPantryService!
     var mockRecommendationService: MockRecommendationService!
     var mockCuratedCollectionService: MockCuratedCollectionService!
 
@@ -23,6 +24,7 @@ final class DiscoverViewModelTests: XCTestCase {
         mockSubscriptionService = MockSubscriptionService(initialPlan: .free)
         mockDBInitService = MockDatabaseInitService()
         mockCameraScanTracker = MockCameraScanTracker()
+        mockPantryService = MockPantryService()
         mockRecommendationService = MockRecommendationService()
         mockCuratedCollectionService = MockCuratedCollectionService()
     }
@@ -34,6 +36,7 @@ final class DiscoverViewModelTests: XCTestCase {
         mockSubscriptionService = nil
         mockDBInitService = nil
         mockCameraScanTracker = nil
+        mockPantryService = nil
         mockRecommendationService = nil
         mockCuratedCollectionService = nil
         super.tearDown()
@@ -47,6 +50,7 @@ final class DiscoverViewModelTests: XCTestCase {
             subscriptionService: mockSubscriptionService,
             databaseInitService: mockDBInitService,
             cameraScanTracker: mockCameraScanTracker,
+            pantryService: mockPantryService,
             recommendationService: mockRecommendationService,
             analyticsService: MockAnalyticsService(),
             logger: MockLogger(),
@@ -322,6 +326,116 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertNil(vm.selectedMood)
         XCTAssertNil(vm.selectedCookTimeFilter)
         XCTAssertNil(vm.selectedComplexityFilter)
+    }
+
+    func testLoadInitialDataLoadsPantryItems() async {
+        mockPantryService.stubbedItems = [Ingredient(name: "Salt"), Ingredient(name: "Olive Oil")]
+
+        let vm = makeViewModel()
+        await vm.loadPantryItems()
+
+        XCTAssertEqual(vm.pantryIngredients.map(\.name), ["Salt", "Olive Oil"])
+    }
+
+    func testTogglePantryItemDoesNotChangeSelectedIngredients() async {
+        let tomato = Ingredient(name: "Tomato")
+        let vm = makeViewModel()
+        vm.selectedIngredients = [tomato]
+
+        vm.togglePantryItem(Ingredient(name: "Salt"))
+        for _ in 0..<10 { await Task.yield() }
+
+        XCTAssertEqual(vm.selectedIngredients, [tomato])
+        XCTAssertEqual(vm.pantryIngredients.map(\.name), ["Salt"])
+        XCTAssertEqual(mockPantryService.addCalls.map(\.name), ["Salt"])
+
+        vm.togglePantryItem(Ingredient(name: "salt"))
+        for _ in 0..<10 { await Task.yield() }
+
+        XCTAssertEqual(vm.selectedIngredients, [tomato])
+        XCTAssertTrue(vm.pantryIngredients.isEmpty)
+        XCTAssertEqual(mockPantryService.removeCalls.map(\.name), ["salt"])
+    }
+
+    func testRapidPantryToggleReplaysMutationsInTapOrder() async {
+        mockPantryService.delayNanoseconds = 20_000_000
+        let vm = makeViewModel()
+        let salt = Ingredient(name: "Salt")
+
+        vm.togglePantryItem(salt)
+        XCTAssertEqual(vm.pantryIngredients.map(\.name), ["Salt"])
+
+        vm.togglePantryItem(salt)
+        XCTAssertTrue(vm.pantryIngredients.isEmpty)
+
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        XCTAssertEqual(mockPantryService.addCalls.map(\.name), ["Salt"])
+        XCTAssertEqual(mockPantryService.removeCalls.map(\.name), ["Salt"])
+        XCTAssertTrue(mockPantryService.stubbedItems.isEmpty)
+        XCTAssertTrue(vm.pantryIngredients.isEmpty)
+    }
+
+    func testPantryIngredientNotFoundRollsBackOptimisticStateBeforeReloadCompletes() async {
+        mockPantryService.addError = DatabaseError.ingredientNotFound("Dragonfruit")
+        mockPantryService.getItemsDelayNanoseconds = 200_000_000
+        let vm = makeViewModel()
+
+        vm.togglePantryItem(Ingredient(name: "Dragonfruit"))
+        XCTAssertEqual(vm.pantryIngredients.map(\.name), ["Dragonfruit"])
+
+        try? await Task.sleep(nanoseconds: 20_000_000)
+
+        XCTAssertTrue(vm.pantryIngredients.isEmpty)
+        XCTAssertEqual(vm.homeLoadError, Strings.Errors.actionFailed)
+    }
+
+    func testSearchUsesSelectedAndPantryIngredients() async {
+        mockRecipeService.stubbedRecipes = [Recipe.mockRandom()]
+        let vm = makeViewModel()
+        vm.pantryIngredients = [Ingredient(name: "Salt")]
+        vm.selectedIngredients = [Ingredient(name: "Chicken")]
+
+        vm.findRecipes()
+        for _ in 0..<10 { await Task.yield() }
+
+        XCTAssertEqual(mockRecipeService.requestedIngredients.map(\.name), ["Chicken", "Salt"])
+    }
+
+    func testMissingIngredientsExcludePantryStaples() async {
+        let ingredients = ["Chicken", "Salt", "Pepper"].map(Ingredient.init(name:))
+        mockRecipeService.stubbedRecipes = [
+            Recipe(
+                title: "Seasoned Chicken",
+                ingredients: ingredients,
+                instructions: ["Cook"],
+                image: "",
+                cleanedIngredients: ingredients,
+                additionalInfo: .empty
+            )
+        ]
+        let vm = makeViewModel()
+        vm.pantryIngredients = [Ingredient(name: "Salt")]
+        vm.selectedIngredients = [Ingredient(name: "Chicken")]
+
+        vm.findRecipes()
+        for _ in 0..<10 { await Task.yield() }
+
+        XCTAssertEqual(vm.searchResultRecipes.first?.missingIngredients, ["Pepper"])
+    }
+
+    func testClearIngredientsPreservesPantry() async {
+        let vm = makeViewModel()
+        vm.pantryIngredients = [Ingredient(name: "Salt")]
+        vm.selectedIngredients = [Ingredient(name: "Onion")]
+        vm.searchResultRecipes = [Recipe.mockRandom()]
+        vm.showResults = true
+
+        vm.clearIngredients()
+
+        XCTAssertTrue(vm.selectedIngredients.isEmpty)
+        XCTAssertEqual(vm.pantryIngredients.map(\.name), ["Salt"])
+        XCTAssertFalse(vm.hasIngredients)
     }
 
     func testRemovingLastIngredientResetsResultFiltersAndExitsResults() {

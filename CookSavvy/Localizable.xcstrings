@@ -178,6 +178,17 @@
         }
       }
     },
+    "accessibility.markAlwaysHave" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Mark %@ as always have"
+          }
+        }
+      }
+    },
     "accessibility.moodNotSelected" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -240,6 +251,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Rating: %@ out of 5 stars"
+          }
+        }
+      }
+    },
+    "accessibility.removeAlwaysHave" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove %@ from always have"
           }
         }
       }
@@ -1252,6 +1274,39 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "ALL INGREDIENTS"
+          }
+        }
+      }
+    },
+    "discover.alwaysHaveBadge" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Always Have"
+          }
+        }
+      }
+    },
+    "discover.alwaysHaveHelper" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Counted in every search"
+          }
+        }
+      }
+    },
+    "discover.alwaysHaveTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ALWAYS HAVE"
           }
         }
       }
@@ -3369,17 +3424,6 @@
         }
       }
     },
-    "upgrade.purchaseFailed" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Purchase Failed"
-          }
-        }
-      }
-    },
     "upgrade.premiumFeatureNeverMissIngredient" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -3420,6 +3464,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Get smarter dinner suggestions"
+          }
+        }
+      }
+    },
+    "upgrade.purchaseFailed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Purchase Failed"
           }
         }
       }

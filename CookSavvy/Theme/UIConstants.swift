@@ -572,6 +572,12 @@ struct UI {
         static let bubbleSelectedBorder: CGFloat = 2
         static let bubbleEmojiSize: CGFloat = 26
         static let bubbleSelectedScale: CGFloat = 1.08
+        static let alwaysHaveBadgePaddingH: CGFloat = 7
+        static let alwaysHaveBadgePaddingV: CGFloat = 3
+        static let pantryToggleSize: CGFloat = 22
+        static let pantryToggleHitSize: CGFloat = 44
+        static let pantryToggleIconSize: CGFloat = 10
+        static let pantryToggleOffset: CGFloat = 2
         // SelectedChip
         static let selectedChipSpacing: CGFloat = 5
         static let selectedChipPaddingH: CGFloat = 12

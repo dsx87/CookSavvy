@@ -137,6 +137,9 @@ enum Strings {
         static let kitchenSubtitle = String(localized: "discover.kitchenSubtitle", defaultValue: "Add what you have — we'll find recipes to use it all")
         static let recipesForYou = String(localized: "discover.recipesForYou", defaultValue: "Your dinner options")
         static let yourIngredients = String(localized: "discover.yourIngredients", defaultValue: "YOUR INGREDIENTS")
+        static let alwaysHaveTitle = String(localized: "discover.alwaysHaveTitle", defaultValue: "ALWAYS HAVE")
+        static let alwaysHaveHelper = String(localized: "discover.alwaysHaveHelper", defaultValue: "Counted in every search")
+        static let alwaysHaveBadge = String(localized: "discover.alwaysHaveBadge", defaultValue: "Always Have")
         static let edit = String(localized: "discover.edit", defaultValue: "Edit")
         static let seeAll = String(localized: "discover.seeAll", defaultValue: "See All")
         static let bestMatch = String(localized: "discover.bestMatch", defaultValue: "TOP PICK")
@@ -404,6 +407,8 @@ enum Strings {
         static let removeDietaryRestriction = String(localized: "accessibility.removeDietaryRestriction", defaultValue: "Remove %@ filter")
         static let onboardingPage = String(localized: "accessibility.onboardingPage", defaultValue: "Page %lld of %lld")
         static let removeIngredient = String(localized: "accessibility.removeIngredient", defaultValue: "Remove %@")
+        static let markAlwaysHave = String(localized: "accessibility.markAlwaysHave", defaultValue: "Mark %@ as always have")
+        static let removeAlwaysHave = String(localized: "accessibility.removeAlwaysHave", defaultValue: "Remove %@ from always have")
         static let checkItem = String(localized: "accessibility.checkItem", defaultValue: "Check %@")
         static let uncheckItem = String(localized: "accessibility.uncheckItem", defaultValue: "Uncheck %@")
     }

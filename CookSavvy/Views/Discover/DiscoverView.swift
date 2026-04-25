@@ -49,6 +49,7 @@ struct DiscoverView: View {
                             homeErrorBanner
                         }
                         selectedIngredientsStrip
+                        alwaysHaveRow
                         recentSection
                         savedSection
                         suggestedSection
@@ -363,13 +364,17 @@ struct DiscoverView: View {
             ForEach(viewModel.shownIngredients) { ingredient in
                 IngredientBubble(
                     ingredient: ingredient,
-                    isSelected: viewModel.isIngredientSelected(ingredient)
-                )
-                .onTapGesture {
-                    withAnimation(UI.Anim.springQuick) {
-                        viewModel.toggleIngredient(ingredient)
+                    isSelected: viewModel.isIngredientSelected(ingredient),
+                    isPantryItem: viewModel.isIngredientInPantry(ingredient),
+                    onSelect: {
+                        withAnimation(UI.Anim.springQuick) {
+                            viewModel.toggleIngredient(ingredient)
+                        }
+                    },
+                    onPantryToggle: {
+                        viewModel.togglePantryItem(ingredient)
                     }
-                }
+                )
             }
         }
     }
@@ -448,6 +453,7 @@ struct DiscoverView: View {
             VStack(alignment: .leading, spacing: UI.Discover.sectionSpacing) {
                 resultsHeader
                 selectedIngredientsStrip
+                alwaysHaveRow
                 moodFilter
                 timeFilter
                 complexityFilter
@@ -593,6 +599,32 @@ struct DiscoverView: View {
             }
         }
         .accessibilityIdentifier(AccessibilityID.Discover.selectedStrip)
+    }
+
+    /// Informational pantry-staple row; removal stays on the ingredient bubble toggle.
+    @ViewBuilder
+    private var alwaysHaveRow: some View {
+        if !viewModel.pantryIngredients.isEmpty {
+            VStack(alignment: .leading, spacing: UI.Discover.ingredientStripSpacing) {
+                VStack(alignment: .leading, spacing: UI.Common.smallSpacing) {
+                    Text(Strings.Discover.alwaysHaveTitle)
+                        .sectionLabel()
+                    Text(Strings.Discover.alwaysHaveHelper)
+                        .font(UI.Fonts.caption)
+                        .foregroundStyle(theme.text3)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: UI.Discover.categoryChipSpacing) {
+                        ForEach(viewModel.pantryIngredients) { ingredient in
+                            AlwaysHaveChip(ingredient: ingredient)
+                        }
+                    }
+                }
+            }
+            .accessibilityIdentifier(AccessibilityID.Discover.alwaysHaveRow)
+        }
     }
 
     private var moodFilter: some View {

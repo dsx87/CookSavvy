@@ -109,6 +109,7 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating, Re
             subscriptionService: container.subscriptionService,
             databaseInitService: container.databaseInitService,
             cameraScanTracker: container.cameraScanTracker,
+            pantryService: container.pantryService,
             recommendationService: container.recommendationService,
             analyticsService: container.analyticsService,
             logger: container.loggingService.makeLogger(category: .discoverViewModel),

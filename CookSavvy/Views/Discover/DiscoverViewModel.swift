@@ -90,6 +90,8 @@ final class DiscoverViewModel: ObservableObject {
 
     /// The ingredients the user has tapped to include in their recipe search.
     @Published var selectedIngredients: [Ingredient] = []
+    /// Ingredients the user has marked as pantry staples and always has available.
+    @Published var pantryIngredients: [Ingredient] = []
     /// The currently active mood filter applied to recipe results (`nil` = no filter).
     @Published var selectedMood: RecipeMood? = nil
     /// The active cook-time bucket applied to recipe results (`nil` = no time filter).
@@ -113,6 +115,7 @@ final class DiscoverViewModel: ObservableObject {
     private var categoryIngredients: [Ingredient] = []
     private var loadedCategory: IngredientCategory?
     private var ingredientRefreshTask: Task<Void, Never>?
+    private var pantryMutationTask: Task<Void, Never>?
     private var ingredientRefreshToken = 0
 
     /// High-frequency ingredients shown at the top of the grid, populated from user history or DB.
@@ -156,6 +159,7 @@ final class DiscoverViewModel: ObservableObject {
     private let subscriptionService: SubscriptionServiceProtocol
     private let databaseInitService: DatabaseInitializationServiceProtocol
     private let cameraScanTracker: CameraScanTrackerProtocol
+    private let pantryService: PantryServiceProtocol
     private let recommendationService: RecipeRecommendationServiceProtocol
     private let analyticsService: AnalyticsServiceProtocol
     private let logger: any LoggerProtocol
@@ -174,6 +178,7 @@ final class DiscoverViewModel: ObservableObject {
         subscriptionService: SubscriptionServiceProtocol,
         databaseInitService: DatabaseInitializationServiceProtocol,
         cameraScanTracker: CameraScanTrackerProtocol,
+        pantryService: PantryServiceProtocol,
         recommendationService: RecipeRecommendationServiceProtocol,
         analyticsService: AnalyticsServiceProtocol,
         logger: any LoggerProtocol,
@@ -188,6 +193,7 @@ final class DiscoverViewModel: ObservableObject {
         self.subscriptionService = subscriptionService
         self.databaseInitService = databaseInitService
         self.cameraScanTracker = cameraScanTracker
+        self.pantryService = pantryService
         self.recommendationService = recommendationService
         self.analyticsService = analyticsService
         self.logger = logger
@@ -201,6 +207,14 @@ final class DiscoverViewModel: ObservableObject {
 
     /// `true` when at least one ingredient has been selected.
     var hasIngredients: Bool { !selectedIngredients.isEmpty }
+
+    /// Explicit selected ingredients plus pantry staples, deduplicated case-insensitively.
+    ///
+    /// Discover requires at least one explicit selected ingredient to start a search, but pantry
+    /// staples are included once a search is running so match scoring treats them as available.
+    var effectiveSearchIngredients: [Ingredient] {
+        Self.deduplicatedIngredients(selectedIngredients + pantryIngredients)
+    }
 
     /// `true` when the homepage has no content to display (no recent, saved, or suggested recipes).
     var isDiscoverEmpty: Bool {
@@ -298,7 +312,7 @@ final class DiscoverViewModel: ObservableObject {
     /// - Parameter recipe: The recipe to check against the current selection.
     /// - Returns: Unique display names of matching ingredients, preserving the recipe's original casing.
     func matchingIngredientNames(for recipe: Recipe) -> [String] {
-        let queryNames = Set(selectedIngredients.map { Self.normalizedIngredientName($0.name) }.filter { !$0.isEmpty })
+        let queryNames = Set(effectiveSearchIngredients.map { Self.normalizedIngredientName($0.name) }.filter { !$0.isEmpty })
         guard !queryNames.isEmpty else { return [] }
 
         let recipeIngredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
@@ -343,6 +357,11 @@ final class DiscoverViewModel: ObservableObject {
     /// Returns `true` when the ingredient bubble should render as selected.
     func isIngredientSelected(_ ingredient: Ingredient) -> Bool {
         selectedIngredients.contains { $0.id == ingredient.id }
+    }
+
+    /// Returns `true` when the ingredient is marked as an always-available pantry staple.
+    func isIngredientInPantry(_ ingredient: Ingredient) -> Bool {
+        pantryIngredients.contains { Self.normalizedIngredientName($0.name) == Self.normalizedIngredientName(ingredient.name) }
     }
 
     /// Returns `true` when the mood pill should render as selected.
@@ -403,9 +422,10 @@ final class DiscoverViewModel: ObservableObject {
         homeLoadError = nil
         loadCollections()
         async let ingredientsTask: () = loadIngredients()
+        async let pantryTask: () = loadPantryItems()
         async let recentTask: () = loadRecentRecipes()
         async let savedTask: () = loadSavedRecipes()
-        _ = await (ingredientsTask, recentTask, savedTask)
+        _ = await (ingredientsTask, pantryTask, recentTask, savedTask)
         isLoadingIngredients = false
         if let initialIngredients, !initialIngredients.isEmpty {
             self.initialIngredients = nil
@@ -441,14 +461,12 @@ final class DiscoverViewModel: ObservableObject {
             selectedIngredients.append(ingredient)
         }
         
-        if showResults {
-            Task { await searchRecipes() }
-        }
-        
         if !hasIngredients {
             showResults = false
             searchResultRecipes = []
             resetResultFilters()
+        } else if showResults {
+            Task { await searchRecipes() }
         }
         //searchText = ""
     }
@@ -458,14 +476,50 @@ final class DiscoverViewModel: ObservableObject {
     func removeIngredient(_ ingredient: Ingredient) {
         selectedIngredients.removeAll { $0.id == ingredient.id }
         
-        if showResults {
-            Task { await searchRecipes() }
-        }
-        
         if !hasIngredients {
             showResults = false
             searchResultRecipes = []
             resetResultFilters()
+        } else if showResults {
+            Task { await searchRecipes() }
+        }
+    }
+
+    /// Adds or removes an ingredient from the always-available pantry list.
+    ///
+    /// Pantry changes do not mutate explicit selection. If results are visible and at least one
+    /// explicit ingredient remains selected, the active search is refreshed with the new effective set.
+    func togglePantryItem(_ ingredient: Ingredient) {
+        let wasPantryItem = isIngredientInPantry(ingredient)
+        if wasPantryItem {
+            removePantryIngredientLocally(ingredient)
+        } else {
+            pantryIngredients = Self.deduplicatedIngredients(pantryIngredients + [ingredient])
+        }
+
+        let previousMutation = pantryMutationTask
+        pantryMutationTask = Task { [weak self] in
+            // Preserve tap order across async persistence so rapid toggles cannot replay stale state.
+            await previousMutation?.value
+            guard let self else { return }
+            do {
+                if wasPantryItem {
+                    try await pantryService.removeItem(ingredient)
+                } else {
+                    try await pantryService.addItem(ingredient)
+                }
+
+                if showResults, hasIngredients {
+                    await searchRecipes()
+                }
+            } catch {
+                logger.error("Failed to update pantry item: \(String(describing: error))")
+                homeLoadError = Strings.Errors.actionFailed
+                if case DatabaseError.ingredientNotFound = error {
+                    rollbackOptimisticPantryMutation(for: ingredient, wasPantryItem: wasPantryItem)
+                }
+                await loadPantryItems()
+            }
         }
     }
 
@@ -525,7 +579,7 @@ final class DiscoverViewModel: ObservableObject {
 
     /// Navigates to the recipe detail screen, passing the current ingredient selection for match highlighting.
     func showRecipeDetails(_ recipe: Recipe) {
-        coordinator?.showRecipeDetails(recipe: recipe, selectedIngredients: selectedIngredients)
+        coordinator?.showRecipeDetails(recipe: recipe, selectedIngredients: effectiveSearchIngredients)
     }
 
     /// Navigates to the "See All" recipe list screen.
@@ -603,10 +657,11 @@ final class DiscoverViewModel: ObservableObject {
         await databaseInitService.waitForRecipes()
         homeLoadError = nil
         async let ingredientsTask: () = loadIngredients()
+        async let pantryTask: () = loadPantryItems()
         async let recentTask: () = loadRecentRecipes()
         async let savedTask: () = loadSavedRecipes()
         async let suggestionsTask: () = loadSuggestions()
-        _ = await (ingredientsTask, recentTask, savedTask, suggestionsTask)
+        _ = await (ingredientsTask, pantryTask, recentTask, savedTask, suggestionsTask)
     }
 
     /// Loads the curated collections appropriate for this week, filtered by subscription tier.
@@ -625,6 +680,34 @@ final class DiscoverViewModel: ObservableObject {
         } catch {
             logger.error("Failed to load discover ingredients: \(String(describing: error))")
             homeLoadError = Strings.Errors.loadFailed
+        }
+    }
+
+    /// Loads pantry staples that should be merged into Discover searches.
+    func loadPantryItems() async {
+        do {
+            var items = try await pantryService.getItems()
+            IngredientEmojiProvider.fillIngredientsWithEmoji(&items)
+            pantryIngredients = Self.deduplicatedIngredients(items)
+        } catch {
+            logger.error("Failed to load pantry ingredients: \(String(describing: error))")
+            homeLoadError = Strings.Errors.loadFailed
+        }
+    }
+
+    /// Removes an ingredient from the optimistic pantry state using the same name identity as persistence.
+    private func removePantryIngredientLocally(_ ingredient: Ingredient) {
+        pantryIngredients.removeAll {
+            Self.normalizedIngredientName($0.name) == Self.normalizedIngredientName(ingredient.name)
+        }
+    }
+
+    /// Restores local pantry state when persistence rejects an optimistic pantry toggle.
+    private func rollbackOptimisticPantryMutation(for ingredient: Ingredient, wasPantryItem: Bool) {
+        if wasPantryItem {
+            pantryIngredients = Self.deduplicatedIngredients(pantryIngredients + [ingredient])
+        } else {
+            removePantryIngredientLocally(ingredient)
         }
     }
 
@@ -672,12 +755,12 @@ final class DiscoverViewModel: ObservableObject {
             if RecipeSourceType.requiresDatabaseReady(enabledSources) {
                 await databaseInitService.waitForRecipes()
             }
+            let ingredients = effectiveSearchIngredients
             let (rawResults, hadSourceFailures) = try await recipeService.getRecipes(
-                for: selectedIngredients,
+                for: ingredients,
                 from: enabledSources
             )
             var results = rawResults
-            let ingredients = selectedIngredients
             for index in results.indices {
                 let missing = RecipeMatchExplainer.missingIngredients(
                     recipe: results[index],
@@ -717,6 +800,19 @@ final class DiscoverViewModel: ObservableObject {
     /// Lowercases and trims whitespace from an ingredient name for fuzzy-match comparisons.
     private static func normalizedIngredientName(_ value: String) -> String {
         value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    /// Deduplicates ingredient arrays by normalized name while preserving first-seen order.
+    private static func deduplicatedIngredients(_ ingredients: [Ingredient]) -> [Ingredient] {
+        var seen = Set<String>()
+        var result: [Ingredient] = []
+        result.reserveCapacity(ingredients.count)
+        for ingredient in ingredients {
+            let key = normalizedIngredientName(ingredient.name)
+            guard !key.isEmpty, seen.insert(key).inserted else { continue }
+            result.append(ingredient)
+        }
+        return result
     }
     /// Returns the recipe source types the current user is entitled to query,
     /// based on their subscription plan.

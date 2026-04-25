@@ -50,32 +50,101 @@ struct IngredientBubble: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let ingredient: Ingredient
     let isSelected: Bool
+    let isPantryItem: Bool
+    let onSelect: () -> Void
+    let onPantryToggle: () -> Void
 
     var body: some View {
         VStack(spacing: UI.Components.bubbleSpacing) {
-            ZStack {
-                Circle()
-                    .fill(isSelected ? theme.accentSoft : theme.surface)
-                    .frame(width: UI.Components.bubbleSize, height: UI.Components.bubbleSize)
-                    .overlay(
-                        Circle().strokeBorder(isSelected ? theme.accent : theme.divider, lineWidth: isSelected ? UI.Components.bubbleSelectedBorder : UI.Common.borderWidth)
-                    )
-                Text(ingredient.emoji ?? IngredientEmojiProvider.emoji(for: ingredient.name, foodGroup: ingredient.foodGroup))
-                    .font(.system(size: UI.Components.bubbleEmojiSize))
+            ZStack(alignment: .topTrailing) {
+                ingredientButton
+                pantryButton
             }
             .scaleEffect(reduceMotion ? 1.0 : (isSelected ? UI.Components.bubbleSelectedScale : 1.0))
 
             Text(ingredient.name)
                 .font(.system(size: 11, weight: isSelected ? .bold : .medium, design: .rounded))
-                .foregroundStyle(isSelected ? theme.accent : theme.text2)
+                .foregroundStyle(labelColor)
                 .lineLimit(1)
+
+            Text(Strings.Discover.alwaysHaveBadge)
+                .font(UI.Fonts.microBold)
+                .foregroundStyle(isPantryItem ? theme.mint : .clear)
+                .padding(.horizontal, UI.Components.alwaysHaveBadgePaddingH)
+                .padding(.vertical, UI.Components.alwaysHaveBadgePaddingV)
+                .background(isPantryItem ? theme.mintSoft : Color.clear, in: Capsule())
+                .overlay(
+                    Capsule().strokeBorder(isPantryItem ? theme.mint.opacity(0.4) : Color.clear, lineWidth: UI.Common.borderWidth)
+                )
+                .opacity(isPantryItem ? 1 : 0)
+                .accessibilityHidden(!isPantryItem)
         }
         .frame(maxWidth: .infinity)
+    }
+
+    private var ingredientButton: some View {
+        Button(action: onSelect) {
+            ZStack {
+                Circle()
+                    .fill(bubbleFill)
+                    .frame(width: UI.Components.bubbleSize, height: UI.Components.bubbleSize)
+                    .overlay(
+                        Circle().strokeBorder(bubbleBorder, lineWidth: isSelected ? UI.Components.bubbleSelectedBorder : UI.Common.borderWidth)
+                    )
+                Text(ingredient.emoji ?? IngredientEmojiProvider.emoji(for: ingredient.name, foodGroup: ingredient.foodGroup))
+                    .font(.system(size: UI.Components.bubbleEmojiSize))
+            }
+        }
+        .buttonStyle(.plain)
         .accessibilityIdentifier(AccessibilityID.Discover.ingredient(ingredient.name))
         .accessibilityLabel(isSelected
             ? String(format: Strings.Accessibility.ingredientSelected, ingredient.name)
             : String(format: Strings.Accessibility.ingredientNotSelected, ingredient.name))
-        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    private var pantryButton: some View {
+        Button(action: onPantryToggle) {
+            Image(systemName: isPantryItem ? Icons.Discover.pantryFill : Icons.Discover.pantry)
+                .font(.system(size: UI.Components.pantryToggleIconSize, weight: .bold))
+                .foregroundStyle(isPantryItem ? .white : theme.text3)
+                .frame(width: UI.Components.pantryToggleSize, height: UI.Components.pantryToggleSize)
+                .background(isPantryItem ? theme.mint : theme.surfaceLight, in: Circle())
+                .overlay(
+                    Circle().strokeBorder(isPantryItem ? Color.clear : theme.divider, lineWidth: UI.Common.borderWidth)
+                )
+        }
+        .frame(width: UI.Components.pantryToggleHitSize, height: UI.Components.pantryToggleHitSize)
+        .contentShape(Circle())
+        .buttonStyle(.plain)
+        .offset(
+            x: (UI.Components.pantryToggleHitSize - UI.Components.pantryToggleSize) / 2 + UI.Components.pantryToggleOffset,
+            y: -((UI.Components.pantryToggleHitSize - UI.Components.pantryToggleSize) / 2 + UI.Components.pantryToggleOffset)
+        )
+        .accessibilityIdentifier(AccessibilityID.Discover.pantryToggle(ingredient.name))
+        .accessibilityLabel(String(
+            format: isPantryItem ? Strings.Accessibility.removeAlwaysHave : Strings.Accessibility.markAlwaysHave,
+            ingredient.name
+        ))
+        .accessibilityAddTraits(isPantryItem ? [.isButton, .isSelected] : .isButton)
+    }
+
+    private var bubbleFill: Color {
+        if isSelected { return theme.accentSoft }
+        if isPantryItem { return theme.mintSoft }
+        return theme.surface
+    }
+
+    private var bubbleBorder: Color {
+        if isSelected { return theme.accent }
+        if isPantryItem { return theme.mint }
+        return theme.divider
+    }
+
+    private var labelColor: Color {
+        if isSelected { return theme.accent }
+        if isPantryItem { return theme.mint }
+        return theme.text2
     }
 }
 
@@ -106,6 +175,29 @@ struct SelectedChip: View {
         .overlay(
             Capsule().strokeBorder(theme.divider, lineWidth: UI.Common.borderWidth)
         )
+    }
+}
+
+/// A read-only chip for pantry staples that are automatically included in Discover searches.
+struct AlwaysHaveChip: View {
+    @Environment(\.appTheme) private var theme
+    let ingredient: Ingredient
+
+    var body: some View {
+        HStack(spacing: UI.Components.selectedChipSpacing) {
+            Text(ingredient.emoji ?? IngredientEmojiProvider.emoji(for: ingredient.name, foodGroup: ingredient.foodGroup))
+                .font(UI.Fonts.caption)
+            Text(ingredient.name)
+                .font(UI.Fonts.captionSemibold)
+                .foregroundStyle(theme.text1)
+        }
+        .padding(.horizontal, UI.Components.selectedChipPaddingH)
+        .padding(.vertical, UI.Components.selectedChipPaddingV)
+        .background(theme.mintSoft, in: Capsule())
+        .overlay(
+            Capsule().strokeBorder(theme.mint.opacity(0.35), lineWidth: UI.Common.borderWidth)
+        )
+        .accessibilityIdentifier(AccessibilityID.Discover.alwaysHaveChip(ingredient.name))
     }
 }
 

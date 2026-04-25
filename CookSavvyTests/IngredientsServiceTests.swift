@@ -73,6 +73,10 @@ final class MockDBInterfaceForIngredients: DBInterfaceProtocol {
     func isFavorite(_ recipeId: Int) throws -> Bool { false }
     func getRecentSearches(limit: Int) throws -> [[Ingredient]] { [] }
     func recordSearch(ingredients: [Ingredient]) throws {}
+    func getPantryItems() throws -> [Ingredient] { [] }
+    func addPantryItem(_ ingredient: Ingredient) throws {}
+    func removePantryItem(_ ingredient: Ingredient) throws {}
+    func isPantryItem(_ ingredient: Ingredient) throws -> Bool { false }
     func clearRecentData() throws {}
     func clearFavorites() throws {}
     func getRecipeCount() throws -> Int { 0 }

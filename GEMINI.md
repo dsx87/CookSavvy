@@ -49,7 +49,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 
 | Screen | Description |
 |--------|-------------|
-| **Discover** (tab 1) | Two-state flow: ingredient selection (grid, categories, search, recent/saved cards) and recipe results (mood filter, hero best match, recipe rows) |
+| **Discover** (tab 1) | Two-state flow: ingredient selection (grid, categories, search, recent/saved cards, free pantry staples) and recipe results (mood filter, hero best match, recipe rows) |
 | **My Kitchen** (tab 2) | Saved recipes, recent cooks, shopping list shortcut, compact stats, user recipes + create card, achievements, settings (gear icon in nav bar) |
 | **Recipe Details** | Hero image, floating back/bookmark actions, stats row, ingredients (with "Add Missing to List" button for premium), steps, sticky Start Cooking CTA |
 | **Recipe List** | Reusable See All destination for recent, saved, and user recipes |
@@ -94,15 +94,15 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 - TODO: refactor away from singleton pattern
 
 ### Database Layer
-- `DBInterfaceProtocol` / `DBInterface` — GRDB-based SQLite database; tables: `ingredients`, `recipes`, `recipe_ingredients`, `recent_ingredients`, `recent_recipes`, `favorite_recipes`, `recent_searches`, `cooking_sessions`, `shopping_items`
-- Used by `RecipeService`, `IngredientsService`, `UserDataService`, `DataImportService`, `DatabaseInitializationService`, `ShoppingListService`, `RecipeRecommendationService`
+- `DBInterfaceProtocol` / `DBInterface` — GRDB-based SQLite database; tables: `ingredients`, `recipes`, `recipe_ingredients`, `recent_ingredients`, `recent_recipes`, `favorite_recipes`, `recent_searches`, `pantry_items`, `cooking_sessions`, `shopping_items`
+- Used by `RecipeService`, `IngredientsService`, `UserDataService`, `DataImportService`, `DatabaseInitializationService`, `ShoppingListService`, `PantryService`, `RecipeRecommendationService`
 - `DBTestHelpers` for test support
 
 ### Service Layer
 - **Data Services**: `RecipeServiceProtocol` / `RecipeService`, `IngredientsServiceProtocol` / `IngredientsService`, `UserDataServiceProtocol` / `UserDataService`
 - **Infrastructure**: `ImageServiceProtocol` / `ImageService`, `RecipeShareCardGenerating` / `RecipeShareCardGenerator`, `DatabaseInitializationServiceProtocol` / `DatabaseInitializationService`, `DataImportServiceProtocol` / `DataImportService`, `CSVParser`
 - **Cross-cutting**: `LoggingServiceProtocol` / `LoggingService` creates feature-scoped `LoggerProtocol` instances backed by `os.Logger`
-- **Feature Services**: `ShoppingListServiceProtocol` / `ShoppingListService`, `RecipeRecommendationServiceProtocol` / `RecipeRecommendationService`, `CameraScanTrackerProtocol` / `CameraScanTracker`, `IngredientDetectionServiceProtocol` (impl: `AIIngredientDetectionAdapter`), `SubscriptionServiceProtocol` (impl: `StoreKitSubscriptionService` / `MockSubscriptionService`)
+- **Feature Services**: `ShoppingListServiceProtocol` / `ShoppingListService`, `PantryServiceProtocol` / `PantryService`, `RecipeRecommendationServiceProtocol` / `RecipeRecommendationService`, `CameraScanTrackerProtocol` / `CameraScanTracker`, `IngredientDetectionServiceProtocol` (impl: `AIIngredientDetectionAdapter`), `SubscriptionServiceProtocol` (impl: `StoreKitSubscriptionService` / `MockSubscriptionService`)
 - **Auth Services**: `AuthServiceProtocol`, `SupabaseAuthService`, `MockAuthService`, `NoOpAuthService` (RELEASE fallback when Supabase keys are missing), `SignInWithAppleAction` (shared SIWA flow, analytics, concurrency guard), `AppleSignInManager` / `AppleSignInManaging` (ASAuthorizationController + SHA256 nonce for SIWA flow)
 - **Network Layer**: `NetworkServiceProtocol` / `NetworkService`, `NetworkConfiguration`, `URLBuilder`, `NetworkRequest`, `NetworkResponse`, `NetworkError`, `HTTPMethod`
 - **Supabase Layer** (`Services/Supabase/`): `SupabaseConfiguration`, `SupabaseClientProviderProtocol` / `SupabaseClientProvider`, `SupabaseLLMProvider`, `SupabaseRecipeAPIProvider`, `SupabaseRecipeDTOs`, `SupabaseServiceAssembly`
@@ -229,6 +229,9 @@ CookSavvy/
 │   │   └── CameraScanTracker.swift         — weekly scan counter (UserDefaults, resets each calendar week)
 │   ├── ShoppingList/
 │   │   └── ShoppingListService.swift       — CRUD for shopping items via DBInterface
+│   ├── Pantry/
+│   │   ├── PantryServiceProtocol.swift     — Protocol for free pantry staples
+│   │   └── PantryService.swift             — CRUD for always-available pantry ingredients via DBInterface
 │   ├── AI/
 │   │   ├── AIServiceProtocol.swift
 │   │   ├── AIService.swift
@@ -315,7 +318,7 @@ CookSavvy/
 
 CookSavvyTests/                        — Unit + integration tests
 ├── Mocks/
-│   ├── MockServices.swift              — MockDatabaseInitService, MockIngredientsService, MockRecipeService, MockRecommendationService, MockCameraScanTracker, MockImageService
+│   ├── MockServices.swift              — MockDatabaseInitService, MockIngredientsService, MockRecipeService, MockPantryService, MockRecommendationService, MockCameraScanTracker, MockImageService
 │   ├── MockSupabaseClientProvider.swift
 │   ├── MockUserDataService.swift
 │   └── MockShoppingListService.swift

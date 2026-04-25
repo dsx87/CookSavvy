@@ -37,6 +37,7 @@ enum AccessibilityID {
         static let cameraButton = "discover.cameraButton"
         static let ingredientGrid = "discover.ingredientGrid"
         static let selectedStrip = "discover.selectedStrip"
+        static let alwaysHaveRow = "discover.alwaysHaveRow"
         static let bestMatch = "discover.bestMatch"
         static let moreRecipes = "discover.moreRecipes"
         static let useItAllToggle = "discover.useItAllToggle"
@@ -49,6 +50,16 @@ enum AccessibilityID {
         /// Returns the id for an ingredient chip by name.
         static func ingredient(_ name: String) -> String {
             "discover.ingredient.\(AccessibilityID.token(name))"
+        }
+
+        /// Returns the id for an ingredient's pantry-staple toggle.
+        static func pantryToggle(_ name: String) -> String {
+            "discover.pantryToggle.\(AccessibilityID.token(name))"
+        }
+
+        /// Returns the id for an informational Always Have chip by ingredient name.
+        static func alwaysHaveChip(_ name: String) -> String {
+            "discover.alwaysHave.\(AccessibilityID.token(name))"
         }
 
         /// Returns the id for an ingredient category control by name.

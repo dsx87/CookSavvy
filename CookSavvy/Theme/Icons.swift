@@ -80,6 +80,8 @@ enum Icons {
         static let badgeQuick = "hare"
         static let badgeEasy = "hand.thumbsup"
         static let badgeBeginner = "star.circle"
+        static let pantry = "cabinet"
+        static let pantryFill = "cabinet.fill"
     }
 
     /// Icons for the My Kitchen (Journey) screen.

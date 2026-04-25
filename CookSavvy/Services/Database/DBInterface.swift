@@ -13,7 +13,7 @@ import os.log
 
 /// GRDB-backed concrete implementation of `DBInterfaceProtocol`.
 ///
-/// Manages a single SQLite database containing 9 tables:
+/// Manages a single SQLite database containing the app's persisted tables:
 /// - `ingredients` / `ingredients_fts` — ingredient catalogue with FTS5 full-text search
 /// - `recipes` / `recipes_fts` — recipe catalogue with FTS5 search on title
 /// - `recipe_ingredients` — many-to-many link table (recipe ↔ ingredient name)
@@ -21,6 +21,7 @@ import os.log
 /// - `recent_recipes` — per-recipe view count and recency
 /// - `favorite_recipes` — user-bookmarked recipes
 /// - `recent_searches` — stored ingredient-combination searches (capped at 50 entries)
+/// - `pantry_items` — free-tier staple ingredients that are always treated as available
 /// - `cooking_sessions` — timestamped cook-mode completions with optional duration, rating, and rescued-ingredient list
 /// - `shopping_items` — premium shopping list entries
 ///
@@ -289,7 +290,18 @@ final class DBInterface: DBInterfaceProtocol {
 
             try db.execute(sql: "CREATE INDEX IF NOT EXISTS idx_recent_searches_date ON recent_searches(search_date DESC);")
 
-            // 8. Cooking Sessions
+            // 8. Pantry Items
+            try db.execute(sql: """
+                CREATE TABLE IF NOT EXISTS pantry_items (
+                    ingredient_name TEXT PRIMARY KEY,
+                    added_at INTEGER NOT NULL,
+                    FOREIGN KEY(ingredient_name) REFERENCES ingredients(name) ON DELETE CASCADE
+                );
+                """)
+
+            try db.execute(sql: "CREATE INDEX IF NOT EXISTS idx_pantry_items_added ON pantry_items(added_at DESC);")
+
+            // 9. Cooking Sessions
             try db.execute(sql: """
                 CREATE TABLE IF NOT EXISTS cooking_sessions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -308,7 +320,7 @@ final class DBInterface: DBInterfaceProtocol {
                 try db.execute(sql: "ALTER TABLE cooking_sessions ADD COLUMN ingredients_rescued_json TEXT;")
             }
 
-            // 9. Shopping List
+            // 10. Shopping List
             try db.execute(sql: """
                 CREATE TABLE IF NOT EXISTS shopping_items (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -607,14 +619,15 @@ final class DBInterface: DBInterfaceProtocol {
     func clearDatabase() throws {
         try dbWriter.write { db in
             try db.execute(sql: "DELETE FROM recent_searches;")
+            try db.execute(sql: "DELETE FROM pantry_items;")
             try db.execute(sql: "DELETE FROM cooking_sessions;")
             try db.execute(sql: "DELETE FROM favorite_recipes;")
             try db.execute(sql: "DELETE FROM recent_recipes;")
             try db.execute(sql: "DELETE FROM recent_ingredients;")
             try db.execute(sql: "DELETE FROM recipe_ingredients;")
             try db.execute(sql: "DELETE FROM recipes;")
-            try db.execute(sql: "DELETE FROM ingredients;")
             try db.execute(sql: "DELETE FROM shopping_items;")
+            try db.execute(sql: "DELETE FROM ingredients;")
 
         }
         testHelpers?.clearVariants()
@@ -1130,6 +1143,66 @@ final class DBInterface: DBInterfaceProtocol {
         }
     }
 
+    // MARK: - Pantry
+
+    /// Returns the user's pantry staples by joining `pantry_items` back to canonical ingredient rows.
+    func getPantryItems() throws -> [Ingredient] {
+        try dbWriter.read { db in
+            let sql = """
+                SELECT i.name, i.description, i.picture_file_name, i.food_group, i.food_subgroup
+                FROM pantry_items pi
+                INNER JOIN ingredients i ON i.name = pi.ingredient_name
+                ORDER BY pi.added_at DESC;
+            """
+            return try Row.fetchAll(db, sql: sql).map(Self.decodeIngredient(from:))
+        }
+    }
+
+    /// Marks an ingredient as a pantry staple using the canonical stored ingredient name.
+    ///
+    /// Resolving through `ingredients` keeps the foreign key valid and prevents duplicate rows
+    /// caused by casing differences such as "salt" vs. "Salt".
+    func addPantryItem(_ ingredient: Ingredient) throws {
+        let timestamp = Int(Date().timeIntervalSince1970)
+        try dbWriter.write { db in
+            guard let actualName = try Self.canonicalIngredientName(for: ingredient.name, in: db) else {
+                throw DatabaseError.ingredientNotFound(ingredient.name)
+            }
+
+            try db.execute(
+                sql: """
+                    INSERT INTO pantry_items (ingredient_name, added_at)
+                    VALUES (?, ?)
+                    ON CONFLICT(ingredient_name) DO UPDATE SET
+                        added_at = excluded.added_at;
+                    """,
+                arguments: [actualName, timestamp]
+            )
+        }
+    }
+
+    /// Removes an ingredient from the pantry, matching case-insensitively.
+    func removePantryItem(_ ingredient: Ingredient) throws {
+        try dbWriter.write { db in
+            try db.execute(
+                sql: "DELETE FROM pantry_items WHERE ingredient_name = ? COLLATE NOCASE;",
+                arguments: [ingredient.name]
+            )
+        }
+    }
+
+    /// Checks pantry membership case-insensitively against `ingredient_name`.
+    func isPantryItem(_ ingredient: Ingredient) throws -> Bool {
+        try dbWriter.read { db in
+            let count = try Int.fetchOne(
+                db,
+                sql: "SELECT COUNT(*) FROM pantry_items WHERE ingredient_name = ? COLLATE NOCASE;",
+                arguments: [ingredient.name]
+            ) ?? 0
+            return count > 0
+        }
+    }
+
     // MARK: - Internal Helpers (used by services)
 
     /// Gets the database ID for a recipe by its title
@@ -1299,6 +1372,26 @@ final class DBInterface: DBInterfaceProtocol {
             isUserCreated: isUserCreated,
             emoji: emoji,
             cuisine: cuisine
+        )
+    }
+
+    /// Decodes a canonical ingredient row returned by database joins.
+    private static func decodeIngredient(from row: Row) -> Ingredient {
+        Ingredient(
+            name: row["name"],
+            description: row["description"],
+            pictureFileName: row["picture_file_name"],
+            foodGroup: row["food_group"],
+            foodSubgroup: row["food_subgroup"]
+        )
+    }
+
+    /// Resolves an ingredient name to the stored primary-key casing, if it exists.
+    private static func canonicalIngredientName(for name: String, in db: Database) throws -> String? {
+        try String.fetchOne(
+            db,
+            sql: "SELECT name FROM ingredients WHERE name = ? COLLATE NOCASE LIMIT 1;",
+            arguments: [name]
         )
     }
 

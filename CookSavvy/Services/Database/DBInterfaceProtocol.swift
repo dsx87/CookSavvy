@@ -155,6 +155,22 @@ protocol DBInterfaceProtocol {
     /// - Parameter ingredients: The ingredient combination that was searched.
     func recordSearch(ingredients: [Ingredient]) throws
 
+    // MARK: - Pantry
+    /// Returns pantry staples sorted by the time they were added, newest first.
+    func getPantryItems() throws -> [Ingredient]
+
+    /// Adds an ingredient to the user's pantry staples.
+    ///
+    /// The concrete database implementation resolves the canonical ingredient row
+    /// before inserting, so repeated calls with different casing remain idempotent.
+    func addPantryItem(_ ingredient: Ingredient) throws
+
+    /// Removes an ingredient from the user's pantry staples.
+    func removePantryItem(_ ingredient: Ingredient) throws
+
+    /// Returns whether an ingredient is currently marked as a pantry staple.
+    func isPantryItem(_ ingredient: Ingredient) throws -> Bool
+
     // MARK: - Cooking Sessions
     /// Records a completed cooking session without rescued-ingredient data.
     /// Delegates to the full variant with `rescuedIngredients: nil`.

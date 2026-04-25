@@ -110,10 +110,12 @@ final class MockRecipeService: RecipeServiceProtocol {
     var stubbedAvailableSources: [RecipeSourceType] = [.offline]
     var shouldThrow: Error?
     var getRecipesCallCount = 0
+    private(set) var requestedIngredients: [Ingredient] = []
 
     func getRecipes(for ingredients: [Ingredient], from sourceType: RecipeSourceType) async throws -> [Recipe] {
         if let error = shouldThrow { throw error }
         getRecipesCallCount += 1
+        requestedIngredients = ingredients
         return stubbedRecipes
     }
 
@@ -122,6 +124,7 @@ final class MockRecipeService: RecipeServiceProtocol {
     func getRecipes(for ingredients: [Ingredient], from sourceTypes: Set<RecipeSourceType>) async throws -> (recipes: [Recipe], hadSourceFailures: Bool) {
         if let error = shouldThrow { throw error }
         getRecipesCallCount += 1
+        requestedIngredients = ingredients
         return (stubbedRecipes, stubbedHadSourceFailures)
     }
 
@@ -140,6 +143,60 @@ final class MockRecipeService: RecipeServiceProtocol {
     func getStoredRecipes(for ingredients: [Ingredient]) throws -> [Recipe] {
         if let error = shouldThrow { throw error }
         return stubbedStoredRecipes
+    }
+}
+
+// MARK: - MockPantryService
+
+final class MockPantryService: PantryServiceProtocol {
+
+    var stubbedItems: [Ingredient] = []
+    var shouldThrow: Error?
+    var addError: Error?
+    var removeError: Error?
+    var getItemsDelayNanoseconds: UInt64 = 0
+    var delayNanoseconds: UInt64 = 0
+    private(set) var addCalls: [Ingredient] = []
+    private(set) var removeCalls: [Ingredient] = []
+
+    func getItems() async throws -> [Ingredient] {
+        try await applyDelayIfNeeded(getItemsDelayNanoseconds)
+        try await applyDelayIfNeeded()
+        if let error = shouldThrow { throw error }
+        return stubbedItems
+    }
+
+    func addItem(_ ingredient: Ingredient) async throws {
+        try await applyDelayIfNeeded()
+        if let error = addError { throw error }
+        if let error = shouldThrow { throw error }
+        addCalls.append(ingredient)
+        if !stubbedItems.contains(where: { $0.name.caseInsensitiveCompare(ingredient.name) == .orderedSame }) {
+            stubbedItems.append(ingredient)
+        }
+    }
+
+    func removeItem(_ ingredient: Ingredient) async throws {
+        try await applyDelayIfNeeded()
+        if let error = removeError { throw error }
+        if let error = shouldThrow { throw error }
+        removeCalls.append(ingredient)
+        stubbedItems.removeAll { $0.name.caseInsensitiveCompare(ingredient.name) == .orderedSame }
+    }
+
+    func contains(_ ingredient: Ingredient) async throws -> Bool {
+        try await applyDelayIfNeeded()
+        if let error = shouldThrow { throw error }
+        return stubbedItems.contains { $0.name.caseInsensitiveCompare(ingredient.name) == .orderedSame }
+    }
+
+    private func applyDelayIfNeeded() async throws {
+        try await applyDelayIfNeeded(delayNanoseconds)
+    }
+
+    private func applyDelayIfNeeded(_ nanoseconds: UInt64) async throws {
+        guard nanoseconds > 0 else { return }
+        try await Task.sleep(nanoseconds: nanoseconds)
     }
 }
 
