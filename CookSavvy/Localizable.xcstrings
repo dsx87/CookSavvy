@@ -1278,6 +1278,17 @@
         }
       }
     },
+    "discover.alsoNeeds" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Also needs: %@"
+          }
+        }
+      }
+    },
     "discover.alwaysHaveBadge" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {

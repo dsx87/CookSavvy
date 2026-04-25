@@ -158,6 +158,7 @@ enum Strings {
         static let matchDetailsEmpty = String(localized: "discover.matchDetailsEmpty", defaultValue: "No exact ingredient matches found.")
         static let missingCount = String(localized: "discover.missingCount", defaultValue: "Missing %lld")
         static let haveAll = String(localized: "discover.haveAll", defaultValue: "You have everything!")
+        static let alsoNeeds = String(localized: "discover.alsoNeeds", defaultValue: "Also needs: %@")
         static let useItAll = String(localized: "discover.useItAll", defaultValue: "Use It All")
         static let suggestedForYou = String(localized: "discover.suggestedForYou", defaultValue: "SUGGESTED FOR YOU")
         static let suggestedBecause = String(localized: "discover.suggestedBecause", defaultValue: "Based on your %@ recipes")

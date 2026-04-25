@@ -33,7 +33,9 @@ final class RecipeDetailsViewModel: ObservableObject {
     // MARK: - Published Properties
 
     /// The recipe being displayed; may be mutated if recipe data is refreshed.
-    @Published var recipe: Recipe
+    @Published var recipe: Recipe {
+        didSet { rebuildIngredientMatchCache() }
+    }
     /// `true` when this recipe is in the user's favourites list.
     @Published var isFavorite: Bool = false
     /// `true` while a favourite-toggle request is in flight.
@@ -56,17 +58,20 @@ final class RecipeDetailsViewModel: ObservableObject {
     private let analyticsService: AnalyticsServiceProtocol
     private let logger: any LoggerProtocol
     private weak var coordinator: (any RecipeDetailsCoordinating)?
+    /// Cached pantry-plus match split and ingredient-row statuses for the current recipe.
+    private var ingredientMatchCache: IngredientMatchCache?
 
     // MARK: - Computed
 
-    /// Ingredient names that are not covered by `selectedIngredients`.
+    /// Ingredient names that should be bought for this recipe.
     ///
-    /// When a selection is present, recomputes live using `ingredientStatus(_:)`.
+    /// When a selection is present, recomputes live using the same pantry-plus breakdown as Discover
+    /// so assumed staples are not added to the shopping list.
     /// Falls back to the pre-computed `recipe.missingIngredients` set (populated during search) when
     /// the detail screen is opened without an ingredient context (e.g. from "See All").
     var missingIngredientNames: [String] {
         if !selectedIngredients.isEmpty {
-            return recipe.ingredients.filter { ingredientStatus($0) == .missing }.map { $0.name }
+            return currentIngredientMatchCache()?.breakdown.missingIngredientNames ?? []
         }
         // Fall back to pre-computed missing ingredients from search (e.g. "See All" path)
         return recipe.missingIngredients ?? []
@@ -98,6 +103,7 @@ final class RecipeDetailsViewModel: ObservableObject {
         self.analyticsService = analyticsService
         self.logger = logger
         self.coordinator = coordinator
+        rebuildIngredientMatchCache()
 
         // Load data on init
         Task {
@@ -176,7 +182,7 @@ final class RecipeDetailsViewModel: ObservableObject {
 
     /// Describes whether a recipe ingredient is covered by the user's current selection.
     enum IngredientStatus {
-        /// The user has selected this ingredient (partial or full name match).
+        /// The ingredient is explicitly selected, saved in pantry, or covered by a built-in staple assumption.
         case available
         /// The ingredient was not found in the user's selection.
         case missing
@@ -186,16 +192,19 @@ final class RecipeDetailsViewModel: ObservableObject {
 
     /// Returns the availability status of a recipe ingredient relative to `selectedIngredients`.
     ///
-    /// Uses the same bidirectional partial-match logic as `RecipeMatchExplainer`.
+    /// Uses the same bidirectional partial-match and pantry-staple logic as `RecipeMatchExplainer`.
     /// Returns `.unknown` when no selection context is available (e.g. browsing from My Kitchen).
     /// - Parameter ingredient: A recipe ingredient to evaluate.
     /// - Returns: `.available`, `.missing`, or `.unknown`.
     func ingredientStatus(_ ingredient: Ingredient) -> IngredientStatus {
         guard !selectedIngredients.isEmpty else { return .unknown }
-        let queryNames = Set(selectedIngredients.map { RecipeMatchExplainer.normalizedIngredientName($0.name) }.filter { !$0.isEmpty })
         let recipeName = RecipeMatchExplainer.normalizedIngredientName(ingredient.name)
-        let isMatch = queryNames.contains(where: { recipeName.contains($0) || $0.contains(recipeName) })
-        return isMatch ? .available : .missing
+        guard !recipeName.isEmpty, let cache = currentIngredientMatchCache() else { return .available }
+        if let status = cache.statusByIngredientName[recipeName] {
+            return status
+        }
+        let isMissing = cache.normalizedMissingNames.contains { recipeName.contains($0) || $0.contains(recipeName) }
+        return isMissing ? .missing : .available
     }
 
     /// Dismisses the error alert.
@@ -204,6 +213,56 @@ final class RecipeDetailsViewModel: ObservableObject {
     }
 
     // MARK: - Private Methods
+
+    /// Memoized match metadata used by repeated ingredient rows in SwiftUI renders.
+    private struct IngredientMatchCache {
+        /// Full pantry-plus breakdown for shopping-list and display decisions.
+        let breakdown: RecipeMatchExplainer.IngredientMatchBreakdown
+        /// Normalized true missing names, cached to avoid remapping during row status checks.
+        let normalizedMissingNames: [String]
+        /// Normalized recipe ingredient name to row status, precomputed once per recipe/selection pair.
+        let statusByIngredientName: [String: IngredientStatus]
+    }
+
+    /// Returns the cached breakdown, lazily rebuilding if the cache was cleared.
+    private func currentIngredientMatchCache() -> IngredientMatchCache? {
+        if ingredientMatchCache == nil {
+            rebuildIngredientMatchCache()
+        }
+        return ingredientMatchCache
+    }
+
+    /// Rebuilds ingredient match metadata when the displayed recipe changes.
+    private func rebuildIngredientMatchCache() {
+        guard !selectedIngredients.isEmpty else {
+            ingredientMatchCache = nil
+            return
+        }
+
+        let breakdown = RecipeMatchExplainer.ingredientBreakdown(
+            recipe: recipe,
+            selectedIngredients: selectedIngredients
+        )
+        let normalizedMissingNames = breakdown.missingIngredientNames
+            .map(RecipeMatchExplainer.normalizedIngredientName)
+            .filter { !$0.isEmpty }
+
+        // Precompute status for the full displayed ingredient list so SwiftUI row rendering does not
+        // rerun recipe-wide matching for every ingredient.
+        var statusByIngredientName: [String: IngredientStatus] = [:]
+        for ingredient in recipe.ingredients {
+            let ingredientName = RecipeMatchExplainer.normalizedIngredientName(ingredient.name)
+            guard !ingredientName.isEmpty else { continue }
+            let isMissing = normalizedMissingNames.contains { ingredientName.contains($0) || $0.contains(ingredientName) }
+            statusByIngredientName[ingredientName] = isMissing ? .missing : .available
+        }
+
+        ingredientMatchCache = IngredientMatchCache(
+            breakdown: breakdown,
+            normalizedMissingNames: normalizedMissingNames,
+            statusByIngredientName: statusByIngredientName
+        )
+    }
 
     /// Checks whether the recipe is in the user's favourites list and sets `isFavorite`.
     private func loadFavoriteStatus() async {

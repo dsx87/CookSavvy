@@ -14,6 +14,16 @@ enum RecipeMatchExplainer {
         let missingIngredientNames: [String]
     }
 
+    /// Ingredient-level match split used to keep pantry assumptions separate from shopping gaps.
+    struct IngredientMatchBreakdown: Equatable {
+        /// Recipe ingredient names covered by explicit selected ingredients or saved pantry items.
+        let availableIngredientNames: [String]
+        /// Common staples assumed to be available even when the user has not saved them.
+        let assumedPantryIngredientNames: [String]
+        /// Recipe ingredient names still missing after explicit and assumed availability are applied.
+        let missingIngredientNames: [String]
+    }
+
     /// Builds a one-line explanation string for a recipe card.
     ///
     /// The explanation covers ingredient coverage and, when the cook time is under 30 minutes
@@ -57,21 +67,50 @@ enum RecipeMatchExplainer {
     /// - Returns: Display-ready ingredient names absent from the user's selection, deduplicated.
     static func missingIngredients(recipe: Recipe, selectedIngredients: [Ingredient]) -> [String] {
         guard !selectedIngredients.isEmpty else { return [] }
+        return ingredientBreakdown(recipe: recipe, selectedIngredients: selectedIngredients).missingIngredientNames
+    }
+
+    /// Splits recipe ingredients into explicit matches, assumed staples, and true shopping gaps.
+    ///
+    /// Explicit matches are checked first so saved pantry items such as "Salt" remain user-provided
+    /// availability, while built-in assumptions only cover unsaved staples like water, pepper, and oil.
+    /// Matching explicit ingredients keeps the app's existing bidirectional partial-match behavior.
+    /// Pantry assumptions are intentionally exact-name based to avoid treating ingredients such as
+    /// bell pepper as a built-in seasoning staple.
+    /// - Parameters:
+    ///   - recipe: The recipe whose ingredient list is being classified.
+    ///   - selectedIngredients: Explicit selected ingredients plus saved pantry ingredients.
+    /// - Returns: A deduplicated, display-ready ingredient split.
+    static func ingredientBreakdown(
+        recipe: Recipe,
+        selectedIngredients: [Ingredient]
+    ) -> IngredientMatchBreakdown {
         let queryNames = Set(selectedIngredients.map { normalizedIngredientName($0.name) }.filter { !$0.isEmpty })
+        var available: [String] = []
+        var assumed: [String] = []
         var missing: [String] = []
         var seen = Set<String>()
         for ingredient in availableIngredients(for: recipe) {
             let recipeName = normalizedIngredientName(ingredient.name)
             guard !recipeName.isEmpty else { continue }
             let isMatch = queryNames.contains(where: { recipeName.contains($0) || $0.contains(recipeName) })
-            guard !isMatch else { continue }
             let displayName = ingredient.name.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !displayName.isEmpty else { continue }
-            if seen.insert(displayName.lowercased()).inserted {
+            guard seen.insert(displayName.lowercased()).inserted else { continue }
+
+            if isMatch {
+                available.append(displayName)
+            } else if isAssumedPantryStaple(recipeName) {
+                assumed.append(displayName)
+            } else {
                 missing.append(displayName)
             }
         }
-        return missing
+        return IngredientMatchBreakdown(
+            availableIngredientNames: available,
+            assumedPantryIngredientNames: assumed,
+            missingIngredientNames: missing
+        )
     }
 
     /// Computes ingredient availability from a list of already-matched (rescued) ingredient names.
@@ -114,6 +153,19 @@ enum RecipeMatchExplainer {
 
     // MARK: - Private
 
+    /// Built-in, non-persisted staples that are commonly available in home kitchens.
+    private static let assumedPantryStapleNames: Set<String> = [
+        "salt",
+        "pepper",
+        "black pepper",
+        "water",
+        "oil",
+        "olive oil",
+        "vegetable oil",
+        "canola oil",
+        "cooking oil"
+    ]
+
     /// Internal overload that computes availability from a set of already-matched names.
     private static func ingredientAvailability(
         recipe: Recipe,
@@ -130,6 +182,11 @@ enum RecipeMatchExplainer {
     /// Returns the effective ingredient list for a recipe, preferring `cleanedIngredients`.
     private static func availableIngredients(for recipe: Recipe) -> [Ingredient] {
         recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
+    }
+
+    /// Returns true only for conservative pantry-staple names, after normalisation.
+    private static func isAssumedPantryStaple(_ normalizedName: String) -> Bool {
+        assumedPantryStapleNames.contains(normalizedName)
     }
 
     /// Parses a numeric cook-time in minutes from the recipe's time `AdditionalInfo`.

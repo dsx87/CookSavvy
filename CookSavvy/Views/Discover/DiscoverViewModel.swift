@@ -762,11 +762,13 @@ final class DiscoverViewModel: ObservableObject {
             )
             var results = rawResults
             for index in results.indices {
-                let missing = RecipeMatchExplainer.missingIngredients(
+                let breakdown = RecipeMatchExplainer.ingredientBreakdown(
                     recipe: results[index],
                     selectedIngredients: ingredients
                 )
+                let missing = breakdown.missingIngredientNames
                 results[index].missingIngredients = missing
+                results[index].assumedPantryIngredients = breakdown.assumedPantryIngredientNames
                 results[index].matchReason = RecipeMatchExplainer.explain(
                     recipe: results[index],
                     missingIngredients: missing

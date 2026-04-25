@@ -421,7 +421,88 @@ final class DiscoverViewModelTests: XCTestCase {
         vm.findRecipes()
         for _ in 0..<10 { await Task.yield() }
 
-        XCTAssertEqual(vm.searchResultRecipes.first?.missingIngredients, ["Pepper"])
+        XCTAssertEqual(vm.searchResultRecipes.first?.missingIngredients, [])
+        XCTAssertEqual(vm.searchResultRecipes.first?.assumedPantryIngredients, ["Pepper"])
+    }
+
+    func testIngredientBreakdownSeparatesAssumedStaplesFromTrueMissingIngredients() {
+        let ingredients = ["Chicken", "Salt", "Oil", "Pepper", "Water", "Rice", "Bell Pepper"]
+            .map(Ingredient.init(name:))
+        let recipe = Recipe(
+            title: "Pantry Plus Chicken",
+            ingredients: ingredients,
+            instructions: ["Cook"],
+            image: "",
+            cleanedIngredients: ingredients,
+            additionalInfo: .empty
+        )
+
+        let breakdown = RecipeMatchExplainer.ingredientBreakdown(
+            recipe: recipe,
+            selectedIngredients: [Ingredient(name: "Chicken")]
+        )
+
+        XCTAssertEqual(breakdown.availableIngredientNames, ["Chicken"])
+        XCTAssertEqual(breakdown.assumedPantryIngredientNames, ["Salt", "Oil", "Pepper", "Water"])
+        XCTAssertEqual(breakdown.missingIngredientNames, ["Rice", "Bell Pepper"])
+    }
+
+    func testAssumedStaplesImproveRankingOverTrueMissingIngredients() async {
+        let assumedOnlyIngredients = ["Chicken", "Salt", "Oil"].map(Ingredient.init(name:))
+        let trueMissingIngredients = ["Chicken", "Rice"].map(Ingredient.init(name:))
+        mockRecipeService.stubbedRecipes = [
+            Recipe(
+                title: "Chicken Rice",
+                ingredients: trueMissingIngredients,
+                instructions: ["Cook"],
+                image: "",
+                cleanedIngredients: trueMissingIngredients,
+                additionalInfo: .empty
+            ),
+            Recipe(
+                title: "Seasoned Chicken",
+                ingredients: assumedOnlyIngredients,
+                instructions: ["Cook"],
+                image: "",
+                cleanedIngredients: assumedOnlyIngredients,
+                additionalInfo: .empty
+            )
+        ]
+        let vm = makeViewModel()
+        vm.selectedIngredients = [Ingredient(name: "Chicken")]
+
+        vm.findRecipes()
+        for _ in 0..<10 { await Task.yield() }
+
+        XCTAssertEqual(vm.searchResultRecipes.first { $0.title == "Seasoned Chicken" }?.missingIngredients, [])
+        XCTAssertEqual(
+            vm.searchResultRecipes.first { $0.title == "Seasoned Chicken" }?.assumedPantryIngredients,
+            ["Salt", "Oil"]
+        )
+        XCTAssertEqual(vm.filteredRecipes.first?.title, "Seasoned Chicken")
+    }
+
+    func testSearchKeepsSavedPantryItemsAvailableAndAssumesBuiltInStaples() async {
+        let ingredients = ["Chicken", "Salt", "Oil", "Rice"].map(Ingredient.init(name:))
+        mockRecipeService.stubbedRecipes = [
+            Recipe(
+                title: "Chicken Rice",
+                ingredients: ingredients,
+                instructions: ["Cook"],
+                image: "",
+                cleanedIngredients: ingredients,
+                additionalInfo: .empty
+            )
+        ]
+        let vm = makeViewModel()
+        vm.pantryIngredients = [Ingredient(name: "Salt")]
+        vm.selectedIngredients = [Ingredient(name: "Chicken")]
+
+        vm.findRecipes()
+        for _ in 0..<10 { await Task.yield() }
+
+        XCTAssertEqual(vm.searchResultRecipes.first?.missingIngredients, ["Rice"])
+        XCTAssertEqual(vm.searchResultRecipes.first?.assumedPantryIngredients, ["Oil"])
     }
 
     func testClearIngredientsPreservesPantry() async {

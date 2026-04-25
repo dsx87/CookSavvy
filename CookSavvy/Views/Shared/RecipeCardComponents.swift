@@ -182,29 +182,46 @@ struct RecipeRow: View {
                     .background(theme.mintSoft, in: Capsule())
             }
 
-            if let missing = recipe.missingIngredients {
-                if missing.isEmpty {
-                    Label(Strings.Discover.haveAll, systemImage: "checkmark.circle.fill")
-                        .font(UI.Fonts.tinyCaption)
-                        .foregroundStyle(theme.mint)
-                        .padding(.horizontal, UI.Components.RecipeRow.Meta.paddingH)
-                        .padding(.vertical, UI.Components.RecipeRow.Meta.paddingV)
-                        .background(theme.mintSoft, in: Capsule())
-                } else {
-                    Label(String(format: Strings.Discover.missingCount, missing.count), systemImage: "cart.badge.plus")
-                        .font(UI.Fonts.tinyCaption)
-                        .foregroundStyle(theme.rose)
-                        .padding(.horizontal, UI.Components.RecipeRow.Meta.paddingH)
-                        .padding(.vertical, UI.Components.RecipeRow.Meta.paddingV)
-                        .background(theme.roseSoft, in: Capsule())
-                }
-            }
+            matchAvailabilityBadges
 
             metaInfoRow
 
             RecipeBadges(recipe: recipe)
 
             Spacer(minLength: 0)
+        }
+    }
+
+    @ViewBuilder
+    private var matchAvailabilityBadges: some View {
+        let missing = recipe.missingIngredients
+        let assumed = recipe.assumedPantryIngredients ?? []
+
+        if missing?.isEmpty == true && assumed.isEmpty {
+            Label(Strings.Discover.haveAll, systemImage: "checkmark.circle.fill")
+                .font(UI.Fonts.tinyCaption)
+                .foregroundStyle(theme.mint)
+                .padding(.horizontal, UI.Components.RecipeRow.Meta.paddingH)
+                .padding(.vertical, UI.Components.RecipeRow.Meta.paddingV)
+                .background(theme.mintSoft, in: Capsule())
+        }
+
+        if !assumed.isEmpty {
+            Label(String(format: Strings.Discover.alsoNeeds, assumed.joined(separator: ", ")), systemImage: "leaf.fill")
+                .font(UI.Fonts.tinyCaption)
+                .foregroundStyle(theme.accent)
+                .padding(.horizontal, UI.Components.RecipeRow.Meta.paddingH)
+                .padding(.vertical, UI.Components.RecipeRow.Meta.paddingV)
+                .background(theme.accentSoft, in: Capsule())
+        }
+
+        if let missing, !missing.isEmpty {
+            Label(String(format: Strings.Discover.missingCount, missing.count), systemImage: "cart.badge.plus")
+                .font(UI.Fonts.tinyCaption)
+                .foregroundStyle(theme.rose)
+                .padding(.horizontal, UI.Components.RecipeRow.Meta.paddingH)
+                .padding(.vertical, UI.Components.RecipeRow.Meta.paddingV)
+                .background(theme.roseSoft, in: Capsule())
         }
     }
 

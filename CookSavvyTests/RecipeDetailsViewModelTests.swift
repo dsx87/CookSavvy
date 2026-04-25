@@ -117,6 +117,18 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         XCTAssertTrue(vm.missingIngredientNames.contains("Tomato"))
     }
 
+    func testMissingIngredientsExcludeAssumedStaplesInDetails() {
+        let recipeIngredients = ["Garlic", "Salt", "Oil", "Onion"].map(Ingredient.init(name:))
+        let recipe = makeRecipe(ingredients: recipeIngredients)
+
+        let vm = makeViewModel(recipe: recipe, selectedIngredients: [Ingredient(name: "Garlic")])
+
+        XCTAssertEqual(vm.missingIngredientNames, ["Onion"])
+        XCTAssertEqual(vm.ingredientStatus(Ingredient(name: "Salt")), .available)
+        XCTAssertEqual(vm.ingredientStatus(Ingredient(name: "Oil")), .available)
+        XCTAssertEqual(vm.ingredientStatus(Ingredient(name: "Onion")), .missing)
+    }
+
     func testMissingEmptyWhenNoSelection() {
         let recipe = makeRecipe(ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion")])
         let vm = makeViewModel(recipe: recipe, selectedIngredients: [])
@@ -155,6 +167,21 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         let call = mockShoppingListService.addItemsCalls[0]
         XCTAssertTrue(call.names.contains("Onion"))
         XCTAssertEqual(call.recipeTitle, "Test Recipe")
+    }
+
+    func testAddToListForPremiumUserSkipsAssumedStaples() async {
+        let recipeIngredients = ["Garlic", "Salt", "Oil", "Onion"].map(Ingredient.init(name:))
+        let recipe = makeRecipe(ingredients: recipeIngredients)
+        let vm = makeViewModel(
+            recipe: recipe,
+            selectedIngredients: [Ingredient(name: "Garlic")],
+            subscription: premiumSubscription
+        )
+
+        await vm.addMissingToShoppingList()
+
+        XCTAssertEqual(mockShoppingListService.addItemsCalls.first?.names, ["Onion"])
+        XCTAssertEqual(mockShoppingListService.addItemsCalls.first?.recipeTitle, "Test Recipe")
     }
 
     func testRecordRecipeViewOnInit() async {

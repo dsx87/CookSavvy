@@ -149,8 +149,10 @@ struct Recipe {
     var matchPercentage: Double?
     /// Human-readable explanation of why this recipe was recommended.
     var matchReason: String?
-    /// Ingredients required by the recipe that the user has not selected.
+    /// Ingredients required by the recipe that the user needs to buy.
     var missingIngredients: [String]?
+    /// Runtime-only staples assumed to be available, but not saved in the user's pantry.
+    var assumedPantryIngredients: [String]?
 
     /// Creates a recipe where instructions are provided as pre-structured `Step` values.
     init(
@@ -170,7 +172,8 @@ struct Recipe {
         cuisine: String? = nil,
         matchPercentage: Double? = nil,
         matchReason: String? = nil,
-        missingIngredients: [String]? = nil
+        missingIngredients: [String]? = nil,
+        assumedPantryIngredients: [String]? = nil
     ) {
         self.title = title
         self.ingredients = ingredients
@@ -189,6 +192,7 @@ struct Recipe {
         self.matchPercentage = matchPercentage
         self.matchReason = matchReason
         self.missingIngredients = missingIngredients
+        self.assumedPantryIngredients = assumedPantryIngredients
     }
 
     /// Creates a recipe where instructions are provided as plain strings; each string is wrapped in a `Step`.
@@ -209,7 +213,8 @@ struct Recipe {
         cuisine: String? = nil,
         matchPercentage: Double? = nil,
         matchReason: String? = nil,
-        missingIngredients: [String]? = nil
+        missingIngredients: [String]? = nil,
+        assumedPantryIngredients: [String]? = nil
     ) {
         self.init(
             title: title,
@@ -228,7 +233,8 @@ struct Recipe {
             cuisine: cuisine,
             matchPercentage: matchPercentage,
             matchReason: matchReason,
-            missingIngredients: missingIngredients
+            missingIngredients: missingIngredients,
+            assumedPantryIngredients: assumedPantryIngredients
         )
     }
 
@@ -369,6 +375,7 @@ extension Recipe: Codable {
         self.matchPercentage = nil
         self.matchReason = nil
         self.missingIngredients = nil
+        self.assumedPantryIngredients = nil
     }
 
 }
