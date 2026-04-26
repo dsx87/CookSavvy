@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		1D62F36B2DC17E2600F28780 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 1D62F36A2DC17E2600F28780 /* ZIPFoundation */; };
-		1D62F3762DC2EC4600F28780 /* CSV in Frameworks */ = {isa = PBXBuildFile; productRef = 1D62F3752DC2EC4600F28780 /* CSV */; };
 		1DDFE9B12F2CE64E000E8058 /* Configuration.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 1DDFE9B02F2CE64E000E8058 /* Configuration.storekit */; };
 		1DE9DF112E623A250077DD75 /* DefaultTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 1DE9DF102E623A250077DD75 /* DefaultTestPlan.xctestplan */; };
 		1DE9DF212E624D220077DD75 /* GRDB-dynamic in Frameworks */ = {isa = PBXBuildFile; productRef = 1DE9DF202E624D220077DD75 /* GRDB-dynamic */; };
@@ -68,7 +67,6 @@
 			files = (
 				1D62F36B2DC17E2600F28780 /* ZIPFoundation in Frameworks */,
 				1DE9DF212E624D220077DD75 /* GRDB-dynamic in Frameworks */,
-				1D62F3762DC2EC4600F28780 /* CSV in Frameworks */,
 				8F2A6C4A44D341B1A1020304 /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -135,7 +133,6 @@
 			name = CookSavvy;
 			packageProductDependencies = (
 				1D62F36A2DC17E2600F28780 /* ZIPFoundation */,
-				1D62F3752DC2EC4600F28780 /* CSV */,
 				1DE9DF202E624D220077DD75 /* GRDB-dynamic */,
 				8F2A6C4A44D341B1A1020305 /* Supabase */,
 			);
@@ -224,7 +221,6 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				1D62F3692DC17E2600F28780 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
-				1D62F3742DC2EC4600F28780 /* XCRemoteSwiftPackageReference "CSV.swift" */,
 				1DE9DF1F2E624D220077DD75 /* XCRemoteSwiftPackageReference "GRDB" */,
 				8F2A6C4A44D341B1A1020306 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
@@ -628,14 +624,6 @@
 				minimumVersion = 0.9.19;
 			};
 		};
-		1D62F3742DC2EC4600F28780 /* XCRemoteSwiftPackageReference "CSV.swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/yaslab/CSV.swift.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.5.2;
-			};
-		};
 		1DE9DF1F2E624D220077DD75 /* XCRemoteSwiftPackageReference "GRDB" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/groue/GRDB.swift";
@@ -659,11 +647,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1D62F3692DC17E2600F28780 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
 			productName = ZIPFoundation;
-		};
-		1D62F3752DC2EC4600F28780 /* CSV */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1D62F3742DC2EC4600F28780 /* XCRemoteSwiftPackageReference "CSV.swift" */;
-			productName = CSV;
 		};
 		1DE9DF202E624D220077DD75 /* GRDB-dynamic */ = {
 			isa = XCSwiftPackageProductDependency;

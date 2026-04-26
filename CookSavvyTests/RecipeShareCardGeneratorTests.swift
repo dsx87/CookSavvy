@@ -55,13 +55,13 @@ final class RecipeShareCardGeneratorTests: XCTestCase {
         XCTAssertGreaterThan(card.pngData.count, 0)
     }
 
-    func testLoadsLocalDatasetImageUsingDiskImagePath() async {
+    func testLoadsLocalDatasetImageUsingExactJSONImagePath() async {
         let imageService = MockImageService()
-        let expectedName = UI.DiskImage.defaultPrefix + "tomato-pasta" + UI.DiskImage.defaultExtension
+        let expectedName = "images/tomato-pasta.jpg"
         imageService.stubbedNamedImages[expectedName] = solidImage(color: .systemGreen)
         let generator = RecipeShareCardGenerator(imageService: imageService)
 
-        let card = await generator.makeShareCard(for: makeRecipe())
+        let card = await generator.makeShareCard(for: makeRecipe(image: expectedName))
 
         XCTAssertEqual(imageService.loadRecipeImageCallCount, 1)
         XCTAssertEqual(imageService.loadNamedImageCalls, [expectedName])

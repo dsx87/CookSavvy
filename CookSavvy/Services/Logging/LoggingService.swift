@@ -20,7 +20,6 @@ enum LogCategory: String {
     case authService = "AuthService"
     case dietaryPreferences = "DietaryPreferences"
     case asyncImageDisk = "AsyncImageDisk"
-    case csvParser = "CSVParser"
 }
 
 /// Abstraction over `os.Logger` that maps to the standard severity levels.

@@ -16,7 +16,6 @@
       "parallelizable" : false,
       "selectedTests" : [
         "CookSavvyTests/CookSavvyTests",
-        "CookSavvyTests/DatasetImportingTests",
         "CookSavvyTests/ImageServiceTests",
         "CookSavvyTests/IngredientsServiceTests",
         "CookSavvyTests/OfflineRecipeSourceTests",

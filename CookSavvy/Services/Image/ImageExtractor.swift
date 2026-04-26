@@ -14,6 +14,10 @@ import ZIPFoundation
 /// duplicate reads from the same ZIP file when multiple images are requested simultaneously.
 actor ImageExtractor {
 
+    private enum ImageExtractorError: Error {
+        case documentsDirectoryUnavailable
+    }
+
     /// Extracts a single image from the ZIP archive by delegating to `extractImages(withNames:fromZipFile:useCache:)`.
     /// - Parameters:
     ///   - imageFileName: Filename of the image entry inside the ZIP.
@@ -33,7 +37,7 @@ actor ImageExtractor {
     ///
     /// First checks the Documents directory for each filename; only entries absent from disk are
     /// extracted from the ZIP via `Unarchiver`. Newly extracted data is written back to disk
-    /// asynchronously so subsequent requests are served from cache.
+    /// so subsequent requests are served from cache.
     ///
     /// - Parameters:
     ///   - fileNames: Filenames of the image entries to extract.
@@ -43,32 +47,51 @@ actor ImageExtractor {
     func extractImages(withNames fileNames: [String], fromZipFile zipFileURL: URL, useCache: Bool = true) async throws -> [String: Data] {
         try await Task {
             let fileManager = FileManager.default
-            let imagesDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+            guard let imagesDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+                throw ImageExtractorError.documentsDirectoryUnavailable
+            }
             var extractedImages: [String: Data] = [:]
             var pendingFileNames: [String] = []
             
-            // Check cache first
+            // Treat disk-cache reads as an optimization. If a cached file is unreadable,
+            // fall back to the ZIP entry so a stale or corrupt cache does not hide valid data.
             for fileName in fileNames {
                 let imageURL = imagesDirectory.appendingPathComponent(fileName)
                 if useCache, fileManager.fileExists(atPath: imageURL.path) {
-                    extractedImages[fileName] = try Data(contentsOf: imageURL)
+                    do {
+                        extractedImages[fileName] = try Data(contentsOf: imageURL)
+                    } catch {
+                        pendingFileNames.append(fileName)
+                    }
                 } else {
                     pendingFileNames.append(fileName)
                 }
             }
             
-            // Batch extract remaining files
+            // Missing entries are skipped for batch extraction. Structural archive
+            // failures still surface to callers because no useful partial result can be trusted.
             if !pendingFileNames.isEmpty {
                 let unarchiver = Unarchiver()
                 for fileName in pendingFileNames {
-                    let imageData = try unarchiver.extract(file: fileName, fromZipFileUrl: zipFileURL)
+                    let imageData: Data
+                    do {
+                        imageData = try unarchiver.extract(file: fileName, fromZipFileUrl: zipFileURL)
+                    } catch Unarchiver.UnarchiverError.fileNotFoundInZipArchive {
+                        continue
+                    }
                     extractedImages[fileName] = imageData
                     
-                    // Cache asynchronously
+                    // Cache writes are best-effort; extraction success should still return image bytes.
                     if useCache {
-                        Task {
-                            let imageURL = imagesDirectory.appendingPathComponent(fileName)
+                        let imageURL = imagesDirectory.appendingPathComponent(fileName)
+                        do {
+                            try fileManager.createDirectory(
+                                at: imageURL.deletingLastPathComponent(),
+                                withIntermediateDirectories: true
+                            )
                             try imageData.write(to: imageURL)
+                        } catch {
+                            continue
                         }
                     }
                 }

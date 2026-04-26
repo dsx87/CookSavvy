@@ -31,8 +31,9 @@ struct DefaultPlaceholder: View {
 /// via `ImageService`. Accepts a custom placeholder shown while the image is loading.
 ///
 /// The full filename is assembled using a configurable `imageNameBuilder` closure, allowing
-/// callers to inject directory prefixes and file extensions. Falls back to the `DefaultPlaceholder`
-/// when no custom placeholder is provided via the convenience initialiser.
+/// callers to inject directory prefixes and file extensions. The convenience initialiser treats
+/// `imageName` as the exact cache/ZIP path, matching JSON dataset values such as `images/foo.jpg`.
+/// It falls back to the `DefaultPlaceholder` when no custom placeholder is provided.
 ///
 /// Services are resolved through the SwiftUI environment (`imageService`, `loggingService`).
 struct AsyncImageDisk<Placeholder: View>: View {
@@ -67,7 +68,7 @@ struct AsyncImageDisk<Placeholder: View>: View {
         self.imageNameBuilder = imageNameBuilder
     }
     
-    /// Convenience initialiser that uses the default prefix and `.jpg` extension.
+    /// Convenience initialiser for recipe image paths already stored with their directory and extension.
     /// - Parameters:
     ///   - imageName: The base filename without extension.
     ///   - contentMode: How the loaded image is scaled inside its frame.
@@ -77,18 +78,11 @@ struct AsyncImageDisk<Placeholder: View>: View {
         contentMode: ContentMode = .fill,
         @ViewBuilder placeholder: @escaping () -> Placeholder
     ) {
-        self.imageNamePrefix = UI.DiskImage.defaultPrefix
+        self.imageNamePrefix = nil
         self.imageName = imageName
         self.contentMode = contentMode
         self.placeholder = placeholder()
-        self.imageNameBuilder = ({ prefix, imageFileName in
-            var imageFileName = imageFileName + UI.DiskImage.defaultExtension
-            if let prefix {
-                imageFileName = prefix + imageFileName
-            }
-            return imageFileName
-            
-        })
+        self.imageNameBuilder = { _, imageFileName in imageFileName }
     }
     
     var body: some View {
@@ -102,10 +96,11 @@ struct AsyncImageDisk<Placeholder: View>: View {
             }
             
         }
-        .task {
+        .task(id: imageName) {
             let fullImageName = imageNameBuilder(self.imageNamePrefix, self.imageName)
             guard let imageService else { return }
             do {
+                self.image = nil
                 self.image = try await imageService.loadImage(named: fullImageName)
             } catch {
                 loggingService?
@@ -145,16 +140,7 @@ extension EnvironmentValues {
 
 #Preview {
     AsyncImageDisk(
-        imageName: "-bloody-mary-tomato-toast-with-celery-and-horseradish-56389813",
-//        imageNamePrefix: "Food Images/Food Images/",
-//        imageNameBuilder: ({ prefix, imageFileName in
-//            var imageFileName = imageFileName + ".jpg"
-//            if let prefix {
-//                imageFileName = prefix + imageFileName
-//            }
-//            return imageFileName
-//            
-//        }),
+        imageName: "images/bloody-mary-tomato-toast-with-celery-and-horseradish.jpg",
         placeholder: ({
             Color.gray
         })

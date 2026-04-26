@@ -135,11 +135,13 @@ struct RecipeRow: View {
     var isSaved: Bool = false
 
     var body: some View {
-        HStack(spacing: UI.Components.RecipeRow.spacing) {
+        HStack(alignment: .top, spacing: UI.Components.RecipeRow.spacing) {
             rowThumbnail
             recipeContent
+                .frame(maxWidth: .infinity, alignment: .leading)
             bookmarkBadge
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(UI.Components.RecipeRow.padding)
         .background(cardBackground)
         .overlay(cardBorder)

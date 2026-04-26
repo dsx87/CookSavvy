@@ -10,11 +10,11 @@ Generated: 2026-04-22
 |---|------|-------|----------|
 | 1 | **Database** | Unprotected mutable `recipeCache` dictionary — concurrent reads/writes with no lock = data race | `DBInterface.swift:31, 341–408, 882` |
 | 2 | **Database** | Three `try!` force-tries on DB init — any failure crashes the app with no graceful degradation | `DBInterface.swift:63, 68, 74, 76` |
-| 3 | **Data Import** | `CSVParser` uses `as!` force-casts without type validation — crash if type doesn't match | `CSVParser.swift:241, 243, 249` |
+| 3 | **Data Import** | JSON recipe dataset import has schema validation only at decode time — malformed bundled data still blocks first launch | `RecipeDatasetReader.swift` |
 | 4 | **AI / Security** | User-supplied ingredient names interpolated directly into LLM prompts — no sanitization, prompt injection risk | `AIService.swift:74–76` |
 | 5 | **Security** | Spoonacular API key passed as URL query parameter — logged in server access logs and proxy caches | `SpoonacularProvider.swift:28` |
 | 6 | **Subscription** | No subscription status refresh when app returns to foreground — cancelled subscriptions won't be reflected until next launch | `CookSavvyApp.swift` / `StoreKitSubscriptionService.swift` |
-| 7 | **Testing** | 11 commented-out `DatasetImportingTests` — data import is entirely untested | `DatasetImportingTests.swift` |
+| 7 | **Testing** | `DataImportService` startup import lacks an end-to-end unit test around bundle lookup and database insertion | `DataImportService.swift` |
 | 8 | **Database** | No formal migration system — schema uses `CREATE TABLE IF NOT EXISTS` only, with one ad-hoc column addition, no versioning | `DBInterface.swift:80–250` |
 
 ---
@@ -36,7 +36,7 @@ Generated: 2026-04-22
 | 19 | **Database** | Swallowed decode errors via `compactMap { try? }` — corrupted recipes silently dropped, users see incomplete lists | `DBInterface.swift:588, 618, 827` |
 | 20 | **Testing** | 26+ tests use arbitrary `Task.yield()` counts instead of `XCTestExpectation` — flaky on slower hardware/CI | `DiscoverViewModelTests`, `OnboardingViewModelTests`, `RecipeDetailsViewModelTests` |
 | 21 | **Testing** | 4 ViewModels with zero tests: `CameraViewModel`, `RecipeListViewModel`, `SettingsViewModel`, `UpgradeViewModel` | Tests directory |
-| 22 | **Testing** | 7 services with zero tests: `AIService`, `SupabaseAuthService`, `DataImportService`, `LoggingService`, `StoreKitSubscriptionService`, `NoOpAuthService`, `DatasetImportingService` | Tests directory |
+| 22 | **Testing** | 6 services with zero tests: `AIService`, `SupabaseAuthService`, `DataImportService`, `LoggingService`, `StoreKitSubscriptionService`, `NoOpAuthService` | Tests directory |
 
 ---
 
@@ -51,7 +51,7 @@ Generated: 2026-04-22
 | 27 | **Database** | `DatabaseInitializationService` uses busy-wait polling with 50ms sleep — should use async published state | `DatabaseInitializationService.swift:104–119` |
 | 28 | **Database** | All `DBInterfaceProtocol` methods are synchronous `throws` — service methods calling them from `async` contexts block the calling thread | `DBInterfaceProtocol.swift:35–105` |
 | 29 | **Database** | N+1 query pattern in `IngredientsService.getAllIngredients(byCategory:)` — loops per food group, creating Ingredients just for category mapping | `IngredientsService.swift:125–150` |
-| 30 | **Database** | CSV import has no validation, no deduplication, no transactional rollback — partial import can corrupt database | `DataImportService.swift:77–90` |
+| 30 | **Database** | JSON recipe import has no pre-insert quality validation or deduplication — low-quality or duplicate bundled records are inserted silently | `DataImportService.swift` |
 | 31 | **Database** | Temporary ZIP extraction files never cleaned up by caller — accumulates in `tmp/` directory | `Unarchiver.swift:40–52` |
 | 32 | **Models** | `Recipe.id` is derived from `title` — two recipes with the same title hash/equate as identical | `Recipe.swift:193` |
 | 33 | **Models** | `ShoppingItem` is not `Codable` despite being persisted to the database — forces manual serialization in DBInterface | `ShoppingItem.swift:8` |
@@ -98,6 +98,6 @@ Based on crash/data-loss risk:
 
 1. **#2** — `try!` on DB init (app crash)
 2. **#1** — Data race on `recipeCache` (data corruption)
-3. **#3** — `CSVParser` force-cast (parsing crash)
+3. **#3** — JSON dataset validation gap (startup import failure)
 4. **#6** — Subscription not refreshed on foreground (revenue/UX)
 5. **#4** — Prompt injection in AI service (security)

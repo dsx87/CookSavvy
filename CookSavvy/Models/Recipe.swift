@@ -326,10 +326,10 @@ extension Recipe {
     }
 }
 
-/// Custom codable behavior for CSV/API compatibility.
+/// Custom codable behavior for bundled dataset and API compatibility.
 extension Recipe: Codable {
     
-    /// Custom `CodingKeys` mapping Swift property names to the CSV/JSON field names used in the dataset.
+    /// Custom `CodingKeys` mapping Swift property names to legacy dataset/API field names.
     enum CodingKeys: String, CodingKey {
         case title = "Title"
         case ingredients = "Ingredients"
@@ -339,12 +339,12 @@ extension Recipe: Codable {
         case additionalInfo = "additionalInfo"
     }
     
-    /// Decodes a recipe from either a CSV-backed JSON representation or a structured API response.
+    /// Decodes a recipe from either a legacy dataset JSON representation or a structured API response.
     ///
     /// The `instructions` field is decoded with three-way fallback:
     /// 1. An array of `Step` objects (structured API format).
     /// 2. An array of plain strings (simple API format).
-    /// 3. A single newline-delimited string (CSV legacy format).
+    /// 3. A single newline-delimited string (legacy dataset format).
     ///
     /// Optional runtime fields (`source`, `matchPercentage`, etc.) are always initialised to `nil`.
     init(from decoder: any Decoder) throws {

@@ -32,7 +32,7 @@ final class AppContainer {
     let imageService: ImageServiceProtocol
     /// Branded PNG recipe share-card generation.
     let recipeShareCardGenerator: RecipeShareCardGenerating
-    /// CSV dataset import into the database.
+    /// JSON dataset import into the database.
     let dataImportService: DataImportServiceProtocol
     /// User-specific data — favorites, recent recipes, and cooking sessions.
     let userDataService: UserDataServiceProtocol

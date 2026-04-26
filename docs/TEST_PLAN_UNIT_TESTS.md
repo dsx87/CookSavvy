@@ -41,7 +41,7 @@ This document defines the unit test plan for CookSavvy. It covers services, View
 | 13 | `RecipeDetailsViewModelTests.swift` | ✅ Done | 9 |
 | 14 | `RecipeSourceTests.swift` | ✅ Done | 7 |
 | 15 | `OnlineAndAIRecipeSourceTests.swift` | ✅ Done | 9 |
-| 16 | `CVSDecoderTests.swift` | ✅ Done | 1 |
+| 16 | `RecipeDatasetReaderTests.swift` | ✅ Done | 5 |
 
 **Unit test total:** ~103
 
@@ -58,7 +58,7 @@ This document defines the unit test plan for CookSavvy. It covers services, View
 | 7 | `ImageServiceTests.swift` | ✅ Done | 22 |
 | 8 | `OfflineRecipeSourceTests.swift` | ✅ Done | 10 |
 | 9 | `NetworkServiceTests.swift` | ✅ Done | 3 |
-| 10 | `DatasetImportingTests.swift` | ⚠️ Stubbed | 0 |
+| 10 | `RecipeDatasetReaderTests.swift` | ✅ Done | 5 |
 | — | `DatabaseInitializationServiceTests.swift` | ❌ Not started | — |
 
 **Integration test total:** ~125

@@ -571,7 +571,7 @@ final class DBInterface: DBInterfaceProtocol {
     ///
     /// Complex fields (`instructions`, `ingredients`, `cleanedIngredients`, `additionalInfo`) are
     /// JSON-encoded before storage. Duplicate ingredient names within a single recipe are
-    /// deduplicated before inserting into `recipe_ingredients` — some CSV-sourced recipes list
+    /// deduplicated before inserting into `recipe_ingredients` — some dataset recipes list
     /// the same ingredient more than once.
     func insertRecipes(_ recipes: [Recipe]) throws {
         guard !recipes.isEmpty else { return }

@@ -15,7 +15,7 @@ import os.log
 enum DatabaseInitializationState: Equatable {
     /// Initialisation has not yet been triggered.
     case notStarted
-    /// Phase 1: the ingredients CSV is being imported into the `ingredients` table.
+    /// Phase 1: the ingredients JSON is being imported into the `ingredients` table.
     case loadingIngredients
     /// Phase 2: the recipe dataset is being imported into the `recipes` table.
     case loadingRecipes
@@ -43,10 +43,10 @@ enum DatabaseInitializationState: Equatable {
 /// Orchestrates the two-phase database startup sequence at app launch.
 ///
 /// **Phase 1 — Ingredients**: calls `IngredientsServiceProtocol.ensureIngredientsLoaded()` to
-/// import the ingredient CSV if the `ingredients` table is empty.
+/// import the ingredient JSON if the `ingredients` table is empty.
 ///
 /// **Phase 2 — Recipes**: calls `DataImportServiceProtocol.ensureRecipesImported()` to
-/// import the recipe dataset CSV if the `recipes` table is empty.
+/// import the recipe dataset JSON if the `recipes` table is empty.
 ///
 /// The service is fail-fast: any error transitions `state` to `.failed(message)` and
 /// propagates upward so `AppContainer` can render a blocking error screen rather than
@@ -152,7 +152,7 @@ final class DatabaseInitializationService: ObservableObject, DatabaseInitializat
 
     #if DEBUG
     /// Cancels any in-progress initialisation task and forces state to `.ready`.
-    /// Used by unit tests to bypass real data loading without running CSV imports.
+    /// Used by unit tests to bypass real data loading without running dataset imports.
     func markReadyForTesting() {
         initializationTask?.cancel()
         initializationTask = nil

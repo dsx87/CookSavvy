@@ -65,10 +65,10 @@ These items are independent of each other and can be done in parallel. None requ
 - `DBInterface.init(inMemory: false)` now delegates to the normal on-disk initializer instead of silently creating an in-memory database.
 - `AppContainer.init()` is explicitly internal and documented as singleton lifecycle construction.
 - `DefaultImageStore.thumbnail(for:size:)` now generates bounded thumbnail data when the stored payload is an image.
-- `CSVDecoder` logs skipped malformed rows through `LoggingService` with `LogCategory.csvParser`.
+- The bundled recipe import path now uses `JSONRecipeDatasetReader` against `recipes.json`.
 - The DEBUG-only `RecipeService` convenience initializer remains gated behind `#if DEBUG`.
 - `AppContainerLifecycleTests` now uses `AppContainer.makeInMemory()` instead of `UITestConfiguration`.
-- `CSVZipAdapter.importAll` checks cancellation before emitting initial `0` progress.
+- `RecipeDatasetReaderTests` cover JSON ZIP detection and structured recipe decoding.
 - Verification: generic iOS Simulator build passed; `UnitTests` passed on `iPhone 16,OS=18.5` with 303 selected tests and 0 failures. The unpinned `iPhone 16` unit-test command still fails on this machine because Xcode resolves it to `OS:latest`, while only iOS 18.5 exists for that simulator name.
 
 ---
@@ -134,25 +134,22 @@ The cache is accessed only from a single serialised context. The simplest correc
 
 ---
 
-### [P0-3] Fix `CSVParser` force-casts
+### [P0-3] Replace legacy parser with JSON dataset reader
 
-**Status:** ✅ Completed — 2026-04-22. `CSVParser` no longer force-casts Foundation generic decoding paths, malformed row decoding is skipped with parser logging, and malformed headers/empty files still throw. Added CSV tests for malformed rows plus `Date`, `Data`, and `URL` decoding failures. Verified with the Phase 0 completion commands above.
+**Status:** ✅ Superseded — 2026-04-25. Runtime delimited-file parsing was removed. `DataImportService` now reads `recipes.json` from the bundled JSON ZIP through `JSONRecipeDatasetReader`, with focused JSON archive tests.
 
-**Severity:** 🔴 Critical — parsing crash on type mismatch  
-**Files:** `CookSavvy/DataImport/CSVParser.swift` lines 241, 243, 249  
+**Severity:** 🔴 Critical — startup import failure on malformed bundled data  
+**Files:** `CookSavvy/DataImport/RecipeDatasetReader.swift`  
 **Parallel:** Yes
 
 **Problem:**  
-`as!` casts assume the parsed CSV value is always the expected Swift type. If the CSV has a malformed row, a missing column, or an empty string where a number is expected, the app crashes.
+The app's first-launch recipe import depends on the bundled dataset matching the supported JSON schema.
 
 **Implementation steps:**
 
-1. Replace each `as!` with a conditional cast (`as?`) combined with a `guard let` or `?? defaultValue`.
-   - For `String` fields: use `as? String ?? ""`
-   - For `Int` fields: use `(value as? Int) ?? (Int(value as? String ?? "") ?? 0)`
-   - For `Double` fields: use `(value as? Double) ?? (Double(value as? String ?? "") ?? 0.0)`
-2. For rows that fail to parse critical required fields (e.g., ingredient name), log the failure via the app's logging infrastructure (`LoggingService`) and `continue` to the next row rather than crashing.
-3. Update `CookSavvyTests/CVSDecoderTests.swift` to add a test case with a malformed row (wrong type, empty required field) and assert that parsing returns partial results without throwing or crashing.
+1. Keep the reader isolated behind `RecipeDatasetReading`.
+2. Validate that ZIP archives contain `recipes.json`.
+3. Decode structured ingredients, instructions, cleaned ingredients, and nested image paths through unit tests.
 
 ---
 
@@ -249,24 +246,22 @@ The iOS app talks only to the app backend abstraction (`SupabaseRecipeAPIProvide
 
 ---
 
-### [P0-7] Uncomment and fix DatasetImportingTests
+### [P0-7] Add recipe dataset reader tests
 
-**Status:** ✅ Completed — 2026-04-22. Replaced the disabled dataset-import tests with compiling in-memory/temp-directory coverage, and implemented minimal ZIP detection, archive validation, progress/cancellation, image-store content-hash dedupe, thumbnail reads, and coordinator delegation. Verified with the Phase 0 completion commands above.
+**Status:** ✅ Completed — 2026-04-25. Replaced legacy importer coverage with JSON ZIP tests for archive detection, missing manifest rejection, structured recipe decoding, legacy recipe model fallback, and nested image path preservation.
 
-**Severity:** 🔴 Critical — data import is entirely untested  
-**Files:** `CookSavvyTests/DatasetImportingTests.swift`  
+**Severity:** 🔴 Critical — data import is startup-critical  
+**Files:** `CookSavvyTests/RecipeDatasetReaderTests.swift`  
 **Parallel:** Yes
 
 **Problem:**  
-11 tests are commented out, meaning the data import path (CSV parsing, ZIP extraction, DB insertion) has zero automated test coverage.
+The bundled recipe dataset reader needs coverage because malformed archive contents block first launch.
 
 **Implementation steps:**
 
-1. Uncomment all disabled tests in `DatasetImportingTests.swift`.
-2. For each test that fails to compile, fix the API mismatch — the service interfaces have likely changed since the tests were written.
-3. For each test that fails at runtime, investigate and fix the root cause in the test setup (not by re-commenting the test).
-4. Ensure the tests use an in-memory `DBInterface` (via `DBTestHelpers`) and do not touch the real app database.
-5. After P0-3 (CSVParser force-casts fixed), run the tests again to confirm they exercise the safe parsing path.
+1. Build temporary ZIP archives with `recipes.json`.
+2. Assert supported and unsupported archive detection.
+3. Assert decoded recipes preserve structured fields and `images/...` paths.
 
 ---
 
@@ -708,7 +703,7 @@ ON CONFLICT(uuid) DO UPDATE SET
 
 Do **not** use `INSERT OR REPLACE` for recipes. In SQLite, replace is implemented as delete + insert, which can change row IDs and cascade-delete favorites, recents, recipe ingredients, or cooking sessions.
 
-For offline (CSV-imported) recipes: generate a deterministic UUID v5 from the title at import time so re-imports are idempotent.
+For offline JSON-imported recipes: generate a deterministic UUID v5 from the title at import time so re-imports are idempotent.
 For online/AI recipes: use the external `sourceIdentifier` to generate a deterministic UUID, or use the UUID returned by the API.
 
 Swift Foundation does not provide UUID v5. Add a small deterministic UUID helper (for example SHA-256 of `namespace + source + sourceIdentifier/title`, truncated into UUID bytes with RFC 4122 version/variant bits set) and unit-test it for stability.
@@ -1116,13 +1111,13 @@ The offline DB readiness wait is skipped when the source set includes online or 
 
 ---
 
-### [P3-8] Fix CSV import — add validation, dedup, and transaction rollback
+### [P3-8] Fix JSON import — add validation, dedup, and transaction rollback
 
 **Severity:** 🟠 Medium  
-**Files:** `CookSavvy/DataImport/DataImportService.swift:77–90`
+**Files:** `CookSavvy/DataImport/DataImportService.swift`, `CookSavvy/DataImport/RecipeDatasetReader.swift`
 
 **Problem:**  
-CSV import performs no input validation, no deduplication, and no transactional rollback. A partial import can leave the database in a corrupted state.
+JSON import performs no pre-insert quality validation or deduplication. Low-quality or duplicate bundled records can be inserted silently.
 
 **Implementation steps:**
 

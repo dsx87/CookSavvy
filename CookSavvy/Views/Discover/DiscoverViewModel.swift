@@ -37,7 +37,7 @@ enum RecipeCookTimeFilter: Int, CaseIterable, Identifiable {
 /// Single-select recipe complexity filter for Discover results.
 ///
 /// Matching is intentionally case-insensitive because recipe metadata can arrive
-/// from local CSV data or backend providers with different capitalization.
+/// from local dataset data or backend providers with different capitalization.
 enum RecipeComplexityFilter: String, CaseIterable, Identifiable {
     case easy
     case medium

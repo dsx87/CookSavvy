@@ -33,11 +33,9 @@ final class RecipeShareCardGenerator: RecipeShareCardGenerating {
         return RecipeShareCard(title: recipe.title, pngData: pngData)
     }
 
-    /// Loads the same recipe image asset path used by `RecipeImage`/`AsyncImageDisk`.
-    ///
-    /// Remote and already-expanded paths are handled by `ImageServiceProtocol.loadImage(for:)`;
-    /// local dataset recipe records store only the base image name, so they need the bundled
-    /// food-image prefix and `.jpg` extension before falling back to artwork.
+    /// Loads the same exact recipe image path used by `RecipeImage`/`AsyncImageDisk`.
+    /// JSON dataset records store image paths such as `images/foo.jpg`, so no legacy prefix or
+    /// extension expansion is applied before falling back to generated artwork.
     private func loadRecipeImage(for recipe: Recipe) async -> UIImage? {
         if let image = try? await imageService.loadImage(for: recipe) {
             return image
@@ -47,8 +45,7 @@ final class RecipeShareCardGenerator: RecipeShareCardGenerating {
             return nil
         }
 
-        let diskImageName = UI.DiskImage.defaultPrefix + recipe.image + UI.DiskImage.defaultExtension
-        return try? await imageService.loadImage(named: diskImageName)
+        return try? await imageService.loadImage(named: recipe.image)
     }
 
     /// Produces deterministic fallback art keyed by recipe title so missing images still share

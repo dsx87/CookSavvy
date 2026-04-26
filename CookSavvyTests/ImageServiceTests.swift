@@ -7,6 +7,7 @@
 
 import XCTest
 import UIKit
+import ZIPFoundation
 @testable import CookSavvy
 
 // MARK: - Mock ImageExtractor
@@ -89,6 +90,31 @@ final class ImageServiceTests: XCTestCase {
         let fileURL = testDirectory.appendingPathComponent(fileName)
         try imageData.write(to: fileURL)
         return fileURL
+    }
+
+    private func documentsDirectory() throws -> URL {
+        try XCTUnwrap(fileManager.urls(for: .documentDirectory, in: .userDomainMask).first)
+    }
+
+    private func makeImageZip(fileName: String) throws -> URL {
+        try makeImageZip(fileNames: [fileName])
+    }
+
+    private func makeImageZip(fileNames: [String]) throws -> URL {
+        let workDirectory = testDirectory.appendingPathComponent("zip-work-\(UUID().uuidString)", isDirectory: true)
+        let zipURL = testDirectory.appendingPathComponent("images-\(UUID().uuidString).zip")
+        guard let archive = Archive(url: zipURL, accessMode: .create) else {
+            throw NSError(domain: "ImageServiceTests", code: 1)
+        }
+
+        for fileName in fileNames {
+            let imageURL = workDirectory.appendingPathComponent(fileName)
+            try fileManager.createDirectory(at: imageURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try createTestImage().pngData()!.write(to: imageURL)
+            try archive.addEntry(with: fileName, fileURL: imageURL)
+        }
+
+        return zipURL
     }
     
     // MARK: - Initialization Tests
@@ -302,6 +328,93 @@ final class ImageServiceTests: XCTestCase {
         
         // Should not throw
         XCTAssertNoThrow(try imageService.clearDiskCache())
+    }
+
+    func testClearAllDiskCacheHandlesMultipleImagesInSameNestedDirectory() throws {
+        imageService = ImageService()
+        let cacheDirectoryName = "image-service-\(UUID().uuidString)"
+        let nestedCacheDirectory = try documentsDirectory()
+            .appendingPathComponent("images", isDirectory: true)
+            .appendingPathComponent(cacheDirectoryName, isDirectory: true)
+        try fileManager.createDirectory(at: nestedCacheDirectory, withIntermediateDirectories: true)
+
+        let imageData = try XCTUnwrap(createTestImage().pngData())
+        try imageData.write(to: nestedCacheDirectory.appendingPathComponent("a.png"))
+        try imageData.write(to: nestedCacheDirectory.appendingPathComponent("b.jpg"))
+
+        try imageService.clearDiskCache()
+
+        XCTAssertFalse(fileManager.fileExists(atPath: nestedCacheDirectory.path))
+    }
+
+    func testLoadImageCachesNestedDatasetImagePath() async throws {
+        let cacheDirectoryName = "image-service-\(UUID().uuidString)"
+        let fileName = "images/\(cacheDirectoryName)/photo.png"
+        let zipURL = try makeImageZip(fileName: fileName)
+        imageService = ImageService(zipFileURL: zipURL)
+        try imageService.clearDiskCache(fileName: fileName)
+
+        let image = try await imageService.loadImage(named: fileName)
+
+        XCTAssertNotNil(image)
+        XCTAssertTrue(imageService.imageExists(named: fileName))
+
+        try imageService.clearDiskCache(fileName: fileName)
+        imageService.clearCache()
+        XCTAssertFalse(imageService.imageExists(named: fileName))
+        let nestedCacheDirectory = try documentsDirectory()
+            .appendingPathComponent("images", isDirectory: true)
+            .appendingPathComponent(cacheDirectoryName, isDirectory: true)
+        XCTAssertFalse(fileManager.fileExists(atPath: nestedCacheDirectory.path))
+    }
+
+    func testImageExtractorReturnsImageWhenCacheWriteFails() async throws {
+        let blockerName = "image-cache-blocker-\(UUID().uuidString)"
+        let fileName = "\(blockerName)/photo.png"
+        let zipURL = try makeImageZip(fileName: fileName)
+        let blockerURL = try documentsDirectory().appendingPathComponent(blockerName)
+        try Data("not a directory".utf8).write(to: blockerURL)
+        defer { try? fileManager.removeItem(at: blockerURL) }
+
+        let imageData = try await ImageExtractor().extractImage(
+            withName: fileName,
+            fromZipFile: zipURL,
+            useCache: true
+        )
+
+        XCTAssertFalse(imageData.isEmpty)
+    }
+
+    func testImageExtractorOmitsMissingBatchEntriesWithoutDroppingValidImages() async throws {
+        let validFileName = "images/batch-valid-\(UUID().uuidString).png"
+        let missingFileName = "images/batch-missing-\(UUID().uuidString).png"
+        let zipURL = try makeImageZip(fileName: validFileName)
+
+        let images = try await ImageExtractor().extractImages(
+            withNames: [missingFileName, validFileName],
+            fromZipFile: zipURL,
+            useCache: false
+        )
+
+        XCTAssertNil(images[missingFileName])
+        XCTAssertFalse(try XCTUnwrap(images[validFileName]).isEmpty)
+    }
+
+    func testImageExtractorFallsBackToZipWhenDiskCacheReadFails() async throws {
+        let blockerName = "image-cache-read-blocker-\(UUID().uuidString)"
+        let fileName = "\(blockerName)/photo.png"
+        let zipURL = try makeImageZip(fileName: fileName)
+        let blockerURL = try documentsDirectory().appendingPathComponent(fileName, isDirectory: true)
+        try fileManager.createDirectory(at: blockerURL, withIntermediateDirectories: true)
+        defer { try? fileManager.removeItem(at: blockerURL.deletingLastPathComponent()) }
+
+        let imageData = try await ImageExtractor().extractImage(
+            withName: fileName,
+            fromZipFile: zipURL,
+            useCache: true
+        )
+
+        XCTAssertFalse(imageData.isEmpty)
     }
     
     // MARK: - Integration Tests

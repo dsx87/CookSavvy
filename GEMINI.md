@@ -100,7 +100,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 
 ### Service Layer
 - **Data Services**: `RecipeServiceProtocol` / `RecipeService`, `IngredientsServiceProtocol` / `IngredientsService`, `UserDataServiceProtocol` / `UserDataService`
-- **Infrastructure**: `ImageServiceProtocol` / `ImageService`, `RecipeShareCardGenerating` / `RecipeShareCardGenerator`, `DatabaseInitializationServiceProtocol` / `DatabaseInitializationService`, `DataImportServiceProtocol` / `DataImportService`, `CSVParser`
+- **Infrastructure**: `ImageServiceProtocol` / `ImageService`, `RecipeShareCardGenerating` / `RecipeShareCardGenerator`, `DatabaseInitializationServiceProtocol` / `DatabaseInitializationService`, `DataImportServiceProtocol` / `DataImportService`, `RecipeDatasetReading` / `JSONRecipeDatasetReader`
 - **Cross-cutting**: `LoggingServiceProtocol` / `LoggingService` creates feature-scoped `LoggerProtocol` instances backed by `os.Logger`
 - **Feature Services**: `ShoppingListServiceProtocol` / `ShoppingListService`, `PantryServiceProtocol` / `PantryService`, `RecipeRecommendationServiceProtocol` / `RecipeRecommendationService`, `CameraScanTrackerProtocol` / `CameraScanTracker`, `IngredientDetectionServiceProtocol` (impl: `AIIngredientDetectionAdapter`), `SubscriptionServiceProtocol` (impl: `StoreKitSubscriptionService` / `MockSubscriptionService`)
 - **Auth Services**: `AuthServiceProtocol`, `SupabaseAuthService`, `MockAuthService`, `NoOpAuthService` (RELEASE fallback when Supabase keys are missing), `SignInWithAppleAction` (shared SIWA flow, analytics, concurrency guard), `AppleSignInManager` / `AppleSignInManaging` (ASAuthorizationController + SHA256 nonce for SIWA flow)
@@ -267,8 +267,7 @@ CookSavvy/
 │       └── RecipeAPIProviderProtocol.swift
 ├── DataImport/
 │   ├── DataImportService.swift
-│   ├── CSVParser.swift
-│   ├── DatasetImporting.swift
+│   ├── RecipeDatasetReader.swift
 │   └── Unarchiver.swift
 ├── Coordinators/
 │   ├── Coordinator.swift              — Base protocol
@@ -332,8 +331,7 @@ CookSavvyTests/                        — Unit + integration tests
 ├── OfflineRecipeSourceTests.swift
 ├── OnlineAndAIRecipeSourceTests.swift
 ├── RecipeSourceTests.swift
-├── CVSDecoderTests.swift
-├── DatasetImportingTests.swift
+├── RecipeDatasetReaderTests.swift
 ├── RecipeMoodRankerTests.swift
 ├── RecipeMatchRankerTests.swift
 ├── RecipeRecommendationServiceTests.swift

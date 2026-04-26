@@ -7,11 +7,11 @@
 
 import Foundation
 
-/// Convenience parsing helpers used when normalizing CSV-backed text fields.
+/// Convenience parsing helpers used when normalizing legacy quoted text fields.
 extension String {
     /// Extracts substrings enclosed in single-quote pairs from the receiver.
     ///
-    /// Used to parse the CSV ingredient field format where each ingredient name is
+    /// Used to parse the legacy ingredient field format where each ingredient name is
     /// wrapped in single quotes (e.g. `"'garlic','onion','chicken'"`).
     /// An unpaired trailing quote is discarded to prevent out-of-bounds access.
     var separatedByQuotes: [String] {

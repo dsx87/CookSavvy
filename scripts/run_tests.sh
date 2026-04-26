@@ -67,7 +67,7 @@ Options:
   --clean               Run a clean build before testing
   --list-schemes        List schemes in the project and exit
   --verbose             verbose output
-  --only <identifier>   Run only specific tests (e.g., CookSavvyTests/CSVZipAdapterTests)
+  --only <identifier>   Run only specific tests (e.g., CookSavvyTests/RecipeDatasetReaderTests)
   --parallel            Enable parallel distributed testing (simulator clones)
   --workers <n>         Number of parallel simulator workers (implies --parallel; default: cpu/2)
   -h, --help            Show this help

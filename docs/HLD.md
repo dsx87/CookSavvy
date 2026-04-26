@@ -382,7 +382,7 @@ INFRASTRUCTURE                           ├──▶ SupabaseLLMProvider
 ──────────────                           └──▶ SupabaseRecipeAPIProvider
 DBInterfaceProtocol ──▶ DBInterface (GRDB SQLite)
 DatabaseInitializationServiceProtocol ──▶ DatabaseInitializationService
-DataImportServiceProtocol ──▶ DataImportService ──▶ CSVParser
+DataImportServiceProtocol ──▶ DataImportService ──▶ JSONRecipeDatasetReader
 ImageServiceProtocol ──▶ ImageService (disk cache)
 LoggingServiceProtocol ──▶ LoggingService (os.Logger)
 AnalyticsServiceProtocol ──▶ AnalyticsService

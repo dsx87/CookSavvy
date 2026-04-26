@@ -14,10 +14,14 @@ private enum ImageServiceConstants {
     static let bytesPerPixel = 4.0
     static let defaultCacheSize = 100
     static let memoryCacheLimit = 50 * 1024 * 1024
-    static let datasetName = "food-ingredients-and-recipe-dataset-with-images"
+    static let datasetName = "food-ingredients-and-recipe-dataset-with-images-json"
     static let datasetExtension = "zip"
     static let pngExtension = "png"
     static let jpgExtension = "jpg"
+    static let jpegExtension = "jpeg"
+    static let heicExtension = "heic"
+    static let webpExtension = "webp"
+    static let imageExtensions = [pngExtension, jpgExtension, jpegExtension, heicExtension, webpExtension]
     static let remoteSchemes = ["http://", "https://"]
 }
 
@@ -162,26 +166,21 @@ final class ImageService: ImageServiceProtocol {
             return try await loadRemoteImage(urlString: fileName)
         }
         
-        // Check memory cache first
         if let cached = imageCache.image(forKey: fileName) {
             return cached
         }
-        
-        // Try to load from disk cache (Documents directory)
+
         if let image = try await loadFromDisk(fileName: fileName) {
             imageCache.setImage(image, forKey: fileName)
             return image
         }
-        
-        // Extract from ZIP if available
-        if let zipURL = zipFileURL {
-            if let image = try await extractFromZip(fileName: fileName, zipURL: zipURL) {
-                imageCache.setImage(image, forKey: fileName)
-                return image
-            }
+
+        if let zipURL = zipFileURL,
+           let image = try await extractFromZip(fileName: fileName, zipURL: zipURL) {
+            imageCache.setImage(image, forKey: fileName)
+            return image
         }
-        
-        // Image not found
+
         return nil
     }
     
@@ -190,35 +189,13 @@ final class ImageService: ImageServiceProtocol {
     /// - Returns: Dictionary mapping recipe IDs to UIImages
     func loadImages(for recipes: [Recipe]) async throws -> [String: UIImage] {
         var result: [String: UIImage] = [:]
-        var uncachedImages: [(Recipe, String)] = []
-        
-        // Check memory cache first
+
         for recipe in recipes {
-            if let cachedImage = imageCache.image(forKey: recipe.image) {
-                result[recipe.id] = cachedImage
-            } else {
-                uncachedImages.append((recipe, recipe.image))
+            if let image = try await loadImage(for: recipe) {
+                result[recipe.id] = image
             }
         }
-        
-        // Batch extract uncached images
-        if !uncachedImages.isEmpty, let zipURL = zipFileURL {
-            let imageNames = uncachedImages.map { $0.1 }
-            do {
-                let imageDataDict = try await imageExtractor.extractImages(withNames: imageNames, fromZipFile: zipURL, useCache: true)
-                
-                for (recipe, imageName) in uncachedImages {
-                    if let imageData = imageDataDict[imageName],
-                       let image = UIImage(data: imageData) {
-                        imageCache.setImage(image, forKey: imageName)
-                        result[recipe.id] = image
-                    }
-                }
-            } catch {
-                // Images not found in ZIP - continue with empty/partial results
-            }
-        }
-        
+
         return result
     }
     
@@ -246,14 +223,25 @@ final class ImageService: ImageServiceProtocol {
             let fileURL = imagesDirectory.appendingPathComponent(fileName)
             if fileManager.fileExists(atPath: fileURL.path) {
                 try fileManager.removeItem(at: fileURL)
+                try removeEmptyCacheDirectories(startingAt: fileURL.deletingLastPathComponent())
             }
         } else {
-            // Clear all cached images
-            let contents = try fileManager.contentsOfDirectory(at: imagesDirectory, includingPropertiesForKeys: nil)
-            for fileURL in contents where
-                fileURL.pathExtension.lowercased() == ImageServiceConstants.pngExtension ||
-                fileURL.pathExtension.lowercased() == ImageServiceConstants.jpgExtension {
+            // Clear all cached images, including nested dataset paths such as `images/foo.jpg`.
+            guard let contents = fileManager.enumerator(
+                at: imagesDirectory,
+                includingPropertiesForKeys: nil
+            ) else { return }
+
+            var removedParentDirectories: [URL] = []
+            for case let fileURL as URL in contents where
+                ImageServiceConstants.imageExtensions.contains(fileURL.pathExtension.lowercased()) {
                 try fileManager.removeItem(at: fileURL)
+                removedParentDirectories.append(fileURL.deletingLastPathComponent())
+            }
+
+            let uniqueParentDirectories = Set(removedParentDirectories.map(\.standardizedFileURL))
+            for directory in uniqueParentDirectories.sorted(by: { $0.path.count > $1.path.count }) {
+                try removeEmptyCacheDirectories(startingAt: directory)
             }
         }
     }
@@ -341,6 +329,19 @@ final class ImageService: ImageServiceProtocol {
             ? "." + URL(string: urlString)!.pathExtension
             : "." + ImageServiceConstants.jpgExtension
         return hex + ext
+    }
+
+    /// Removes empty cache directories left behind after deleting nested cached image files.
+    private func removeEmptyCacheDirectories(startingAt directory: URL) throws {
+        let cacheRootPath = imagesDirectory.standardizedFileURL.path
+        var directory = directory.standardizedFileURL
+        while directory.path != cacheRootPath,
+              directory.path.hasPrefix(cacheRootPath + "/") {
+            let contents = try fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+            guard contents.isEmpty else { return }
+            try fileManager.removeItem(at: directory)
+            directory.deleteLastPathComponent()
+        }
     }
     
     /// Extracts a single image from the bundled dataset ZIP archive via `ImageExtractor`.

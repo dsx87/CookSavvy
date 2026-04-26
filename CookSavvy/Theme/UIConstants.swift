@@ -253,16 +253,6 @@ struct UI {
         static let planInfoSpacing: CGFloat = 4
     }
 
-    // MARK: - DiskImage
-
-    /// File-path constants for loading bundled food images from the app bundle.
-    struct DiskImage {
-        /// Path prefix for bundled food image assets. The double segment mirrors the nested
-        /// folder structure created when the image dataset was imported into the bundle.
-        static let defaultPrefix = "Food Images/Food Images/"
-        static let defaultExtension = ".jpg"
-    }
-
     // MARK: - V2
 
     /// Top-level V2 design-system constants not tied to a single component.
