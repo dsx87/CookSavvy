@@ -30,6 +30,8 @@ final class SettingsViewModel: ObservableObject {
 
     /// The user's current subscription plan (updated live from `SubscriptionServiceProtocol`).
     @Published private(set) var currentPlan: SubscriptionPlan = .free
+    /// The user's current subscription snapshot, including any active trial state.
+    @Published private(set) var currentSubscriptionStatus: SubscriptionStatus = .free()
     /// Total number of recipes in the local database.
     @Published var recipeCount: Int = 0
     /// Number of recipes the user has bookmarked/saved.
@@ -75,6 +77,26 @@ final class SettingsViewModel: ObservableObject {
             return userId
         }
         return nil
+    }
+
+    /// Title shown in the subscription row, upgraded to a trial-specific label when needed.
+    var subscriptionTitle: String {
+        currentSubscriptionStatus.isOnFreeTrial
+            ? Strings.Settings.trialPlanTitle
+            : currentPlan.displayName
+    }
+
+    /// Subtitle shown in the subscription row, including the trial end date when available.
+    var subscriptionDescription: String {
+        guard currentSubscriptionStatus.isOnFreeTrial else {
+            return currentPlan.description
+        }
+
+        if let trialEndDate = currentSubscriptionStatus.formattedTrialEndDate {
+            return String(format: Strings.Settings.trialDescriptionWithDate, trialEndDate)
+        }
+
+        return Strings.Settings.trialDescription
     }
 
     // MARK: - Properties
@@ -132,14 +154,17 @@ final class SettingsViewModel: ObservableObject {
             self.buildNumber = SettingsViewModelConstants.unknownValue
         }
         
-        subscriptionService.currentPlanPublisher
+        currentSubscriptionStatus = subscriptionService.currentSubscriptionStatus
+        currentPlan = currentSubscriptionStatus.plan
+
+        subscriptionService.currentSubscriptionStatusPublisher
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] plan in
-                self?.currentPlan = plan
+            .sink { [weak self] status in
+                self?.currentSubscriptionStatus = status
+                self?.currentPlan = status.plan
             }
             .store(in: &cancellables)
-        
-        currentPlan = subscriptionService.currentPlan
+
         themePreference = userDataService.getThemePreference()
 
         authState = authService.authState

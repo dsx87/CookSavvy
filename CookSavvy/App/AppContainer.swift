@@ -167,10 +167,14 @@ final class AppContainer {
         )
         
         #if DEBUG
-        self.subscriptionService = MockSubscriptionService(initialPlan: .free)
+        self.subscriptionService = MockSubscriptionService(
+            initialPlan: .free,
+            analyticsService: analyticsService
+        )
         #else
         self.subscriptionService = StoreKitSubscriptionService(
-            logger: loggingService.makeLogger(category: .subscriptionService)
+            logger: loggingService.makeLogger(category: .subscriptionService),
+            analyticsService: analyticsService
         )
         #endif
 

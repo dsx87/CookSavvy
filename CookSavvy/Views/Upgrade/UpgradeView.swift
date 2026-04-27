@@ -49,6 +49,29 @@ struct UpgradeView: View {
         }
     }
     
+    /// Builds a plan card wired to the view model purchase action and accessibility ids.
+    private func planCard(for option: PremiumSubscriptionOption) -> some View {
+        PlanCard(
+            plan: option.associatedPlan,
+            optionTitle: viewModel.optionTitle(for: option),
+            badgeText: viewModel.optionBadgeText(for: option),
+            features: viewModel.featureDescription(for: option.associatedPlan),
+            priceText: viewModel.priceText(for: option),
+            savingsText: viewModel.savingsText(for: option),
+            isPromoted: option.isPromoted,
+            currentBadgeText: viewModel.currentBadgeText(for: option),
+            isLoading: viewModel.isLoading,
+            subscribeButtonID: subscribeButtonID(for: option),
+            buttonTitle: viewModel.purchaseButtonText(for: option),
+            onSelect: {
+                Task {
+                    await viewModel.purchase(option)
+                }
+            }
+        )
+        .accessibilityIdentifier(planAccessibilityID(for: option))
+    }
+
     private var headerView: some View {
         VStack(spacing: UI.Upgrade.headerInnerSpacing) {
             Image(systemName: Icons.Upgrade.crown)
@@ -59,33 +82,12 @@ struct UpgradeView: View {
                 .font(.title2)
                 .fontWeight(.bold)
             
-            Text(Strings.Upgrade.unlockSubtitle)
+            Text(viewModel.headerSubtitle)
                 .font(.subheadline)
                 .foregroundStyle(theme.text2)
                 .multilineTextAlignment(.center)
         }
         .padding(.vertical)
-    }
-
-    /// Builds a plan card wired to the view model purchase action and accessibility ids.
-    private func planCard(for option: PremiumSubscriptionOption) -> some View {
-        PlanCard(
-            plan: option.associatedPlan,
-            optionTitle: viewModel.optionTitle(for: option),
-            features: viewModel.featureDescription(for: option.associatedPlan),
-            priceText: viewModel.priceText(for: option),
-            savingsText: viewModel.savingsText(for: option),
-            isPromoted: option.isPromoted,
-            isCurrentPlan: viewModel.currentPlan == option.associatedPlan,
-            isLoading: viewModel.isLoading,
-            subscribeButtonID: subscribeButtonID(for: option),
-            onSelect: {
-                Task {
-                    await viewModel.purchase(option)
-                }
-            }
-        )
-        .accessibilityIdentifier(planAccessibilityID(for: option))
     }
 
     private func planAccessibilityID(for option: PremiumSubscriptionOption) -> String {
@@ -111,13 +113,15 @@ struct UpgradeView: View {
 struct PlanCard: View {
     let plan: SubscriptionPlan
     let optionTitle: String
+    let badgeText: String?
     let features: [String]
     let priceText: String
     let savingsText: String?
     let isPromoted: Bool
-    let isCurrentPlan: Bool
+    let currentBadgeText: String?
     let isLoading: Bool
     let subscribeButtonID: String
+    let buttonTitle: String
     let onSelect: () -> Void
     @Environment(\.appTheme) private var theme
     
@@ -131,8 +135,8 @@ struct PlanCard: View {
                             .fontWeight(.semibold)
                             .foregroundStyle(theme.text1)
 
-                        if isPromoted {
-                            Text(Strings.Upgrade.bestValue)
+                        if let badgeText {
+                            Text(badgeText)
                                 .font(.caption)
                                 .fontWeight(.bold)
                                 .foregroundStyle(theme.accent)
@@ -155,8 +159,8 @@ struct PlanCard: View {
                 
                 Spacer()
                 
-                if isCurrentPlan {
-                    Text(Strings.Upgrade.current)
+                if let currentBadgeText {
+                    Text(currentBadgeText)
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundStyle(theme.mint)
@@ -193,7 +197,7 @@ struct PlanCard: View {
                 }
             }
             
-            if !isCurrentPlan {
+            if currentBadgeText == nil {
                 Button {
                     onSelect()
                 } label: {
@@ -202,7 +206,7 @@ struct PlanCard: View {
                             ProgressView()
                                 .tint(.white)
                         } else {
-                            Text(Strings.Upgrade.subscribe)
+                            Text(buttonTitle)
                                 .fontWeight(.semibold)
                         }
                     }

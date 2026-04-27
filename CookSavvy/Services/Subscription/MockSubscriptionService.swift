@@ -13,11 +13,15 @@ import Combine
 /// triggers creation with `.premium` to test premium-gated UI paths.
 final class MockSubscriptionService: SubscriptionServiceProtocol {
 
-    /// Backing subject powering both `currentPlan` and `currentPlanPublisher`.
-    private let _currentPlan: CurrentValueSubject<SubscriptionPlan, Never>
+    /// Backing subject powering both plan-level and trial-aware subscription publishers.
+    private let _currentSubscriptionStatus: CurrentValueSubject<SubscriptionStatus, Never>
+    private let analyticsService: AnalyticsServiceProtocol?
 
     /// The currently simulated subscription plan.
-    var currentPlan: SubscriptionPlan { _currentPlan.value }
+    var currentPlan: SubscriptionPlan { currentSubscriptionStatus.plan }
+
+    /// The currently simulated subscription snapshot.
+    var currentSubscriptionStatus: SubscriptionStatus { _currentSubscriptionStatus.value }
 
     /// Tracks how many times `refreshSubscriptionStatus()` has been called; useful in unit tests.
     private(set) var refreshCallCount = 0
@@ -34,15 +38,34 @@ final class MockSubscriptionService: SubscriptionServiceProtocol {
         .yearly: Decimal(string: "39.99") ?? .zero
     ]
 
+    /// Emits full subscription status changes reactively.
+    var currentSubscriptionStatusPublisher: AnyPublisher<SubscriptionStatus, Never> {
+        _currentSubscriptionStatus.eraseToAnyPublisher()
+    }
+
     /// Emits plan changes reactively.
     var currentPlanPublisher: AnyPublisher<SubscriptionPlan, Never> {
-        _currentPlan.eraseToAnyPublisher()
+        _currentSubscriptionStatus
+            .map(\.plan)
+            .removeDuplicates()
+            .eraseToAnyPublisher()
     }
 
     /// Creates a mock service with the given initial plan.
     /// - Parameter initialPlan: The plan to start with. Defaults to `.free`.
-    init(initialPlan: SubscriptionPlan = .free) {
-        self._currentPlan = CurrentValueSubject(initialPlan)
+    init(
+        initialPlan: SubscriptionPlan = .free,
+        analyticsService: AnalyticsServiceProtocol? = nil
+    ) {
+        self.analyticsService = analyticsService
+        let initialStatus: SubscriptionStatus
+        switch initialPlan {
+        case .free:
+            initialStatus = .free(isEligibleForMonthlyTrial: true)
+        case .premium:
+            initialStatus = .premium(option: .monthly)
+        }
+        self._currentSubscriptionStatus = CurrentValueSubject(initialStatus)
     }
     
     /// Returns whether the simulated plan grants access to the given feature.
@@ -58,7 +81,18 @@ final class MockSubscriptionService: SubscriptionServiceProtocol {
     /// Simulates a premium option purchase with a 0.5 s delay, then grants its entitlement plan.
     func purchase(_ option: PremiumSubscriptionOption) async throws {
         try await Task.sleep(nanoseconds: 500_000_000)
-        _currentPlan.send(option.associatedPlan)
+        let trialEndDate = option == .monthly && currentSubscriptionStatus.isEligibleForMonthlyTrial
+            ? Calendar.current.date(byAdding: .day, value: 7, to: Date())
+            : nil
+
+        publish(
+            .premium(
+                option: option,
+                isEligibleForMonthlyTrial: false,
+                isOnFreeTrial: trialEndDate != nil,
+                trialExpirationDate: trialEndDate
+            )
+        )
     }
 
     /// Simulates a plan purchase through the default purchasable option for compatibility.
@@ -99,6 +133,33 @@ final class MockSubscriptionService: SubscriptionServiceProtocol {
     /// Directly updates the simulated subscription plan, emitting the change immediately.
     /// - Parameter plan: The plan to switch to.
     func setPlan(_ plan: SubscriptionPlan) {
-        _currentPlan.send(plan)
+        switch plan {
+        case .free:
+            publish(.free(isEligibleForMonthlyTrial: currentSubscriptionStatus.isEligibleForMonthlyTrial))
+        case .premium:
+            publish(.premium(option: currentSubscriptionStatus.activeOption ?? .monthly))
+        }
+    }
+
+    /// Directly updates the full simulated subscription status for trial-aware tests.
+    /// - Parameter status: The new subscription snapshot to publish.
+    func setSubscriptionStatus(_ status: SubscriptionStatus) {
+        publish(status)
+    }
+
+    private func publish(_ status: SubscriptionStatus) {
+        let previousStatus = currentSubscriptionStatus
+        _currentSubscriptionStatus.send(status)
+
+        guard let analyticsService else {
+            return
+        }
+
+        for analyticsEvent in SubscriptionStatusTransitionAnalytics.trialLifecycleEvents(
+            from: previousStatus,
+            to: status
+        ) {
+            analyticsService.track(analyticsEvent.event, properties: analyticsEvent.properties)
+        }
     }
 }

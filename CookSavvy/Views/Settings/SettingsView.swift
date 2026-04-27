@@ -188,9 +188,9 @@ struct SettingsView: View {
     private var planInfoRow: some View {
         HStack {
             VStack(alignment: .leading, spacing: UI.Settings.planInfoSpacing) {
-                Text(viewModel.currentPlan.displayName)
+                Text(viewModel.subscriptionTitle)
                     .font(.headline)
-                Text(viewModel.currentPlan.description)
+                Text(viewModel.subscriptionDescription)
                     .font(.caption)
                     .foregroundStyle(theme.text2)
             }

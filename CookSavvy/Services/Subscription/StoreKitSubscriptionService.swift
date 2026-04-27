@@ -20,18 +20,29 @@ import Combine
 // TODO: Review this
 final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
 
-    /// Backing subject for the reactive plan publisher.
-    private let _currentPlan = CurrentValueSubject<SubscriptionPlan, Never>(.free)
+    /// Backing subject for the reactive subscription-status publisher.
+    private let _currentSubscriptionStatus = CurrentValueSubject<SubscriptionStatus, Never>(.free())
 
     /// Serialises concurrent refresh calls so only one refresh runs at a time.
     private let refreshCoordinator = SubscriptionRefreshCoordinator()
 
     /// The user's currently active subscription plan.
-    var currentPlan: SubscriptionPlan { _currentPlan.value }
+    var currentPlan: SubscriptionPlan { currentSubscriptionStatus.plan }
 
-    /// Emits the plan on every change, backed by `_currentPlan`.
+    /// The user's full subscription snapshot, including trial state.
+    var currentSubscriptionStatus: SubscriptionStatus { _currentSubscriptionStatus.value }
+
+    /// Emits the full subscription snapshot on every change.
+    var currentSubscriptionStatusPublisher: AnyPublisher<SubscriptionStatus, Never> {
+        _currentSubscriptionStatus.eraseToAnyPublisher()
+    }
+
+    /// Emits the plan on every change, backed by `_currentSubscriptionStatus`.
     var currentPlanPublisher: AnyPublisher<SubscriptionPlan, Never> {
-        _currentPlan.eraseToAnyPublisher()
+        _currentSubscriptionStatus
+            .map(\.plan)
+            .removeDuplicates()
+            .eraseToAnyPublisher()
     }
     
     /// Loaded StoreKit products keyed by product identifier.
@@ -40,15 +51,21 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
     /// Handle to the long-lived transaction-listener task; cancelled on deinit.
     private var transactionListener: Task<Void, Error>?
     
-    /// UserDefaults key for the persisted plan raw value.
-    private let cacheKey = "cached_subscription_plan"
+    /// UserDefaults keys for the persisted subscription snapshot and legacy plan cache.
+    private let statusCacheKey = "cached_subscription_status"
+    private let legacyPlanCacheKey = "cached_subscription_plan"
+    private let analyticsService: AnalyticsServiceProtocol
     private let logger: any LoggerProtocol
     
     /// Initialises the service, loads the cached plan, and begins listening for StoreKit updates.
     /// - Parameter logger: A scoped logger for error reporting.
-    init(logger: any LoggerProtocol) {
+    init(
+        logger: any LoggerProtocol,
+        analyticsService: AnalyticsServiceProtocol
+    ) {
         self.logger = logger
-        loadCachedPlan()
+        self.analyticsService = analyticsService
+        loadCachedSubscriptionStatus()
         transactionListener = listenForTransactions()
         Task { [weak self] in
             await self?.refreshSubscriptionStatus()
@@ -186,25 +203,39 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
         }
     }
     
-    /// Iterates `Transaction.currentEntitlements` to determine the user's highest active plan.
+    /// Resolves the live subscription snapshot from StoreKit entitlements and intro-offer eligibility.
     ///
-    /// Only verified transactions are considered. The resolved plan is broadcast via
-    /// `_currentPlan` and persisted to UserDefaults for fast startup on the next launch.
+    /// The returned status keeps plan-based feature gating intact while adding the extra
+    /// trial metadata required by T-007 for Settings, the paywall, and lifecycle analytics.
     private func updateSubscriptionStatus() async {
-        var highestPlan: SubscriptionPlan = .free
-        
+        var resolvedStatus = SubscriptionStatus.free()
+
         for await result in Transaction.currentEntitlements {
             guard case .verified(let transaction) = result else { continue }
-            
-            if let option = PremiumSubscriptionOption.option(for: transaction.productID),
-               option.associatedPlan > highestPlan {
-                let plan = option.associatedPlan
-                highestPlan = plan
+
+            guard let option = PremiumSubscriptionOption.option(for: transaction.productID) else {
+                continue
             }
+
+            let isOnFreeTrial = isMonthlyFreeTrial(transaction, option: option)
+            let candidateStatus = SubscriptionStatus.premium(
+                option: option,
+                isOnFreeTrial: isOnFreeTrial,
+                trialExpirationDate: isOnFreeTrial ? transaction.expirationDate : nil
+            )
+            resolvedStatus = preferredStatus(between: resolvedStatus, and: candidateStatus)
         }
-        
-        _currentPlan.send(highestPlan)
-        cachePlan(highestPlan)
+
+        let monthlyTrialEligibility = await loadMonthlyTrialEligibility()
+        let finalStatus = SubscriptionStatus(
+            plan: resolvedStatus.plan,
+            activeOption: resolvedStatus.activeOption,
+            isEligibleForMonthlyTrial: monthlyTrialEligibility,
+            isOnFreeTrial: resolvedStatus.isOnFreeTrial,
+            trialExpirationDate: resolvedStatus.trialExpirationDate
+        )
+
+        publishSubscriptionStatus(finalStatus)
     }
     
     /// Starts a detached background task that continuously observes `Transaction.updates`.
@@ -236,18 +267,96 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
     
     // MARK: - Local Caching
     
-    /// Reads the persisted plan from UserDefaults and pre-populates `_currentPlan` to avoid
-    /// a flash of "free" state while the async refresh is in flight.
-    private func loadCachedPlan() {
-        if let rawValue = UserDefaults.standard.string(forKey: cacheKey),
+    /// Reads the persisted subscription snapshot and pre-populates the subject before refresh.
+    private func loadCachedSubscriptionStatus() {
+        let defaults = UserDefaults.standard
+
+        if let data = defaults.data(forKey: statusCacheKey),
+           let status = try? JSONDecoder().decode(SubscriptionStatus.self, from: data) {
+            _currentSubscriptionStatus.send(status)
+            return
+        }
+
+        if let rawValue = defaults.string(forKey: legacyPlanCacheKey),
            let plan = SubscriptionPlan(rawValue: rawValue) {
-            _currentPlan.send(plan)
+            switch plan {
+            case .free:
+                _currentSubscriptionStatus.send(.free())
+            case .premium:
+                _currentSubscriptionStatus.send(.premium(option: .monthly))
+            }
         }
     }
-    
-    /// Persists the resolved plan to UserDefaults so it survives app restarts.
-    private func cachePlan(_ plan: SubscriptionPlan) {
-        UserDefaults.standard.set(plan.rawValue, forKey: cacheKey)
+
+    /// Persists the resolved subscription snapshot so it survives app restarts.
+    private func cacheSubscriptionStatus(_ status: SubscriptionStatus) {
+        let defaults = UserDefaults.standard
+        defaults.set(status.plan.rawValue, forKey: legacyPlanCacheKey)
+
+        if let data = try? JSONEncoder().encode(status) {
+            defaults.set(data, forKey: statusCacheKey)
+        }
+    }
+
+    private func publishSubscriptionStatus(_ status: SubscriptionStatus) {
+        let previousStatus = currentSubscriptionStatus
+        _currentSubscriptionStatus.send(status)
+        cacheSubscriptionStatus(status)
+
+        // TODO(T-002): Preserve these trial lifecycle events when AnalyticsService moves
+        // from local logging to a remote SDK so the funnel remains continuous.
+        for analyticsEvent in SubscriptionStatusTransitionAnalytics.trialLifecycleEvents(
+            from: previousStatus,
+            to: status
+        ) {
+            analyticsService.track(analyticsEvent.event, properties: analyticsEvent.properties)
+        }
+    }
+
+    private func loadMonthlyTrialEligibility() async -> Bool {
+        guard let subscription = products[PremiumSubscriptionOption.monthly.productIdentifier]?.subscription,
+              subscription.introductoryOffer?.paymentMode == .freeTrial else {
+            return false
+        }
+
+        return await subscription.isEligibleForIntroOffer
+    }
+
+    private func isMonthlyFreeTrial(_ transaction: Transaction, option: PremiumSubscriptionOption) -> Bool {
+        guard option == .monthly else {
+            return false
+        }
+
+        if #available(iOS 17.2, *) {
+            guard let offer = transaction.offer else {
+                return false
+            }
+
+            return offer.type == .introductory && offer.paymentMode == .freeTrial
+        }
+
+        return transaction.offerType == .introductory
+    }
+
+    private func preferredStatus(
+        between currentStatus: SubscriptionStatus,
+        and candidateStatus: SubscriptionStatus
+    ) -> SubscriptionStatus {
+        guard candidateStatus.plan >= currentStatus.plan else {
+            return currentStatus
+        }
+
+        if candidateStatus.plan > currentStatus.plan {
+            return candidateStatus
+        }
+
+        if candidateStatus.isOnFreeTrial && !currentStatus.isOnFreeTrial {
+            return candidateStatus
+        }
+
+        let currentDate = currentStatus.trialExpirationDate ?? .distantPast
+        let candidateDate = candidateStatus.trialExpirationDate ?? .distantPast
+        return candidateDate > currentDate ? candidateStatus : currentStatus
     }
 }
 

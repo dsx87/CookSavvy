@@ -15,6 +15,8 @@ final class UpgradeViewModel: ObservableObject {
 
     /// The user's current subscription plan; updated live from the service.
     @Published private(set) var currentPlan: SubscriptionPlan = .free
+    /// Trial-aware subscription snapshot used by the paywall UI.
+    @Published private(set) var currentSubscriptionStatus: SubscriptionStatus = .free()
     /// `true` while a purchase request is in flight.
     @Published private(set) var isLoading: Bool = false
     /// The error message to display when a purchase fails (non-`nil` triggers `showErrorAlert`).
@@ -36,6 +38,18 @@ final class UpgradeViewModel: ObservableObject {
 
     /// The purchasable products shown on the paywall, ordered with annual first for promotion.
     let availableOptions: [PremiumSubscriptionOption] = [.yearly, .monthly]
+
+    var headerSubtitle: String {
+        if currentSubscriptionStatus.isOnFreeTrial {
+            return Strings.Upgrade.trialActiveSubtitle
+        }
+
+        if currentSubscriptionStatus.isEligibleForMonthlyTrial {
+            return Strings.Upgrade.trialEligibleSubtitle
+        }
+
+        return Strings.Upgrade.unlockSubtitle
+    }
     
     /// Creates the paywall view model and subscribes to live plan updates.
     init(
@@ -46,12 +60,14 @@ final class UpgradeViewModel: ObservableObject {
         self.subscriptionService = subscriptionService
         self.analyticsService = analyticsService
         self.onDismiss = onDismiss
-        self.currentPlan = subscriptionService.currentPlan
+        self.currentSubscriptionStatus = subscriptionService.currentSubscriptionStatus
+        self.currentPlan = currentSubscriptionStatus.plan
         
-        subscriptionService.currentPlanPublisher
+        subscriptionService.currentSubscriptionStatusPublisher
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] plan in
-                self?.currentPlan = plan
+            .sink { [weak self] status in
+                self?.currentSubscriptionStatus = status
+                self?.currentPlan = status.plan
             }
             .store(in: &cancellables)
     }
@@ -135,6 +151,16 @@ final class UpgradeViewModel: ObservableObject {
 
         switch option {
         case .monthly:
+            if isCurrentOption(option),
+               currentSubscriptionStatus.isOnFreeTrial,
+               let trialEndDate = currentSubscriptionStatus.formattedTrialEndDate {
+                return String(format: Strings.Upgrade.monthlyTrialActivePriceFormat, trialEndDate, price)
+            }
+
+            if currentSubscriptionStatus.isEligibleForMonthlyTrial {
+                return String(format: Strings.Upgrade.monthlyTrialPriceFormat, price)
+            }
+
             return String(format: Strings.Upgrade.monthlyPriceFormat, price)
         case .yearly:
             return String(format: Strings.Upgrade.annualPriceFormat, price)
@@ -168,6 +194,46 @@ final class UpgradeViewModel: ObservableObject {
     /// Returns the display title for a purchasable option.
     func optionTitle(for option: PremiumSubscriptionOption) -> String {
         option.billingPeriodLabel
+    }
+
+    /// Returns the pill badge shown next to a plan heading.
+    func optionBadgeText(for option: PremiumSubscriptionOption) -> String? {
+        if option == .monthly && currentSubscriptionStatus.isEligibleForMonthlyTrial && !isCurrentOption(option) {
+            return Strings.Upgrade.freeTrialBadge
+        }
+
+        if option.isPromoted {
+            return Strings.Upgrade.bestValue
+        }
+
+        return nil
+    }
+
+    /// Returns the CTA title shown on a plan card.
+    func purchaseButtonText(for option: PremiumSubscriptionOption) -> String {
+        option == .monthly && currentSubscriptionStatus.isEligibleForMonthlyTrial
+            ? Strings.Upgrade.tryFreeForSevenDays
+            : Strings.Upgrade.subscribe
+    }
+
+    /// Returns the current-state badge for the active product.
+    func currentBadgeText(for option: PremiumSubscriptionOption) -> String? {
+        guard isCurrentOption(option) else {
+            return nil
+        }
+
+        return currentSubscriptionStatus.isOnFreeTrial
+            ? Strings.Upgrade.trialActive
+            : Strings.Upgrade.current
+    }
+
+    /// Returns whether this option is the currently active StoreKit product.
+    func isCurrentOption(_ option: PremiumSubscriptionOption) -> Bool {
+        guard currentPlan == .premium else {
+            return false
+        }
+
+        return currentSubscriptionStatus.activeOption == option
     }
 
     /// Calculates yearly savings against paying the monthly price for 12 months.

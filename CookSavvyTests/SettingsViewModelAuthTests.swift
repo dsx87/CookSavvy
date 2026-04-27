@@ -31,12 +31,15 @@ final class SettingsViewModelAuthTests: XCTestCase {
         try super.tearDownWithError()
     }
 
-    private func makeViewModel(authService: MockAuthService) throws -> SettingsViewModel {
+    private func makeViewModel(
+        authService: MockAuthService,
+        subscriptionService: SubscriptionServiceProtocol = MockSubscriptionService()
+    ) throws -> SettingsViewModel {
         let db = try DBInterface(inMemory: true)
         return SettingsViewModel(
             userDataService: MockUserDataService(),
             dbInterface: db,
-            subscriptionService: MockSubscriptionService(),
+            subscriptionService: subscriptionService,
             dietaryPreferences: DietaryPreferences(),
             authService: authService,
             analyticsService: mockAnalytics,
@@ -63,6 +66,25 @@ final class SettingsViewModelAuthTests: XCTestCase {
         let vm = try makeViewModel(authService: auth)
         XCTAssertFalse(vm.isAnonymous)
         XCTAssertEqual(vm.currentUserId, "apple-user")
+    }
+
+    func testTrialSubscriptionRowUsesTrialCopy() throws {
+        let trialStatus = SubscriptionStatus.premium(
+            option: .monthly,
+            isEligibleForMonthlyTrial: false,
+            isOnFreeTrial: true,
+            trialExpirationDate: Date(timeIntervalSince1970: 1_800_000_000)
+        )
+        let subscriptionService = MockSubscriptionService()
+        subscriptionService.setSubscriptionStatus(trialStatus)
+
+        let vm = try makeViewModel(authService: mockAuth, subscriptionService: subscriptionService)
+
+        XCTAssertEqual(vm.subscriptionTitle, Strings.Settings.trialPlanTitle)
+        XCTAssertEqual(
+            vm.subscriptionDescription,
+            String(format: Strings.Settings.trialDescriptionWithDate, trialStatus.formattedTrialEndDate ?? "")
+        )
     }
 
     // MARK: - Auth State Observation

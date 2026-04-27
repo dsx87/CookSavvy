@@ -107,6 +107,62 @@ enum PremiumSubscriptionOption: String, CaseIterable, Codable, Hashable, Identif
     }
 }
 
+/// Snapshot of the user's current subscription entitlement and trial state.
+///
+/// The app still uses `SubscriptionPlan` for premium gating, but T-007 needs extra
+/// context so the UI can distinguish a paid premium customer from someone who is
+/// actively using the monthly introductory free trial.
+struct SubscriptionStatus: Equatable, Codable {
+    /// The effective entitlement tier used for feature access checks.
+    let plan: SubscriptionPlan
+    /// The currently active product, when StoreKit has enough information to identify it.
+    let activeOption: PremiumSubscriptionOption?
+    /// Whether the user can still start the monthly introductory offer.
+    let isEligibleForMonthlyTrial: Bool
+    /// Whether the current premium access is coming from a free trial.
+    let isOnFreeTrial: Bool
+    /// The current trial's end date when StoreKit exposes it.
+    let trialExpirationDate: Date?
+
+    static func free(isEligibleForMonthlyTrial: Bool = false) -> SubscriptionStatus {
+        SubscriptionStatus(
+            plan: .free,
+            activeOption: nil,
+            isEligibleForMonthlyTrial: isEligibleForMonthlyTrial,
+            isOnFreeTrial: false,
+            trialExpirationDate: nil
+        )
+    }
+
+    static func premium(
+        option: PremiumSubscriptionOption,
+        isEligibleForMonthlyTrial: Bool = false,
+        isOnFreeTrial: Bool = false,
+        trialExpirationDate: Date? = nil
+    ) -> SubscriptionStatus {
+        SubscriptionStatus(
+            plan: .premium,
+            activeOption: option,
+            isEligibleForMonthlyTrial: isEligibleForMonthlyTrial,
+            isOnFreeTrial: isOnFreeTrial,
+            trialExpirationDate: trialExpirationDate
+        )
+    }
+
+    /// Localized medium-style date used in Upgrade and Settings trial messaging.
+    var formattedTrialEndDate: String? {
+        guard let trialExpirationDate else {
+            return nil
+        }
+
+        return DateFormatter.localizedString(
+            from: trialExpirationDate,
+            dateStyle: .medium,
+            timeStyle: .none
+        )
+    }
+}
+
 /// Premium-gated features that require an active CookSavvy+ subscription.
 enum PaidFeature {
     /// AI-powered camera scanning for ingredient detection.

@@ -41,7 +41,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 | Free | Free | Local database (`OfflineRecipeSource`) | Manual text input + 5 camera scans/week |
 | Premium | CookSavvy+ | Local + REST API + AI (`OnlineRecipeSource`, `AIRecipeSource`) | Unlimited AI photo recognition |
 
-- Product identifiers: monthly `com.cooksavvy.subscription.premium`, annual `com.cooksavvy.subscription.premium.yearly`
+- Product identifiers: monthly `com.cooksavvy.subscription.premium` (7-day introductory free trial), annual `com.cooksavvy.subscription.premium.yearly`
 - Free tier weekly camera scan limit tracked via `CameraScanTracker` (UserDefaults)
 - Premium-gated features: `PaidFeature` enum — `cameraIngredientDetection`, `onlineRecipes`, `aiRecipes`, `shoppingList`
 
@@ -57,7 +57,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 | **Create Recipe** | 5-step wizard: Name & Photo → Ingredients → Steps → Details → Review & Save |
 | **Settings** | Subscription plan, usage limits, account (Sign in with Apple / Sign Out), preferences (accessed from My Kitchen nav bar) |
 | **Camera** | Camera capture for AI ingredient detection (free users: 5/week via `CameraScanTracker`) |
-| **Upgrade** | Single-plan upgrade prompt (CookSavvy+) |
+| **Upgrade** | CookSavvy+ paywall with monthly trial messaging and annual best-value option |
 | **Onboarding** | Camera-first first-launch walkthrough: 2 static intro pages followed by an embedded camera scan page; skip/type fallback lands on Discover ingredient selection and a successful first scan hands ingredients to Discover for immediate results |
 | **Shopping List** | Premium checklist of missing ingredients grouped by recipe; swipe-to-delete, toggle checked, clear done; sheet from Recipe Details or My Kitchen |
 | **Tab Container** | Root tab bar with 2 tabs: Discover + My Kitchen |
@@ -141,6 +141,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 - `MockSubscriptionService` — mock with configurable initial plan (DEBUG)
 - `SubscriptionPlan` — entitlement tier enum (`free`, `premium`)
 - `PremiumSubscriptionOption` — purchasable CookSavvy+ products (`monthly`, `yearly`)
+- `SubscriptionStatus` — subscription snapshot including active option, monthly trial eligibility, and active free-trial state for Upgrade + Settings UI
 - `PaidFeature` — feature gating
 - `Configuration.storekit` — StoreKit testing configuration
 

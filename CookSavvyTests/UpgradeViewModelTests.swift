@@ -11,15 +11,17 @@ final class UpgradeViewModelTests: XCTestCase {
 
     private var sut: UpgradeViewModel!
     private var subscriptionService: MockSubscriptionService!
+    private var analyticsService: MockAnalyticsService!
     private var didDismiss = false
 
     override func setUpWithError() throws {
         try super.setUpWithError()
         subscriptionService = MockSubscriptionService()
+        analyticsService = MockAnalyticsService()
         didDismiss = false
         sut = UpgradeViewModel(
             subscriptionService: subscriptionService,
-            analyticsService: MockAnalyticsService(),
+            analyticsService: analyticsService,
             onDismiss: { [weak self] in
                 self?.didDismiss = true
             }
@@ -29,6 +31,7 @@ final class UpgradeViewModelTests: XCTestCase {
     override func tearDownWithError() throws {
         sut = nil
         subscriptionService = nil
+        analyticsService = nil
         try super.tearDownWithError()
     }
 
@@ -46,7 +49,7 @@ final class UpgradeViewModelTests: XCTestCase {
     func testPriceTextFormatsMonthlyAndYearlyBillingPeriods() async {
         await sut.loadPrices()
 
-        XCTAssertEqual(sut.priceText(for: .monthly), "$4.99/month")
+        XCTAssertEqual(sut.priceText(for: .monthly), "7 days free, then $4.99/month")
         XCTAssertEqual(sut.priceText(for: .yearly), "$39.99/year")
     }
 
@@ -73,6 +76,7 @@ final class UpgradeViewModelTests: XCTestCase {
         await sut.purchase(.monthly)
 
         XCTAssertEqual(subscriptionService.currentPlan, .premium)
+        XCTAssertTrue(subscriptionService.currentSubscriptionStatus.isOnFreeTrial)
         XCTAssertTrue(didDismiss)
     }
 
@@ -119,7 +123,7 @@ final class UpgradeViewModelTests: XCTestCase {
     }
 
     func testVisibleUpgradeOutcomeCopyAvoidsTechnicalSellingTerms() {
-        let visibleCopy = ([Strings.Upgrade.unlockSubtitle] + sut.featureDescription(for: .premium))
+        let visibleCopy = ([Strings.Upgrade.trialEligibleSubtitle] + sut.featureDescription(for: .premium))
             .joined(separator: " ")
             .lowercased()
 
@@ -129,5 +133,34 @@ final class UpgradeViewModelTests: XCTestCase {
                 "Upgrade outcome copy should not include technical term: \(forbiddenTerm)"
             )
         }
+    }
+
+    func testEligibleMonthlyCardUsesTrialCTA() {
+        XCTAssertEqual(sut.purchaseButtonText(for: .monthly), Strings.Upgrade.tryFreeForSevenDays)
+        XCTAssertEqual(sut.optionBadgeText(for: .monthly), Strings.Upgrade.freeTrialBadge)
+    }
+
+    func testActiveTrialUsesTrialHeaderAndBadge() async {
+        let trialStatus = SubscriptionStatus.premium(
+            option: .monthly,
+            isEligibleForMonthlyTrial: false,
+            isOnFreeTrial: true,
+            trialExpirationDate: Date(timeIntervalSince1970: 1_800_000_000)
+        )
+        subscriptionService.setSubscriptionStatus(trialStatus)
+        sut = UpgradeViewModel(
+            subscriptionService: subscriptionService,
+            analyticsService: analyticsService,
+            onDismiss: {}
+        )
+
+        await sut.loadPrices()
+
+        XCTAssertEqual(sut.headerSubtitle, Strings.Upgrade.trialActiveSubtitle)
+        XCTAssertEqual(sut.currentBadgeText(for: .monthly), Strings.Upgrade.trialActive)
+        XCTAssertEqual(
+            sut.priceText(for: .monthly),
+            "Free until \(trialStatus.formattedTrialEndDate ?? ""), then $4.99/month"
+        )
     }
 }

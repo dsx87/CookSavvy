@@ -49,7 +49,8 @@ final class AnalyticsServiceTests: XCTestCase {
             .onboardingCameraScanCompleted, .onboardingTypeInsteadTapped,
             .cameraScanStarted, .recipeSearchPerformed, .recipeViewed,
             .recipeFavorited, .recipeCooked, .upgradeScreenViewed,
-            .upgradePurchased, .upgradeDismissed, .scanLimitHit,
+            .upgradePurchased, .upgradeDismissed, .trialStarted,
+            .trialConverted, .trialExpired, .scanLimitHit,
             .anonymousAuthCompleted, .signInWithAppleStarted,
             .signInWithAppleCompleted, .signInWithAppleFailed,
             .signOutCompleted

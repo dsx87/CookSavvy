@@ -30,6 +30,12 @@ enum AnalyticsEvent: String {
     case upgradePurchased = "upgrade_purchased"
     /// Fired when the user dismisses the upgrade screen without purchasing.
     case upgradeDismissed = "upgrade_dismissed"
+    /// Fired when the user begins the monthly introductory free trial.
+    case trialStarted = "trial_started"
+    /// Fired when the monthly free trial rolls into a paid premium subscription.
+    case trialConverted = "trial_converted"
+    /// Fired when the monthly free trial ends without an active paid subscription.
+    case trialExpired = "trial_expired"
     /// Fired when a free-tier user reaches the weekly camera scan cap.
     case scanLimitHit = "scan_limit_hit"
     /// Fired when anonymous Supabase authentication completes successfully.

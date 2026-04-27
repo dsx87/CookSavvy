@@ -12,6 +12,12 @@ import Combine
 /// purchase/restore operations. Premium entitlement can be purchased through
 /// monthly or annual `PremiumSubscriptionOption` products.
 protocol SubscriptionServiceProtocol: AnyObject {
+    /// The user's full subscription snapshot, including trial state and eligibility.
+    var currentSubscriptionStatus: SubscriptionStatus { get }
+
+    /// A publisher that emits the full subscription snapshot whenever it changes.
+    var currentSubscriptionStatusPublisher: AnyPublisher<SubscriptionStatus, Never> { get }
+
     /// The user's currently active subscription plan.
     var currentPlan: SubscriptionPlan { get }
 
@@ -58,6 +64,56 @@ protocol SubscriptionServiceProtocol: AnyObject {
     /// - Parameter plan: The plan whose price to fetch.
     /// - Returns: A formatted price string (e.g. `"$4.99"`) or `nil` for the free plan.
     func price(for plan: SubscriptionPlan) async -> String?
+}
+
+/// Analytics payload produced by subscription status transitions.
+struct SubscriptionAnalyticsEvent {
+    let event: AnalyticsEvent
+    let properties: [String: String]
+}
+
+/// Maps subscription-state transitions to analytics events.
+///
+/// TODO(T-002): When remote analytics lands, preserve these event names and properties in
+/// that backend adapter so the trial funnel stays consistent with the local logger behavior
+/// introduced by T-007.
+enum SubscriptionStatusTransitionAnalytics {
+    static func trialLifecycleEvents(
+        from previousStatus: SubscriptionStatus,
+        to newStatus: SubscriptionStatus
+    ) -> [SubscriptionAnalyticsEvent] {
+        if !previousStatus.isOnFreeTrial && newStatus.isOnFreeTrial {
+            return [
+                SubscriptionAnalyticsEvent(
+                    event: .trialStarted,
+                    properties: properties(for: newStatus, fallbackOption: .monthly)
+                )
+            ]
+        }
+
+        guard previousStatus.isOnFreeTrial && !newStatus.isOnFreeTrial else {
+            return []
+        }
+
+        let event: AnalyticsEvent = newStatus.plan == .premium ? .trialConverted : .trialExpired
+        return [
+            SubscriptionAnalyticsEvent(
+                event: event,
+                properties: properties(for: newStatus, fallbackOption: previousStatus.activeOption)
+            )
+        ]
+    }
+
+    private static func properties(
+        for status: SubscriptionStatus,
+        fallbackOption: PremiumSubscriptionOption?
+    ) -> [String: String] {
+        guard let option = status.activeOption ?? fallbackOption else {
+            return [:]
+        }
+
+        return ["product_id": option.productIdentifier]
+    }
 }
 
 /// Errors that can occur during subscription operations.
