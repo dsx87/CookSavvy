@@ -80,15 +80,19 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
         await updateSubscriptionStatus()
     }
     
-    /// Purchases a plan through StoreKit 2, finishing the resulting transaction on success.
+    /// Purchases a premium subscription option through StoreKit 2, finishing the resulting transaction on success.
     ///
     /// Pending transactions (e.g. Ask to Buy) are silently accepted; they will resolve
     /// via the `Transaction.updates` listener when approved.
-    /// - Parameter plan: The plan to purchase.
+    /// - Parameter option: The purchasable subscription option to purchase.
     /// - Throws: `SubscriptionError` for missing products, purchase failures, or user cancellation.
-    func purchase(_ plan: SubscriptionPlan) async throws {
-        guard let productId = plan.productIdentifier,
-              let product = products[productId] else {
+    func purchase(_ option: PremiumSubscriptionOption) async throws {
+        let productId = option.productIdentifier
+        if products[productId] == nil {
+            await loadProducts()
+        }
+
+        guard let product = products[productId] else {
             throw SubscriptionError.productNotFound
         }
         
@@ -115,6 +119,15 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
             break
         }
     }
+
+    /// Purchases the default product for an entitlement plan, preserving older call sites.
+    func purchase(_ plan: SubscriptionPlan) async throws {
+        guard let option = PremiumSubscriptionOption.defaultOption(for: plan) else {
+            throw SubscriptionError.productNotFound
+        }
+
+        try await purchase(option)
+    }
     
     /// Syncs with the App Store via `AppStore.sync()` and refreshes entitlements.
     func restorePurchases() async throws {
@@ -122,26 +135,45 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
         await updateSubscriptionStatus()
     }
 
-    /// Returns the localized display price for the given plan.
+    /// Returns the localized display price for the given purchasable option.
     ///
     /// Triggers a product load if the product hasn't been fetched yet.
-    func price(for plan: SubscriptionPlan) async -> String? {
-        guard let productId = plan.productIdentifier else {
-            return nil
-        }
-
+    func price(for option: PremiumSubscriptionOption) async -> String? {
+        let productId = option.productIdentifier
         if products[productId] == nil {
             await loadProducts()
         }
 
         return products[productId]?.displayPrice
     }
+
+    /// Returns the numeric StoreKit price for the given purchasable option.
+    ///
+    /// The upgrade view model uses this to compute annual savings while preserving
+    /// StoreKit's localized display price for the headline price text.
+    func priceAmount(for option: PremiumSubscriptionOption) async -> Decimal? {
+        let productId = option.productIdentifier
+        if products[productId] == nil {
+            await loadProducts()
+        }
+
+        return products[productId]?.price
+    }
+
+    /// Returns the localized display price for a plan's default purchasable option.
+    func price(for plan: SubscriptionPlan) async -> String? {
+        guard let option = PremiumSubscriptionOption.defaultOption(for: plan) else {
+            return nil
+        }
+
+        return await price(for: option)
+    }
     
     // MARK: - Private Methods
     
     /// Fetches all subscription products from the App Store and caches them in `products`.
     private func loadProducts() async {
-        let productIds = SubscriptionPlan.allCases.compactMap { $0.productIdentifier }
+        let productIds = PremiumSubscriptionOption.allCases.map(\.productIdentifier)
         guard !productIds.isEmpty else { return }
         
         do {
@@ -164,7 +196,9 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
         for await result in Transaction.currentEntitlements {
             guard case .verified(let transaction) = result else { continue }
             
-            if let plan = planForProductId(transaction.productID), plan > highestPlan {
+            if let option = PremiumSubscriptionOption.option(for: transaction.productID),
+               option.associatedPlan > highestPlan {
+                let plan = option.associatedPlan
                 highestPlan = plan
             }
         }
@@ -198,11 +232,6 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
         case .unverified:
             throw SubscriptionError.verificationFailed
         }
-    }
-    
-    /// Returns the `SubscriptionPlan` whose product identifier matches the given string.
-    private func planForProductId(_ productId: String) -> SubscriptionPlan? {
-        SubscriptionPlan.allCases.first { $0.productIdentifier == productId }
     }
     
     // MARK: - Local Caching

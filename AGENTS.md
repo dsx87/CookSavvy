@@ -41,7 +41,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 | Free | Free | Local database (`OfflineRecipeSource`) | Manual text input + 5 camera scans/week |
 | Premium | CookSavvy+ | Local + REST API + AI (`OnlineRecipeSource`, `AIRecipeSource`) | Unlimited AI photo recognition |
 
-- Product identifier: `com.cooksavvy.subscription.premium`
+- Product identifiers: monthly `com.cooksavvy.subscription.premium`, annual `com.cooksavvy.subscription.premium.yearly`
 - Free tier weekly camera scan limit tracked via `CameraScanTracker` (UserDefaults)
 - Premium-gated features: `PaidFeature` enum — `cameraIngredientDetection`, `onlineRecipes`, `aiRecipes`, `shoppingList`
 
@@ -136,10 +136,11 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
   - `SupabaseAuthService` handles anonymous auth bootstrap and Sign in with Apple identity linking
 
 ### Subscription Layer
-- `SubscriptionServiceProtocol` — common interface (plan access, purchases, restore)
+- `SubscriptionServiceProtocol` — common interface (plan access, monthly/annual purchases, restore)
 - `StoreKitSubscriptionService` — real StoreKit 2 implementation (RELEASE)
 - `MockSubscriptionService` — mock with configurable initial plan (DEBUG)
-- `SubscriptionPlan` — plan enum (free/api/ai)
+- `SubscriptionPlan` — entitlement tier enum (`free`, `premium`)
+- `PremiumSubscriptionOption` — purchasable CookSavvy+ products (`monthly`, `yearly`)
 - `PaidFeature` — feature gating
 - `Configuration.storekit` — StoreKit testing configuration
 

@@ -3353,7 +3353,62 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Subscriptions auto-renew monthly until cancelled."
+            "value" : "Subscriptions auto-renew monthly or annually until cancelled."
+          }
+        }
+      }
+    },
+    "upgrade.annualOptionTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Annual"
+          }
+        }
+      }
+    },
+    "upgrade.annualPriceFormat" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@/year"
+          }
+        }
+      }
+    },
+    "upgrade.annualSavingsFallbackAmount" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "$20"
+          }
+        }
+      }
+    },
+    "upgrade.annualSavingsFormat" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Save %@ per year"
+          }
+        }
+      }
+    },
+    "upgrade.bestValue" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Best value"
           }
         }
       }
@@ -3420,6 +3475,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%@/month"
+          }
+        }
+      }
+    },
+    "upgrade.monthlyOptionTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Monthly"
           }
         }
       }
@@ -3497,6 +3563,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Subscribe"
+          }
+        }
+      }
+    },
+    "upgrade.savingsAmountNumberFormat" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%.2f"
           }
         }
       }

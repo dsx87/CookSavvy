@@ -154,7 +154,9 @@ enum AccessibilityID {
 
     enum Upgrade {
         static let subscribeButton = "upgrade.subscribeButton"
+        static let monthlySubscribeButton = "upgrade.monthlySubscribeButton"
         static let premiumPlan = "upgrade.premiumPlan"
+        static let monthlyPlan = "upgrade.monthlyPlan"
     }
 
     enum Camera {

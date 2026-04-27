@@ -15,8 +15,8 @@ struct UpgradeView: View {
             VStack(spacing: UI.Upgrade.headerSpacing) {
                 headerView
                 
-                ForEach(viewModel.availablePlans, id: \.self) { plan in
-                    planCard(for: plan)
+                ForEach(viewModel.availableOptions, id: \.self) { option in
+                    planCard(for: option)
                 }
                 
                 Text(Strings.Upgrade.autoRenew)
@@ -68,35 +68,56 @@ struct UpgradeView: View {
     }
 
     /// Builds a plan card wired to the view model purchase action and accessibility ids.
-    private func planCard(for plan: SubscriptionPlan) -> some View {
-        let card = PlanCard(
-            plan: plan,
-            features: viewModel.featureDescription(for: plan),
-            priceText: viewModel.priceText(for: plan),
-            isCurrentPlan: viewModel.currentPlan == plan,
+    private func planCard(for option: PremiumSubscriptionOption) -> some View {
+        PlanCard(
+            plan: option.associatedPlan,
+            optionTitle: viewModel.optionTitle(for: option),
+            features: viewModel.featureDescription(for: option.associatedPlan),
+            priceText: viewModel.priceText(for: option),
+            savingsText: viewModel.savingsText(for: option),
+            isPromoted: option.isPromoted,
+            isCurrentPlan: viewModel.currentPlan == option.associatedPlan,
             isLoading: viewModel.isLoading,
+            subscribeButtonID: subscribeButtonID(for: option),
             onSelect: {
                 Task {
-                    await viewModel.purchase(plan)
+                    await viewModel.purchase(option)
                 }
             }
         )
+        .accessibilityIdentifier(planAccessibilityID(for: option))
+    }
 
-        if plan == .premium {
-            return AnyView(card.accessibilityIdentifier(AccessibilityID.Upgrade.premiumPlan))
+    private func planAccessibilityID(for option: PremiumSubscriptionOption) -> String {
+        switch option {
+        case .yearly:
+            return AccessibilityID.Upgrade.premiumPlan
+        case .monthly:
+            return AccessibilityID.Upgrade.monthlyPlan
         }
+    }
 
-        return AnyView(card)
+    private func subscribeButtonID(for option: PremiumSubscriptionOption) -> String {
+        switch option {
+        case .yearly:
+            return AccessibilityID.Upgrade.subscribeButton
+        case .monthly:
+            return AccessibilityID.Upgrade.monthlySubscribeButton
+        }
     }
 }
 
 /// Reusable visual card representing one subscription plan on the upgrade screen.
 struct PlanCard: View {
     let plan: SubscriptionPlan
+    let optionTitle: String
     let features: [String]
     let priceText: String
+    let savingsText: String?
+    let isPromoted: Bool
     let isCurrentPlan: Bool
     let isLoading: Bool
+    let subscribeButtonID: String
     let onSelect: () -> Void
     @Environment(\.appTheme) private var theme
     
@@ -104,11 +125,29 @@ struct PlanCard: View {
         VStack(alignment: .leading, spacing: UI.Upgrade.contentSpacing) {
             HStack {
                 VStack(alignment: .leading, spacing: UI.Upgrade.planCardSpacing) {
-                    Text(plan.displayName)
-                        .font(.title3)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(theme.text1)
+                    HStack(spacing: UI.Common.mediumSpacing) {
+                        Text(plan.displayName)
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(theme.text1)
+
+                        if isPromoted {
+                            Text(Strings.Upgrade.bestValue)
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundStyle(theme.accent)
+                                .padding(.horizontal, UI.Upgrade.promotedBadgePaddingH)
+                                .padding(.vertical, UI.Upgrade.promotedBadgePaddingV)
+                                .background(theme.accentSoft)
+                                .cornerRadius(UI.Upgrade.promotedBadgeCornerRadius)
+                        }
+                    }
                     
+                    Text(optionTitle)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundStyle(theme.text2)
+
                     Text(priceText)
                         .font(.subheadline)
                         .foregroundStyle(theme.text2)
@@ -126,6 +165,17 @@ struct PlanCard: View {
                         .background(theme.mintSoft)
                         .cornerRadius(UI.Upgrade.currentBadgeCornerRadius)
                 }
+            }
+
+            if let savingsText {
+                Text(savingsText)
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(theme.mint)
+                    .padding(.horizontal, UI.Upgrade.savingsPaddingH)
+                    .padding(.vertical, UI.Upgrade.savingsPaddingV)
+                    .background(theme.mintSoft)
+                    .cornerRadius(UI.Upgrade.savingsCornerRadius)
             }
             
             Divider()
@@ -170,12 +220,18 @@ struct PlanCard: View {
                     .clipShape(RoundedRectangle(cornerRadius: UI.Upgrade.subscribeCornerRadius, style: .continuous))
                 }
                 .disabled(isLoading)
-                .accessibilityIdentifier(AccessibilityID.Upgrade.subscribeButton)
+                .accessibilityIdentifier(subscribeButtonID)
             }
         }
         .padding()
         .background(theme.card)
         .cornerRadius(UI.Upgrade.cardCornerRadius)
+        .overlay {
+            if isPromoted {
+                RoundedRectangle(cornerRadius: UI.Upgrade.cardCornerRadius, style: .continuous)
+                    .stroke(theme.accent, lineWidth: UI.Upgrade.promotedBorderWidth)
+            }
+        }
         .shadow(color: .black.opacity(UI.Upgrade.shadowOpacity), radius: UI.Upgrade.shadowRadius, x: 0, y: UI.Upgrade.shadowY)
     }
     

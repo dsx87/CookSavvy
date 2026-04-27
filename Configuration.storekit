@@ -65,6 +65,34 @@
           "winbackOffers" : [
 
           ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "39.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "F052D4C9",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlimited recipes, camera scanning & smart features",
+              "displayName" : "CookSavvy+ Annual",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.cooksavvy.subscription.premium.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "premium_yearly",
+          "subscriptionGroupID" : "8D03CFD8",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
         }
       ]
     }

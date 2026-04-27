@@ -22,6 +22,18 @@ final class MockSubscriptionService: SubscriptionServiceProtocol {
     /// Tracks how many times `refreshSubscriptionStatus()` has been called; useful in unit tests.
     private(set) var refreshCallCount = 0
 
+    /// Override these values in tests that need locale-specific price displays.
+    var priceByOption: [PremiumSubscriptionOption: String] = [
+        .monthly: "$4.99",
+        .yearly: "$39.99"
+    ]
+
+    /// Override these values in tests that need custom subscription math.
+    var priceAmountByOption: [PremiumSubscriptionOption: Decimal] = [
+        .monthly: Decimal(string: "4.99") ?? .zero,
+        .yearly: Decimal(string: "39.99") ?? .zero
+    ]
+
     /// Emits plan changes reactively.
     var currentPlanPublisher: AnyPublisher<SubscriptionPlan, Never> {
         _currentPlan.eraseToAnyPublisher()
@@ -43,10 +55,19 @@ final class MockSubscriptionService: SubscriptionServiceProtocol {
         refreshCallCount += 1
     }
     
-    /// Simulates a purchase with a 0.5 s delay, then updates the plan.
-    func purchase(_ plan: SubscriptionPlan) async throws {
+    /// Simulates a premium option purchase with a 0.5 s delay, then grants its entitlement plan.
+    func purchase(_ option: PremiumSubscriptionOption) async throws {
         try await Task.sleep(nanoseconds: 500_000_000)
-        _currentPlan.send(plan)
+        _currentPlan.send(option.associatedPlan)
+    }
+
+    /// Simulates a plan purchase through the default purchasable option for compatibility.
+    func purchase(_ plan: SubscriptionPlan) async throws {
+        guard let option = PremiumSubscriptionOption.defaultOption(for: plan) else {
+            throw SubscriptionError.productNotFound
+        }
+
+        try await purchase(option)
     }
     
     /// No-op for mock — restoring purchases has no effect.
@@ -55,13 +76,22 @@ final class MockSubscriptionService: SubscriptionServiceProtocol {
     }
 
     /// Returns hard-coded display prices matching the live App Store configuration.
+    func price(for option: PremiumSubscriptionOption) async -> String? {
+        priceByOption[option]
+    }
+
+    /// Returns hard-coded numeric prices matching the live App Store configuration.
+    func priceAmount(for option: PremiumSubscriptionOption) async -> Decimal? {
+        priceAmountByOption[option]
+    }
+
+    /// Returns hard-coded display prices for a plan's default purchasable option.
     func price(for plan: SubscriptionPlan) async -> String? {
-        switch plan {
-        case .free:
+        guard let option = PremiumSubscriptionOption.defaultOption(for: plan) else {
             return nil
-        case .premium:
-            return "$4.99"
         }
+
+        return await price(for: option)
     }
     
     // MARK: - Test Helpers

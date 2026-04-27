@@ -774,6 +774,13 @@ struct UI {
         static let currentBadgePaddingV: CGFloat = 4
         static let currentBadgeCornerRadius: CGFloat = 6
         static let currentBadgeBgOpacity: Double = 0.15
+        static let promotedBadgePaddingH: CGFloat = 10
+        static let promotedBadgePaddingV: CGFloat = 5
+        static let promotedBadgeCornerRadius: CGFloat = 8
+        static let promotedBorderWidth: CGFloat = 1.5
+        static let savingsPaddingH: CGFloat = 10
+        static let savingsPaddingV: CGFloat = 6
+        static let savingsCornerRadius: CGFloat = 8
         static let subscribeCornerRadius: CGFloat = 12
         static let cardCornerRadius: CGFloat = 16
         static let shadowOpacity: Double = 0.1

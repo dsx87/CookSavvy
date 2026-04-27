@@ -10,19 +10,100 @@ import XCTest
 final class UpgradeViewModelTests: XCTestCase {
 
     private var sut: UpgradeViewModel!
+    private var subscriptionService: MockSubscriptionService!
+    private var didDismiss = false
 
     override func setUpWithError() throws {
         try super.setUpWithError()
+        subscriptionService = MockSubscriptionService()
+        didDismiss = false
         sut = UpgradeViewModel(
-            subscriptionService: MockSubscriptionService(),
+            subscriptionService: subscriptionService,
             analyticsService: MockAnalyticsService(),
-            onDismiss: {}
+            onDismiss: { [weak self] in
+                self?.didDismiss = true
+            }
         )
     }
 
     override func tearDownWithError() throws {
         sut = nil
+        subscriptionService = nil
         try super.tearDownWithError()
+    }
+
+    func testAvailableOptionsPromoteAnnualBeforeMonthly() {
+        XCTAssertEqual(sut.availableOptions, [.yearly, .monthly])
+    }
+
+    func testLoadPricesLoadsMonthlyAndYearlyPrices() async {
+        await sut.loadPrices()
+
+        XCTAssertEqual(sut.priceByOption[.monthly], "$4.99")
+        XCTAssertEqual(sut.priceByOption[.yearly], "$39.99")
+    }
+
+    func testPriceTextFormatsMonthlyAndYearlyBillingPeriods() async {
+        await sut.loadPrices()
+
+        XCTAssertEqual(sut.priceText(for: .monthly), "$4.99/month")
+        XCTAssertEqual(sut.priceText(for: .yearly), "$39.99/year")
+    }
+
+    func testAnnualSavingsUsesTwelveMonthlyPayments() async throws {
+        await sut.loadPrices()
+
+        let savings = try XCTUnwrap(sut.annualSavingsAmount())
+        XCTAssertEqual(NSDecimalNumber(decimal: savings), NSDecimalNumber(string: "19.89"))
+        XCTAssertEqual(sut.savingsText(for: .yearly), "Save $19.89 per year")
+    }
+
+    func testAnnualSavingsPreservesLocalizedDecimalSeparator() async {
+        subscriptionService.priceByOption[.monthly] = "4,99 €"
+        subscriptionService.priceByOption[.yearly] = "39,99 €"
+        subscriptionService.priceAmountByOption[.monthly] = Decimal(string: "4.99") ?? .zero
+        subscriptionService.priceAmountByOption[.yearly] = Decimal(string: "39.99") ?? .zero
+
+        await sut.loadPrices()
+
+        XCTAssertEqual(sut.savingsText(for: .yearly), "Save 19,89 € per year")
+    }
+
+    func testPurchasingMonthlyGrantsPremium() async {
+        await sut.purchase(.monthly)
+
+        XCTAssertEqual(subscriptionService.currentPlan, .premium)
+        XCTAssertTrue(didDismiss)
+    }
+
+    func testPurchasingYearlyGrantsPremium() async {
+        await sut.purchase(.yearly)
+
+        XCTAssertEqual(subscriptionService.currentPlan, .premium)
+        XCTAssertTrue(didDismiss)
+    }
+
+    func testProductIdentifierMappingTreatsBothProductsAsPremium() {
+        XCTAssertEqual(
+            PremiumSubscriptionOption.option(for: "com.cooksavvy.subscription.premium")?.associatedPlan,
+            .premium
+        )
+        XCTAssertEqual(
+            PremiumSubscriptionOption.option(for: "com.cooksavvy.subscription.premium.yearly")?.associatedPlan,
+            .premium
+        )
+    }
+
+    func testMockPricesMatchStoreKitConfiguration() async {
+        let monthlyPrice = await subscriptionService.price(for: .monthly)
+        let yearlyPrice = await subscriptionService.price(for: .yearly)
+        let monthlyAmount = await subscriptionService.priceAmount(for: .monthly)
+        let yearlyAmount = await subscriptionService.priceAmount(for: .yearly)
+
+        XCTAssertEqual(monthlyPrice, "$4.99")
+        XCTAssertEqual(yearlyPrice, "$39.99")
+        XCTAssertEqual(monthlyAmount, Decimal(string: "4.99"))
+        XCTAssertEqual(yearlyAmount, Decimal(string: "39.99"))
     }
 
     func testPremiumFeatureDescriptionsUseOutcomeCopy() {

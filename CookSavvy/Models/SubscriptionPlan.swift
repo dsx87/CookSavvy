@@ -30,15 +30,6 @@ enum SubscriptionPlan: String, CaseIterable, Codable, Comparable {
         }
     }
 
-    /// The StoreKit product identifier used to purchase this plan, or `nil` for the free tier.
-    var productIdentifier: String? {
-        switch self {
-        case .free: return nil
-        case .premium: return "com.cooksavvy.subscription.premium"
-        }
-    }
-
-
     /// Numeric tier value used to implement `Comparable` ordering.
     private var tier: Int {
         switch self {
@@ -50,6 +41,69 @@ enum SubscriptionPlan: String, CaseIterable, Codable, Comparable {
     /// Orders plans by tier value so that `free < premium`.
     static func < (lhs: SubscriptionPlan, rhs: SubscriptionPlan) -> Bool {
         lhs.tier < rhs.tier
+    }
+}
+
+/// Purchasable CookSavvy+ subscription products.
+///
+/// `SubscriptionPlan` models entitlement state (`free` or `premium`), while this type
+/// models the concrete StoreKit products a customer can buy to unlock the premium tier.
+enum PremiumSubscriptionOption: String, CaseIterable, Codable, Hashable, Identifiable {
+    /// Annual billing for CookSavvy+, promoted as the best-value option.
+    case yearly
+    /// Monthly billing for CookSavvy+.
+    case monthly
+
+    /// Stable identity for SwiftUI lists and tests.
+    var id: String { rawValue }
+
+    /// StoreKit product identifier configured in App Store Connect and `Configuration.storekit`.
+    var productIdentifier: String {
+        switch self {
+        case .monthly:
+            return "com.cooksavvy.subscription.premium"
+        case .yearly:
+            return "com.cooksavvy.subscription.premium.yearly"
+        }
+    }
+
+    /// The entitlement tier unlocked by this purchasable product.
+    var associatedPlan: SubscriptionPlan {
+        .premium
+    }
+
+    /// User-facing billing cadence label for this option.
+    var billingPeriodLabel: String {
+        switch self {
+        case .monthly:
+            return Strings.Upgrade.monthlyOptionTitle
+        case .yearly:
+            return Strings.Upgrade.annualOptionTitle
+        }
+    }
+
+    /// Whether this option should be visually promoted on the paywall.
+    var isPromoted: Bool {
+        self == .yearly
+    }
+
+    /// Looks up an option by StoreKit product identifier.
+    /// - Parameter productIdentifier: The StoreKit product ID from a transaction or product load.
+    /// - Returns: The matching subscription option, or `nil` if the ID is unknown.
+    static func option(for productIdentifier: String) -> PremiumSubscriptionOption? {
+        allCases.first { $0.productIdentifier == productIdentifier }
+    }
+
+    /// The default product used by legacy plan-based purchase and price APIs.
+    /// - Parameter plan: The entitlement plan being purchased.
+    /// - Returns: The monthly premium option for `.premium`, or `nil` for `.free`.
+    static func defaultOption(for plan: SubscriptionPlan) -> PremiumSubscriptionOption? {
+        switch plan {
+        case .free:
+            return nil
+        case .premium:
+            return .monthly
+        }
     }
 }
 
