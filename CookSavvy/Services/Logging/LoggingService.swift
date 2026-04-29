@@ -15,6 +15,7 @@ enum LogCategory: String {
     case settingsViewModel = "SettingsViewModel"
     case recipeDetailsViewModel = "RecipeDetailsViewModel"
     case recipeService = "RecipeService"
+    case substitutionService = "SubstitutionService"
     case dataImportService = "DataImportService"
     case subscriptionService = "SubscriptionService"
     case authService = "AuthService"

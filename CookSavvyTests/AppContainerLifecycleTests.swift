@@ -17,4 +17,9 @@ final class AppContainerLifecycleTests: XCTestCase {
         await container.handleSceneBecameActive()
         XCTAssertEqual(subscription.refreshCallCount, 1)
     }
+
+    func testMakeInMemoryProvidesMockSubstitutionService() throws {
+        let container = try AppContainer.makeInMemory()
+        XCTAssertTrue(container.substitutionService is MockSubstitutionService)
+    }
 }

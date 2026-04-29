@@ -54,6 +54,8 @@ final class AppContainer {
     let pantryService: PantryServiceProtocol
     /// Personalized recipe suggestions derived from cooking history.
     let recommendationService: RecipeRecommendationServiceProtocol
+    /// Curated ingredient substitutions backed by a bundled local catalog.
+    let substitutionService: SubstitutionServiceProtocol
     /// Event analytics; `MockAnalyticsService` in DEBUG builds, `AnalyticsService` in RELEASE.
     let analyticsService: AnalyticsServiceProtocol
     /// Creates feature-scoped `os.Logger` instances for structured logging.
@@ -186,6 +188,10 @@ final class AppContainer {
             dbInterface: db,
             databaseInitService: self.databaseInitService
         )
+        self.substitutionService = SubstitutionService(
+            bundle: .main,
+            logger: loggingService.makeLogger(category: .substitutionService)
+        )
 
         databaseInitService.startInitialization()
 
@@ -217,6 +223,7 @@ final class AppContainer {
         shoppingListService: ShoppingListServiceProtocol,
         pantryService: PantryServiceProtocol,
         recommendationService: RecipeRecommendationServiceProtocol,
+        substitutionService: SubstitutionServiceProtocol,
         loggingService: LoggingServiceProtocol,
         authService: AuthServiceProtocol,
         analyticsService: AnalyticsServiceProtocol = MockAnalyticsService(),
@@ -238,6 +245,7 @@ final class AppContainer {
         self.shoppingListService = shoppingListService
         self.pantryService = pantryService
         self.recommendationService = recommendationService
+        self.substitutionService = substitutionService
         self.analyticsService = analyticsService
         self.loggingService = loggingService
         self.authService = authService
@@ -321,6 +329,7 @@ final class AppContainer {
                 dbInterface: db,
                 databaseInitService: databaseInitService
             ),
+            substitutionService: MockSubstitutionService(),
             loggingService: loggingService,
             authService: MockAuthService(
                 initialState: authState,

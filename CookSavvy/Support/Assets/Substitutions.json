@@ -1,0 +1,110 @@
+[
+  {
+    "ingredient": "butter",
+    "aliases": ["salted butter", "unsalted butter"],
+    "substitutes": [
+      {
+        "ingredient": "olive oil",
+        "aliases": ["extra virgin olive oil"],
+        "ratio": "3/4 amount",
+        "note": "Best for sauteing and pan-frying; less ideal when butter flavor matters."
+      },
+      {
+        "ingredient": "coconut oil",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Works in many baked recipes but can add coconut flavor."
+      }
+    ]
+  },
+  {
+    "ingredient": "milk",
+    "aliases": ["whole milk", "dairy milk"],
+    "substitutes": [
+      {
+        "ingredient": "oat milk",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Good for most cooking and baking with a mild flavor."
+      },
+      {
+        "ingredient": "almond milk",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Works well in lighter sauces and baking."
+      }
+    ]
+  },
+  {
+    "ingredient": "egg",
+    "aliases": ["eggs"],
+    "substitutes": [
+      {
+        "ingredient": "flax egg",
+        "aliases": ["ground flaxseed", "flaxseed meal"],
+        "ratio": "1 egg = 1 tbsp flaxseed + 3 tbsp water",
+        "note": "Best for binding in baking, not ideal for fluffy egg texture."
+      },
+      {
+        "ingredient": "applesauce",
+        "aliases": ["unsweetened applesauce"],
+        "ratio": "1/4 cup per egg",
+        "note": "Good in sweet baking; may make the result softer."
+      }
+    ]
+  },
+  {
+    "ingredient": "soy sauce",
+    "aliases": [],
+    "substitutes": [
+      {
+        "ingredient": "tamari",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Closest flavor match and often gluten-free."
+      },
+      {
+        "ingredient": "coconut aminos",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Slightly sweeter and less salty than soy sauce."
+      }
+    ]
+  },
+  {
+    "ingredient": "lemon juice",
+    "aliases": ["fresh lemon juice", "lemon"],
+    "substitutes": [
+      {
+        "ingredient": "lime juice",
+        "aliases": ["fresh lime juice", "lime"],
+        "ratio": "1:1",
+        "note": "A bright citrus swap with a slightly different flavor."
+      },
+      {
+        "ingredient": "white wine vinegar",
+        "aliases": [],
+        "ratio": "1/2 amount",
+        "note": "Use less because it is sharper than lemon juice."
+      }
+    ]
+  },
+  {
+    "ingredient": "green onion",
+    "aliases": ["scallion", "spring onion"],
+    "substitutes": [
+      {
+        "ingredient": "chives",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Great as a garnish or finishing herb."
+      },
+      {
+        "ingredient": "onion",
+        "aliases": ["yellow onion", "white onion", "red onion"],
+        "ratio": "smaller amount",
+        "note": "Use less raw onion because the flavor is stronger."
+      }
+    ]
+  }
+]

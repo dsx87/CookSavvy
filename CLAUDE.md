@@ -102,7 +102,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 - **Data Services**: `RecipeServiceProtocol` / `RecipeService`, `IngredientsServiceProtocol` / `IngredientsService`, `UserDataServiceProtocol` / `UserDataService`
 - **Infrastructure**: `ImageServiceProtocol` / `ImageService`, `RecipeShareCardGenerating` / `RecipeShareCardGenerator`, `DatabaseInitializationServiceProtocol` / `DatabaseInitializationService`, `DataImportServiceProtocol` / `DataImportService`, `RecipeDatasetReading` / `JSONRecipeDatasetReader`
 - **Cross-cutting**: `LoggingServiceProtocol` / `LoggingService` creates feature-scoped `LoggerProtocol` instances backed by `os.Logger`
-- **Feature Services**: `ShoppingListServiceProtocol` / `ShoppingListService`, `PantryServiceProtocol` / `PantryService`, `RecipeRecommendationServiceProtocol` / `RecipeRecommendationService`, `CameraScanTrackerProtocol` / `CameraScanTracker`, `IngredientDetectionServiceProtocol` (impl: `AIIngredientDetectionAdapter`), `SubscriptionServiceProtocol` (impl: `StoreKitSubscriptionService` / `MockSubscriptionService`)
+- **Feature Services**: `ShoppingListServiceProtocol` / `ShoppingListService`, `PantryServiceProtocol` / `PantryService`, `RecipeRecommendationServiceProtocol` / `RecipeRecommendationService`, `SubstitutionServiceProtocol` / `SubstitutionService`, `CameraScanTrackerProtocol` / `CameraScanTracker`, `IngredientDetectionServiceProtocol` (impl: `AIIngredientDetectionAdapter`), `SubscriptionServiceProtocol` (impl: `StoreKitSubscriptionService` / `MockSubscriptionService`)
 - **Auth Services**: `AuthServiceProtocol`, `SupabaseAuthService`, `MockAuthService`, `NoOpAuthService` (RELEASE fallback when Supabase keys are missing), `SignInWithAppleAction` (shared SIWA flow, analytics, concurrency guard), `AppleSignInManager` / `AppleSignInManaging` (ASAuthorizationController + SHA256 nonce for SIWA flow)
 - **Network Layer**: `NetworkServiceProtocol` / `NetworkService`, `NetworkConfiguration`, `URLBuilder`, `NetworkRequest`, `NetworkResponse`, `NetworkError`, `HTTPMethod`
 - **Supabase Layer** (`Services/Supabase/`): `SupabaseConfiguration`, `SupabaseClientProviderProtocol` / `SupabaseClientProvider`, `SupabaseLLMProvider`, `SupabaseRecipeAPIProvider`, `SupabaseRecipeDTOs`, `SupabaseServiceAssembly`
@@ -234,6 +234,11 @@ CookSavvy/
 │   ├── Pantry/
 │   │   ├── PantryServiceProtocol.swift     — Protocol for free pantry staples
 │   │   └── PantryService.swift             — CRUD for always-available pantry ingredients via DBInterface
+│   ├── Substitution/
+│   │   ├── SubstitutionServiceProtocol.swift
+│   │   ├── SubstitutionCatalogLoader.swift
+│   │   ├── SubstitutionService.swift
+│   │   └── MockSubstitutionService.swift   — DEBUG/test canned substitution results
 │   ├── AI/
 │   │   ├── AIServiceProtocol.swift
 │   │   ├── AIService.swift
@@ -314,6 +319,7 @@ CookSavvy/
 │   └── DeviceUtility.swift
 └── Support/
     ├── APIKeys.plist                  — API keys (gitignored)
+    ├── Assets/Substitutions.json      — Curated local substitution catalog
     ├── Assets/                        — Asset catalogs
     └── Preview Content/
 
