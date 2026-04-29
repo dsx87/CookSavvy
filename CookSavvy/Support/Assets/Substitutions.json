@@ -14,6 +14,12 @@
         "aliases": [],
         "ratio": "1:1",
         "note": "Works in many baked recipes but can add coconut flavor."
+      },
+      {
+        "ingredient": "margarine",
+        "aliases": ["buttery spread"],
+        "ratio": "1:1",
+        "note": "Use in baking or spreading when a dairy-free swap is acceptable."
       }
     ]
   },
@@ -32,6 +38,12 @@
         "aliases": [],
         "ratio": "1:1",
         "note": "Works well in lighter sauces and baking."
+      },
+      {
+        "ingredient": "evaporated milk",
+        "aliases": [],
+        "ratio": "1/2 evaporated milk + 1/2 water",
+        "note": "Useful when shelf-stable dairy is available."
       }
     ]
   },
@@ -50,6 +62,12 @@
         "aliases": ["unsweetened applesauce"],
         "ratio": "1/4 cup per egg",
         "note": "Good in sweet baking; may make the result softer."
+      },
+      {
+        "ingredient": "mashed banana",
+        "aliases": ["banana"],
+        "ratio": "1/4 cup per egg",
+        "note": "Works in muffins and quick breads with a noticeable banana flavor."
       }
     ]
   },
@@ -68,6 +86,12 @@
         "aliases": [],
         "ratio": "1:1",
         "note": "Slightly sweeter and less salty than soy sauce."
+      },
+      {
+        "ingredient": "worcestershire sauce",
+        "aliases": [],
+        "ratio": "1/2 amount",
+        "note": "Use when savory depth matters more than exact Asian flavor."
       }
     ]
   },
@@ -86,6 +110,12 @@
         "aliases": [],
         "ratio": "1/2 amount",
         "note": "Use less because it is sharper than lemon juice."
+      },
+      {
+        "ingredient": "apple cider vinegar",
+        "aliases": ["cider vinegar"],
+        "ratio": "1/2 amount",
+        "note": "Good for dressings and marinades where fruitiness fits."
       }
     ]
   },
@@ -104,6 +134,1872 @@
         "aliases": ["yellow onion", "white onion", "red onion"],
         "ratio": "smaller amount",
         "note": "Use less raw onion because the flavor is stronger."
+      },
+      {
+        "ingredient": "shallot",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Works well in cooked dishes and mild dressings."
+      }
+    ]
+  },
+  {
+    "ingredient": "all-purpose flour",
+    "aliases": ["plain flour", "ap flour"],
+    "substitutes": [
+      {
+        "ingredient": "bread flour",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Best for sturdy doughs; baked goods may be chewier."
+      },
+      {
+        "ingredient": "cake flour",
+        "aliases": [],
+        "ratio": "1 cup + 2 tbsp per cup",
+        "note": "Use for tender cakes and muffins, not chewy breads."
+      },
+      {
+        "ingredient": "whole wheat flour",
+        "aliases": ["wholemeal flour"],
+        "ratio": "3/4 amount",
+        "note": "Adds nuttier flavor and absorbs more moisture."
+      }
+    ]
+  },
+  {
+    "ingredient": "cake flour",
+    "aliases": ["soft flour"],
+    "substitutes": [
+      {
+        "ingredient": "all-purpose flour",
+        "aliases": ["plain flour", "ap flour"],
+        "ratio": "1 cup minus 2 tbsp + 2 tbsp cornstarch",
+        "note": "Sift together for a lighter baking texture."
+      },
+      {
+        "ingredient": "pastry flour",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Close protein level for cakes, biscuits, and tender bakes."
+      }
+    ]
+  },
+  {
+    "ingredient": "bread flour",
+    "aliases": ["strong flour"],
+    "substitutes": [
+      {
+        "ingredient": "all-purpose flour",
+        "aliases": ["plain flour", "ap flour"],
+        "ratio": "1:1",
+        "note": "Works for most home breads with a slightly softer crumb."
+      },
+      {
+        "ingredient": "all-purpose flour with vital wheat gluten",
+        "aliases": ["vital wheat gluten"],
+        "ratio": "1 cup flour + 1 tsp gluten",
+        "note": "Improves chew and structure in yeast doughs."
+      }
+    ]
+  },
+  {
+    "ingredient": "baking powder",
+    "aliases": [],
+    "substitutes": [
+      {
+        "ingredient": "baking soda and cream of tartar",
+        "aliases": ["cream of tartar"],
+        "ratio": "1 tsp = 1/4 tsp baking soda + 1/2 tsp cream of tartar",
+        "note": "Use immediately after mixing for best lift."
+      },
+      {
+        "ingredient": "baking soda and lemon juice",
+        "aliases": [],
+        "ratio": "1 tsp = 1/4 tsp baking soda + 1/2 tsp lemon juice",
+        "note": "Works when the recipe can handle extra acidity."
+      }
+    ]
+  },
+  {
+    "ingredient": "baking soda",
+    "aliases": ["sodium bicarbonate"],
+    "substitutes": [
+      {
+        "ingredient": "baking powder",
+        "aliases": [],
+        "ratio": "3:1",
+        "note": "Use three times as much and reduce salt if the recipe tastes salty."
+      },
+      {
+        "ingredient": "self-rising flour",
+        "aliases": ["self raising flour"],
+        "ratio": "replace flour portion",
+        "note": "Use only when flour is also present and adjust added leavening."
+      }
+    ]
+  },
+  {
+    "ingredient": "active dry yeast",
+    "aliases": ["yeast"],
+    "substitutes": [
+      {
+        "ingredient": "instant yeast",
+        "aliases": ["rapid rise yeast"],
+        "ratio": "3/4 amount",
+        "note": "Can be mixed directly into dry ingredients."
+      },
+      {
+        "ingredient": "sourdough starter",
+        "aliases": ["starter"],
+        "ratio": "1 cup starter per packet",
+        "note": "Adjust flour and liquid; rise time will be longer."
+      }
+    ]
+  },
+  {
+    "ingredient": "granulated sugar",
+    "aliases": ["white sugar", "sugar"],
+    "substitutes": [
+      {
+        "ingredient": "brown sugar",
+        "aliases": ["light brown sugar"],
+        "ratio": "1:1",
+        "note": "Adds moisture and mild molasses flavor."
+      },
+      {
+        "ingredient": "honey",
+        "aliases": [],
+        "ratio": "3/4 amount",
+        "note": "Reduce other liquid slightly and expect extra browning."
+      },
+      {
+        "ingredient": "maple syrup",
+        "aliases": [],
+        "ratio": "3/4 amount",
+        "note": "Best where maple flavor fits; reduce other liquid slightly."
+      }
+    ]
+  },
+  {
+    "ingredient": "brown sugar",
+    "aliases": ["light brown sugar", "dark brown sugar"],
+    "substitutes": [
+      {
+        "ingredient": "granulated sugar and molasses",
+        "aliases": ["white sugar and molasses"],
+        "ratio": "1 cup sugar + 1 tbsp molasses",
+        "note": "Closest texture and flavor for baking."
+      },
+      {
+        "ingredient": "coconut sugar",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Less moist but works in cookies and quick breads."
+      },
+      {
+        "ingredient": "granulated sugar",
+        "aliases": ["white sugar", "sugar"],
+        "ratio": "1:1",
+        "note": "Use when sweetness matters more than molasses flavor."
+      }
+    ]
+  },
+  {
+    "ingredient": "powdered sugar",
+    "aliases": ["confectioners sugar", "icing sugar"],
+    "substitutes": [
+      {
+        "ingredient": "blended granulated sugar",
+        "aliases": ["blended white sugar"],
+        "ratio": "1 cup sugar + 1 tbsp cornstarch",
+        "note": "Blend until very fine for frostings and dusting."
+      },
+      {
+        "ingredient": "superfine sugar",
+        "aliases": ["caster sugar"],
+        "ratio": "1:1",
+        "note": "Works for sweetness but will not dissolve as smoothly in icing."
+      }
+    ]
+  },
+  {
+    "ingredient": "honey",
+    "aliases": [],
+    "substitutes": [
+      {
+        "ingredient": "maple syrup",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Similar sweetness with a more pronounced maple flavor."
+      },
+      {
+        "ingredient": "agave nectar",
+        "aliases": ["agave syrup"],
+        "ratio": "1:1",
+        "note": "Milder flavor and easy to dissolve in drinks or sauces."
+      },
+      {
+        "ingredient": "brown sugar syrup",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Use when a liquid sweetener is needed and caramel flavor fits."
+      }
+    ]
+  },
+  {
+    "ingredient": "maple syrup",
+    "aliases": [],
+    "substitutes": [
+      {
+        "ingredient": "honey",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Sweet and thick but with a different floral flavor."
+      },
+      {
+        "ingredient": "brown sugar syrup",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Good in glazes, pancakes, and sauces."
+      }
+    ]
+  },
+  {
+    "ingredient": "molasses",
+    "aliases": ["blackstrap molasses"],
+    "substitutes": [
+      {
+        "ingredient": "dark corn syrup",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Provides body and sweetness with less bitter depth."
+      },
+      {
+        "ingredient": "brown sugar syrup",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Works in marinades and baked goods needing dark sweetness."
+      },
+      {
+        "ingredient": "maple syrup",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Use when a lighter flavor is acceptable."
+      }
+    ]
+  },
+  {
+    "ingredient": "cocoa powder",
+    "aliases": ["unsweetened cocoa powder"],
+    "substitutes": [
+      {
+        "ingredient": "unsweetened baking chocolate",
+        "aliases": ["baking chocolate"],
+        "ratio": "3 tbsp cocoa = 1 oz chocolate",
+        "note": "Reduce fat in the recipe by about 1 tbsp per ounce."
+      },
+      {
+        "ingredient": "carob powder",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Naturally sweeter and less chocolatey."
+      }
+    ]
+  },
+  {
+    "ingredient": "cornstarch",
+    "aliases": ["corn starch"],
+    "substitutes": [
+      {
+        "ingredient": "arrowroot powder",
+        "aliases": ["arrowroot starch"],
+        "ratio": "1:1",
+        "note": "Good for glossy sauces; avoid long simmering."
+      },
+      {
+        "ingredient": "potato starch",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Thickens quickly and works well in soups and sauces."
+      },
+      {
+        "ingredient": "all-purpose flour",
+        "aliases": ["plain flour", "ap flour"],
+        "ratio": "2:1",
+        "note": "Use twice as much flour and cook longer to remove raw flavor."
+      }
+    ]
+  },
+  {
+    "ingredient": "bread crumbs",
+    "aliases": ["breadcrumbs", "panko"],
+    "substitutes": [
+      {
+        "ingredient": "crushed crackers",
+        "aliases": ["cracker crumbs"],
+        "ratio": "1:1",
+        "note": "Good for coating or binding; adjust salt if crackers are salty."
+      },
+      {
+        "ingredient": "rolled oats",
+        "aliases": ["oats"],
+        "ratio": "1:1",
+        "note": "Best as a binder in meatballs, patties, and casseroles."
+      },
+      {
+        "ingredient": "crushed cornflakes",
+        "aliases": ["cornflake crumbs"],
+        "ratio": "1:1",
+        "note": "Adds crunch for baked coatings."
+      }
+    ]
+  },
+  {
+    "ingredient": "buttermilk",
+    "aliases": [],
+    "substitutes": [
+      {
+        "ingredient": "milk and lemon juice",
+        "aliases": ["milk and vinegar"],
+        "ratio": "1 cup milk + 1 tbsp acid",
+        "note": "Let sit 5 minutes before using in baking."
+      },
+      {
+        "ingredient": "plain yogurt",
+        "aliases": ["yogurt"],
+        "ratio": "3/4 yogurt + 1/4 water",
+        "note": "Thin with water for pancakes, biscuits, and marinades."
+      },
+      {
+        "ingredient": "kefir",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Closest tangy dairy swap when available."
+      }
+    ]
+  },
+  {
+    "ingredient": "heavy cream",
+    "aliases": ["heavy whipping cream", "whipping cream"],
+    "substitutes": [
+      {
+        "ingredient": "milk and butter",
+        "aliases": [],
+        "ratio": "1 cup = 3/4 cup milk + 1/4 cup butter",
+        "note": "Works for sauces and soups but will not whip."
+      },
+      {
+        "ingredient": "half-and-half",
+        "aliases": ["half and half"],
+        "ratio": "1:1",
+        "note": "Use in soups and sauces for a lighter result."
+      },
+      {
+        "ingredient": "coconut cream",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Dairy-free option with coconut flavor."
+      }
+    ]
+  },
+  {
+    "ingredient": "half-and-half",
+    "aliases": ["half and half"],
+    "substitutes": [
+      {
+        "ingredient": "milk and cream",
+        "aliases": [],
+        "ratio": "1/2 milk + 1/2 cream",
+        "note": "Closest match for coffee, soups, and sauces."
+      },
+      {
+        "ingredient": "whole milk",
+        "aliases": ["milk"],
+        "ratio": "1:1",
+        "note": "Lighter result but works in most cooking."
+      },
+      {
+        "ingredient": "evaporated milk",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Shelf-stable swap with a slightly cooked flavor."
+      }
+    ]
+  },
+  {
+    "ingredient": "sour cream",
+    "aliases": [],
+    "substitutes": [
+      {
+        "ingredient": "greek yogurt",
+        "aliases": ["plain greek yogurt"],
+        "ratio": "1:1",
+        "note": "Tangy and thick; good for dips, baking, and toppings."
+      },
+      {
+        "ingredient": "plain yogurt",
+        "aliases": ["yogurt"],
+        "ratio": "1:1",
+        "note": "Use in baked goods and sauces; thinner than sour cream."
+      },
+      {
+        "ingredient": "creme fraiche",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Richer and less tangy but excellent in warm sauces."
+      }
+    ]
+  },
+  {
+    "ingredient": "plain yogurt",
+    "aliases": ["yogurt"],
+    "substitutes": [
+      {
+        "ingredient": "greek yogurt",
+        "aliases": ["plain greek yogurt"],
+        "ratio": "3/4 amount + water as needed",
+        "note": "Thin slightly for marinades, sauces, and batters."
+      },
+      {
+        "ingredient": "sour cream",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Richer and tangier; works in dips and baking."
+      },
+      {
+        "ingredient": "buttermilk",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Best when yogurt is used for tang and moisture, not thickness."
+      }
+    ]
+  },
+  {
+    "ingredient": "cream cheese",
+    "aliases": [],
+    "substitutes": [
+      {
+        "ingredient": "ricotta cheese",
+        "aliases": ["ricotta"],
+        "ratio": "1:1",
+        "note": "Blend smooth for dips and fillings; flavor is milder."
+      },
+      {
+        "ingredient": "mascarpone",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Richer and less tangy, good for desserts."
+      },
+      {
+        "ingredient": "greek yogurt",
+        "aliases": ["plain greek yogurt"],
+        "ratio": "1:1",
+        "note": "Use in spreads and dips when a lighter tangy result is fine."
+      }
+    ]
+  },
+  {
+    "ingredient": "parmesan cheese",
+    "aliases": ["parmesan", "parmigiano reggiano"],
+    "substitutes": [
+      {
+        "ingredient": "pecorino romano",
+        "aliases": ["pecorino"],
+        "ratio": "3/4 amount",
+        "note": "Saltier and sharper, so start with less."
+      },
+      {
+        "ingredient": "grana padano",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Milder but close for pasta, soups, and grating."
+      },
+      {
+        "ingredient": "nutritional yeast",
+        "aliases": ["nooch"],
+        "ratio": "1/2 amount",
+        "note": "Dairy-free savory swap for finishing dishes."
+      }
+    ]
+  },
+  {
+    "ingredient": "cheddar cheese",
+    "aliases": ["cheddar"],
+    "substitutes": [
+      {
+        "ingredient": "monterey jack cheese",
+        "aliases": ["monterey jack"],
+        "ratio": "1:1",
+        "note": "Melts well but tastes milder."
+      },
+      {
+        "ingredient": "colby cheese",
+        "aliases": ["colby"],
+        "ratio": "1:1",
+        "note": "Similar texture with a softer flavor."
+      },
+      {
+        "ingredient": "gouda cheese",
+        "aliases": ["gouda"],
+        "ratio": "1:1",
+        "note": "Good melting swap for casseroles and sandwiches."
+      }
+    ]
+  },
+  {
+    "ingredient": "mozzarella cheese",
+    "aliases": ["mozzarella"],
+    "substitutes": [
+      {
+        "ingredient": "provolone cheese",
+        "aliases": ["provolone"],
+        "ratio": "1:1",
+        "note": "Melts well and adds a sharper flavor."
+      },
+      {
+        "ingredient": "monterey jack cheese",
+        "aliases": ["monterey jack"],
+        "ratio": "1:1",
+        "note": "Mild melting option for pizzas and casseroles."
+      },
+      {
+        "ingredient": "fontina cheese",
+        "aliases": ["fontina"],
+        "ratio": "1:1",
+        "note": "Creamy and meltable with a richer flavor."
+      }
+    ]
+  },
+  {
+    "ingredient": "evaporated milk",
+    "aliases": [],
+    "substitutes": [
+      {
+        "ingredient": "milk",
+        "aliases": ["whole milk"],
+        "ratio": "1:1",
+        "note": "Use in most cooking; result will be thinner."
+      },
+      {
+        "ingredient": "half-and-half",
+        "aliases": ["half and half"],
+        "ratio": "1:1",
+        "note": "Richer swap for sauces, soups, and desserts."
+      }
+    ]
+  },
+  {
+    "ingredient": "sweetened condensed milk",
+    "aliases": ["condensed milk"],
+    "substitutes": [
+      {
+        "ingredient": "evaporated milk and sugar",
+        "aliases": [],
+        "ratio": "1 cup evaporated milk + 1 1/4 cups sugar",
+        "note": "Simmer until sugar dissolves and mixture thickens slightly."
+      },
+      {
+        "ingredient": "coconut condensed milk",
+        "aliases": ["sweetened condensed coconut milk"],
+        "ratio": "1:1",
+        "note": "Dairy-free swap with coconut flavor."
+      }
+    ]
+  },
+  {
+    "ingredient": "apple cider vinegar",
+    "aliases": ["cider vinegar"],
+    "substitutes": [
+      {
+        "ingredient": "white wine vinegar",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Clean acidity for dressings and marinades."
+      },
+      {
+        "ingredient": "lemon juice",
+        "aliases": ["fresh lemon juice", "lemon"],
+        "ratio": "1:1",
+        "note": "Good when bright citrus flavor fits the dish."
+      },
+      {
+        "ingredient": "rice vinegar",
+        "aliases": ["rice wine vinegar"],
+        "ratio": "1:1",
+        "note": "Milder acidity for slaws, pickles, and sauces."
+      }
+    ]
+  },
+  {
+    "ingredient": "white vinegar",
+    "aliases": ["distilled vinegar"],
+    "substitutes": [
+      {
+        "ingredient": "apple cider vinegar",
+        "aliases": ["cider vinegar"],
+        "ratio": "1:1",
+        "note": "Slightly fruitier but works for most cooking."
+      },
+      {
+        "ingredient": "white wine vinegar",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Milder and better for dressings."
+      },
+      {
+        "ingredient": "lemon juice",
+        "aliases": ["fresh lemon juice", "lemon"],
+        "ratio": "1:1",
+        "note": "Use when citrus flavor is welcome."
+      }
+    ]
+  },
+  {
+    "ingredient": "white wine vinegar",
+    "aliases": [],
+    "substitutes": [
+      {
+        "ingredient": "apple cider vinegar",
+        "aliases": ["cider vinegar"],
+        "ratio": "1:1",
+        "note": "Fruitier but practical for vinaigrettes and marinades."
+      },
+      {
+        "ingredient": "rice vinegar",
+        "aliases": ["rice wine vinegar"],
+        "ratio": "1:1",
+        "note": "Milder acidity for delicate dressings."
+      },
+      {
+        "ingredient": "lemon juice",
+        "aliases": ["fresh lemon juice", "lemon"],
+        "ratio": "1:1",
+        "note": "Brighter flavor for fish, vegetables, and sauces."
+      }
+    ]
+  },
+  {
+    "ingredient": "rice vinegar",
+    "aliases": ["rice wine vinegar"],
+    "substitutes": [
+      {
+        "ingredient": "apple cider vinegar",
+        "aliases": ["cider vinegar"],
+        "ratio": "1:1",
+        "note": "Add a pinch of sugar if the recipe needs mild sweetness."
+      },
+      {
+        "ingredient": "white wine vinegar",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Sharper but works in sauces and dressings."
+      },
+      {
+        "ingredient": "lime juice",
+        "aliases": ["fresh lime juice", "lime"],
+        "ratio": "1:1",
+        "note": "Use in fresh sauces where citrus is acceptable."
+      }
+    ]
+  },
+  {
+    "ingredient": "lime juice",
+    "aliases": ["fresh lime juice", "lime"],
+    "substitutes": [
+      {
+        "ingredient": "lemon juice",
+        "aliases": ["fresh lemon juice", "lemon"],
+        "ratio": "1:1",
+        "note": "Closest acidity with a less tropical citrus flavor."
+      },
+      {
+        "ingredient": "rice vinegar",
+        "aliases": ["rice wine vinegar"],
+        "ratio": "1/2 amount",
+        "note": "Use less when acidity matters more than citrus flavor."
+      },
+      {
+        "ingredient": "white wine vinegar",
+        "aliases": [],
+        "ratio": "1/2 amount",
+        "note": "Sharper than lime, so start small."
+      }
+    ]
+  },
+  {
+    "ingredient": "chicken broth",
+    "aliases": ["chicken stock"],
+    "substitutes": [
+      {
+        "ingredient": "vegetable broth",
+        "aliases": ["vegetable stock"],
+        "ratio": "1:1",
+        "note": "Good all-purpose swap with a lighter flavor."
+      },
+      {
+        "ingredient": "water and bouillon",
+        "aliases": ["chicken bouillon"],
+        "ratio": "1 cup water + bouillon for 1 cup",
+        "note": "Adjust salt because bouillon can be salty."
+      },
+      {
+        "ingredient": "water",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Use in a pinch and increase seasoning."
+      }
+    ]
+  },
+  {
+    "ingredient": "beef broth",
+    "aliases": ["beef stock"],
+    "substitutes": [
+      {
+        "ingredient": "chicken broth",
+        "aliases": ["chicken stock"],
+        "ratio": "1:1",
+        "note": "Lighter flavor but works in soups and braises."
+      },
+      {
+        "ingredient": "vegetable broth",
+        "aliases": ["vegetable stock"],
+        "ratio": "1:1",
+        "note": "Use with soy sauce or mushrooms for deeper flavor."
+      },
+      {
+        "ingredient": "water and bouillon",
+        "aliases": ["beef bouillon"],
+        "ratio": "1 cup water + bouillon for 1 cup",
+        "note": "Adjust salt after the bouillon dissolves."
+      }
+    ]
+  },
+  {
+    "ingredient": "vegetable broth",
+    "aliases": ["vegetable stock"],
+    "substitutes": [
+      {
+        "ingredient": "chicken broth",
+        "aliases": ["chicken stock"],
+        "ratio": "1:1",
+        "note": "Use when a non-vegetarian swap is acceptable."
+      },
+      {
+        "ingredient": "water and bouillon",
+        "aliases": ["vegetable bouillon"],
+        "ratio": "1 cup water + bouillon for 1 cup",
+        "note": "Convenient for soups and grains; watch salt."
+      },
+      {
+        "ingredient": "water",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Add herbs, aromatics, or extra seasoning for flavor."
+      }
+    ]
+  },
+  {
+    "ingredient": "white wine",
+    "aliases": ["dry white wine"],
+    "substitutes": [
+      {
+        "ingredient": "chicken broth",
+        "aliases": ["chicken stock"],
+        "ratio": "1:1",
+        "note": "Good for deglazing and sauces; add lemon for brightness."
+      },
+      {
+        "ingredient": "vegetable broth",
+        "aliases": ["vegetable stock"],
+        "ratio": "1:1",
+        "note": "Non-alcoholic swap for soups and pan sauces."
+      },
+      {
+        "ingredient": "white grape juice",
+        "aliases": [],
+        "ratio": "3/4 amount + splash vinegar",
+        "note": "Use when gentle sweetness fits the dish."
+      }
+    ]
+  },
+  {
+    "ingredient": "red wine",
+    "aliases": ["dry red wine"],
+    "substitutes": [
+      {
+        "ingredient": "beef broth",
+        "aliases": ["beef stock"],
+        "ratio": "1:1",
+        "note": "Good for braises and stews; add vinegar for acidity."
+      },
+      {
+        "ingredient": "red grape juice",
+        "aliases": [],
+        "ratio": "3/4 amount + splash vinegar",
+        "note": "Adds fruitiness and color without alcohol."
+      },
+      {
+        "ingredient": "pomegranate juice",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Tangy swap for reductions and marinades."
+      }
+    ]
+  },
+  {
+    "ingredient": "garlic",
+    "aliases": ["garlic clove", "garlic cloves"],
+    "substitutes": [
+      {
+        "ingredient": "garlic powder",
+        "aliases": [],
+        "ratio": "1 clove = 1/8 tsp",
+        "note": "Best in cooked dishes, rubs, and sauces."
+      },
+      {
+        "ingredient": "shallot",
+        "aliases": [],
+        "ratio": "2 tbsp minced per clove",
+        "note": "Milder and sweeter; use when fresh allium flavor is needed."
+      },
+      {
+        "ingredient": "garlic paste",
+        "aliases": [],
+        "ratio": "1/2 tsp per clove",
+        "note": "Convenient close swap for marinades and stir-fries."
+      }
+    ]
+  },
+  {
+    "ingredient": "onion",
+    "aliases": ["yellow onion", "white onion", "red onion"],
+    "substitutes": [
+      {
+        "ingredient": "shallot",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Milder and slightly sweeter, especially good in sauces."
+      },
+      {
+        "ingredient": "leek",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Use the white and light green parts for a gentle flavor."
+      },
+      {
+        "ingredient": "onion powder",
+        "aliases": [],
+        "ratio": "1 small onion = 1 tbsp",
+        "note": "Best when texture from fresh onion is not important."
+      }
+    ]
+  },
+  {
+    "ingredient": "shallot",
+    "aliases": ["shallots"],
+    "substitutes": [
+      {
+        "ingredient": "onion",
+        "aliases": ["yellow onion", "white onion", "red onion"],
+        "ratio": "1:1",
+        "note": "Use a small amount for a stronger flavor."
+      },
+      {
+        "ingredient": "green onion",
+        "aliases": ["scallion", "spring onion"],
+        "ratio": "1:1",
+        "note": "Best raw or lightly cooked."
+      },
+      {
+        "ingredient": "leek",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Mild swap for soups, sauces, and sautes."
+      }
+    ]
+  },
+  {
+    "ingredient": "fresh ginger",
+    "aliases": ["ginger", "ginger root"],
+    "substitutes": [
+      {
+        "ingredient": "ground ginger",
+        "aliases": ["dried ginger"],
+        "ratio": "1 tbsp fresh = 1/4 tsp ground",
+        "note": "Works in baking, sauces, and marinades with less brightness."
+      },
+      {
+        "ingredient": "galangal",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Sharper and more citrusy, good for Southeast Asian dishes."
+      },
+      {
+        "ingredient": "ginger paste",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Closest convenience swap for stir-fries and sauces."
+      }
+    ]
+  },
+  {
+    "ingredient": "celery",
+    "aliases": ["celery stalk", "celery stalks"],
+    "substitutes": [
+      {
+        "ingredient": "fennel",
+        "aliases": ["fennel bulb"],
+        "ratio": "1:1",
+        "note": "Adds crunch with a light anise flavor."
+      },
+      {
+        "ingredient": "carrot",
+        "aliases": ["carrots"],
+        "ratio": "1:1",
+        "note": "Adds sweetness and crunch in soups and salads."
+      },
+      {
+        "ingredient": "celery seed",
+        "aliases": [],
+        "ratio": "1 stalk = pinch",
+        "note": "Use for celery flavor when texture is not needed."
+      }
+    ]
+  },
+  {
+    "ingredient": "carrot",
+    "aliases": ["carrots"],
+    "substitutes": [
+      {
+        "ingredient": "sweet potato",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Adds sweetness and body in soups and roasts."
+      },
+      {
+        "ingredient": "parsnip",
+        "aliases": ["parsnips"],
+        "ratio": "1:1",
+        "note": "Similar texture with a nuttier flavor."
+      },
+      {
+        "ingredient": "butternut squash",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Good in soups, stews, and roasted dishes."
+      }
+    ]
+  },
+  {
+    "ingredient": "leek",
+    "aliases": ["leeks"],
+    "substitutes": [
+      {
+        "ingredient": "onion",
+        "aliases": ["yellow onion", "white onion"],
+        "ratio": "1:1",
+        "note": "Stronger flavor, especially when raw."
+      },
+      {
+        "ingredient": "green onion",
+        "aliases": ["scallion", "spring onion"],
+        "ratio": "1:1",
+        "note": "Best for quick cooking or finishing."
+      },
+      {
+        "ingredient": "shallot",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Good in sauces and sautes."
+      }
+    ]
+  },
+  {
+    "ingredient": "fresh parsley",
+    "aliases": ["parsley"],
+    "substitutes": [
+      {
+        "ingredient": "cilantro",
+        "aliases": ["fresh cilantro", "coriander leaves"],
+        "ratio": "1:1",
+        "note": "Brighter and more polarizing flavor; best in fresh dishes."
+      },
+      {
+        "ingredient": "chives",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Good garnish when a mild onion note fits."
+      },
+      {
+        "ingredient": "dried parsley",
+        "aliases": [],
+        "ratio": "1 tbsp fresh = 1 tsp dried",
+        "note": "Use in cooked dishes, not as a fresh garnish."
+      }
+    ]
+  },
+  {
+    "ingredient": "fresh cilantro",
+    "aliases": ["cilantro", "coriander leaves"],
+    "substitutes": [
+      {
+        "ingredient": "fresh parsley",
+        "aliases": ["parsley"],
+        "ratio": "1:1",
+        "note": "Milder green flavor for people who avoid cilantro."
+      },
+      {
+        "ingredient": "mint",
+        "aliases": ["fresh mint"],
+        "ratio": "1/2 amount",
+        "note": "Use in salads, chutneys, and fresh sauces."
+      },
+      {
+        "ingredient": "basil",
+        "aliases": ["fresh basil"],
+        "ratio": "1:1",
+        "note": "Works in fresh dishes where sweet herb flavor fits."
+      }
+    ]
+  },
+  {
+    "ingredient": "fresh basil",
+    "aliases": ["basil"],
+    "substitutes": [
+      {
+        "ingredient": "dried basil",
+        "aliases": [],
+        "ratio": "1 tbsp fresh = 1 tsp dried",
+        "note": "Use in cooked sauces rather than fresh salads."
+      },
+      {
+        "ingredient": "oregano",
+        "aliases": ["dried oregano"],
+        "ratio": "1/2 amount",
+        "note": "More pungent and savory, good in tomato sauces."
+      },
+      {
+        "ingredient": "fresh parsley",
+        "aliases": ["parsley"],
+        "ratio": "1:1",
+        "note": "Milder swap when freshness matters more than basil flavor."
+      }
+    ]
+  },
+  {
+    "ingredient": "fresh thyme",
+    "aliases": ["thyme"],
+    "substitutes": [
+      {
+        "ingredient": "dried thyme",
+        "aliases": [],
+        "ratio": "1 tbsp fresh = 1 tsp dried",
+        "note": "Good in soups, roasts, and sauces."
+      },
+      {
+        "ingredient": "oregano",
+        "aliases": ["dried oregano"],
+        "ratio": "1:1",
+        "note": "Stronger herbal flavor, best in savory dishes."
+      },
+      {
+        "ingredient": "marjoram",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Gentler herb flavor for poultry and vegetables."
+      }
+    ]
+  },
+  {
+    "ingredient": "fresh rosemary",
+    "aliases": ["rosemary"],
+    "substitutes": [
+      {
+        "ingredient": "dried rosemary",
+        "aliases": [],
+        "ratio": "1 tbsp fresh = 1 tsp dried",
+        "note": "Crush before using to soften the texture."
+      },
+      {
+        "ingredient": "thyme",
+        "aliases": ["fresh thyme"],
+        "ratio": "1:1",
+        "note": "Milder but works with roasted meats and vegetables."
+      },
+      {
+        "ingredient": "sage",
+        "aliases": ["fresh sage"],
+        "ratio": "1/2 amount",
+        "note": "Use sparingly because sage is strong."
+      }
+    ]
+  },
+  {
+    "ingredient": "oregano",
+    "aliases": ["dried oregano"],
+    "substitutes": [
+      {
+        "ingredient": "marjoram",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Milder and slightly sweeter."
+      },
+      {
+        "ingredient": "dried basil",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Good in tomato-based dishes."
+      },
+      {
+        "ingredient": "italian seasoning",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Use when a mixed herb profile is acceptable."
+      }
+    ]
+  },
+  {
+    "ingredient": "cumin",
+    "aliases": ["ground cumin"],
+    "substitutes": [
+      {
+        "ingredient": "coriander",
+        "aliases": ["ground coriander"],
+        "ratio": "1:1",
+        "note": "Less earthy and more citrusy."
+      },
+      {
+        "ingredient": "chili powder",
+        "aliases": [],
+        "ratio": "1/2 amount",
+        "note": "Use when added chile and spice blend flavors fit."
+      },
+      {
+        "ingredient": "garam masala",
+        "aliases": [],
+        "ratio": "1/2 amount",
+        "note": "Warmer spice blend for curries and stews."
+      }
+    ]
+  },
+  {
+    "ingredient": "coriander",
+    "aliases": ["ground coriander"],
+    "substitutes": [
+      {
+        "ingredient": "cumin",
+        "aliases": ["ground cumin"],
+        "ratio": "1/2 amount",
+        "note": "Earthier and stronger, so use less."
+      },
+      {
+        "ingredient": "caraway seed",
+        "aliases": ["caraway"],
+        "ratio": "1/2 amount",
+        "note": "Adds warm citrusy notes with a stronger bite."
+      },
+      {
+        "ingredient": "garam masala",
+        "aliases": [],
+        "ratio": "1/2 amount",
+        "note": "Use when a warmer spice blend fits the dish."
+      }
+    ]
+  },
+  {
+    "ingredient": "paprika",
+    "aliases": ["sweet paprika"],
+    "substitutes": [
+      {
+        "ingredient": "smoked paprika",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Adds smoke along with color and mild pepper flavor."
+      },
+      {
+        "ingredient": "chili powder",
+        "aliases": [],
+        "ratio": "1/2 amount",
+        "note": "Spicier and more complex, so start with less."
+      },
+      {
+        "ingredient": "cayenne pepper",
+        "aliases": ["cayenne"],
+        "ratio": "1/4 amount",
+        "note": "Adds heat without paprika's sweetness."
+      }
+    ]
+  },
+  {
+    "ingredient": "chili powder",
+    "aliases": ["chilli powder"],
+    "substitutes": [
+      {
+        "ingredient": "paprika and cumin",
+        "aliases": [],
+        "ratio": "2 parts paprika + 1 part cumin",
+        "note": "Add cayenne if heat is needed."
+      },
+      {
+        "ingredient": "cayenne pepper",
+        "aliases": ["cayenne"],
+        "ratio": "1/4 amount",
+        "note": "Much hotter and less complex."
+      },
+      {
+        "ingredient": "taco seasoning",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Works in Tex-Mex dishes; adjust salt."
+      }
+    ]
+  },
+  {
+    "ingredient": "cayenne pepper",
+    "aliases": ["cayenne"],
+    "substitutes": [
+      {
+        "ingredient": "red pepper flakes",
+        "aliases": ["crushed red pepper"],
+        "ratio": "1:1",
+        "note": "Adds similar heat with a coarser texture."
+      },
+      {
+        "ingredient": "hot sauce",
+        "aliases": [],
+        "ratio": "few dashes per pinch",
+        "note": "Adds vinegar and liquid along with heat."
+      },
+      {
+        "ingredient": "paprika",
+        "aliases": ["sweet paprika"],
+        "ratio": "1:1",
+        "note": "Use only when color matters more than heat."
+      }
+    ]
+  },
+  {
+    "ingredient": "black pepper",
+    "aliases": ["ground black pepper", "pepper"],
+    "substitutes": [
+      {
+        "ingredient": "white pepper",
+        "aliases": ["ground white pepper"],
+        "ratio": "1:1",
+        "note": "Similar heat with a different aroma."
+      },
+      {
+        "ingredient": "red pepper flakes",
+        "aliases": ["crushed red pepper"],
+        "ratio": "1/2 amount",
+        "note": "Adds more chile heat and visible flakes."
+      },
+      {
+        "ingredient": "cayenne pepper",
+        "aliases": ["cayenne"],
+        "ratio": "1/4 amount",
+        "note": "Much hotter, so use sparingly."
+      }
+    ]
+  },
+  {
+    "ingredient": "cinnamon",
+    "aliases": ["ground cinnamon"],
+    "substitutes": [
+      {
+        "ingredient": "pumpkin pie spice",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Adds nutmeg, ginger, and clove along with cinnamon."
+      },
+      {
+        "ingredient": "allspice",
+        "aliases": ["ground allspice"],
+        "ratio": "1/2 amount",
+        "note": "Warm and strong, so start with less."
+      },
+      {
+        "ingredient": "nutmeg",
+        "aliases": ["ground nutmeg"],
+        "ratio": "1/4 amount",
+        "note": "Use only for background warmth."
+      }
+    ]
+  },
+  {
+    "ingredient": "nutmeg",
+    "aliases": ["ground nutmeg"],
+    "substitutes": [
+      {
+        "ingredient": "mace",
+        "aliases": ["ground mace"],
+        "ratio": "1:1",
+        "note": "Closest flavor match with a slightly lighter note."
+      },
+      {
+        "ingredient": "allspice",
+        "aliases": ["ground allspice"],
+        "ratio": "1/2 amount",
+        "note": "Warmer and more complex."
+      },
+      {
+        "ingredient": "cinnamon",
+        "aliases": ["ground cinnamon"],
+        "ratio": "1/2 amount",
+        "note": "Different flavor but useful in sweet baking."
+      }
+    ]
+  },
+  {
+    "ingredient": "vanilla extract",
+    "aliases": ["vanilla"],
+    "substitutes": [
+      {
+        "ingredient": "vanilla paste",
+        "aliases": ["vanilla bean paste"],
+        "ratio": "1:1",
+        "note": "Closest flavor with visible vanilla specks."
+      },
+      {
+        "ingredient": "maple syrup",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Adds sweetness and a different warm flavor."
+      },
+      {
+        "ingredient": "almond extract",
+        "aliases": [],
+        "ratio": "1/4 amount",
+        "note": "Much stronger and nuttier, so use sparingly."
+      }
+    ]
+  },
+  {
+    "ingredient": "mayonnaise",
+    "aliases": ["mayo"],
+    "substitutes": [
+      {
+        "ingredient": "greek yogurt",
+        "aliases": ["plain greek yogurt"],
+        "ratio": "1:1",
+        "note": "Tangy lighter swap for dressings and spreads."
+      },
+      {
+        "ingredient": "sour cream",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Creamy and tangy, good in salads and dips."
+      },
+      {
+        "ingredient": "mashed avocado",
+        "aliases": ["avocado"],
+        "ratio": "1:1",
+        "note": "Good for sandwiches and creamy salads with a green color."
+      }
+    ]
+  },
+  {
+    "ingredient": "mustard",
+    "aliases": ["yellow mustard", "dijon mustard"],
+    "substitutes": [
+      {
+        "ingredient": "mustard powder",
+        "aliases": ["dry mustard"],
+        "ratio": "1 tbsp mustard = 1 tsp powder + 2 tsp water",
+        "note": "Let hydrate briefly before using."
+      },
+      {
+        "ingredient": "horseradish",
+        "aliases": [],
+        "ratio": "1/2 amount",
+        "note": "Sharp and spicy; best in dressings and sauces."
+      },
+      {
+        "ingredient": "wasabi",
+        "aliases": [],
+        "ratio": "1/4 amount",
+        "note": "Use sparingly for heat, not mustard flavor."
+      }
+    ]
+  },
+  {
+    "ingredient": "ketchup",
+    "aliases": ["catsup"],
+    "substitutes": [
+      {
+        "ingredient": "tomato paste and vinegar",
+        "aliases": [],
+        "ratio": "1 tbsp paste + 1 tsp vinegar + pinch sugar",
+        "note": "Closest pantry swap for sauces and glazes."
+      },
+      {
+        "ingredient": "tomato sauce",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Thinner and less sweet; season to taste."
+      },
+      {
+        "ingredient": "barbecue sauce",
+        "aliases": ["bbq sauce"],
+        "ratio": "1:1",
+        "note": "Sweeter and smokier, best in casual sauces."
+      }
+    ]
+  },
+  {
+    "ingredient": "tomato paste",
+    "aliases": [],
+    "substitutes": [
+      {
+        "ingredient": "tomato sauce",
+        "aliases": [],
+        "ratio": "3:1",
+        "note": "Use three times as much and simmer to reduce if needed."
+      },
+      {
+        "ingredient": "tomato puree",
+        "aliases": [],
+        "ratio": "2:1",
+        "note": "Use twice as much for sauces and soups."
+      },
+      {
+        "ingredient": "ketchup",
+        "aliases": ["catsup"],
+        "ratio": "1:1",
+        "note": "Sweeter and vinegary, best in small amounts."
+      }
+    ]
+  },
+  {
+    "ingredient": "tomato sauce",
+    "aliases": [],
+    "substitutes": [
+      {
+        "ingredient": "tomato puree",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Similar texture; season to taste."
+      },
+      {
+        "ingredient": "crushed tomatoes",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Chunkier but good for simmered sauces."
+      },
+      {
+        "ingredient": "tomato paste and water",
+        "aliases": [],
+        "ratio": "1 part paste + 1 part water",
+        "note": "Whisk smooth and season before using."
+      }
+    ]
+  },
+  {
+    "ingredient": "worcestershire sauce",
+    "aliases": [],
+    "substitutes": [
+      {
+        "ingredient": "soy sauce and vinegar",
+        "aliases": [],
+        "ratio": "1 tbsp soy sauce + 1 tsp vinegar",
+        "note": "Savory and tangy but lacks the same spice blend."
+      },
+      {
+        "ingredient": "fish sauce",
+        "aliases": [],
+        "ratio": "1/2 amount",
+        "note": "Very salty and pungent, so start with less."
+      },
+      {
+        "ingredient": "steak sauce",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Closest in cooked sauces and marinades."
+      }
+    ]
+  },
+  {
+    "ingredient": "fish sauce",
+    "aliases": [],
+    "substitutes": [
+      {
+        "ingredient": "soy sauce",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Salty umami swap without seafood flavor."
+      },
+      {
+        "ingredient": "tamari",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Good gluten-free savory swap."
+      },
+      {
+        "ingredient": "worcestershire sauce",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Adds tang and depth but changes the flavor profile."
+      }
+    ]
+  },
+  {
+    "ingredient": "oyster sauce",
+    "aliases": [],
+    "substitutes": [
+      {
+        "ingredient": "hoisin sauce",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Sweeter and thicker, useful in stir-fries."
+      },
+      {
+        "ingredient": "soy sauce and sugar",
+        "aliases": [],
+        "ratio": "1 tbsp soy sauce + 1 tsp sugar",
+        "note": "Simple savory-sweet swap without oyster flavor."
+      },
+      {
+        "ingredient": "mushroom sauce",
+        "aliases": ["vegetarian oyster sauce"],
+        "ratio": "1:1",
+        "note": "Closest vegetarian option for stir-fries."
+      }
+    ]
+  },
+  {
+    "ingredient": "hoisin sauce",
+    "aliases": [],
+    "substitutes": [
+      {
+        "ingredient": "soy sauce and peanut butter",
+        "aliases": [],
+        "ratio": "2 tbsp soy sauce + 1 tbsp peanut butter + pinch sugar",
+        "note": "Good quick swap for marinades and dipping sauces."
+      },
+      {
+        "ingredient": "oyster sauce",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Less sweet and not vegetarian."
+      },
+      {
+        "ingredient": "barbecue sauce and soy sauce",
+        "aliases": ["bbq sauce and soy sauce"],
+        "ratio": "2 parts barbecue sauce + 1 part soy sauce",
+        "note": "Works when sweet and smoky flavors fit."
+      }
+    ]
+  },
+  {
+    "ingredient": "sesame oil",
+    "aliases": ["toasted sesame oil"],
+    "substitutes": [
+      {
+        "ingredient": "peanut oil",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Good cooking oil swap but less nutty."
+      },
+      {
+        "ingredient": "olive oil",
+        "aliases": ["extra virgin olive oil"],
+        "ratio": "1:1",
+        "note": "Use for cooking when sesame flavor is not essential."
+      },
+      {
+        "ingredient": "tahini",
+        "aliases": [],
+        "ratio": "1/2 amount",
+        "note": "Use in dressings or sauces for sesame flavor, not frying."
+      }
+    ]
+  },
+  {
+    "ingredient": "olive oil",
+    "aliases": ["extra virgin olive oil"],
+    "substitutes": [
+      {
+        "ingredient": "canola oil",
+        "aliases": ["rapeseed oil"],
+        "ratio": "1:1",
+        "note": "Neutral flavor for sauteing and baking."
+      },
+      {
+        "ingredient": "avocado oil",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Good for high-heat cooking."
+      },
+      {
+        "ingredient": "vegetable oil",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Neutral all-purpose swap."
+      }
+    ]
+  },
+  {
+    "ingredient": "vegetable oil",
+    "aliases": ["neutral oil"],
+    "substitutes": [
+      {
+        "ingredient": "canola oil",
+        "aliases": ["rapeseed oil"],
+        "ratio": "1:1",
+        "note": "Neutral and reliable for frying and baking."
+      },
+      {
+        "ingredient": "avocado oil",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Good high-heat swap with mild flavor."
+      },
+      {
+        "ingredient": "melted butter",
+        "aliases": ["butter"],
+        "ratio": "1:1",
+        "note": "Adds dairy flavor and works best in baking."
+      }
+    ]
+  },
+  {
+    "ingredient": "peanut butter",
+    "aliases": [],
+    "substitutes": [
+      {
+        "ingredient": "almond butter",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Similar texture with a different nut flavor."
+      },
+      {
+        "ingredient": "sunflower seed butter",
+        "aliases": ["sunbutter"],
+        "ratio": "1:1",
+        "note": "Nut-free option for sauces, baking, and spreads."
+      },
+      {
+        "ingredient": "tahini",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Savory sesame flavor, best in sauces and dressings."
+      }
+    ]
+  },
+  {
+    "ingredient": "tahini",
+    "aliases": ["sesame paste"],
+    "substitutes": [
+      {
+        "ingredient": "peanut butter",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Stronger nut flavor; thin with water or lemon juice."
+      },
+      {
+        "ingredient": "sunflower seed butter",
+        "aliases": ["sunbutter"],
+        "ratio": "1:1",
+        "note": "Good nut-free creamy swap."
+      },
+      {
+        "ingredient": "almond butter",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Works in dressings and dips with a nuttier flavor."
+      }
+    ]
+  },
+  {
+    "ingredient": "peanut oil",
+    "aliases": [],
+    "substitutes": [
+      {
+        "ingredient": "canola oil",
+        "aliases": ["rapeseed oil"],
+        "ratio": "1:1",
+        "note": "Neutral high-heat swap for frying."
+      },
+      {
+        "ingredient": "vegetable oil",
+        "aliases": ["neutral oil"],
+        "ratio": "1:1",
+        "note": "Good all-purpose cooking replacement."
+      },
+      {
+        "ingredient": "avocado oil",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "High smoke point with mild flavor."
+      }
+    ]
+  },
+  {
+    "ingredient": "coconut milk",
+    "aliases": ["full-fat coconut milk"],
+    "substitutes": [
+      {
+        "ingredient": "heavy cream",
+        "aliases": ["heavy whipping cream", "whipping cream"],
+        "ratio": "1:1",
+        "note": "Creamy dairy swap when coconut flavor is not required."
+      },
+      {
+        "ingredient": "evaporated milk",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Works in soups and curries with a lighter flavor."
+      },
+      {
+        "ingredient": "cashew cream",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Dairy-free creamy swap for sauces and curries."
+      }
+    ]
+  },
+  {
+    "ingredient": "coconut cream",
+    "aliases": [],
+    "substitutes": [
+      {
+        "ingredient": "heavy cream",
+        "aliases": ["heavy whipping cream", "whipping cream"],
+        "ratio": "1:1",
+        "note": "Rich dairy swap for sauces and desserts."
+      },
+      {
+        "ingredient": "coconut milk",
+        "aliases": ["full-fat coconut milk"],
+        "ratio": "chilled thick top layer",
+        "note": "Use the thick separated cream from chilled full-fat coconut milk."
+      },
+      {
+        "ingredient": "cashew cream",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Creamy dairy-free option with a neutral nut flavor."
+      }
+    ]
+  },
+  {
+    "ingredient": "oats",
+    "aliases": ["rolled oats", "old-fashioned oats"],
+    "substitutes": [
+      {
+        "ingredient": "quick oats",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Softer texture and faster cooking."
+      },
+      {
+        "ingredient": "bread crumbs",
+        "aliases": ["breadcrumbs"],
+        "ratio": "1:1",
+        "note": "Use as a binder in savory patties or meatballs."
+      },
+      {
+        "ingredient": "cooked quinoa",
+        "aliases": ["quinoa"],
+        "ratio": "1:1",
+        "note": "Works in patties and bowls, not dry baking."
+      }
+    ]
+  },
+  {
+    "ingredient": "rice",
+    "aliases": ["white rice"],
+    "substitutes": [
+      {
+        "ingredient": "quinoa",
+        "aliases": [],
+        "ratio": "1:1 cooked amount",
+        "note": "Higher-protein grain swap for bowls and sides."
+      },
+      {
+        "ingredient": "cauliflower rice",
+        "aliases": ["riced cauliflower"],
+        "ratio": "1:1 cooked amount",
+        "note": "Lower-carb option with more vegetable flavor."
+      },
+      {
+        "ingredient": "couscous",
+        "aliases": [],
+        "ratio": "1:1 cooked amount",
+        "note": "Quick side dish swap but not gluten-free."
+      }
+    ]
+  },
+  {
+    "ingredient": "pasta",
+    "aliases": ["noodles"],
+    "substitutes": [
+      {
+        "ingredient": "rice noodles",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Good gluten-free style swap for saucy dishes."
+      },
+      {
+        "ingredient": "zucchini noodles",
+        "aliases": ["zoodles"],
+        "ratio": "1:1",
+        "note": "Lighter vegetable option; cook briefly to avoid wateriness."
+      },
+      {
+        "ingredient": "spaghetti squash",
+        "aliases": [],
+        "ratio": "1:1 cooked amount",
+        "note": "Works with hearty sauces after roasting."
+      }
+    ]
+  },
+  {
+    "ingredient": "flour tortillas",
+    "aliases": ["tortillas"],
+    "substitutes": [
+      {
+        "ingredient": "corn tortillas",
+        "aliases": [],
+        "ratio": "1:1",
+        "note": "Smaller and more fragile but good for tacos."
+      },
+      {
+        "ingredient": "flatbread",
+        "aliases": ["pita"],
+        "ratio": "1:1",
+        "note": "Works for wraps and quick pizzas."
+      },
+      {
+        "ingredient": "lettuce leaves",
+        "aliases": ["lettuce wraps"],
+        "ratio": "1:1",
+        "note": "Fresh low-carb wrap option."
+      }
+    ]
+  },
+  {
+    "ingredient": "coconut flakes",
+    "aliases": ["shredded coconut"],
+    "substitutes": [
+      {
+        "ingredient": "chopped nuts",
+        "aliases": ["nuts"],
+        "ratio": "1:1",
+        "note": "Adds crunch but not coconut flavor."
+      },
+      {
+        "ingredient": "rolled oats",
+        "aliases": ["oats"],
+        "ratio": "1:1",
+        "note": "Works in granola, cookies, and toppings."
+      },
+      {
+        "ingredient": "almond flour",
+        "aliases": ["almond meal"],
+        "ratio": "1:1",
+        "note": "Use in baked goods where texture can be finer."
       }
     ]
   }
