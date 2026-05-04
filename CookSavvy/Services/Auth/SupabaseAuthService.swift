@@ -5,6 +5,7 @@
 
 import Combine
 import Foundation
+import os
 import Supabase
 
 /// Production Supabase-backed authentication service.
@@ -18,30 +19,28 @@ import Supabase
 ///    to the Apple ID rather than creating a new user. This upgrades the account from anonymous to
 ///    named while preserving all user data associated with the original anonymous session.
 ///
-/// State is published via a `CurrentValueSubject` stored as a `nonisolated let` so callers on the
-/// main actor can read it synchronously without crossing the actor boundary on every read.
-actor SupabaseAuthService: AuthServiceProtocol {
+/// State is published via a `CurrentValueSubject` (a thread-safe class) so callers can read auth
+/// state synchronously from any context without requiring actor hops or MainActor serialization.
+final class SupabaseAuthService: AuthServiceProtocol {
     private let clientProvider: SupabaseClientProviderProtocol
     private let analyticsService: AnalyticsServiceProtocol
     private let logger: any LoggerProtocol
-    private var isStartingSession = false
+    /// Lock protecting concurrent access to the session-start guard flag.
+    private let _isStartingSession = OSAllocatedUnfairLock(initialState: false)
 
-    // CurrentValueSubject is a thread-safe class; nonisolated let on an actor
-    // can be read synchronously from outside without crossing the actor boundary.
-    /// Thread-safe backing subject for auth state. Exposed as `nonisolated let` so it can be read
-    /// synchronously from any concurrency context without hopping to the actor.
-    nonisolated let stateSubject = CurrentValueSubject<AuthState, Never>(.unknown)
+    /// Thread-safe backing subject for auth state. Readable synchronously from any context.
+    let stateSubject = CurrentValueSubject<AuthState, Never>(.unknown)
 
     /// The current auth state, readable synchronously from any context.
-    nonisolated var authState: AuthState { stateSubject.value }
+    var authState: AuthState { stateSubject.value }
 
     /// Publisher that emits whenever auth state changes.
-    nonisolated var authStatePublisher: AnyPublisher<AuthState, Never> {
+    var authStatePublisher: AnyPublisher<AuthState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
 
     /// The Supabase user ID for the active session, or `nil` when not signed in.
-    nonisolated var currentUserId: String? {
+    var currentUserId: String? {
         switch stateSubject.value {
         case .signedIn(let userId): return userId
         case .unknown, .signedOut: return nil
@@ -49,10 +48,10 @@ actor SupabaseAuthService: AuthServiceProtocol {
     }
 
     /// Always `true` for the production implementation.
-    nonisolated var isAuthAvailable: Bool { true }
+    var isAuthAvailable: Bool { true }
 
     /// `true` when the current Supabase session belongs to an anonymous user (no Apple identity linked).
-    nonisolated var isAnonymous: Bool {
+    var isAnonymous: Bool {
         guard let session = clientProvider.client.auth.currentSession else {
             return false
         }
@@ -86,14 +85,17 @@ actor SupabaseAuthService: AuthServiceProtocol {
 
     /// Ensures an active Supabase session exists, creating an anonymous one if needed.
     ///
-    /// Guards against concurrent calls via `isStartingSession`. Tries to restore an existing session
+    /// Guards against concurrent calls via an unfair lock. Tries to restore an existing session
     /// first; falls back to anonymous sign-in only when explicitly signed out or when no in-memory
     /// session is present. Safe to call on every app foreground activation.
     func startSessionIfNeeded() async {
-        guard !isStartingSession else { return }
-
-        isStartingSession = true
-        defer { isStartingSession = false }
+        // Atomically check-and-set the guard flag; return early if another call is in progress.
+        guard _isStartingSession.withLock({ isStarting in
+            guard !isStarting else { return false }
+            isStarting = true
+            return true
+        }) else { return }
+        defer { _isStartingSession.withLock { $0 = false } }
 
         await restoreSession()
 

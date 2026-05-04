@@ -3194,6 +3194,39 @@
         }
       }
     },
+    "settings.trialDescription" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your 7-day free trial is active."
+          }
+        }
+      }
+    },
+    "settings.trialDescriptionWithDate" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your 7-day free trial is active until %@."
+          }
+        }
+      }
+    },
+    "settings.trialPlanTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "CookSavvy+ Trial"
+          }
+        }
+      }
+    },
     "settings.upgradePlan" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -3347,17 +3380,6 @@
         }
       }
     },
-    "upgrade.autoRenew" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Subscriptions auto-renew monthly or annually until cancelled."
-          }
-        }
-      }
-    },
     "upgrade.annualOptionTitle" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -3398,6 +3420,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Save %@ per year"
+          }
+        }
+      }
+    },
+    "upgrade.autoRenew" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Subscriptions auto-renew monthly or annually until cancelled."
           }
         }
       }
@@ -3457,6 +3490,17 @@
         }
       }
     },
+    "upgrade.freeTrialBadge" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "7-day free trial"
+          }
+        }
+      }
+    },
     "upgrade.loadingPrice" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -3464,6 +3508,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Loading price..."
+          }
+        }
+      }
+    },
+    "upgrade.monthlyOptionTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Monthly"
           }
         }
       }
@@ -3479,13 +3534,24 @@
         }
       }
     },
-    "upgrade.monthlyOptionTitle" : {
+    "upgrade.monthlyTrialActivePriceFormat" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Monthly"
+            "value" : "Free until %1$@, then %2$@/month"
+          }
+        }
+      }
+    },
+    "upgrade.monthlyTrialPriceFormat" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "7 days free, then %@/month"
           }
         }
       }
@@ -3556,6 +3622,17 @@
         }
       }
     },
+    "upgrade.savingsAmountNumberFormat" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%.2f"
+          }
+        }
+      }
+    },
     "upgrade.subscribe" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -3567,13 +3644,46 @@
         }
       }
     },
-    "upgrade.savingsAmountNumberFormat" : {
+    "upgrade.trialActive" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "%.2f"
+            "value" : "Trial active"
+          }
+        }
+      }
+    },
+    "upgrade.trialActiveSubtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your 7-day free trial is active."
+          }
+        }
+      }
+    },
+    "upgrade.trialEligibleSubtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Try CookSavvy+ free for 7 days."
+          }
+        }
+      }
+    },
+    "upgrade.tryFreeForSevenDays" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Try free for 7 days"
           }
         }
       }
