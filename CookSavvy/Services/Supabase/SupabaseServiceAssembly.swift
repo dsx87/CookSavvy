@@ -22,6 +22,8 @@ struct SupabaseServiceAssembly {
     let llmProvider: LLMProviderProtocol?
     /// The recipe API provider backed by Supabase Edge Functions, or `nil` when Supabase is not configured.
     let recipeAPIProvider: RecipeAPIProviderProtocol?
+    /// The AI recipe provider that calls `generate-recipes`, or `nil` when Supabase is not configured.
+    let aiRecipeProvider: RecipeAPIProviderProtocol?
 
     /// Reads `SupabaseConfiguration` from the given bundle and assembles services.
     /// - Parameters:
@@ -62,6 +64,7 @@ struct SupabaseServiceAssembly {
             self.clientProvider = nil
             self.llmProvider = nil
             self.recipeAPIProvider = nil
+            self.aiRecipeProvider = nil
             return
         }
 
@@ -69,6 +72,10 @@ struct SupabaseServiceAssembly {
         self.clientProvider = clientProvider
         self.llmProvider = SupabaseLLMProvider(clientProvider: clientProvider)
         self.recipeAPIProvider = SupabaseRecipeAPIProvider(
+            clientProvider: clientProvider,
+            configuration: configuration
+        )
+        self.aiRecipeProvider = SupabaseAIRecipeAPIProvider(
             clientProvider: clientProvider,
             configuration: configuration
         )

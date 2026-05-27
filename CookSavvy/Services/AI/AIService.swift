@@ -20,15 +20,18 @@ final class AIService: AIServiceProtocol {
         category: "AIService"
     )
     
-    private let provider: LLMProviderProtocol?
+    private let visionProvider: LLMProviderProtocol?
+    private let recipeGenerationProvider: RecipeAPIProviderProtocol?
 
-    /// Whether an LLM provider was injected and is ready to receive requests.
-    var isAvailable: Bool { provider != nil }
+    /// `true` when an AI recipe generation provider is configured; gates `AIRecipeSource` availability.
+    var isAvailable: Bool { recipeGenerationProvider != nil }
 
-    /// - Parameter provider: The LLM backend to use. Pass `nil` to disable AI features
-    ///   without causing runtime errors (e.g., when API keys are absent).
-    init(provider: LLMProviderProtocol?) {
-        self.provider = provider
+    /// - Parameters:
+    ///   - visionProvider: LLM backend used for vision-based ingredient detection. Pass `nil` to disable.
+    ///   - recipeGenerationProvider: Backend used for AI recipe generation. Pass `nil` to disable.
+    init(visionProvider: LLMProviderProtocol?, recipeGenerationProvider: RecipeAPIProviderProtocol? = nil) {
+        self.visionProvider = visionProvider
+        self.recipeGenerationProvider = recipeGenerationProvider
     }
 
     /// Detects food ingredients from raw image bytes by sending a vision request to the LLM.
@@ -45,17 +48,17 @@ final class AIService: AIServiceProtocol {
         guard !imageData.isEmpty else {
             throw AIServiceError.invalidImageData
         }
-        guard let provider else {
+        guard let visionProvider else {
             throw AIServiceError.providerError(.invalidAPIKey)
         }
 
         let mimeType = detectMimeType(from: imageData)
         let prompt = Prompts.ingredientDetection
 
-        Self.logger.debug("Sending vision request to \(provider.name)")
-        
+        Self.logger.debug("Sending vision request to \(visionProvider.name)")
+
         do {
-            let response = try await provider.sendVisionRequest(
+            let response = try await visionProvider.sendVisionRequest(
                 imageData: imageData,
                 mimeType: mimeType,
                 prompt: prompt,
@@ -84,65 +87,30 @@ final class AIService: AIServiceProtocol {
         }
     }
     
-    /// Generates AI-authored recipes for the given ingredients via a chat request to the LLM.
-    ///
-    /// Ingredient names are sanitized before being embedded in the prompt (newlines stripped,
-    /// length capped at 100 chars each) to prevent prompt injection and oversized payloads.
-    /// A system message establishes the chef persona so the model outputs structured JSON.
+    /// Generates AI-authored recipes for the given ingredients via the `generate-recipes` edge function.
     ///
     /// - Parameters:
     ///   - ingredients: The ingredients to cook with. Must be non-empty.
     ///   - count: How many recipe suggestions to request.
-    /// - Returns: Parsed `Recipe` values from the model's JSON response.
-    /// - Throws: `AIServiceError.noIngredientsDetected`, `AIServiceError.noRecipesGenerated`,
-    ///   `AIServiceError.parsingFailed`, or `AIServiceError.providerError`.
+    /// - Returns: Generated `Recipe` values (may be fewer than `count`).
+    /// - Throws: `AIServiceError.noIngredientsDetected` if ingredients is empty,
+    ///   or `AIServiceError.providerError` / `AIServiceError.unknown` on network failures.
     func generateRecipes(for ingredients: [Ingredient], count: Int) async throws -> [Recipe] {
         guard !ingredients.isEmpty else {
             throw AIServiceError.noIngredientsDetected
         }
-        guard let provider else {
+        guard let recipeGenerationProvider else {
             throw AIServiceError.providerError(.invalidAPIKey)
         }
 
-        let ingredientNames = ingredients
-            .map { Self.sanitizedIngredientName($0.name) }
-            .filter { !$0.isEmpty }
-            .joined(separator: ", ")
-        guard !ingredientNames.isEmpty else {
-            throw AIServiceError.noIngredientsDetected
-        }
-        let prompt = Prompts.recipeGeneration(ingredients: ingredientNames, count: count)
-
-        let messages: [LLMMessage] = [
-            LLMMessage(role: .system, content: Prompts.recipeSystemPrompt),
-            LLMMessage(role: .user, content: prompt)
-        ]
-
-        Self.logger.debug("Sending chat request to \(provider.name)")
+        Self.logger.debug("Generating recipes via \(recipeGenerationProvider.name)")
 
         do {
-            let response = try await provider.sendChatRequest(
-                messages: messages,
-                responseFormat: .json
-            )
-            
-            if let usage = response.tokensUsed {
-                Self.logger.debug("Tokens used: \(usage.totalTokens)")
-            }
-            
-            let recipes = try parseRecipesResponse(response.content)
-            
-            guard !recipes.isEmpty else {
-                throw AIServiceError.noRecipesGenerated
-            }
-            
-            Self.logger.info("Generated \(recipes.count) recipes")
-            return recipes
-            
-        } catch let error as LLMProviderError {
-            throw AIServiceError.providerError(error)
-        } catch let error as AIServiceError {
-            throw error
+            return try await recipeGenerationProvider.fetchRecipes(for: ingredients, count: count)
+        } catch RecipeAPIProviderError.noResults {
+            return []
+        } catch let error as RecipeAPIProviderError {
+            throw AIServiceError.providerError(.networkError(error))
         } catch {
             throw AIServiceError.unknown(error)
         }
@@ -179,18 +147,6 @@ final class AIService: AIServiceProtocol {
         return "image/jpeg"
     }
 
-    /// Strips control characters and newlines from an ingredient name, then caps it at 100 characters.
-    /// Prevents prompt injection and avoids oversized tokens when ingredient names are user-supplied.
-    private static func sanitizedIngredientName(_ name: String) -> String {
-        let stripped = name
-            .replacingOccurrences(of: "\n", with: " ")
-            .replacingOccurrences(of: "\r", with: " ")
-            .replacingOccurrences(of: "\u{0000}", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard stripped.count > 100 else { return stripped }
-        return String(stripped.prefix(100))
-    }
-    
     /// Decodes the LLM's JSON text into an array of `Ingredient` values.
     /// - Throws: `AIServiceError.parsingFailed` if the content is not valid UTF-8 or does not
     ///   conform to the expected `{"ingredients": [{"name": "..."}]}` shape.
@@ -207,35 +163,6 @@ final class AIService: AIServiceProtocol {
         }
     }
     
-    /// Decodes the LLM's JSON text into an array of `Recipe` values.
-    /// - Throws: `AIServiceError.parsingFailed` if the content is not valid UTF-8 or does not
-    ///   conform to the expected `{"recipes": [...]}` shape.
-    private func parseRecipesResponse(_ content: String) throws -> [Recipe] {
-        guard let data = content.data(using: .utf8) else {
-            throw AIServiceError.parsingFailed("Invalid UTF-8 content")
-        }
-        
-        do {
-            let response = try JSONDecoder().decode(RecipesResponse.self, from: data)
-            return response.recipes.map { recipeData in
-                Recipe(
-                    title: recipeData.title,
-                    ingredients: recipeData.ingredients.map { Ingredient(name: $0) },
-                    instructions: recipeData.instructions.map(Recipe.Step.init(plainText:)),
-                    image: "",
-                    cleanedIngredients: recipeData.ingredients.map { Ingredient(name: $0) },
-                    additionalInfo: Recipe.AdditionalInfo(
-                        time: recipeData.time,
-                        servings: recipeData.servings,
-                        complexity: recipeData.complexity,
-                        calories: recipeData.calories
-                    )
-                )
-            }
-        } catch {
-            throw AIServiceError.parsingFailed(error.localizedDescription)
-        }
-    }
 }
 
 /// Top-level JSON wrapper decoded from the ingredient-detection LLM response.
@@ -248,65 +175,14 @@ private struct IngredientData: Decodable {
     let name: String
 }
 
-/// Top-level JSON wrapper decoded from the recipe-generation LLM response.
-private struct RecipesResponse: Decodable {
-    let recipes: [RecipeData]
-}
-
-/// Single recipe entry inside a `RecipesResponse`.
-private struct RecipeData: Decodable {
-    let title: String
-    let ingredients: [String]
-    let instructions: [String]
-    let time: String?
-    let servings: Int?
-    let complexity: String?
-    let calories: Int?
-}
-
-/// Prompt templates used by `AIService` when constructing LLM requests.
-/// Centralising prompts here makes them easy to iterate without touching request logic.
 private enum Prompts {
-    /// Prompt instructing the model to return detected ingredients as a JSON object.
     static let ingredientDetection = """
         Analyze this image and identify all food ingredients visible.
         Return a JSON object with an "ingredients" array containing objects with "name" field.
         Only include actual food ingredients, not packaging or non-food items.
         Be specific (e.g., "Roma tomatoes" instead of just "tomatoes" if identifiable).
-        
+
         Example response format:
         {"ingredients": [{"name": "Tomato"}, {"name": "Onion"}]}
         """
-    
-    /// System message establishing the chef persona for the recipe-generation conversation.
-    static let recipeSystemPrompt = """
-        You are a professional chef assistant. Generate recipes based on available ingredients.
-        Always respond with valid JSON in the specified format.
-        Create practical, delicious recipes that can be made with the given ingredients.
-        Include realistic cooking times, serving sizes, and calorie estimates.
-        """
-    
-    /// Builds the user turn for a recipe-generation chat, embedding the ingredient list and count.
-    /// - Parameters:
-    ///   - ingredients: Comma-separated, sanitized ingredient names.
-    ///   - count: Number of recipes to generate.
-    static func recipeGeneration(ingredients: String, count: Int) -> String {
-        """
-        Generate \(count) recipes using these ingredients: \(ingredients)
-        
-        You may suggest common pantry items (salt, pepper, oil, etc.) if needed.
-        
-        Return a JSON object with a "recipes" array. Each recipe should have:
-        - "title": Recipe name
-        - "ingredients": Array of ingredient strings with quantities
-        - "instructions": Array of step-by-step instructions
-        - "time": Cooking time (e.g., "30 min")
-        - "servings": Number of servings (integer)
-        - "complexity": "Easy", "Medium", or "Hard"
-        - "calories": Estimated calories per serving (integer)
-        
-        Example format:
-        {"recipes": [{"title": "Pasta", "ingredients": ["200g pasta"], "instructions": ["Boil water"], "time": "20 min", "servings": 2, "complexity": "Easy", "calories": 400}]}
-        """
-    }
 }

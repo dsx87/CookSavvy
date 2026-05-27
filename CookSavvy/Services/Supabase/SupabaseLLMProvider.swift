@@ -42,14 +42,17 @@ final class SupabaseLLMProvider: LLMProviderProtocol {
 
     /// Sends an image to the `detect-ingredients` edge function for AI-powered ingredient recognition.
     ///
-    /// The image is base64-encoded and transmitted in the JSON body alongside the MIME type and prompt.
+    /// The image is base64-encoded and sent in the JSON body. The edge function constructs its own
+    /// prompt server-side and returns `{ "ingredients": [{ "name": "...", "confidence": ... }] }`.
+    /// The raw JSON is returned as `content` so `AIService.parseIngredientsResponse` can decode it
+    /// (the `confidence` field is ignored by the decoder).
     /// - Parameters:
     ///   - imageData: Raw image bytes to be identified.
     ///   - mimeType: MIME type of the image (e.g. `"image/jpeg"`).
-    ///   - prompt: Instruction text sent to the LLM alongside the image.
-    ///   - responseFormat: Expected output format (`json` or `text`).
-    /// - Returns: An `LLMResponse` containing the model's text output and optional token usage.
-    /// - Throws: `LLMProviderError` on network failure, HTTP error, or decoding failure.
+    ///   - prompt: Unused — the edge function builds its own prompt. Kept for protocol conformance.
+    ///   - responseFormat: Unused — the edge function always returns JSON. Kept for protocol conformance.
+    /// - Returns: An `LLMResponse` whose `content` is the raw JSON from the edge function.
+    /// - Throws: `LLMProviderError` on network failure, HTTP error, or non-UTF-8 response.
     func sendVisionRequest(
         imageData: Data,
         mimeType: String,
@@ -57,13 +60,26 @@ final class SupabaseLLMProvider: LLMProviderProtocol {
         responseFormat: LLMResponseFormat
     ) async throws -> LLMResponse {
         let request = VisionFunctionRequest(
-            prompt: prompt,
             mimeType: mimeType,
-            imageBase64: imageData.base64EncodedString(),
-            responseFormat: responseFormat.contractValue
+            imageBase64: imageData.base64EncodedString()
         )
 
-        return try await invokeLLMFunction(named: FunctionName.detectIngredients, body: request)
+        let data: Data
+        do {
+            data = try await clientProvider.invokeFunction(FunctionName.detectIngredients, body: request)
+        } catch {
+            throw mapSupabaseError(error)
+        }
+
+        guard let content = String(data: data, encoding: .utf8) else {
+            throw LLMProviderError.decodingError(
+                DecodingError.dataCorrupted(
+                    DecodingError.Context(codingPath: [], debugDescription: "Response is not valid UTF-8")
+                )
+            )
+        }
+
+        return LLMResponse(content: content, tokensUsed: nil)
     }
 
     /// Sends a conversation history to the `generate-recipes` edge function.
@@ -167,11 +183,9 @@ private extension LLMResponseFormat {
 
 /// Request body sent to the `detect-ingredients` edge function.
 private struct VisionFunctionRequest: Encodable {
-    let prompt: String
     let mimeType: String
     /// Base64-encoded image bytes.
     let imageBase64: String
-    let responseFormat: String
 }
 
 /// Request body sent to the `generate-recipes` edge function.

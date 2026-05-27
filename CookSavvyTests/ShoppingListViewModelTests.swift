@@ -79,7 +79,7 @@ final class ShoppingListViewModelTests: XCTestCase {
         mockService.shouldThrow = TestError.stub
 
         let vm = makeViewModel()
-        for _ in 0..<10 { await Task.yield() }
+        await vm.loadItems()
 
         XCTAssertEqual(vm.errorMessage, Strings.Errors.shoppingListLoadFailed)
     }

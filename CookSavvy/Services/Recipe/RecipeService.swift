@@ -61,7 +61,7 @@ final class RecipeService: RecipeServiceProtocol {
 
         let offlineSource = OfflineRecipeSource(dbInterface: resolvedDB)
         let onlineSource = OnlineRecipeSource()
-        let aiSource = AIRecipeSource(aiService: AIService(provider: MockLLMProvider()))
+        let aiSource = AIRecipeSource(aiService: AIService(visionProvider: MockLLMProvider()))
 
         let sources: [RecipeSourceType: RecipeSourceProtocol] = [
             .offline: offlineSource,

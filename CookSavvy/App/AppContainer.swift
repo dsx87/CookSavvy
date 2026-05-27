@@ -115,6 +115,7 @@ final class AppContainer {
         let supabaseAssembly = SupabaseServiceAssembly()
         let recipeAPIProvider = supabaseAssembly.recipeAPIProvider
         let llmProvider = supabaseAssembly.llmProvider
+        let aiRecipeProvider = supabaseAssembly.aiRecipeProvider
 
         if let clientProvider = supabaseAssembly.clientProvider {
             self.authService = SupabaseAuthService(
@@ -147,7 +148,7 @@ final class AppContainer {
             appleSignInManager: appleSignInManager
         )
 
-        let ai = AIService(provider: llmProvider)
+        let ai = AIService(visionProvider: llmProvider, recipeGenerationProvider: aiRecipeProvider)
         self.aiService = ai
         self.ingredientDetectionService = AIIngredientDetectionAdapter(aiService: ai)
 
@@ -291,7 +292,7 @@ final class AppContainer {
         let network = NetworkService()
         let userDataService = UserDataService(dbInterface: db)
         let llmProvider: LLMProviderProtocol = MockLLMProvider()
-        let ai = AIService(provider: llmProvider)
+        let ai = AIService(visionProvider: llmProvider, recipeGenerationProvider: nil)
         let onlineSource = OnlineRecipeSource(provider: nil)
         let recipeService = RecipeService(
             dbInterface: db,

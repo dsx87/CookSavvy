@@ -9,28 +9,29 @@ import Supabase
 
 final class SupabaseLLMProviderTests: XCTestCase {
 
-    func testSendChatRequestDecodesSuccessfulResponse() async throws {
+    func testSendVisionRequestDecodesSuccessfulResponse() async throws {
         let clientProvider = MockSupabaseClientProvider()
-        clientProvider.stubbedResponses["generate-recipes"] = """
+        clientProvider.stubbedResponses["detect-ingredients"] = """
         {
-          "content": "{\\"recipes\\":[{\\"title\\":\\"Soup\\"}]}",
-          "tokens_used": {
-            "prompt_tokens": 11,
-            "completion_tokens": 7,
-            "total_tokens": 18
-          }
+          "ingredients": [
+            {"name": "tomato", "confidence": 0.95},
+            {"name": "onion", "confidence": 0.87}
+          ]
         }
         """.data(using: .utf8)!
 
         let provider = SupabaseLLMProvider(clientProvider: clientProvider)
-        let response = try await provider.sendChatRequest(
-            messages: [LLMMessage(role: .user, content: "hello")],
+        let response = try await provider.sendVisionRequest(
+            imageData: Data([0xFF, 0xD8, 0xFF]),
+            mimeType: "image/jpeg",
+            prompt: "Detect ingredients",
             responseFormat: .json
         )
 
-        XCTAssertEqual(clientProvider.invokedFunctionNames, ["generate-recipes"])
-        XCTAssertEqual(response.content, #"{"recipes":[{"title":"Soup"}]}"#)
-        XCTAssertEqual(response.tokensUsed?.totalTokens, 18)
+        XCTAssertEqual(clientProvider.invokedFunctionNames, ["detect-ingredients"])
+        XCTAssertTrue(response.content.contains("\"tomato\""))
+        XCTAssertTrue(response.content.contains("\"onion\""))
+        XCTAssertNil(response.tokensUsed)
     }
 
     func testSendVisionRequestMapsHTTP400ToInvalidRequest() async {

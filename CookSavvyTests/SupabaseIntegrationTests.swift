@@ -78,7 +78,8 @@ final class SupabaseIntegrationTests: XCTestCase {
         try await harness.ensureAnonymousSession()
 
         let aiService = AIService(
-            provider: SupabaseLLMProvider(clientProvider: harness.clientProvider)
+            visionProvider: SupabaseLLMProvider(clientProvider: harness.clientProvider),
+            recipeGenerationProvider: SupabaseAIRecipeAPIProvider(clientProvider: harness.clientProvider, configuration: harness.configuration)
         )
 
         let recipes = try await aiService.generateRecipes(
@@ -100,7 +101,7 @@ final class SupabaseIntegrationTests: XCTestCase {
         try await harness.ensureAnonymousSession()
 
         let aiService = AIService(
-            provider: SupabaseLLMProvider(clientProvider: harness.clientProvider)
+            visionProvider: SupabaseLLMProvider(clientProvider: harness.clientProvider)
         )
 
         let ingredients = try await aiService.detectIngredients(from: imageData)
@@ -215,7 +216,7 @@ private struct SupabaseIntegrationConfiguration {
 
     private static func bundledFixtureImageData() -> Data? {
         let testsDirectory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
-        let fixtureURL = testsDirectory.appendingPathComponent("Fixtures/supabase-test-image.png")
+        let fixtureURL = testsDirectory.appendingPathComponent("Fixtures/supabase-test-image.jpeg")
         return try? Data(contentsOf: fixtureURL)
     }
 

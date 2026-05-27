@@ -44,10 +44,19 @@ final class SupabaseClientProvider: SupabaseClientProviderProtocol {
 
     /// Invokes the named edge function, returning the raw response bytes.
     /// The `decode` closure passes through `Data` directly, deferring JSON parsing to callers.
+    ///
+    /// Explicitly sets the `Authorization: Bearer <accessToken>` header using the synchronous
+    /// `currentSession` so that edge function JWT verification always receives a valid token,
+    /// even when the SDK's async `_getAccessToken()` path (used by `fetchWithAuth`) silently
+    /// fails due to a missing or expired session.
     func invokeFunction<Request: Encodable>(_ name: String, body: Request) async throws -> Data {
-        try await client.functions.invoke(
+        var headers: [String: String] = [:]
+        if let session = client.auth.currentSession, !session.isExpired {
+            headers["Authorization"] = "Bearer \(session.accessToken)"
+        }
+        return try await client.functions.invoke(
             name,
-            options: FunctionInvokeOptions(body: body),
+            options: FunctionInvokeOptions(headers: headers, body: body),
             decode: { data, _ in data }
         )
     }
