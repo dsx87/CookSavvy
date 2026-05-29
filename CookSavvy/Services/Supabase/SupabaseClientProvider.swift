@@ -33,7 +33,12 @@ final class SupabaseClientProvider: SupabaseClientProviderProtocol {
     init(
         projectURL: URL,
         anonKey: String,
-        options: SupabaseClientOptions = SupabaseClientOptions()
+        options: SupabaseClientOptions = SupabaseClientOptions(
+            // Opt into the next-major-release behavior: emit the locally stored session
+            // immediately as the initial session rather than after a refresh attempt.
+            // `syncStateFromCurrentSession` already guards against expired sessions via `isExpired`.
+            auth: .init(emitLocalSessionAsInitialSession: true)
+        )
     ) {
         self.client = SupabaseClient(
             supabaseURL: projectURL,
