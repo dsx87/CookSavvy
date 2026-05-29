@@ -34,6 +34,27 @@ struct Recipe {
             self.text = string
             self.timerMinutes = nil
         }
+
+        private enum CodingKeys: CodingKey { case text, timerMinutes }
+
+        /// Decodes from either a plain string (bundled JSON format) or a keyed object (DB storage format).
+        init(from decoder: any Decoder) throws {
+            if let text = try? decoder.singleValueContainer().decode(String.self) {
+                self.text = text
+                self.timerMinutes = nil
+            } else {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.text = try container.decode(String.self, forKey: .text)
+                self.timerMinutes = try container.decodeIfPresent(Int.self, forKey: .timerMinutes)
+            }
+        }
+
+        /// Encodes as a keyed object so `timerMinutes` survives DB round-trips.
+        func encode(to encoder: any Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(text, forKey: .text)
+            try container.encodeIfPresent(timerMinutes, forKey: .timerMinutes)
+        }
     }
 
     /// A collection of structured metadata items shown in the recipe stats row.
@@ -330,57 +351,6 @@ extension Recipe {
             .filter { $0 > 0 }
         return numbers.last
     }
-}
-
-/// Custom codable behavior for bundled dataset and API compatibility.
-extension Recipe: Codable {
-    
-    /// Custom `CodingKeys` mapping Swift property names to legacy dataset/API field names.
-    enum CodingKeys: String, CodingKey {
-        case title = "Title"
-        case ingredients = "Ingredients"
-        case instructions = "Instructions"
-        case image = "Image_Name"
-        case additionalInfo = "additionalInfo"
-    }
-    
-    /// Decodes a recipe from either a legacy dataset JSON representation or a structured API response.
-    ///
-    /// The `instructions` field is decoded with three-way fallback:
-    /// 1. An array of `Step` objects (structured API format).
-    /// 2. An array of plain strings (simple API format).
-    /// 3. A single newline-delimited string (legacy dataset format).
-    ///
-    /// Optional runtime fields (`source`, `matchPercentage`, etc.) are always initialised to `nil`.
-    init(from decoder: any Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.title = try container.decode(String.self, forKey: .title)
-        let rawIngredients = try container.decode(String.self, forKey: .ingredients)
-        self.ingredients = rawIngredients.separatedByQuotes.map(Ingredient.init(stringLiteral:))
-        if let stepsArray = try? container.decode([Step].self, forKey: .instructions) {
-            self.instructions = stepsArray
-        } else if let stringsArray = try? container.decode([String].self, forKey: .instructions) {
-            self.instructions = stringsArray.map(Step.init(plainText:))
-        } else {
-            let rawInstructions = try container.decode(String.self, forKey: .instructions)
-            self.instructions = rawInstructions.components(separatedBy: "\n").map(Step.init(plainText:))
-        }
-        self.image = try container.decode(String.self, forKey: .image)
-        self.additionalInfo = try container.decodeIfPresent(AdditionalInfo.self, forKey: .additionalInfo) ?? .empty
-        self.source = nil
-        self.tagline = nil
-        self.userRating = nil
-        self.apiRating = nil
-        self.author = nil
-        self.isUserCreated = false
-        self.emoji = nil
-        self.cuisine = nil
-        self.matchPercentage = nil
-        self.matchReason = nil
-        self.missingIngredients = nil
-        self.assumedPantryIngredients = nil
-    }
-
 }
 
 // MARK: - Transferable (Sharing)

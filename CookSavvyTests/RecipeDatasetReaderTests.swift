@@ -56,53 +56,29 @@ final class RecipeDatasetReaderTests: XCTestCase {
         XCTAssertEqual(recipe.title, "Nested Image Pasta")
         XCTAssertEqual(recipe.ingredients.map(\.name), ["pasta", "tomato"])
         XCTAssertEqual(recipe.instructions.map(\.text), ["Boil pasta.", "Toss with sauce."])
-        XCTAssertEqual(recipe.instructions.first?.timerMinutes, 8)
         XCTAssertEqual(recipe.image, "images/nested-image-pasta.jpg")
         XCTAssertEqual(recipe.source, .offline)
     }
 
-    func testReaderDecodesLegacyRecipeModelJSON() throws {
-        let json = """
-        [
-          {
-            "Title": "Legacy Dataset Soup",
-            "Ingredients": "'water', 'salt'",
-            "Instructions": "Boil water.\\nSeason.",
-            "Image_Name": "images/legacy-dataset-soup.jpg",
-            "Cleaned_Ingredients": "'water', 'salt'"
-          }
-        ]
-        """
-        let zipURL = try makeDatasetZip(recipeJSON: json)
-        let recipes = try JSONRecipeDatasetReader().readRecipes(from: zipURL)
-
-        XCTAssertEqual(recipes.first?.title, "Legacy Dataset Soup")
-        XCTAssertEqual(recipes.first?.image, "images/legacy-dataset-soup.jpg")
-        XCTAssertEqual(recipes.first?.source, .offline)
-    }
-
-    func testReaderReportsBothDecodeErrorsWhenSupportedShapesFail() throws {
+    func testReaderReportsDecodeErrorForInvalidJSON() throws {
         let json = """
         [
           {
             "title": "Broken Recipe",
             "ingredients": "not structured",
             "instructions": 42,
-            "image": "images/broken.jpg",
-            "cleanedIngredients": false
+            "image": "images/broken.jpg"
           }
         ]
         """
         let zipURL = try makeDatasetZip(recipeJSON: json)
 
         XCTAssertThrowsError(try JSONRecipeDatasetReader().readRecipes(from: zipURL)) { error in
-            guard case RecipeDatasetReaderError.decodingFailed(let primary, let fallback) = error else {
+            guard case RecipeDatasetReaderError.decodingFailed(let underlying) = error else {
                 return XCTFail("Expected decodingFailed, got \(error)")
             }
-            XCTAssertFalse(primary.localizedDescription.isEmpty)
-            XCTAssertFalse(fallback.localizedDescription.isEmpty)
-            XCTAssertTrue((error as? RecipeDatasetReaderError)?.errorDescription?.contains("Recipe model error") == true)
-            XCTAssertTrue((error as? RecipeDatasetReaderError)?.errorDescription?.contains("Dataset DTO error") == true)
+            XCTAssertFalse(underlying.localizedDescription.isEmpty)
+            XCTAssertTrue((error as? RecipeDatasetReaderError)?.errorDescription?.contains("Failed to decode") == true)
         }
     }
 
@@ -116,8 +92,8 @@ final class RecipeDatasetReaderTests: XCTestCase {
               { "name": "tomato" }
             ],
             "instructions": [
-              { "text": "Boil pasta.", "timerMinutes": 8 },
-              { "text": "Toss with sauce." }
+              "Boil pasta.",
+              "Toss with sauce."
             ],
             "image": "images/nested-image-pasta.jpg"
           }

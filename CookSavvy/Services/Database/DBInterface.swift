@@ -1322,11 +1322,8 @@ final class DBInterface: DBInterfaceProtocol {
 
     /// Decodes a `Recipe` from a GRDB `Row` matching the shape defined by `recipeColumns`.
     ///
-    /// **Migration fallback for `instructions_json`**: older database rows may store instructions
-    /// as a JSON array of plain strings (`[String]`) rather than the current `[Recipe.Step]` format.
-    /// The decoder first attempts `[Recipe.Step]` decoding; on failure it retries as `[String]` and
-    /// converts each string to a `Recipe.Step` via `Step.init(plainText:)`, ensuring backward
-    /// compatibility without requiring a schema migration.
+    /// `Recipe.Step.init(from:)` accepts both plain-string rows (bundled JSON import path) and
+    /// keyed-object rows (DB storage path), so no separate fallback is needed here.
     private func decodeRecipe(from row: Row) throws -> Recipe {
         let title: String = row["title"]
         let image: String = row["image"]
@@ -1336,13 +1333,7 @@ final class DBInterface: DBInterfaceProtocol {
         let sourceRaw: String? = row["source"]
         let source = sourceRaw.flatMap { RecipeSourceType(rawValue: $0) }
 
-        let instructions: [Recipe.Step]
-        do {
-            instructions = try decoder.decode([Recipe.Step].self, from: Data(instructionsJSON.utf8))
-        } catch {
-            let strings = try decoder.decode([String].self, from: Data(instructionsJSON.utf8))
-            instructions = strings.map(Recipe.Step.init(plainText:))
-        }
+        let instructions = try decoder.decode([Recipe.Step].self, from: Data(instructionsJSON.utf8))
         let ingredients = try decoder.decode([Ingredient].self, from: Data(ingredientsJSON.utf8))
         let additionalInfo = try decoder.decode(Recipe.AdditionalInfo.self, from: Data(additionalJSON.utf8))
 

@@ -79,20 +79,12 @@ final class JSONRecipeDatasetReader: RecipeDatasetReading {
         return data
     }
 
-    /// Decodes either the app's `Recipe` model shape or the canonical lower-camel dataset DTO.
+    /// Decodes the canonical lower-camel dataset DTO from `recipes.json`.
     private func decodeRecipes(from data: Data) throws -> [Recipe] {
         do {
-            return try decoder.decode([Recipe].self, from: data).map { recipe in
-                var recipe = recipe
-                recipe.source = .offline
-                return recipe
-            }
-        } catch let modelError {
-            do {
-                return try decoder.decode([RecipeDatasetDTO].self, from: data).map { $0.recipe }
-            } catch let dtoError {
-                throw RecipeDatasetReaderError.decodingFailed(primary: modelError, fallback: dtoError)
-            }
+            return try decoder.decode([RecipeDatasetDTO].self, from: data).map { $0.recipe }
+        } catch {
+            throw RecipeDatasetReaderError.decodingFailed(error)
         }
     }
 }
@@ -105,8 +97,8 @@ enum RecipeDatasetReaderError: Error, LocalizedError {
     case recipesFileNotFound
     /// `recipes.json` decoded successfully but did not contain any recipes.
     case emptyDataset
-    /// The manifest exists but does not match a supported recipe JSON shape.
-    case decodingFailed(primary: Error, fallback: Error)
+    /// The manifest exists but `recipes.json` could not be decoded.
+    case decodingFailed(Error)
 
     var errorDescription: String? {
         switch self {
@@ -116,8 +108,8 @@ enum RecipeDatasetReaderError: Error, LocalizedError {
             return "Recipe dataset ZIP does not contain recipes.json"
         case .emptyDataset:
             return "Recipe dataset did not contain any recipes"
-        case .decodingFailed(let primary, let fallback):
-            return "Failed to decode recipe dataset. Recipe model error: \(primary.localizedDescription). Dataset DTO error: \(fallback.localizedDescription)"
+        case .decodingFailed(let error):
+            return "Failed to decode recipe dataset: \(error.localizedDescription)"
         }
     }
 }
