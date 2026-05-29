@@ -72,7 +72,7 @@ final class CuratedCollectionServiceTests: XCTestCase {
         )
         let recipes = try await service.getRecipes(for: collection)
         for recipe in recipes {
-            let count = recipe.cleanedIngredients.isEmpty ? recipe.ingredients.count : recipe.cleanedIngredients.count
+            let count = recipe.cleanedIngredients.count
             XCTAssertLessThanOrEqual(count, 5, "Recipe '\(recipe.title)' has \(count) ingredients, exceeds max 5")
         }
     }

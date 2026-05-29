@@ -32,7 +32,6 @@ final class CookModeViewModelTests: XCTestCase {
             ingredients: [Ingredient(name: "Egg")],
             instructions: steps,
             image: "",
-            cleanedIngredients: [Ingredient(name: "Egg")],
             additionalInfo: .empty
         )
     }

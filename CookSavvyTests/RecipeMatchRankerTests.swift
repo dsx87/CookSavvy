@@ -18,7 +18,6 @@ final class RecipeMatchRankerTests: XCTestCase {
             ingredients: ingredients,
             instructions: ["Cook"],
             image: "",
-            cleanedIngredients: ingredients,
             additionalInfo: .init(time: time, servings: nil, complexity: complexity, calories: nil),
             userRating: userRating,
             apiRating: apiRating,

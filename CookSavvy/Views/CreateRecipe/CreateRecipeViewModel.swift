@@ -248,7 +248,6 @@ final class CreateRecipeViewModel: ObservableObject {
             ingredients: ingredients,
             instructions: instructions,
             image: "",
-            cleanedIngredients: ingredients,
             additionalInfo: additionalInfo,
             tagline: tagline.isEmpty ? nil : tagline.trimmingCharacters(in: .whitespaces),
             isUserCreated: true,

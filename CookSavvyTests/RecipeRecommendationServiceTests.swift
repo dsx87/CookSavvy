@@ -42,7 +42,6 @@ final class RecipeRecommendationServiceTests: XCTestCase {
             ingredients: ingList,
             instructions: ["Cook"],
             image: "",
-            cleanedIngredients: ingList,
             additionalInfo: .empty
         )
     }

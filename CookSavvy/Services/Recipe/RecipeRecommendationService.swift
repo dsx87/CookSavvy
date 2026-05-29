@@ -146,8 +146,7 @@ final class RecipeRecommendationService: RecipeRecommendationServiceProtocol {
     }
 
     private func ingredientNames(for recipe: Recipe) -> [String] {
-        let ingredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
-        return ingredients
+        return recipe.cleanedIngredients
             .map(\.name)
             .map(normalizeIngredientName)
             .filter { !$0.isEmpty }

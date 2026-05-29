@@ -125,8 +125,6 @@ struct Recipe {
     let instructions: [Step]
     /// Image asset name or URL string used to load the hero image.
     let image: String
-    /// Normalised ingredient list with quantities and notes stripped, used for matching.
-    let cleanedIngredients: [Ingredient]
     /// Structured metadata (time, servings, complexity, calories) shown in the stats row.
     let additionalInfo: AdditionalInfo
     /// The data source that produced this recipe (offline, online, or AI).
@@ -160,7 +158,6 @@ struct Recipe {
         ingredients: [Ingredient],
         instructions: [Step],
         image: String,
-        cleanedIngredients: [Ingredient],
         additionalInfo: AdditionalInfo,
         source: RecipeSourceType? = nil,
         tagline: String? = nil,
@@ -179,7 +176,6 @@ struct Recipe {
         self.ingredients = ingredients
         self.instructions = instructions
         self.image = image
-        self.cleanedIngredients = cleanedIngredients
         self.additionalInfo = additionalInfo
         self.source = source
         self.tagline = tagline
@@ -201,7 +197,6 @@ struct Recipe {
         ingredients: [Ingredient],
         instructions: [String],
         image: String,
-        cleanedIngredients: [Ingredient],
         additionalInfo: AdditionalInfo,
         source: RecipeSourceType? = nil,
         tagline: String? = nil,
@@ -221,7 +216,6 @@ struct Recipe {
             ingredients: ingredients,
             instructions: instructions.map(Step.init(plainText:)),
             image: image,
-            cleanedIngredients: cleanedIngredients,
             additionalInfo: additionalInfo,
             source: source,
             tagline: tagline,
@@ -261,6 +255,18 @@ extension Recipe.Step: Sendable {}
 extension Recipe.AdditionalInfo: Sendable {}
 /// `Sendable` conformance for additional-info discriminated union cases.
 extension Recipe.AdditionalInfo.InfoType: Sendable {}
+
+/// Computed helpers derived directly from stored recipe data.
+extension Recipe {
+    /// Deduplicated ingredient list used for recipe-ingredient matching.
+    ///
+    /// Previously stored as a separate field; now derived from `ingredients` so there is a single
+    /// source of truth. Preserves first-occurrence order and de-duplicates by name.
+    var cleanedIngredients: [Ingredient] {
+        var seen = Set<String>()
+        return ingredients.filter { seen.insert($0.name).inserted }
+    }
+}
 
 /// Derived metadata helpers built from recipe content.
 extension Recipe {
@@ -335,7 +341,6 @@ extension Recipe: Codable {
         case ingredients = "Ingredients"
         case instructions = "Instructions"
         case image = "Image_Name"
-        case cleanedIngredients = "Cleaned_Ingredients"
         case additionalInfo = "additionalInfo"
     }
     
@@ -361,8 +366,6 @@ extension Recipe: Codable {
             self.instructions = rawInstructions.components(separatedBy: "\n").map(Step.init(plainText:))
         }
         self.image = try container.decode(String.self, forKey: .image)
-        let rawCleanedIngredients = try container.decode(String.self, forKey: .cleanedIngredients)
-        self.cleanedIngredients = rawCleanedIngredients.separatedByQuotes.map(Ingredient.init(stringLiteral:))
         self.additionalInfo = try container.decodeIfPresent(AdditionalInfo.self, forKey: .additionalInfo) ?? .empty
         self.source = nil
         self.tagline = nil
@@ -440,9 +443,6 @@ extension Recipe {
 
         let imageName = "recipe_placeholder"
 
-        // Create a simple cleaned list (unique, capitalized)
-        let cleanedIngredients: [Ingredient] = Array(Set(ingredientNames.map { $0.capitalized })).sorted().map(Ingredient.init(stringLiteral:))
-
         // Additional info
         let minutes = Int.random(in: 10...75, using: &rng)
         let servings = Int.random(in: 1...6, using: &rng)
@@ -459,7 +459,6 @@ extension Recipe {
             ingredients: ingredients,
             instructions: steps,
             image: imageName,
-            cleanedIngredients: cleanedIngredients,
             additionalInfo: info
         )
     }

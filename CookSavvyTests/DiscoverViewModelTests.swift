@@ -72,7 +72,6 @@ final class DiscoverViewModelTests: XCTestCase {
             ingredients: ingredients,
             instructions: ["Cook"],
             image: "",
-            cleanedIngredients: ingredients,
             additionalInfo: .empty,
             tagline: tagline,
             missingIngredients: missingIngredients
@@ -90,7 +89,6 @@ final class DiscoverViewModelTests: XCTestCase {
             ingredients: [Ingredient(name: "tomato")],
             instructions: ["Cook"],
             image: "",
-            cleanedIngredients: [Ingredient(name: "tomato")],
             additionalInfo: .init(time: time, servings: nil, complexity: complexity, calories: nil),
             tagline: tagline,
             missingIngredients: []
@@ -131,7 +129,6 @@ final class DiscoverViewModelTests: XCTestCase {
             ingredients: [],
             instructions: [Recipe.Step](),
             image: "",
-            cleanedIngredients: [],
             additionalInfo: .empty,
             tagline: "cozy warm comfort"
         )
@@ -140,7 +137,6 @@ final class DiscoverViewModelTests: XCTestCase {
             ingredients: [],
             instructions: [Recipe.Step](),
             image: "",
-            cleanedIngredients: [],
             additionalInfo: .empty
         )
         vm.searchResultRecipes = [saladRecipe, soupRecipe]
@@ -410,7 +406,6 @@ final class DiscoverViewModelTests: XCTestCase {
                 ingredients: ingredients,
                 instructions: ["Cook"],
                 image: "",
-                cleanedIngredients: ingredients,
                 additionalInfo: .empty
             )
         ]
@@ -433,7 +428,6 @@ final class DiscoverViewModelTests: XCTestCase {
             ingredients: ingredients,
             instructions: ["Cook"],
             image: "",
-            cleanedIngredients: ingredients,
             additionalInfo: .empty
         )
 
@@ -456,7 +450,6 @@ final class DiscoverViewModelTests: XCTestCase {
                 ingredients: trueMissingIngredients,
                 instructions: ["Cook"],
                 image: "",
-                cleanedIngredients: trueMissingIngredients,
                 additionalInfo: .empty
             ),
             Recipe(
@@ -464,7 +457,6 @@ final class DiscoverViewModelTests: XCTestCase {
                 ingredients: assumedOnlyIngredients,
                 instructions: ["Cook"],
                 image: "",
-                cleanedIngredients: assumedOnlyIngredients,
                 additionalInfo: .empty
             )
         ]
@@ -490,7 +482,6 @@ final class DiscoverViewModelTests: XCTestCase {
                 ingredients: ingredients,
                 instructions: ["Cook"],
                 image: "",
-                cleanedIngredients: ingredients,
                 additionalInfo: .empty
             )
         ]

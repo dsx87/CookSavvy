@@ -217,7 +217,6 @@ final class JourneyViewModelTests: XCTestCase {
             ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion"), Ingredient(name: "Pasta")],
             instructions: ["Step 1"],
             image: "",
-            cleanedIngredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion"), Ingredient(name: "Pasta")],
             additionalInfo: .empty
         )
         let rescued = [Ingredient(name: "Garlic"), Ingredient(name: "Onion")]

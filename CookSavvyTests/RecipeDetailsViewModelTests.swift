@@ -68,7 +68,6 @@ final class RecipeDetailsViewModelTests: XCTestCase {
             ingredients: ingredients,
             instructions: ["Cook"],
             image: "",
-            cleanedIngredients: ingredients,
             additionalInfo: .empty
         )
     }
@@ -198,7 +197,6 @@ final class RecipeDetailsViewModelTests: XCTestCase {
             ingredients: [Ingredient(name: "Pasta"), Ingredient(name: "Sauce")],
             instructions: ["Cook"],
             image: "",
-            cleanedIngredients: [],
             additionalInfo: .empty,
             missingIngredients: ["Sauce"]
         )

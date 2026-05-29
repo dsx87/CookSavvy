@@ -7,6 +7,219 @@
 
 import Foundation
 
+// MARK: - IngredientAmount
+
+/// A measured quantity paired with a unit of measurement.
+///
+/// `value` is optional to represent uncountable amounts such as "to taste" or "as needed".
+/// Use `formatted(as:)` to render the amount in the user's preferred display style, including
+/// automatic unit conversions between metric and imperial.
+struct IngredientAmount: Codable, Hashable, Sendable {
+
+    fileprivate enum ConversionDimension {
+        case volume
+        case mass
+    }
+
+    /// The unit of measurement for an ingredient quantity.
+    enum Unit: String, Codable, CaseIterable, Sendable {
+        // Volume – US
+        case teaspoon    = "tsp"
+        case tablespoon  = "tbsp"
+        case cup         = "cup"
+        case fluidOunce  = "fl oz"
+        // Volume – metric
+        case milliliter  = "ml"
+        case liter       = "l"
+        // Weight – US
+        case ounce       = "oz"
+        case pound       = "lb"
+        // Weight – metric
+        case gram        = "g"
+        case kilogram    = "kg"
+        // Count / pack
+        case whole       = "whole"
+        case clove       = "clove"
+        case can         = "can"
+        // Informal
+        case pinch       = "pinch"
+        case dash        = "dash"
+        case handful     = "handful"
+        // Uncountable
+        case toTaste     = "to taste"
+        case asNeeded    = "as needed"
+
+        /// Broad conversion family for units with fixed culinary conversion factors.
+        fileprivate var conversionDimension: ConversionDimension? {
+            switch self {
+            case .teaspoon, .tablespoon, .cup, .fluidOunce, .milliliter, .liter:
+                return .volume
+            case .ounce, .pound, .gram, .kilogram:
+                return .mass
+            default: return nil
+            }
+        }
+
+        /// Multiplier from this unit into the dimension's base unit: milliliters for volume, grams for mass.
+        fileprivate var baseUnitValue: Double? {
+            switch self {
+            case .teaspoon: return Conversion.tspToMl
+            case .tablespoon: return Conversion.tbspToMl
+            case .cup: return Conversion.cupToMl
+            case .fluidOunce: return Conversion.flOzToMl
+            case .milliliter: return 1
+            case .liter: return 1_000
+            case .ounce: return Conversion.ozToG
+            case .pound: return Conversion.lbToG
+            case .gram: return 1
+            case .kilogram: return 1_000
+            default: return nil
+            }
+        }
+    }
+
+    /// User-facing format for rendering a quantity.
+    enum DisplayFormat {
+        /// Renders the value as a Unicode fraction where possible (e.g. `¼ cup`); falls back to decimal.
+        case fraction
+        /// Renders the value as a decimal number (e.g. `0.25 cup`).
+        case decimal
+        /// Converts volume to ml / l and weight to g / kg.
+        case metric
+        /// Converts volume to tsp / tbsp / cup and weight to oz / lb.
+        case imperial
+    }
+
+    /// Numeric quantity; `nil` for units like `.toTaste` and `.asNeeded` that carry no numeric value.
+    let value: Double?
+    /// The unit of measurement.
+    let unit: Unit
+
+    // MARK: - Unit conversions
+
+    private enum Conversion {
+        static let tspToMl: Double = 4.929
+        static let tbspToMl: Double = 14.787
+        static let cupToMl: Double = 236.588
+        static let flOzToMl: Double = 29.574
+        static let ozToG: Double = 28.350
+        static let lbToG: Double = 453.592
+    }
+
+    /// Converts this amount to another compatible unit.
+    ///
+    /// Volume units can convert to other volume units, and mass units can convert to other mass
+    /// units. Count, informal, and uncountable units only convert to the same unit because values
+    /// such as "1 cup flour" -> "grams" require ingredient-specific density data.
+    func converted(to targetUnit: Unit) -> IngredientAmount? {
+        if targetUnit == unit { return self }
+        guard let value,
+              let sourceDimension = unit.conversionDimension,
+              sourceDimension == targetUnit.conversionDimension,
+              let sourceBaseUnitValue = unit.baseUnitValue,
+              let targetBaseUnitValue = targetUnit.baseUnitValue else { return nil }
+
+        return IngredientAmount(value: value * sourceBaseUnitValue / targetBaseUnitValue, unit: targetUnit)
+    }
+
+    /// Numeric value converted into another compatible unit.
+    func value(in targetUnit: Unit) -> Double? {
+        converted(to: targetUnit)?.value
+    }
+
+    /// Volume in millilitres; `nil` for non-volume units or when `value` is absent.
+    var milliliters: Double? {
+        value(in: .milliliter)
+    }
+
+    /// Mass in grams; `nil` for non-weight units or when `value` is absent.
+    var grams: Double? {
+        value(in: .gram)
+    }
+
+    // MARK: - Formatting
+
+    /// Returns a human-readable representation of this amount in the requested display format.
+    func formatted(as format: DisplayFormat) -> String {
+        switch format {
+        case .fraction:  return fractionString(value: value, unitLabel: unit.rawValue)
+        case .decimal:   return decimalString()
+        case .metric:    return metricString()
+        case .imperial:  return imperialString()
+        }
+    }
+
+    private func decimalString() -> String {
+        guard let v = value else { return unit.rawValue }
+        return "\(Self.formatDecimal(v)) \(unit.rawValue)"
+    }
+
+    private func metricString() -> String {
+        if let ml = milliliters {
+            return ml >= 1_000
+                ? "\(Self.formatDecimal(ml / 1_000)) l"
+                : "\(Self.formatDecimal(ml)) ml"
+        }
+        if let g = grams {
+            return g >= 1_000
+                ? "\(Self.formatDecimal(g / 1_000)) kg"
+                : "\(Self.formatDecimal(g)) g"
+        }
+        return fractionString(value: value, unitLabel: unit.rawValue)
+    }
+
+    private func imperialString() -> String {
+        if let ml = milliliters {
+            let cups = IngredientAmount(value: ml, unit: .milliliter).value(in: .cup) ?? 0
+            if cups >= 1 { return fractionString(value: cups, unitLabel: "cup") }
+            let tbsp = IngredientAmount(value: ml, unit: .milliliter).value(in: .tablespoon) ?? 0
+            if tbsp >= 1 { return fractionString(value: tbsp, unitLabel: "tbsp") }
+            return fractionString(value: IngredientAmount(value: ml, unit: .milliliter).value(in: .teaspoon), unitLabel: "tsp")
+        }
+        if let g = grams {
+            let lb = IngredientAmount(value: g, unit: .gram).value(in: .pound) ?? 0
+            if lb >= 1 { return fractionString(value: lb, unitLabel: "lb") }
+            return fractionString(value: IngredientAmount(value: g, unit: .gram).value(in: .ounce), unitLabel: "oz")
+        }
+        return fractionString(value: value, unitLabel: unit.rawValue)
+    }
+
+    private func fractionString(value: Double?, unitLabel: String) -> String {
+        guard let v = value else { return unitLabel }
+        let whole = Int(v)
+        let frac = v - Double(whole)
+        let symbol = Self.unicodeFraction(for: frac)
+        let valueString: String
+        if symbol.isEmpty {
+            valueString = Self.formatDecimal(v)
+        } else if whole == 0 {
+            valueString = symbol
+        } else {
+            valueString = "\(whole)\(symbol)"
+        }
+        return "\(valueString) \(unitLabel)"
+    }
+
+    // Maps a fractional part (0.0–1.0) to the nearest Unicode fraction glyph within ±0.02 tolerance.
+    private static func unicodeFraction(for fraction: Double) -> String {
+        let table: [(Double, String)] = [
+            (1.0/8, "⅛"), (1.0/4, "¼"), (1.0/3, "⅓"),
+            (3.0/8, "⅜"), (1.0/2, "½"), (5.0/8, "⅝"),
+            (2.0/3, "⅔"), (3.0/4, "¾"), (7.0/8, "⅞"),
+        ]
+        let tolerance = 0.02
+        for (v, symbol) in table where abs(fraction - v) < tolerance { return symbol }
+        return ""
+    }
+
+    private static func formatDecimal(_ value: Double) -> String {
+        if value == Double(Int(value)) { return String(Int(value)) }
+        return String(format: "%g", (value * 100).rounded() / 100)
+    }
+}
+
+// MARK: - IngredientCategory
+
 /// Broad food-group categories used to organise ingredients in the UI.
 enum IngredientCategory: String, CaseIterable {
     /// Meat, poultry, fish, seafood, eggs, and plant-based proteins.
@@ -48,14 +261,20 @@ struct Ingredient: Codable, Identifiable {
     let foodSubgroup: String?
     /// Resolved emoji for display, populated by ``IngredientEmojiProvider``.
     var emoji: String?
-    
+    /// Measured quantity for this ingredient (e.g. `1½ cups`); `nil` when no amount is specified.
+    var amount: IngredientAmount?
+    /// Preparation context or qualifier (e.g. `"finely chopped"`, `"at room temperature"`); `nil` when absent.
+    var notes: String?
+
     /// Maps model property names to dataset field keys.
     enum CodingKeys: String, CodingKey {
         case name
         case description
         case pictureFileName = "picture_file_name"
-        case foodGroup = "food_group"
-        case foodSubgroup = "food_subgroup"
+        case foodGroup       = "food_group"
+        case foodSubgroup    = "food_subgroup"
+        case amount
+        case notes
     }
     
     /// Derives a broad ``IngredientCategory`` by matching `foodGroup` against known keyword patterns.
@@ -90,6 +309,8 @@ struct Ingredient: Codable, Identifiable {
         self.pictureFileName = nil
         self.foodSubgroup = nil
         self.emoji = nil
+        self.amount = nil
+        self.notes = nil
     }
 }
 
@@ -118,13 +339,15 @@ extension Ingredient: ExpressibleByStringLiteral {
 /// Additional initializers used by previews and richer mock fixtures.
 extension Ingredient {
     /// Creates an ingredient with all fields populated; used by test helpers and mock factories.
-    init(name: String, description: String?, pictureFileName: String?, foodGroup: String?, foodSubgroup: String?, emoji: String? = nil) {
+    init(name: String, description: String?, pictureFileName: String?, foodGroup: String?, foodSubgroup: String?, emoji: String? = nil, amount: IngredientAmount? = nil, notes: String? = nil) {
         self.name = name
         self.description = description
         self.pictureFileName = pictureFileName
         self.foodGroup = foodGroup
         self.foodSubgroup = foodSubgroup
         self.emoji = emoji
+        self.amount = amount
+        self.notes = notes
     }
 }
 

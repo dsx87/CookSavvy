@@ -266,7 +266,7 @@ enum RecipeMoodRanker {
     /// Builds a single lowercased string from the recipe's title, tagline, cuisine, and
     /// ingredient names — the search surface used by all keyword matching.
     private static func searchableText(for recipe: Recipe) -> String {
-        let recipeIngredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
+        let recipeIngredients = recipe.cleanedIngredients
         var parts: [String] = [recipe.title]
         if let tagline = recipe.tagline {
             parts.append(tagline)

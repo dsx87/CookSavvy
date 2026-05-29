@@ -25,7 +25,6 @@ final class RecipeShareCardGeneratorTests: XCTestCase {
             ingredients: ingredients,
             instructions: ["Cook pasta", "Toss with sauce"],
             image: image,
-            cleanedIngredients: ingredients,
             additionalInfo: additionalInfo,
             emoji: "🍝"
         )

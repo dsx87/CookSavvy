@@ -57,7 +57,6 @@ final class RecipeDatasetReaderTests: XCTestCase {
         XCTAssertEqual(recipe.ingredients.map(\.name), ["pasta", "tomato"])
         XCTAssertEqual(recipe.instructions.map(\.text), ["Boil pasta.", "Toss with sauce."])
         XCTAssertEqual(recipe.instructions.first?.timerMinutes, 8)
-        XCTAssertEqual(recipe.cleanedIngredients.map(\.name), ["pasta", "tomato"])
         XCTAssertEqual(recipe.image, "images/nested-image-pasta.jpg")
         XCTAssertEqual(recipe.source, .offline)
     }
@@ -120,11 +119,7 @@ final class RecipeDatasetReaderTests: XCTestCase {
               { "text": "Boil pasta.", "timerMinutes": 8 },
               { "text": "Toss with sauce." }
             ],
-            "image": "images/nested-image-pasta.jpg",
-            "cleanedIngredients": [
-              { "name": "pasta" },
-              { "name": "tomato" }
-            ]
+            "image": "images/nested-image-pasta.jpg"
           }
         ]
         """

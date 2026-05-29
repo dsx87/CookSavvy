@@ -279,7 +279,6 @@ final class RecipeServiceTests: XCTestCase {
             ingredients: [chicken],
             instructions: ["Cook"],
             image: "img",
-            cleanedIngredients: [chicken],
             additionalInfo: .mock
         )
         
@@ -309,7 +308,6 @@ final class RecipeServiceTests: XCTestCase {
             ingredients: [chicken, "Pasta"],
             instructions: ["Cook pasta", "Add chicken"],
             image: "img",
-            cleanedIngredients: [chicken, "Pasta"],
             additionalInfo: .mock
         )
         try recipeService.storeRecipes([recipe])
@@ -329,7 +327,6 @@ final class RecipeServiceTests: XCTestCase {
                 ingredients: ["Chicken"],
                 instructions: ["Cook"],
                 image: "img",
-                cleanedIngredients: ["Chicken"],
                 additionalInfo: .mock
             )
         ]

@@ -28,9 +28,10 @@ import os.log
 /// **Thread safety**: file-based databases use a `DatabasePool` (concurrent reads, serialised writes);
 /// the in-memory test variant uses a `DatabaseQueue`. GRDB serialises all write access automatically.
 ///
-/// **JSON columns**: `instructions_json`, `ingredients_json`, `cleaned_ingredients_json`, and
-/// `additional_info_json` in `recipes` store model objects as JSON blobs to avoid schema churn
-/// as models evolve.
+/// **JSON columns**: `instructions_json`, `ingredients_json`, and `additional_info_json` in `recipes`
+/// store model objects as JSON blobs to avoid schema churn as models evolve.
+/// The `cleaned_ingredients_json` column still exists in the schema for backward compatibility but
+/// is no longer read or meaningfully written (always stored as `'[]'`).
 ///
 /// **Recipe cache**: a title-keyed in-memory dictionary (`maxRecipeCacheSize = 100`) reduces
 /// repeated JSON decoding for hot recipes. Eviction is simple FIFO.
@@ -72,7 +73,7 @@ final class DBInterface: DBInterfaceProtocol {
 
     /// Shared `SELECT` column list used in every recipe query, aliased under `r`.
     /// Keeping this in one place ensures all queries produce the row shape that `decodeRecipe(from:)` expects.
-    private static let recipeColumns = "r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.cleaned_ingredients_json, r.additional_info_json, r.source, r.tagline, r.user_rating, r.api_rating, r.author, r.is_user_created, r.emoji, r.cuisine"
+    private static let recipeColumns = "r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.additional_info_json, r.source, r.tagline, r.user_rating, r.api_rating, r.author, r.is_user_created, r.emoji, r.cuisine"
 
     // MARK: - Init
     /// Creates a file-based database in the app's Application Support directory (`CookSavvy/db.sqlite`).
@@ -569,7 +570,7 @@ final class DBInterface: DBInterfaceProtocol {
 
     /// Inserts a batch of recipes and their `recipe_ingredients` link rows in a single write transaction.
     ///
-    /// Complex fields (`instructions`, `ingredients`, `cleanedIngredients`, `additionalInfo`) are
+    /// Complex fields (`instructions`, `ingredients`, `additionalInfo`) are
     /// JSON-encoded before storage. Duplicate ingredient names within a single recipe are
     /// deduplicated before inserting into `recipe_ingredients` — some dataset recipes list
     /// the same ingredient more than once.
@@ -579,12 +580,11 @@ final class DBInterface: DBInterfaceProtocol {
             for r in recipes {
                 let instructionsJSON = try String(data: encoder.encode(r.instructions), encoding: .utf8) ?? "[]"
                 let ingredientsJSON = try String(data: encoder.encode(r.ingredients), encoding: .utf8) ?? "[]"
-                let cleanedIngredientsJSON = try String(data: encoder.encode(r.cleanedIngredients), encoding: .utf8) ?? "[]"
                 let additionalJSON = try String(data: encoder.encode(r.additionalInfo), encoding: .utf8) ?? "{}"
 
                 try db.execute(
-                    sql: "INSERT INTO recipes(title, image, instructions_json, ingredients_json, cleaned_ingredients_json, additional_info_json, source, tagline, user_rating, api_rating, author, is_user_created, emoji, cuisine) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
-                    arguments: [r.title, r.image, instructionsJSON, ingredientsJSON, cleanedIngredientsJSON, additionalJSON, r.source?.rawValue, r.tagline, r.userRating, r.apiRating, r.author, r.isUserCreated ? 1 : 0, r.emoji, r.cuisine]
+                    sql: "INSERT INTO recipes(title, image, instructions_json, ingredients_json, cleaned_ingredients_json, additional_info_json, source, tagline, user_rating, api_rating, author, is_user_created, emoji, cuisine) VALUES (?, ?, ?, ?, '[]', ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+                    arguments: [r.title, r.image, instructionsJSON, ingredientsJSON, additionalJSON, r.source?.rawValue, r.tagline, r.userRating, r.apiRating, r.author, r.isUserCreated ? 1 : 0, r.emoji, r.cuisine]
                 )
 
                 let recipeId = db.lastInsertedRowID
@@ -1048,21 +1048,20 @@ final class DBInterface: DBInterfaceProtocol {
         }
         let instructionsJSON = try String(data: encoder.encode(recipe.instructions), encoding: .utf8) ?? "[]"
         let ingredientsJSON = try String(data: encoder.encode(recipe.ingredients), encoding: .utf8) ?? "[]"
-        let cleanedIngredientsJSON = try String(data: encoder.encode(recipe.cleanedIngredients), encoding: .utf8) ?? "[]"
         let additionalJSON = try String(data: encoder.encode(recipe.additionalInfo), encoding: .utf8) ?? "{}"
 
         try dbWriter.write { db in
             let sql = """
                 UPDATE recipes SET
                     title = ?, image = ?, instructions_json = ?, ingredients_json = ?,
-                    cleaned_ingredients_json = ?, additional_info_json = ?, source = ?,
+                    additional_info_json = ?, source = ?,
                     tagline = ?, user_rating = ?, api_rating = ?, author = ?,
                     emoji = ?, cuisine = ?
                 WHERE id = ?;
             """
             try db.execute(sql: sql, arguments: [
                 recipe.title, recipe.image, instructionsJSON, ingredientsJSON,
-                cleanedIngredientsJSON, additionalJSON, recipe.source?.rawValue,
+                additionalJSON, recipe.source?.rawValue,
                 recipe.tagline, recipe.userRating, recipe.apiRating, recipe.author,
                 recipe.emoji, recipe.cuisine, recipeId
             ])
@@ -1333,7 +1332,6 @@ final class DBInterface: DBInterfaceProtocol {
         let image: String = row["image"]
         let instructionsJSON: String = row["instructions_json"]
         let ingredientsJSON: String = row["ingredients_json"]
-        let cleanedIngredientsJSON: String = row["cleaned_ingredients_json"]
         let additionalJSON: String = row["additional_info_json"]
         let sourceRaw: String? = row["source"]
         let source = sourceRaw.flatMap { RecipeSourceType(rawValue: $0) }
@@ -1346,7 +1344,6 @@ final class DBInterface: DBInterfaceProtocol {
             instructions = strings.map(Recipe.Step.init(plainText:))
         }
         let ingredients = try decoder.decode([Ingredient].self, from: Data(ingredientsJSON.utf8))
-        let cleanedIngredients = try decoder.decode([Ingredient].self, from: Data(cleanedIngredientsJSON.utf8))
         let additionalInfo = try decoder.decode(Recipe.AdditionalInfo.self, from: Data(additionalJSON.utf8))
 
         let tagline: String? = row["tagline"]
@@ -1362,7 +1359,6 @@ final class DBInterface: DBInterfaceProtocol {
             ingredients: ingredients,
             instructions: instructions,
             image: image,
-            cleanedIngredients: cleanedIngredients,
             additionalInfo: additionalInfo,
             source: source,
             tagline: tagline,

@@ -40,7 +40,6 @@ final class UserDataServiceTests: XCTestCase {
             ingredients: [Ingredient(name: "Garlic")],
             instructions: ["Step 1"],
             image: "",
-            cleanedIngredients: [Ingredient(name: "Garlic")],
             additionalInfo: .empty
         )
     }
@@ -104,7 +103,6 @@ final class UserDataServiceTests: XCTestCase {
             ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion"), Ingredient(name: "Pasta")],
             instructions: ["Step 1"],
             image: "",
-            cleanedIngredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion"), Ingredient(name: "Pasta")],
             additionalInfo: .empty,
             missingIngredients: ["Pasta"]
         )
@@ -133,7 +131,6 @@ final class UserDataServiceTests: XCTestCase {
             ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion"), Ingredient(name: "Pasta")],
             instructions: ["Step 1"],
             image: "",
-            cleanedIngredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion"), Ingredient(name: "Pasta")],
             additionalInfo: .empty,
             missingIngredients: ["Onion"]
         )
@@ -169,7 +166,6 @@ final class UserDataServiceTests: XCTestCase {
             ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Pasta")],
             instructions: ["Step 1"],
             image: "",
-            cleanedIngredients: [Ingredient(name: "Garlic"), Ingredient(name: "Pasta")],
             additionalInfo: .empty,
             missingIngredients: []
         )
@@ -186,7 +182,6 @@ final class UserDataServiceTests: XCTestCase {
             ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Pasta")],
             instructions: ["Step 1"],
             image: "",
-            cleanedIngredients: [Ingredient(name: "Garlic"), Ingredient(name: "Pasta")],
             additionalInfo: .empty,
             missingIngredients: ["Pasta"]
         )
@@ -239,7 +234,6 @@ final class UserDataServiceTests: XCTestCase {
             ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion")],
             instructions: ["Step 1"],
             image: "",
-            cleanedIngredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion")],
             additionalInfo: .empty
         )
         try db.insertIngredients([Ingredient(name: "Garlic"), Ingredient(name: "Onion")])
@@ -300,7 +294,6 @@ final class UserDataServiceTests: XCTestCase {
             ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion")],
             instructions: ["Step 1"],
             image: "",
-            cleanedIngredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion")],
             additionalInfo: .empty
         )
         let recipe2 = Recipe(
@@ -308,7 +301,6 @@ final class UserDataServiceTests: XCTestCase {
             ingredients: [Ingredient(name: "Garlic")],
             instructions: ["Step 1"],
             image: "",
-            cleanedIngredients: [Ingredient(name: "Garlic")],
             additionalInfo: .empty
         )
         try insertRecipe(recipe1)

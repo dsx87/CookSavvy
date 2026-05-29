@@ -150,7 +150,6 @@ final class DBInterfaceTests: XCTestCase {
             ingredients: [garlic, "Pasta", "Olive Oil"],
             instructions: ["Boil pasta", "Sauté garlic", "Combine"],
             image: "garlic_pasta",
-            cleanedIngredients: ["Garlic", "Pasta", "Olive Oil"],
             additionalInfo: .mock
         )
         let r2 = Recipe(
@@ -158,7 +157,6 @@ final class DBInterfaceTests: XCTestCase {
             ingredients: [onion, "Butter", "Stock"],
             instructions: ["Caramelize onions", "Add stock", "Simmer"],
             image: "onion_soup",
-            cleanedIngredients: ["Onion", "Butter", "Stock"],
             additionalInfo: .mock
         )
 
@@ -182,7 +180,6 @@ final class DBInterfaceTests: XCTestCase {
             ingredients: [known, "Tomato", "Pasta"],
             instructions: ["Cook pasta", "Make sauce", "Combine"],
             image: "tb_pasta",
-            cleanedIngredients: ["Basil", "Tomato", "Pasta"],
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([r])
@@ -201,7 +198,6 @@ final class DBInterfaceTests: XCTestCase {
             ingredients: [lemon, lemon, "Water", "Sugar"],
             instructions: ["Squeeze lemons", "Mix with water and sugar"],
             image: "lemonade",
-            cleanedIngredients: ["Lemon", "Water", "Sugar"],
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([r])
@@ -331,7 +327,6 @@ final class DBInterfaceTests: XCTestCase {
             ingredients: [garlic, "Pasta"],
             instructions: ["Boil", "Mix"],
             image: "img1",
-            cleanedIngredients: ["Garlic", "Pasta"],
             additionalInfo: .mock
         )
         let r2 = Recipe(
@@ -339,7 +334,6 @@ final class DBInterfaceTests: XCTestCase {
             ingredients: [basil, "Pasta"],
             instructions: ["Boil", "Mix"],
             image: "img2",
-            cleanedIngredients: ["Basil", "Pasta"],
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([r1, r2])
@@ -372,7 +366,6 @@ final class DBInterfaceTests: XCTestCase {
             ingredients: [garlic, "Chicken"],
             instructions: ["Cook"],
             image: "img",
-            cleanedIngredients: ["Garlic", "Chicken"],
             additionalInfo: .mock
         )
         let r2 = Recipe(
@@ -380,7 +373,6 @@ final class DBInterfaceTests: XCTestCase {
             ingredients: [tomato, "Stock"],
             instructions: ["Simmer"],
             image: "img",
-            cleanedIngredients: ["Tomato", "Stock"],
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([r1, r2])
@@ -454,7 +446,6 @@ final class DBInterfaceTests: XCTestCase {
             ingredients: [chickenBreast, "Salt"],
             instructions: ["Grill"],
             image: "img",
-            cleanedIngredients: [chickenBreast, "Salt"],
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([r])
@@ -472,7 +463,6 @@ final class DBInterfaceTests: XCTestCase {
             ingredients: [chickenBreast],
             instructions: ["Cook"],
             image: "img",
-            cleanedIngredients: [chickenBreast],
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([r])
@@ -490,7 +480,6 @@ final class DBInterfaceTests: XCTestCase {
             ingredients: [ingredient],
             instructions: ["Cook"],
             image: "img",
-            cleanedIngredients: [ingredient],
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([r])
@@ -507,7 +496,6 @@ final class DBInterfaceTests: XCTestCase {
             ingredients: [chicken, tomato, "Pasta"],
             instructions: ["Cook"],
             image: "img",
-            cleanedIngredients: [chicken, tomato, "Pasta"],
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([r])
@@ -525,7 +513,6 @@ final class DBInterfaceTests: XCTestCase {
             ingredients: [chicken],
             instructions: ["Cook"],
             image: "img",
-            cleanedIngredients: [chicken],
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([r])
@@ -542,7 +529,6 @@ final class DBInterfaceTests: XCTestCase {
             ingredients: [chicken, "Pasta"],
             instructions: ["Cook"],
             image: "img",
-            cleanedIngredients: [chicken, "Pasta"],
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([r])

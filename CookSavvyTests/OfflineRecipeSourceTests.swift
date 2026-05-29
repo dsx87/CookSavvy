@@ -45,7 +45,6 @@ final class OfflineRecipeSourceTests: XCTestCase {
             ingredients: [garlic, pasta],
             instructions: ["Cook pasta", "Add garlic"],
             image: "garlic_pasta.jpg",
-            cleanedIngredients: [garlic, pasta],
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([recipe])
@@ -69,7 +68,6 @@ final class OfflineRecipeSourceTests: XCTestCase {
             ingredients: [chicken, tomato],
             instructions: ["Cook"],
             image: "img1",
-            cleanedIngredients: [chicken, tomato],
             additionalInfo: .mock
         )
         let recipe2 = Recipe(
@@ -77,7 +75,6 @@ final class OfflineRecipeSourceTests: XCTestCase {
             ingredients: [tomato, basil],
             instructions: ["Mix"],
             image: "img2",
-            cleanedIngredients: [tomato, basil],
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([recipe1, recipe2])
@@ -115,7 +112,6 @@ final class OfflineRecipeSourceTests: XCTestCase {
             ingredients: [garlic],
             instructions: ["Toast"],
             image: "img",
-            cleanedIngredients: [garlic],
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([recipe])
@@ -145,7 +141,6 @@ final class OfflineRecipeSourceTests: XCTestCase {
             ingredients: [chicken],
             instructions: ["Cook"],
             image: "img",
-            cleanedIngredients: [chicken],
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([recipe])

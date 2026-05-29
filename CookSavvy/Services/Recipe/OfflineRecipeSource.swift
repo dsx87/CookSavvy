@@ -59,7 +59,7 @@ final class OfflineRecipeSource: RecipeSourceProtocol {
             
             let searchNames = Set(ingredients.map { $0.name.lowercased() })
             for i in recipes.indices {
-                let recipeIngredientNames = recipes[i].cleanedIngredients.map { $0.name.lowercased() }
+                let recipeIngredientNames = recipes[i].ingredients.map { $0.name.lowercased() }
                 let totalIngredients = max(recipeIngredientNames.count, 1)
                 let matchedCount = recipeIngredientNames.filter { name in
                     searchNames.contains(where: { name.contains($0) || $0.contains(name) })

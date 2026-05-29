@@ -435,8 +435,7 @@ struct RecipeBadges: View {
 
     /// `true` when the recipe has a small number of ingredients, within the beginner-friendly cap.
     private var isBeginnerFriendly: Bool {
-        let ingredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
-        return ingredients.count > 0 && ingredients.count <= UI.RecipeBadge.beginnerMaxIngredients
+        return recipe.cleanedIngredients.count > 0 && recipe.cleanedIngredients.count <= UI.RecipeBadge.beginnerMaxIngredients
     }
 
     /// Builds a colored contextual badge for recipe attributes.

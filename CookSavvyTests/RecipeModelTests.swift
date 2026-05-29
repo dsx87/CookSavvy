@@ -58,7 +58,6 @@ final class RecipeModelTests: XCTestCase {
             ingredients: [],
             instructions: [Recipe.Step](),
             image: "",
-            cleanedIngredients: [],
             additionalInfo: Recipe.AdditionalInfo(time: "1 hr 30 min", servings: nil, complexity: nil, calories: nil)
         )
 
@@ -71,7 +70,6 @@ final class RecipeModelTests: XCTestCase {
             ingredients: [],
             instructions: [Recipe.Step](),
             image: "",
-            cleanedIngredients: [],
             additionalInfo: Recipe.AdditionalInfo(time: "1h30", servings: nil, complexity: nil, calories: nil)
         )
 
@@ -84,7 +82,6 @@ final class RecipeModelTests: XCTestCase {
             ingredients: [],
             instructions: [Recipe.Step](),
             image: "",
-            cleanedIngredients: [],
             additionalInfo: Recipe.AdditionalInfo(time: "25-30 min", servings: nil, complexity: nil, calories: nil)
         )
 

@@ -133,7 +133,7 @@ final class CuratedCollectionService: CuratedCollectionServiceProtocol {
 
         return rawRecipes.filter { recipe in
             if let maxCount = criteria.maxIngredientCount {
-                let count = recipe.cleanedIngredients.isEmpty ? recipe.ingredients.count : recipe.cleanedIngredients.count
+                let count = recipe.cleanedIngredients.count
                 guard count <= maxCount else { return false }
             }
             if let maxTime = criteria.maxCookTime {

@@ -39,7 +39,7 @@ enum RecipeMatchExplainer {
         recipe: Recipe,
         missingIngredients: [String]
     ) -> String {
-        let recipeIngredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
+        let recipeIngredients = recipe.cleanedIngredients
         let total = recipeIngredients.count
         let matched = max(0, total - missingIngredients.count)
 
@@ -179,9 +179,8 @@ enum RecipeMatchExplainer {
         )
     }
 
-    /// Returns the effective ingredient list for a recipe, preferring `cleanedIngredients`.
     private static func availableIngredients(for recipe: Recipe) -> [Ingredient] {
-        recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
+        recipe.cleanedIngredients
     }
 
     /// Returns true only for conservative pantry-staple names, after normalisation.

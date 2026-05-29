@@ -51,7 +51,6 @@ struct SupabaseRecipeDTO: Decodable {
             ingredients: mappedIngredients,
             instructions: instructions,
             image: image ?? "",
-            cleanedIngredients: mappedIngredients,
             additionalInfo: Recipe.AdditionalInfo(
                 time: time,
                 servings: servings,

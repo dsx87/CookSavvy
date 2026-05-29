@@ -74,8 +74,7 @@ enum RecipeMatchRanker {
     }
 
     private static func ingredientCount(for recipe: Recipe) -> Int {
-        let ingredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
-        return ingredients.count
+        return recipe.cleanedIngredients.count
     }
 
     private static func weightedRating(for recipe: Recipe) -> Double {

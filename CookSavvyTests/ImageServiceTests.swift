@@ -173,7 +173,6 @@ final class ImageServiceTests: XCTestCase {
             ingredients: [],
             instructions: [] as [String],
             image: "test_image.png",
-            cleanedIngredients: [],
             additionalInfo: .empty
         )
         
@@ -190,7 +189,6 @@ final class ImageServiceTests: XCTestCase {
             ingredients: [],
             instructions: [] as [String],
             image: "",
-            cleanedIngredients: [],
             additionalInfo: .empty
         )
         
@@ -236,7 +234,6 @@ final class ImageServiceTests: XCTestCase {
                 ingredients: [],
                 instructions: [] as [String],
                 image: "img1.png",
-                cleanedIngredients: [],
                 additionalInfo: .empty
             ),
             Recipe(
@@ -244,7 +241,6 @@ final class ImageServiceTests: XCTestCase {
                 ingredients: [],
                 instructions: [] as [String],
                 image: "img2.png",
-                cleanedIngredients: [],
                 additionalInfo: .empty
             )
         ]
@@ -275,7 +271,6 @@ final class ImageServiceTests: XCTestCase {
                 ingredients: [],
                 instructions: [] as [String],
                 image: "img1.png",
-                cleanedIngredients: [],
                 additionalInfo: .empty
             )
         ]
@@ -435,7 +430,6 @@ final class ImageServiceTests: XCTestCase {
                 ingredients: [],
                 instructions: [] as [String],
                 image: "img\(i).png",
-                cleanedIngredients: [],
                 additionalInfo: .empty
             )
         }
@@ -503,7 +497,6 @@ final class ImageServiceTests: XCTestCase {
             ingredients: [ingredient],
             instructions: ["Cook"],
             image: "dish.png",
-            cleanedIngredients: [ingredient],
             additionalInfo: .empty
         )
         

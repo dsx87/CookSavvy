@@ -267,8 +267,7 @@ final class DiscoverViewModel: ObservableObject {
         } else {
             let blockedKeywords = activeDietaryRestrictions.flatMap { $0.filterKeywords }
             filtered = rankedRecipes.filter { recipe in
-                let ingredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
-                let ingredientText = ingredients.map { $0.name.lowercased() }.joined(separator: " ")
+                let ingredientText = recipe.cleanedIngredients.map { $0.name.lowercased() }.joined(separator: " ")
                 return !blockedKeywords.contains { ingredientText.contains($0) }
             }
         }
@@ -315,7 +314,7 @@ final class DiscoverViewModel: ObservableObject {
         let queryNames = Set(effectiveSearchIngredients.map { Self.normalizedIngredientName($0.name) }.filter { !$0.isEmpty })
         guard !queryNames.isEmpty else { return [] }
 
-        let recipeIngredients = recipe.cleanedIngredients.isEmpty ? recipe.ingredients : recipe.cleanedIngredients
+        let recipeIngredients = recipe.cleanedIngredients
         var matches: [String] = []
         var seen = Set<String>()
 
@@ -400,7 +399,7 @@ final class DiscoverViewModel: ObservableObject {
     func matchBadgeState(for recipe: Recipe) -> DiscoverMatchBadgeState? {
         guard recipe.missingIngredients != nil || recipe.matchPercentage != nil else { return nil }
 
-        let total = recipe.cleanedIngredients.isEmpty ? recipe.ingredients.count : recipe.cleanedIngredients.count
+        let total = recipe.cleanedIngredients.count
         let missing = recipe.missingIngredients?.count ?? 0
         let matched = max(0, total - missing)
         let label = recipe.missingIngredients?.isEmpty == true

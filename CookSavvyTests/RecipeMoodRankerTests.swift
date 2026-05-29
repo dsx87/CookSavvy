@@ -23,7 +23,6 @@ final class RecipeMoodRankerTests: XCTestCase {
             ingredients: ingredients,
             instructions: [Recipe.Step(text: "Cook.")],
             image: "",
-            cleanedIngredients: ingredients,
             additionalInfo: info,
             tagline: tagline,
             cuisine: cuisine
