@@ -121,6 +121,7 @@ private struct RecipeDatasetDTO: Decodable {
     let instructions: [Recipe.Step]
     let image: String
     let additionalInfo: Recipe.AdditionalInfo?
+    let cuisine: String?
 
     /// Converts the transport DTO into the app's runtime recipe model and marks it offline.
     var recipe: Recipe {
@@ -130,7 +131,8 @@ private struct RecipeDatasetDTO: Decodable {
             instructions: instructions,
             image: image,
             additionalInfo: additionalInfo ?? .empty,
-            source: .offline
+            source: .offline,
+            cuisine: cuisine
         )
     }
 }

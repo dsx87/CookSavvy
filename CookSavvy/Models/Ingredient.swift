@@ -261,10 +261,18 @@ struct Ingredient: Codable, Identifiable {
     let foodSubgroup: String?
     /// Resolved emoji for display, populated by ``IngredientEmojiProvider``.
     var emoji: String?
-    /// Measured quantity for this ingredient (e.g. `1½ cups`); `nil` when no amount is specified.
-    var amount: IngredientAmount?
+    /// Raw amount string from the bundled JSON dataset (e.g. `"2 Tbsp."`, `"1 lb."`); `nil` when absent.
+    /// Used for display in recipe detail views. For programmatic unit conversion, see `structuredAmount`.
+    var rawAmount: String?
+    /// Structured quantity for programmatic use (e.g. in Create Recipe or unit-conversion features);
+    /// not decoded from JSON — populated only by app logic. For the human-readable string from the
+    /// dataset, use `rawAmount`.
+    var structuredAmount: IngredientAmount?
     /// Preparation context or qualifier (e.g. `"finely chopped"`, `"at room temperature"`); `nil` when absent.
     var notes: String?
+    /// Core food noun stripped of all adjectives, used for ingredient matching and substitution
+    /// (e.g. `"olive oil"` for `"extra-virgin olive oil"`, `"chicken"` for `"chicken breast"`).
+    var basicComponent: String?
 
     /// Maps model property names to dataset field keys.
     enum CodingKeys: String, CodingKey {
@@ -273,8 +281,9 @@ struct Ingredient: Codable, Identifiable {
         case pictureFileName = "picture_file_name"
         case foodGroup       = "food_group"
         case foodSubgroup    = "food_subgroup"
-        case amount
+        case rawAmount       = "amount"
         case notes
+        case basicComponent
     }
     
     /// Derives a broad ``IngredientCategory`` by matching `foodGroup` against known keyword patterns.
@@ -309,8 +318,10 @@ struct Ingredient: Codable, Identifiable {
         self.pictureFileName = nil
         self.foodSubgroup = nil
         self.emoji = nil
-        self.amount = nil
+        self.rawAmount = nil
+        self.structuredAmount = nil
         self.notes = nil
+        self.basicComponent = nil
     }
 }
 
@@ -339,15 +350,17 @@ extension Ingredient: ExpressibleByStringLiteral {
 /// Additional initializers used by previews and richer mock fixtures.
 extension Ingredient {
     /// Creates an ingredient with all fields populated; used by test helpers and mock factories.
-    init(name: String, description: String?, pictureFileName: String?, foodGroup: String?, foodSubgroup: String?, emoji: String? = nil, amount: IngredientAmount? = nil, notes: String? = nil) {
+    init(name: String, description: String?, pictureFileName: String?, foodGroup: String?, foodSubgroup: String?, emoji: String? = nil, rawAmount: String? = nil, structuredAmount: IngredientAmount? = nil, notes: String? = nil, basicComponent: String? = nil) {
         self.name = name
         self.description = description
         self.pictureFileName = pictureFileName
         self.foodGroup = foodGroup
         self.foodSubgroup = foodSubgroup
         self.emoji = emoji
-        self.amount = amount
+        self.rawAmount = rawAmount
+        self.structuredAmount = structuredAmount
         self.notes = notes
+        self.basicComponent = basicComponent
     }
 }
 

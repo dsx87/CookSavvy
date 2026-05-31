@@ -277,6 +277,34 @@ extension Recipe.AdditionalInfo: Sendable {}
 /// `Sendable` conformance for additional-info discriminated union cases.
 extension Recipe.AdditionalInfo.InfoType: Sendable {}
 
+/// Custom Codable for InfoType using flat single-key dicts: {"time": "30 min"}, {"servings": 4}.
+/// This replaces the synthesised format which wraps values in {"_0": ...}.
+extension Recipe.AdditionalInfo.InfoType {
+    private enum CodingKeys: String, CodingKey {
+        case time, servings, complexity, calories
+    }
+
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        if let v = try c.decodeIfPresent(String.self, forKey: .time)       { self = .time(v);       return }
+        if let v = try c.decodeIfPresent(Int.self,    forKey: .servings)   { self = .servings(v);   return }
+        if let v = try c.decodeIfPresent(String.self, forKey: .complexity) { self = .complexity(v); return }
+        if let v = try c.decodeIfPresent(Int.self,    forKey: .calories)   { self = .calories(v);   return }
+        self = .empty
+    }
+
+    func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .time(let v):       try c.encode(v, forKey: .time)
+        case .servings(let v):   try c.encode(v, forKey: .servings)
+        case .complexity(let v): try c.encode(v, forKey: .complexity)
+        case .calories(let v):   try c.encode(v, forKey: .calories)
+        case .empty:             break
+        }
+    }
+}
+
 /// Computed helpers derived directly from stored recipe data.
 extension Recipe {
     /// Deduplicated ingredient list used for recipe-ingredient matching.
