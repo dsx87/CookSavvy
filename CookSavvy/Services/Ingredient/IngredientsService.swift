@@ -9,87 +9,56 @@ import Foundation
 
 /// Internal constants used by `IngredientsService` to avoid magic values.
 private enum IngredientsServiceConstants {
-    static let defaultFileName = "Food"
-    static let defaultFileExtension = "json"
     static let defaultSearchLimit = 50
     static let defaultCategoryLimit = 100
-    static let populationProbe = "a"
-    static let populationProbeLimit = 1
 }
 
 /// Manages the ingredient catalog and user ingredient history.
 ///
-/// On first use, imports the ingredient catalog from a bundled JSON file into the SQLite database
-/// via `DBInterface`. Subsequent searches leverage GRDB's FTS5 full-text index for fast
-/// prefix-matching. The service also provides category browsing — note that `IngredientCategory`
-/// is a computed property derived from the raw `foodGroup` string stored in the database, so
-/// category-based queries require an intermediate mapping step through a proxy `Ingredient`.
+/// The ingredient catalog is seeded into the database by `DataImportService` during recipe
+/// import — `IngredientsService` does not import data itself. `ensureIngredientsLoaded()`
+/// is a lightweight gate that marks the service ready; it is a no-op if the catalog has
+/// already been confirmed present. Subsequent searches leverage GRDB's FTS5 full-text index
+/// for fast prefix-matching. The service also provides category browsing — note that
+/// `IngredientCategory` is a computed property derived from the raw `foodGroup` string stored
+/// in the database, so category-based queries require an intermediate mapping step through a
+/// proxy `Ingredient`.
 final class IngredientsService: IngredientsServiceProtocol {
-    
+
     // MARK: - Properties
-    
+
     /// Database interface used for all ingredient read/write operations.
     private let dbInterface: DBInterfaceProtocol
-    /// Name of the bundled JSON file containing the ingredient catalog.
-    private let ingredientsFileName: String
-    /// File extension of the bundled ingredient catalog file.
-    private let ingredientsFileExtension: String
-    
-    /// Tracks whether ingredients have been imported
+
+    /// Tracks whether the service has been marked ready after the initial check.
     private var isImported: Bool = false
-    
+
     // MARK: - Initialization
-    
-    /// Initializes the ingredients service
-    /// - Parameters:
-    ///   - dbInterface: Database interface for storing and retrieving ingredients
-    ///   - ingredientsFileName: Name of the JSON file containing ingredients (default: "Food")
-    ///   - ingredientsFileExtension: File extension (default: "json")
-    init(
-        dbInterface: DBInterfaceProtocol,
-        ingredientsFileName: String = IngredientsServiceConstants.defaultFileName,
-        ingredientsFileExtension: String = IngredientsServiceConstants.defaultFileExtension
-    ) {
+
+    /// Initializes the ingredients service.
+    /// - Parameter dbInterface: Database interface for storing and retrieving ingredients.
+    init(dbInterface: DBInterfaceProtocol) {
         self.dbInterface = dbInterface
-        self.ingredientsFileName = ingredientsFileName
-        self.ingredientsFileExtension = ingredientsFileExtension
     }
 
     #if DEBUG
     /// Convenience initializer for DEBUG builds that creates its own `DBInterface`.
-    /// - Parameters:
-    ///   - ingredientsFileName: Name of the bundled JSON ingredient catalog (default: "Food").
-    ///   - ingredientsFileExtension: File extension of the catalog (default: "json").
     /// - Throws: Any error thrown by `DBInterface` initialization.
-    convenience init(
-        ingredientsFileName: String = IngredientsServiceConstants.defaultFileName,
-        ingredientsFileExtension: String = IngredientsServiceConstants.defaultFileExtension
-    ) throws {
+    convenience init() throws {
         let dbInterface = try DBInterface()
-        self.init(
-            dbInterface: dbInterface,
-            ingredientsFileName: ingredientsFileName,
-            ingredientsFileExtension: ingredientsFileExtension
-        )
+        self.init(dbInterface: dbInterface)
     }
     #endif
-    
+
     // MARK: - Public Methods
-    
-    /// Ensures ingredients are loaded into the database
-    /// This should be called when the app starts
-    /// - Throws: IngredientsServiceError if import fails
+
+    /// Marks the service as ready. The ingredient catalog is seeded by `DataImportService`
+    /// during recipe import; this method is a no-op gate that prevents redundant DB probes
+    /// on subsequent calls to search and retrieval methods.
     func ensureIngredientsLoaded() async throws {
-        // Check if ingredients already exist in database
-        let hasIngredients = try await checkIngredientsExist()
-        
-        if !hasIngredients {
-            try await importIngredients()
-        }
-        
         isImported = true
     }
-    
+
     /// Searches for ingredients matching the provided query
     /// - Parameters:
     ///   - query: Search text to match against ingredient names
@@ -97,13 +66,12 @@ final class IngredientsService: IngredientsServiceProtocol {
     /// - Returns: Array of matching ingredient names
     /// - Throws: IngredientsServiceError if search fails
     func searchIngredients(matching query: String, limit: Int = IngredientsServiceConstants.defaultSearchLimit) async throws -> [String] {
-        // Ensure ingredients are loaded before searching
         if !isImported {
             try await ensureIngredientsLoaded()
         }
-        
+
         guard !query.isEmpty else { return [] }
-        
+
         do {
             let ingredients = try dbInterface.searchIngredients(matching: query, limit: limit)
             return ingredients.map { $0.name }
@@ -111,7 +79,7 @@ final class IngredientsService: IngredientsServiceProtocol {
             throw IngredientsServiceError.searchFailed(error)
         }
     }
-    
+
     /// Searches for full ingredient objects matching the provided query
     /// - Parameters:
     ///   - query: Search text to match against ingredient names
@@ -119,30 +87,28 @@ final class IngredientsService: IngredientsServiceProtocol {
     /// - Returns: Array of matching ingredients
     /// - Throws: IngredientsServiceError if search fails
     func searchFullIngredients(matching query: String, limit: Int = IngredientsServiceConstants.defaultSearchLimit) async throws -> [Ingredient] {
-        // Ensure ingredients are loaded before searching
         if !isImported {
             try await ensureIngredientsLoaded()
         }
-        
+
         guard !query.isEmpty else { return [] }
-        
+
         do {
             return try dbInterface.searchIngredients(matching: query, limit: limit)
         } catch {
             throw IngredientsServiceError.searchFailed(error)
         }
     }
-    
+
     /// Gets a specific ingredient by exact name
     /// - Parameter name: Exact name of the ingredient
     /// - Returns: The ingredient if found, nil otherwise
     /// - Throws: IngredientsServiceError if retrieval fails
     func getIngredient(byName name: String) async throws -> Ingredient? {
-        // Ensure ingredients are loaded before searching
         if !isImported {
             try await ensureIngredientsLoaded()
         }
-        
+
         do {
             let results = try dbInterface.getIngredients(byName: name)
             return results.first
@@ -150,7 +116,7 @@ final class IngredientsService: IngredientsServiceProtocol {
             throw IngredientsServiceError.retrievalFailed(error)
         }
     }
-    
+
     /// Returns ingredients, optionally filtered by category, up to `limit` results.
     ///
     /// Filtering by `IngredientCategory` requires a two-step mapping because the database
@@ -215,83 +181,21 @@ final class IngredientsService: IngredientsServiceProtocol {
             throw IngredientsServiceError.databaseError(error)
         }
     }
-
-    /// Forces a re-import of ingredients from the JSON file
-    /// - Throws: IngredientsServiceError if import fails
-    func forceReimport() async throws {
-        try await importIngredients()
-        isImported = true
-    }
-    
-    // MARK: - Private Methods
-    
-    /// Checks if ingredients exist in the database
-    /// - Returns: True if at least one ingredient exists, false otherwise
-    private func checkIngredientsExist() async throws -> Bool {
-        do {
-            // Try to search for a common ingredient to check if DB is populated
-            let results = try dbInterface.searchIngredients(
-                matching: IngredientsServiceConstants.populationProbe,
-                limit: IngredientsServiceConstants.populationProbeLimit
-            )
-            return !results.isEmpty
-        } catch {
-            throw IngredientsServiceError.databaseError(error)
-        }
-    }
-    
-    /// Imports ingredients from the JSON file into the database
-    /// - Throws: IngredientsServiceError if import fails
-    private func importIngredients() async throws {
-        guard let fileURL = Bundle.main.url(
-            forResource: ingredientsFileName,
-            withExtension: ingredientsFileExtension
-        ) else {
-            throw IngredientsServiceError.fileNotFound(ingredientsFileName)
-        }
-        
-        do {
-            let data = try Data(contentsOf: fileURL)
-            let ingredients = try JSONDecoder().decode([Ingredient].self, from: data)
-            
-            guard !ingredients.isEmpty else {
-                throw IngredientsServiceError.emptyFile
-            }
-            
-            try dbInterface.insertIngredients(ingredients)
-        } catch let error as IngredientsServiceError {
-            throw error
-        } catch {
-            throw IngredientsServiceError.importFailed(error)
-        }
-    }
 }
 
 // MARK: - Error Types
 
 /// Errors that can occur during ingredient service operations.
 enum IngredientsServiceError: Error, LocalizedError {
-    /// The bundled ingredient catalog file could not be located in the app bundle.
-    case fileNotFound(String)
-    /// The ingredient catalog file was found but contained no ingredient entries.
-    case emptyFile
-    /// Decoding or writing the ingredient catalog to the database failed.
-    case importFailed(Error)
     /// An FTS5 search query against the ingredients table failed.
     case searchFailed(Error)
     /// A lookup by exact ingredient name failed.
     case retrievalFailed(Error)
     /// A general database operation (e.g. fetching food groups) failed.
     case databaseError(Error)
-    
+
     var errorDescription: String? {
         switch self {
-        case .fileNotFound(let fileName):
-            return "Ingredients file '\(fileName)' not found in bundle"
-        case .emptyFile:
-            return "Ingredients file is empty"
-        case .importFailed(let error):
-            return "Failed to import ingredients: \(error.localizedDescription)"
         case .searchFailed(let error):
             return "Failed to search ingredients: \(error.localizedDescription)"
         case .retrievalFailed(let error):

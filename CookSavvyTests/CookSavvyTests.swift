@@ -437,10 +437,12 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertEqual(resLower.first?.name, "Chicken")
     }
 
-    // MARK: - Word-based recipe matching tests
+    // MARK: - basicComponent-based recipe matching tests
 
-    func testGetRecipesMatchesSingleWordFromMultiWordIngredient() throws {
-        let chickenBreast: Ingredient = "Chicken Breast"
+    func testGetRecipesMatchesByBasicComponent() throws {
+        // "Chicken Breast" has basicComponent "chicken" — querying "chicken" should find it
+        let chickenBreast = Ingredient(name: "Chicken Breast", description: nil, pictureFileName: nil,
+                                       foodGroup: nil, foodSubgroup: nil, basicComponent: "chicken")
         let r = Recipe(
             title: "Grilled Chicken",
             ingredients: [chickenBreast, "Salt"],
@@ -449,15 +451,16 @@ final class DBInterfaceTests: XCTestCase {
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([r])
-        
-        // Query with just "chicken" should match "Chicken Breast"
-        let results = try dbInterface.getRecipes(byIngredients: ["chicken"], offset: 0, limit: 20)
+
+        let results = try dbInterface.getRecipes(byIngredients: [Ingredient(name: "chicken")], offset: 0, limit: 20)
         XCTAssertEqual(results.count, 1)
         XCTAssertEqual(results.first?.title, "Grilled Chicken")
     }
 
-    func testGetRecipesMatchesSecondWordFromMultiWordIngredient() throws {
-        let chickenBreast: Ingredient = "Chicken Breast"
+    func testGetRecipesExactBasicComponentMatch() throws {
+        // Querying a component not present in the recipe should return nothing
+        let chickenBreast = Ingredient(name: "Chicken Breast", description: nil, pictureFileName: nil,
+                                       foodGroup: nil, foodSubgroup: nil, basicComponent: "chicken")
         let r = Recipe(
             title: "Stuffed Breast",
             ingredients: [chickenBreast],
@@ -466,15 +469,21 @@ final class DBInterfaceTests: XCTestCase {
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([r])
-        
-        // Query with just "breast" should match "Chicken Breast"
-        let results = try dbInterface.getRecipes(byIngredients: ["breast"], offset: 0, limit: 20)
-        XCTAssertEqual(results.count, 1)
-        XCTAssertEqual(results.first?.title, "Stuffed Breast")
+
+        // "breast" is not stored as basic_component — should return nothing
+        let misses = try dbInterface.getRecipes(byIngredients: [Ingredient(name: "breast")], offset: 0, limit: 20)
+        XCTAssertTrue(misses.isEmpty)
+
+        // "chicken" is the stored basic_component — should find the recipe
+        let hits = try dbInterface.getRecipes(byIngredients: [Ingredient(name: "chicken")], offset: 0, limit: 20)
+        XCTAssertEqual(hits.count, 1)
+        XCTAssertEqual(hits.first?.title, "Stuffed Breast")
     }
 
-    func testGetRecipesWordMatchingIsCaseInsensitive() throws {
-        let ingredient: Ingredient = "CHICKEN BREAST"
+    func testGetRecipesBasicComponentMatchIsCaseSensitiveToStoredValue() throws {
+        // basicComponent stored as-is; querying with the same value must match
+        let ingredient = Ingredient(name: "CHICKEN BREAST", description: nil, pictureFileName: nil,
+                                    foodGroup: nil, foodSubgroup: nil, basicComponent: "chicken")
         let r = Recipe(
             title: "Chicken Dish",
             ingredients: [ingredient],
@@ -483,14 +492,16 @@ final class DBInterfaceTests: XCTestCase {
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([r])
-        
-        let results = try dbInterface.getRecipes(byIngredients: ["chicken"], offset: 0, limit: 20)
+
+        let results = try dbInterface.getRecipes(byIngredients: [Ingredient(name: "chicken")], offset: 0, limit: 20)
         XCTAssertEqual(results.count, 1)
     }
 
-    func testGetRecipesMatchesMultipleWordsFromDifferentIngredients() throws {
-        let chicken: Ingredient = "Chicken Breast"
-        let tomato: Ingredient = "Tomato Sauce"
+    func testGetRecipesMatchesMultipleBasicComponents() throws {
+        let chicken = Ingredient(name: "Chicken Breast", description: nil, pictureFileName: nil,
+                                 foodGroup: nil, foodSubgroup: nil, basicComponent: "chicken")
+        let tomato = Ingredient(name: "Tomato Sauce", description: nil, pictureFileName: nil,
+                                foodGroup: nil, foodSubgroup: nil, basicComponent: "tomato")
         let r = Recipe(
             title: "Chicken Tomato Pasta",
             ingredients: [chicken, tomato, "Pasta"],
@@ -499,15 +510,19 @@ final class DBInterfaceTests: XCTestCase {
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([r])
-        
-        // Query with "chicken" and "sauce" should match
-        let results = try dbInterface.getRecipes(byIngredients: ["chicken", "sauce"], offset: 0, limit: 20)
+
+        // Querying either basicComponent should find the recipe
+        let results = try dbInterface.getRecipes(
+            byIngredients: [Ingredient(name: "chicken"), Ingredient(name: "tomato")],
+            offset: 0, limit: 20
+        )
         XCTAssertEqual(results.count, 1)
         XCTAssertEqual(results.first?.title, "Chicken Tomato Pasta")
     }
 
-    func testGetRecipesNoWordMatchReturnsEmpty() throws {
-        let chicken: Ingredient = "Chicken Breast"
+    func testGetRecipesNoBasicComponentMatchReturnsEmpty() throws {
+        let chicken = Ingredient(name: "Chicken Breast", description: nil, pictureFileName: nil,
+                                 foodGroup: nil, foodSubgroup: nil, basicComponent: "chicken")
         let r = Recipe(
             title: "Chicken Dish",
             ingredients: [chicken],
@@ -516,25 +531,31 @@ final class DBInterfaceTests: XCTestCase {
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([r])
-        
-        // Query with "beef" should not match "Chicken Breast"
-        let results = try dbInterface.getRecipes(byIngredients: ["beef"], offset: 0, limit: 20)
+
+        // "beef" is not a basicComponent in this recipe — should return nothing
+        let results = try dbInterface.getRecipes(byIngredients: [Ingredient(name: "beef")], offset: 0, limit: 20)
         XCTAssertTrue(results.isEmpty)
     }
 
     func testGetRecipesDistinctResultsNoDuplicates() throws {
-        let chicken: Ingredient = "Chicken Breast"
+        let chicken = Ingredient(name: "Chicken Breast", description: nil, pictureFileName: nil,
+                                 foodGroup: nil, foodSubgroup: nil, basicComponent: "chicken")
+        let pasta = Ingredient(name: "Pasta", description: nil, pictureFileName: nil,
+                               foodGroup: nil, foodSubgroup: nil, basicComponent: "pasta")
         let r = Recipe(
             title: "Chicken Pasta",
-            ingredients: [chicken, "Pasta"],
+            ingredients: [chicken, pasta],
             instructions: ["Cook"],
             image: "img",
             additionalInfo: .mock
         )
         try dbInterface.insertRecipes([r])
-        
-        // Query with both "chicken" and "breast" should return recipe only once
-        let results = try dbInterface.getRecipes(byIngredients: ["chicken", "breast"], offset: 0, limit: 20)
+
+        // Both basicComponents match — recipe should appear exactly once
+        let results = try dbInterface.getRecipes(
+            byIngredients: [Ingredient(name: "chicken"), Ingredient(name: "pasta")],
+            offset: 0, limit: 20
+        )
         XCTAssertEqual(results.count, 1)
         XCTAssertEqual(results.first?.title, "Chicken Pasta")
     }

@@ -95,10 +95,6 @@ final class MockIngredientsService: IngredientsServiceProtocol {
         if let error = shouldThrow { throw error }
         return stubbedCategories
     }
-
-    func forceReimport() async throws {
-        if let error = shouldThrow { throw error }
-    }
 }
 
 // MARK: - MockRecipeService

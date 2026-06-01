@@ -99,7 +99,26 @@ final class DataImportService: DataImportServiceProtocol {
 
         try dbInterface.insertRecipes(importedRecipes)
 
-        logger.info("Successfully imported \(importedRecipes.count) recipes to database")
+        // Seed the ingredients table from basicComponent values so the ingredient grid
+        // shows short canonical names (e.g. "chicken", "olive oil") rather than Food.json entries.
+        var seenComponents = Set<String>()
+        var basicIngredients: [Ingredient] = []
+        for recipe in importedRecipes {
+            for ingredient in recipe.ingredients {
+                let component = ingredient.basicComponent ?? ingredient.name
+                guard !component.isEmpty, seenComponents.insert(component.lowercased()).inserted else { continue }
+                basicIngredients.append(Ingredient(
+                    name: component,
+                    description: nil,
+                    pictureFileName: nil,
+                    foodGroup: ingredient.foodGroup,
+                    foodSubgroup: ingredient.foodSubgroup
+                ))
+            }
+        }
+        try dbInterface.insertIngredients(basicIngredients)
+
+        logger.info("Successfully imported \(importedRecipes.count) recipes and \(basicIngredients.count) unique ingredients to database")
         isRecipesImported = true
     }
 

@@ -10,30 +10,32 @@ import os.log
 
 /// Represents the current phase of the two-phase database initialisation sequence.
 ///
-/// Progress flows linearly: `notStarted` → `loadingIngredients` → `loadingRecipes` → `ready`.
+/// Progress flows linearly: `notStarted` → `loadingRecipes` → `loadingIngredients` → `ready`.
+/// Recipe import runs first because it also seeds the `ingredients` table from `basicComponent`
+/// values. The `loadingIngredients` phase is a lightweight readiness gate after that seeding.
 /// Any failure transitions to `.failed` with a human-readable message.
 enum DatabaseInitializationState: Equatable {
     /// Initialisation has not yet been triggered.
     case notStarted
-    /// Phase 1: the ingredients JSON is being imported into the `ingredients` table.
-    case loadingIngredients
-    /// Phase 2: the recipe dataset is being imported into the `recipes` table.
+    /// Phase 1: the recipe dataset is being imported and the `ingredients` table is being seeded.
     case loadingRecipes
+    /// Phase 2: the ingredients service readiness gate is being confirmed.
+    case loadingIngredients
     /// Both phases completed successfully; all data is available.
     case ready
     /// An unrecoverable error occurred. The associated string describes the failure.
     case failed(String)
-    
-    /// `true` once the app has progressed past the ingredients loading phase.
+
+    /// `true` once recipe import (which seeds ingredients) has completed.
     var isIngredientsReady: Bool {
         switch self {
-        case .loadingRecipes, .ready:
+        case .loadingIngredients, .ready:
             return true
         default:
             return false
         }
     }
-    
+
     /// `true` only when the full initialisation sequence has completed successfully.
     var isRecipesReady: Bool {
         self == .ready
@@ -42,11 +44,12 @@ enum DatabaseInitializationState: Equatable {
 
 /// Orchestrates the two-phase database startup sequence at app launch.
 ///
-/// **Phase 1 — Ingredients**: calls `IngredientsServiceProtocol.ensureIngredientsLoaded()` to
-/// import the ingredient JSON if the `ingredients` table is empty.
+/// **Phase 1 — Recipes**: calls `DataImportServiceProtocol.ensureRecipesImported()` to
+/// import the recipe dataset JSON if the `recipes` table is empty. This phase also seeds
+/// the `ingredients` table from `basicComponent` values extracted from the recipe dataset.
 ///
-/// **Phase 2 — Recipes**: calls `DataImportServiceProtocol.ensureRecipesImported()` to
-/// import the recipe dataset JSON if the `recipes` table is empty.
+/// **Phase 2 — Ingredients**: calls `IngredientsServiceProtocol.ensureIngredientsLoaded()` to
+/// confirm the service is ready. Because the catalog was seeded in Phase 1, this is a no-op gate.
 ///
 /// The service is fail-fast: any error transitions `state` to `.failed(message)` and
 /// propagates upward so `AppContainer` can render a blocking error screen rather than
@@ -97,35 +100,35 @@ final class DatabaseInitializationService: ObservableObject, DatabaseInitializat
     /// Executes both initialisation phases sequentially, publishing `state` updates throughout.
     private func initialize() async {
         Self.logger.info("Starting database initialization")
-        
-        state = .loadingIngredients
-        Self.logger.info("Phase 1: Loading ingredients...")
-        
-        do {
-            let ingredientsStartTime = Date()
-            try await ingredientsService.ensureIngredientsLoaded()
-            let ingredientsDuration = Date().timeIntervalSince(ingredientsStartTime)
-            Self.logger.info("Ingredients loaded successfully in \(String(format: "%.2f", ingredientsDuration))s")
-        } catch {
-            Self.logger.error("Failed to load ingredients: \(error.localizedDescription)")
-            state = .failed("Failed to load ingredients: \(error.localizedDescription)")
-            return
-        }
-        
+
         state = .loadingRecipes
-        Self.logger.info("Phase 2: Loading recipes...")
-        
+        Self.logger.info("Phase 1: Importing recipes and seeding ingredients...")
+
         do {
             let recipesStartTime = Date()
             try await dataImportService.ensureRecipesImported()
             let recipesDuration = Date().timeIntervalSince(recipesStartTime)
-            Self.logger.info("Recipes loaded successfully in \(String(format: "%.2f", recipesDuration))s")
+            Self.logger.info("Recipes imported successfully in \(String(format: "%.2f", recipesDuration))s")
         } catch {
-            Self.logger.error("Failed to load recipes: \(error.localizedDescription)")
+            Self.logger.error("Failed to import recipes: \(error.localizedDescription)")
             state = .failed("Failed to load recipes: \(error.localizedDescription)")
             return
         }
-        
+
+        state = .loadingIngredients
+        Self.logger.info("Phase 2: Confirming ingredients readiness...")
+
+        do {
+            let ingredientsStartTime = Date()
+            try await ingredientsService.ensureIngredientsLoaded()
+            let ingredientsDuration = Date().timeIntervalSince(ingredientsStartTime)
+            Self.logger.info("Ingredients ready in \(String(format: "%.2f", ingredientsDuration))s")
+        } catch {
+            Self.logger.error("Failed to confirm ingredients: \(error.localizedDescription)")
+            state = .failed("Failed to load ingredients: \(error.localizedDescription)")
+            return
+        }
+
         state = .ready
         Self.logger.info("Database initialization completed successfully")
     }

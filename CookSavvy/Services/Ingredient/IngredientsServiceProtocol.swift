@@ -2,11 +2,12 @@ import Foundation
 
 /// Defines the public interface for the ingredient catalog and search service.
 ///
-/// Conforming types must load the catalog on demand, expose FTS5-backed search,
-/// category browsing, and exact-name lookup. The protocol allows `IngredientsService`
-/// to be replaced with a mock in tests and DEBUG builds.
+/// The ingredient catalog is seeded into the database by `DataImportService` during recipe
+/// import. Conforming types expose `ensureIngredientsLoaded()` as a readiness gate,
+/// FTS5-backed search, category browsing, and exact-name lookup. The protocol allows
+/// `IngredientsService` to be replaced with a mock in tests and DEBUG builds.
 protocol IngredientsServiceProtocol: AnyObject {
-    /// Ensures the ingredient catalog has been imported into the database; imports on first call.
+    /// Marks the service as ready; the ingredient catalog is seeded by `DataImportService`.
     func ensureIngredientsLoaded() async throws
     /// Returns ingredient names matching `query` using FTS5 prefix search, up to `limit` results.
     func searchIngredients(matching query: String, limit: Int) async throws -> [String]
@@ -18,8 +19,6 @@ protocol IngredientsServiceProtocol: AnyObject {
     func getAllIngredients(category: IngredientCategory?, limit: Int) async throws -> [Ingredient]
     /// Returns the `IngredientCategory` values that have at least one ingredient in the database.
     func getCategories() async throws -> [IngredientCategory]
-    /// Forces a fresh re-import of the ingredient catalog, replacing all existing entries.
-    func forceReimport() async throws
 }
 
 /// Default-parameter overloads so call sites can omit `limit` for the common case.

@@ -237,6 +237,8 @@ final class DBInterface: DBInterfaceProtocol {
                 CREATE TABLE IF NOT EXISTS recipe_ingredients (
                     recipe_id INTEGER NOT NULL,
                     ingredient_name TEXT NOT NULL,
+                    basic_component TEXT,
+                    PRIMARY KEY (recipe_id, ingredient_name),
                     FOREIGN KEY(recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
                 );
                 """)
@@ -244,6 +246,14 @@ final class DBInterface: DBInterfaceProtocol {
             try db.execute(sql: "CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_name ON recipe_ingredients(ingredient_name);")
             try db.execute(sql: "CREATE INDEX IF NOT EXISTS idx_recipes_title ON recipes(title);")
             try db.execute(sql: "CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_composite ON recipe_ingredients(recipe_id, ingredient_name);")
+
+            // Migration: add basic_component column to recipe_ingredients if absent (pre-basicComponent schema).
+            let riColumns = try db.columns(in: "recipe_ingredients").map { $0.name }
+            if !riColumns.contains("basic_component") {
+                try db.execute(sql: "ALTER TABLE recipe_ingredients ADD COLUMN basic_component TEXT;")
+            }
+
+            try db.execute(sql: "CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_basic_component ON recipe_ingredients(basic_component);")
 
             // 4. Recent Ingredients (for quick selection)
             try db.execute(sql: """
@@ -407,9 +417,10 @@ final class DBInterface: DBInterfaceProtocol {
 
     /// Fetches paginated recipes that contain at least one of the specified ingredients.
     ///
-    /// Uses `LIKE '%name%'` wildcards rather than exact joins so that "chicken" also matches
-    /// recipe ingredients listed as "chicken breast" or "grilled chicken". This trades some
-    /// precision for recall — scoring and ranking layers above this method handle deduplication.
+    /// Matches via exact `IN` lookup on `basic_component` so that "chicken" matches every recipe
+    /// ingredient whose core component is chicken regardless of how the full name is phrased.
+    /// `ingredients` are expected to carry `basicComponent`-derived names (sourced from the
+    /// `ingredients` table, which is seeded from `basicComponent` values during dataset import).
     ///
     /// Hot results are served from the title-keyed `recipeCache` to avoid repeated JSON decoding.
     /// - Parameters:
@@ -419,23 +430,20 @@ final class DBInterface: DBInterfaceProtocol {
     func getRecipes(byIngredients ingredients: [Ingredient], offset: Int = 0, limit: Int = 20) throws -> [Recipe] {
         let ingredientNames = Set(ingredients.map { $0.name })
         if ingredientNames.isEmpty { return [] }
-        
+
         Self.logger.debug("Searching recipes for ingredients: \(ingredientNames.joined(separator: ", ")) [offset: \(offset), limit: \(limit)]")
-        
-        // Build LIKE conditions for partial matching to handle cases like "chicken" matching "chicken breast"
-        let likeConditions = ingredientNames.map { _ in "LOWER(ri.ingredient_name) LIKE LOWER(?)" }.joined(separator: " OR ")
-        let likeValues = ingredientNames.map { "%\($0)%" } // Add wildcards for partial matching
-        
+
+        let placeholders = Array(repeating: "?", count: ingredientNames.count).joined(separator: ", ")
         let sql = """
             SELECT DISTINCT \(Self.recipeColumns)
             FROM recipes r
             INNER JOIN recipe_ingredients ri ON ri.recipe_id = r.id
-            WHERE \(likeConditions)
+            WHERE ri.basic_component IN (\(placeholders))
             ORDER BY r.id ASC
             LIMIT ? OFFSET ?;
         """
-        
-        var arguments: [DatabaseValueConvertible] = likeValues
+
+        var arguments: [DatabaseValueConvertible] = Array(ingredientNames)
         arguments.append(limit)
         arguments.append(offset)
         
@@ -589,15 +597,15 @@ final class DBInterface: DBInterfaceProtocol {
 
                 let recipeId = db.lastInsertedRowID
 
-                // Link unique ingredient names for querying
+                // Link unique ingredient names for querying, storing the basicComponent for fast ingredient-based search.
                 var seen: Set<String> = []
                 for ing in r.ingredients {
                     let name = ing.name
                     if seen.contains(name) { continue }
                     seen.insert(name)
                     try db.execute(
-                        sql: "INSERT INTO recipe_ingredients(recipe_id, ingredient_name) VALUES(?, ?);",
-                        arguments: [recipeId, name]
+                        sql: "INSERT INTO recipe_ingredients(recipe_id, ingredient_name, basic_component) VALUES(?, ?, ?);",
+                        arguments: [recipeId, name, ing.basicComponent ?? name]
                     )
                 }
             }
@@ -1073,8 +1081,8 @@ final class DBInterface: DBInterfaceProtocol {
                 if seen.contains(name) { continue }
                 seen.insert(name)
                 try db.execute(
-                    sql: "INSERT INTO recipe_ingredients(recipe_id, ingredient_name) VALUES(?, ?);",
-                    arguments: [recipeId, name]
+                    sql: "INSERT INTO recipe_ingredients(recipe_id, ingredient_name, basic_component) VALUES(?, ?, ?);",
+                    arguments: [recipeId, name, ing.basicComponent ?? name]
                 )
             }
         }

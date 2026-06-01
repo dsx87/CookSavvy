@@ -2,9 +2,10 @@ import Foundation
 
 /// Protocol describing the database initialisation lifecycle observable by the rest of the app.
 ///
-/// Conformers drive the two-phase startup sequence (ingredients first, then recipes) and
-/// expose the current `state` for progress tracking. `AppContainer` uses this protocol
-/// to await readiness before vending services that depend on seeded data.
+/// Conformers drive the two-phase startup sequence (recipes first — which also seeds
+/// ingredients — then the ingredients readiness gate) and expose the current `state` for
+/// progress tracking. `AppContainer` uses this protocol to await readiness before vending
+/// services that depend on seeded data.
 protocol DatabaseInitializationServiceProtocol: AnyObject {
     /// The current phase of the initialisation sequence.
     var state: DatabaseInitializationState { get }
