@@ -111,6 +111,7 @@ struct JourneyView: View {
             Image(systemName: Icons.Auth.personCircle)
                 .font(.system(size: UI.Auth.accountIconSize))
                 .foregroundStyle(theme.text3)
+                .frame(width: UI.Auth.accountIconSize, height: UI.Auth.accountIconSize)
 
             VStack(alignment: .leading, spacing: UI.Journey.accountCardTextSpacing) {
                 Text(Strings.Auth.guestAccount)
@@ -156,6 +157,7 @@ struct JourneyView: View {
             Image(systemName: Icons.Auth.checkmarkShield)
                 .font(.system(size: UI.Journey.accountCardIconSize))
                 .foregroundStyle(theme.mint)
+                .frame(width: UI.Journey.accountCardIconSize, height: UI.Journey.accountCardIconSize)
 
             VStack(alignment: .leading, spacing: UI.Journey.accountCardTextSpacing) {
                 Text(Strings.Auth.signedInAs)
