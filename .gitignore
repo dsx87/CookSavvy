@@ -150,4 +150,5 @@ CookSavvy.xcodeproj/project.xcworkspace/xcshareddata/
 APIKeys.plist
 
 # Claude Code
-.claude/
+.claude/*
+!.claude/rules
