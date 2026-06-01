@@ -201,7 +201,7 @@ struct RecipeDetailsView: View {
                     .fill(ingredientDotColor(for: status))
                     .frame(width: UI.RecipeDetails.ingredientDotSize, height: UI.RecipeDetails.ingredientDotSize)
                     .accessibilityLabel(ingredientDotAccessibilityLabel(for: status))
-                Text(ingredient.name)
+                Text(ingredient.name.capitalized)
                     .font(UI.Fonts.bodyScaled)
                     .foregroundStyle(theme.text1)
                 Spacer()

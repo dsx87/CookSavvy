@@ -227,7 +227,7 @@ struct OnboardingCameraPage: View {
             horizontalSpacing: UI.Onboarding.chipSpacing,
             verticalSpacing: UI.Onboarding.chipSpacing
         ) { ingredient in
-            Text(ingredient.name)
+            Text(ingredient.name.capitalized)
                 .font(UI.Fonts.captionSemibold)
                 .foregroundStyle(.white)
                 .padding(.horizontal, UI.Common.chipHorizontalPadding)

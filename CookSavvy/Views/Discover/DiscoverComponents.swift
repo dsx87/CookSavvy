@@ -62,7 +62,7 @@ struct IngredientBubble: View {
             }
             .scaleEffect(reduceMotion ? 1.0 : (isSelected ? UI.Components.bubbleSelectedScale : 1.0))
 
-            Text(ingredient.name)
+            Text(ingredient.name.capitalized)
                 .font(.system(size: 11, weight: isSelected ? .bold : .medium, design: .rounded))
                 .foregroundStyle(labelColor)
                 .lineLimit(1)
@@ -159,7 +159,7 @@ struct SelectedChip: View {
         HStack(spacing: UI.Components.selectedChipSpacing) {
             Text(ingredient.emoji ?? IngredientEmojiProvider.emoji(for: ingredient.name, foodGroup: ingredient.foodGroup))
                 .font(UI.Fonts.caption)
-            Text(ingredient.name)
+            Text(ingredient.name.capitalized)
                 .font(UI.Fonts.captionSemibold)
                 .foregroundStyle(theme.text1)
             Button(action: onRemove) {
@@ -187,7 +187,7 @@ struct AlwaysHaveChip: View {
         HStack(spacing: UI.Components.selectedChipSpacing) {
             Text(ingredient.emoji ?? IngredientEmojiProvider.emoji(for: ingredient.name, foodGroup: ingredient.foodGroup))
                 .font(UI.Fonts.caption)
-            Text(ingredient.name)
+            Text(ingredient.name.capitalized)
                 .font(UI.Fonts.captionSemibold)
                 .foregroundStyle(theme.text1)
         }

@@ -109,7 +109,7 @@ struct ShoppingListView: View {
             .accessibilityIdentifier(AccessibilityID.ShoppingList.checkbox(item.name))
             .accessibilityLabel(viewModel.checkboxAccessibilityLabel(for: item))
 
-            Text(item.name)
+            Text(item.name.capitalized)
                 .font(UI.Fonts.bodyScaled)
                 .foregroundStyle(item.isChecked ? theme.text3 : theme.text1)
                 .strikethrough(item.isChecked, color: theme.text3)
