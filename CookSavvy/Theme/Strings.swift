@@ -204,6 +204,11 @@ enum Strings {
         static let badgeQuick = String(localized: "discover.badgeQuick", defaultValue: "Quick")
         static let badgeEasy = String(localized: "discover.badgeEasy", defaultValue: "Easy")
         static let badgeBeginner = String(localized: "discover.badgeBeginner", defaultValue: "Beginner")
+        static let suggestionRowAccessibilityLabel = String(localized: "discover.suggestionRowAccessibilityLabel", defaultValue: "Add %@ to selection")
+        static let smartSearchRowLabel = String(localized: "discover.smartSearchRowLabel", defaultValue: "✨ Smart search \"%@\"")
+        static let smartSearchAccessibilityLabel = String(localized: "discover.smartSearchAccessibilityLabel", defaultValue: "Smart search for %@")
+        static let smartSearchFailedMessage = String(localized: "discover.smartSearchFailedMessage", defaultValue: "Smart search failed — try a simpler phrase or add ingredients manually")
+        static let smartSearchNoIngredientsFound = String(localized: "discover.smartSearchNoIngredientsFound", defaultValue: "Couldn't find matching ingredients — try being more specific")
     }
 
     /// Strings for the My Kitchen (Journey) screen, including stats, achievements, shopping list shortcuts, and account section.

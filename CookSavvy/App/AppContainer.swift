@@ -68,6 +68,8 @@ final class AppContainer {
     let dietaryPreferences: DietaryPreferences
     /// Curated recipe collection management backed by the database.
     let curatedCollectionService: CuratedCollectionServiceProtocol
+    /// AI natural-language query parser; `nil` when neither on-device nor server-side AI is available.
+    let smartSearchService: SmartSearchServiceProtocol?
 
     // MARK: - Initialization
 
@@ -200,6 +202,7 @@ final class AppContainer {
             logger: loggingService.makeLogger(category: .dietaryPreferences)
         )
         self.curatedCollectionService = CuratedCollectionService(dbInterface: db)
+        self.smartSearchService = SmartSearchService.makeIfAvailable(clientProvider: supabaseAssembly.clientProvider)
     }
 
     #if DEBUG
@@ -260,6 +263,7 @@ final class AppContainer {
             logger: loggingService.makeLogger(category: .dietaryPreferences)
         )
         self.curatedCollectionService = CuratedCollectionService(dbInterface: dbInterface)
+        self.smartSearchService = nil
     }
     #endif
 

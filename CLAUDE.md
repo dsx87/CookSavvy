@@ -68,7 +68,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 CookSavvy/
 ├── App/                   — Entry point (CookSavvyApp), DI container (AppContainer), UI test config
 ├── Models/                — Data models: Recipe, Ingredient, ShoppingItem, CookingSession, Achievement
-├── Services/              — All service layer: data, auth, AI, subscription, DB (see services.md rule)
+├── Services/              — All service layer: data, auth, AI, subscription, DB, SmartSearch (see services.md rule)
 ├── Network/               — Networking infrastructure (see services.md rule)
 ├── DataImport/            — Dataset import and JSON reading (see services.md rule)
 ├── Coordinators/          — Navigation coordinators (see coordinators.md rule)

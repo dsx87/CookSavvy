@@ -410,6 +410,16 @@ struct UI {
         static let useItAllPaddingH: CGFloat = 14
         static let useItAllPaddingV: CGFloat = 8
         static let chefEmojiSize: CGFloat = 20
+        static let suggestionPopupCornerRadius: CGFloat = 14
+        static let suggestionPopupShadowRadius: CGFloat = 10
+        static let suggestionPopupShadowY: CGFloat = 4
+        static let suggestionPopupShadowOpacity: Double = 0.10
+        static let suggestionRowPaddingH: CGFloat = 14
+        static let suggestionRowPaddingV: CGFloat = 11
+        static let suggestionPopupTopGap: CGFloat = 4
+        static let suggestionPopupItemLimit: Int = 6
+        /// Maximum number of recipes fetched for ingredient-free browse searches.
+        static let browseRecipeLimit: Int = 100
 
         /// Dimensions and gradient colors for the "This Week's Collections" card strip on the Discover screen.
         struct Collection {

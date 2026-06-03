@@ -1850,6 +1850,50 @@
         }
       }
     },
+    "discover.smartSearchAccessibilityLabel" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Smart search for %@"
+          }
+        }
+      }
+    },
+    "discover.smartSearchFailedMessage" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Smart search failed — try a simpler phrase or add ingredients manually"
+          }
+        }
+      }
+    },
+    "discover.smartSearchNoIngredientsFound" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Couldn't find matching ingredients — try being more specific"
+          }
+        }
+      }
+    },
+    "discover.smartSearchRowLabel" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "✨ Smart search \"%@\""
+          }
+        }
+      }
+    },
     "discover.suggestedBecause" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -1868,6 +1912,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "SUGGESTED FOR YOU"
+          }
+        }
+      }
+    },
+    "discover.suggestionRowAccessibilityLabel" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add %@ to selection"
           }
         }
       }

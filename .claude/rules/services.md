@@ -59,6 +59,16 @@ paths:
 - `PaidFeature` — feature gating
 - `Configuration.storekit` — StoreKit testing configuration
 
+## Smart Search Layer
+- `SmartSearchServiceProtocol` / `SmartSearchService` — AI natural-language query parser; free for all users, no subscription gating
+- `SmartSearchProviderProtocol` — common interface for AI providers
+- `FoundationModelsSmartSearchProvider` — on-device provider using `LanguageModelSession`, iOS 26+ / Apple Intelligence only; `@available(iOS 26.0, *)`, wrapped in `#if canImport(FoundationModels)`
+- `EdgeFunctionSmartSearchProvider` — fallback for older devices; calls the `parse-search-query` Supabase edge function (not yet deployed — see backend dependency note in `SmartSearchService.swift`)
+- `SmartSearchIntent` — structured output: `ingredientNames`, `mood`, `cookTime`, `complexity`, `dietary`
+- `SmartSearchError` — typed errors: `parsingFailed`, `networkError`
+- Provider selection at construction time via `SmartSearchService.makeIfAvailable(clientProvider:)`: on-device (iOS 26+, Apple Intelligence) if available, else `nil` (Smart Search row hidden). `EdgeFunctionSmartSearchProvider` is implemented but not wired — deferred until the `parse-search-query` Supabase edge function is deployed
+- Errors from `runSmartSearch` surface via `homeLoadError` (State-1 banner), not `searchError` (State-2 only)
+
 ## File Map
 
 ```
@@ -72,6 +82,12 @@ Services/
 │   ├── OfflineRecipeSource.swift
 │   ├── OnlineRecipeSource.swift
 │   └── AIRecipeSource.swift
+├── SmartSearch/
+│   ├── SmartSearchIntent.swift
+│   ├── SmartSearchServiceProtocol.swift   — Service + provider protocols, SmartSearchError
+│   ├── SmartSearchService.swift           — Provider selector + SmartSearchServiceProtocol impl
+│   ├── FoundationModelsSmartSearchProvider.swift  — On-device LLM (iOS 26+)
+│   └── EdgeFunctionSmartSearchProvider.swift      — Supabase edge function fallback
 ├── Ingredient/
 │   ├── IngredientsService.swift
 │   └── IngredientDetectionProtocol.swift — Protocol + errors

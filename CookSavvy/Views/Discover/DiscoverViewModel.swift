@@ -150,6 +150,15 @@ final class DiscoverViewModel: ObservableObject {
     @Published var loadingCollectionID: String? = nil
     /// Controls visibility of the ingredient match info popover.
     @Published var isMatchInfoPopoverPresented = false
+    /// `true` while the search bar text field has keyboard focus; drives the suggestions popup.
+    @Published var isSearchFocused: Bool = false
+    /// Captured height of the rendered search bar; used to offset the suggestions popup correctly.
+    @Published var searchBarHeight: CGFloat = 47
+    /// Ingredient matches for the inline search suggestions popup; populated while the search bar has
+    /// non-empty text. Already-selected ingredients are excluded so tapping always adds, never removes.
+    @Published var ingredientSuggestions: [Ingredient] = []
+    /// `true` while the smart-search service is parsing a natural-language query.
+    @Published var isParsingQuery = false
 
     // MARK: - Dependencies
 
@@ -165,6 +174,7 @@ final class DiscoverViewModel: ObservableObject {
     private let logger: any LoggerProtocol
     private let dietaryPreferences: DietaryPreferencesProtocol
     private let curatedCollectionService: CuratedCollectionServiceProtocol
+    private let smartSearchService: SmartSearchServiceProtocol?
     private var initialIngredients: [Ingredient]?
     private weak var coordinator: DiscoverCoordinator?
 
@@ -184,6 +194,7 @@ final class DiscoverViewModel: ObservableObject {
         logger: any LoggerProtocol,
         dietaryPreferences: DietaryPreferencesProtocol,
         curatedCollectionService: CuratedCollectionServiceProtocol,
+        smartSearchService: SmartSearchServiceProtocol? = nil,
         initialIngredients: [Ingredient]? = nil,
         coordinator: DiscoverCoordinator? = nil
     ) {
@@ -199,6 +210,7 @@ final class DiscoverViewModel: ObservableObject {
         self.logger = logger
         self.dietaryPreferences = dietaryPreferences
         self.curatedCollectionService = curatedCollectionService
+        self.smartSearchService = smartSearchService
         self.initialIngredients = initialIngredients
         self.coordinator = coordinator
     }
@@ -207,6 +219,9 @@ final class DiscoverViewModel: ObservableObject {
 
     /// `true` when at least one ingredient has been selected.
     var hasIngredients: Bool { !selectedIngredients.isEmpty }
+
+    /// `true` when a smart-search service is available; used by the view to show the Smart Search row.
+    var hasSmartSearch: Bool { smartSearchService != nil }
 
     /// Explicit selected ingredients plus pantry staples, deduplicated case-insensitively.
     ///
@@ -530,6 +545,79 @@ final class DiscoverViewModel: ObservableObject {
         showResults = false
     }
 
+    /// Parses a natural-language query into structured intent and applies it to the discover state.
+    ///
+    /// Filters (mood, cook time, complexity, dietary) are applied whenever they are present in the
+    /// intent, independent of whether any ingredients were resolved. Ingredient handling then branches:
+    /// - Ingredients resolved → replace the current selection, clear the search bar, run a new search.
+    /// - No ingredients resolved, but user already has some selected → keep their selection, apply the
+    ///   new filters, and re-run the search so results reflect the updated criteria immediately.
+    /// - No ingredients resolved and none selected → surface a hint so the user can add ingredients.
+    func runSmartSearch(_ query: String) async {
+        guard let service = smartSearchService, !query.isEmpty else { return }
+        isParsingQuery = true
+        // homeLoadError is the only banner visible in State 1; searchError is State-2-only.
+        homeLoadError = nil
+        defer { isParsingQuery = false }
+
+        do {
+            let intent = try await service.parse(query: query)
+
+            // Resolve free-text names to DB Ingredient objects, skipping unrecognised terms.
+            var resolved: [Ingredient] = []
+            for name in intent.ingredientNames {
+                if let ingredient = await resolveIngredient(for: name) {
+                    resolved.append(ingredient)
+                }
+            }
+
+            // Always apply extracted filters — they are independent of ingredient resolution.
+            applySmartSearchFilters(intent)
+
+            if !resolved.isEmpty {
+                // Ingredients were found: replace selection, clear bar, run search.
+                selectedIngredients = resolved
+                searchText = ""
+                ingredientSuggestions = []
+                analyticsService.track(.recipeSearchPerformed)
+                showResults = true
+                await searchRecipes()
+            } else if hasIngredients {
+                // No new ingredients but user already has some: re-run with updated filters.
+                if showResults {
+                    await searchRecipes()
+                }
+            } else {
+                // No ingredients anywhere: browse all local recipes filtered by whatever was extracted.
+                analyticsService.track(.recipeSearchPerformed)
+                showResults = true
+                await searchBrowseRecipes()
+            }
+        } catch {
+            homeLoadError = Strings.Discover.smartSearchFailedMessage
+            logger.error("Smart search failed: \(String(describing: error))")
+        }
+    }
+
+    /// Applies the filter fields from a parsed intent to the current VM state.
+    /// Only overwrites a filter when the intent provides a non-nil value, so existing
+    /// user selections are preserved when the query doesn't mention that dimension.
+    private func applySmartSearchFilters(_ intent: SmartSearchIntent) {
+        if let mood = intent.mood { selectedMood = mood }
+        if let cookTime = intent.cookTime { selectedCookTimeFilter = cookTime }
+        if let complexity = intent.complexity { selectedComplexityFilter = complexity }
+        if !intent.dietary.isEmpty { activeDietaryRestrictions = Set(intent.dietary) }
+    }
+
+    /// Selects an ingredient from the suggestions popup: adds it, clears the search field, and
+    /// dismisses the popup. The ingredient is always added (never removed) because `ingredientSuggestions`
+    /// only contains non-selected ingredients.
+    func selectSuggestion(_ ingredient: Ingredient) {
+        toggleIngredient(ingredient)
+        searchText = ""
+        ingredientSuggestions = []
+    }
+
     /// Transitions to the results state and starts a recipe search. No-op if no ingredients are selected.
     func findRecipes() {
         guard hasIngredients else { return }
@@ -786,6 +874,25 @@ final class DiscoverViewModel: ObservableObject {
         isSearching = false
     }
 
+    /// Fetches all local recipes for ingredient-free smart searches (e.g. "give me something quick").
+    ///
+    /// No ingredient match data is annotated — `missingIngredients` stays nil, so match badges are
+    /// suppressed. The existing `filteredRecipes` pipeline applies any active mood/time/complexity/dietary
+    /// filters on top of the raw results, and `RecipeMatchRanker` uses cook time, complexity, and rating
+    /// as tiebreakers, naturally surfacing simpler and higher-rated recipes first.
+    private func searchBrowseRecipes() async {
+        isSearching = true
+        searchError = nil
+        do {
+            await databaseInitService.waitForRecipes()
+            searchResultRecipes = try await recipeService.getAllRecipes(limit: UI.Discover.browseRecipeLimit)
+        } catch {
+            searchResultRecipes = []
+            searchError = Strings.Discover.searchFailedMessage
+        }
+        isSearching = false
+    }
+
     /// Debounces ingredient grid refresh requests to avoid thrashing the database on rapid input.
     /// Cancels any pending refresh before scheduling a new one with a unique token.
     private func scheduleIngredientRefresh() {
@@ -844,18 +951,37 @@ final class DiscoverViewModel: ObservableObject {
                 }
 
                 guard isCurrentRefresh(token) else { return }
-                shownIngredients = filterCategoryIngredients(categoryIngredients, query: query)
+                let filtered = filterCategoryIngredients(categoryIngredients, query: query)
+                shownIngredients = filtered
+                ingredientSuggestions = makeSuggestions(from: filtered, query: query)
             } else {
                 let fetchedIngredients = try await ingredientsService.searchFullIngredients(matching: query)
                 guard isCurrentRefresh(token) else { return }
                 loadedCategory = nil
                 categoryIngredients = []
                 shownIngredients = fetchedIngredients
+                ingredientSuggestions = makeSuggestions(from: fetchedIngredients, query: query)
             }
         } catch {
             guard isCurrentRefresh(token) else { return }
+            ingredientSuggestions = []
             logger.error("Failed to refresh discover ingredients: \(String(describing: error))")
         }
+    }
+
+    /// Resolves a free-text ingredient name from the LLM to a local database `Ingredient` object.
+    /// Uses prefix/FTS search and takes the best match; returns `nil` if no match is found.
+    private func resolveIngredient(for name: String) async -> Ingredient? {
+        guard !name.isEmpty else { return nil }
+        return try? await ingredientsService.searchFullIngredients(matching: name, limit: 1).first
+    }
+
+    /// Builds the popup suggestion list from a fetched ingredient set for the given query.
+    /// Returns an empty array when the query is empty; otherwise excludes already-selected ingredients.
+    private func makeSuggestions(from ingredients: [Ingredient], query: String) -> [Ingredient] {
+        guard !query.isEmpty else { return [] }
+        let selectedIDs = Set(selectedIngredients.map { $0.id })
+        return ingredients.filter { !selectedIDs.contains($0.id) }
     }
 
     /// Filters a pre-fetched ingredient list by a search query (case-insensitive contains).

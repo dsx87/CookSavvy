@@ -217,4 +217,12 @@ final class RecipeService: RecipeServiceProtocol {
 
         return (allRecipes, hadSourceFailures)
     }
+
+    func getAllRecipes(limit: Int) async throws -> [Recipe] {
+        do {
+            return try dbInterface.getAllRecipes(offset: 0, limit: limit)
+        } catch {
+            throw RecipeSourceError.databaseError(error)
+        }
+    }
 }

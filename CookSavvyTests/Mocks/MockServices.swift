@@ -140,6 +140,15 @@ final class MockRecipeService: RecipeServiceProtocol {
         if let error = shouldThrow { throw error }
         return stubbedStoredRecipes
     }
+
+    var stubbedAllRecipes: [Recipe] = []
+    private(set) var getAllRecipesCallCount = 0
+
+    func getAllRecipes(limit: Int) async throws -> [Recipe] {
+        if let error = shouldThrow { throw error }
+        getAllRecipesCallCount += 1
+        return stubbedAllRecipes
+    }
 }
 
 // MARK: - MockPantryService

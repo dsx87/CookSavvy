@@ -34,6 +34,12 @@ protocol RecipeServiceProtocol: AnyObject {
     /// - Throws: `RecipeSourceError.databaseError` if the read fails.
     func getStoredRecipes(for ingredients: [Ingredient]) throws -> [Recipe]
 
+    /// Fetches all locally-stored recipes without an ingredient constraint, for ingredient-free browse searches.
+    /// - Parameter limit: Maximum number of recipes to return.
+    /// - Returns: Up to `limit` recipes from the local database, in the database's natural order.
+    /// - Throws: `RecipeSourceError.databaseError` if the read fails.
+    func getAllRecipes(limit: Int) async throws -> [Recipe]
+
     /// Fetches recipes from multiple sources concurrently, deduplicating by title.
     ///
     /// Sources are queried in a stable order. Partial failures (individual source errors)

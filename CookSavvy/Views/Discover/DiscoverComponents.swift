@@ -274,6 +274,72 @@ struct RecipeFilterPill: View {
     }
 }
 
+/// A tappable row in the ingredient suggestions popup.
+/// Shows the ingredient emoji and name; tapping fires `onSelect` to add it to the current selection.
+struct IngredientSuggestionRow: View {
+    @Environment(\.appTheme) private var theme
+    let ingredient: Ingredient
+    let onSelect: () -> Void
+
+    var body: some View {
+        Button(action: onSelect) {
+            HStack(spacing: UI.Components.categoryChipSpacing) {
+                Text(ingredient.emoji ?? IngredientEmojiProvider.emoji(for: ingredient.name, foodGroup: ingredient.foodGroup))
+                    .font(UI.Fonts.body)
+                Text(ingredient.name.capitalized)
+                    .font(UI.Fonts.captionSemibold)
+                    .foregroundStyle(theme.text1)
+                Spacer()
+            }
+            .padding(.horizontal, UI.Discover.suggestionRowPaddingH)
+            .padding(.vertical, UI.Discover.suggestionRowPaddingV)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(AccessibilityID.Discover.suggestion(ingredient.name))
+        .accessibilityLabel(String(format: Strings.Discover.suggestionRowAccessibilityLabel, ingredient.name))
+    }
+}
+
+/// The "✨ Smart search" row shown at the bottom of the ingredient suggestions popup.
+/// Tapping fires `onTap`, which triggers AI natural-language parsing of the current query.
+/// Shows a spinner in place of the label while parsing is in progress.
+struct SmartSearchRow: View {
+    @Environment(\.appTheme) private var theme
+    let query: String
+    let isLoading: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: UI.Components.categoryChipSpacing) {
+                if isLoading {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .scaleEffect(0.8)
+                } else {
+                    Text(String(format: Strings.Discover.smartSearchRowLabel, query))
+                        .font(UI.Fonts.captionSemibold)
+                        .foregroundStyle(theme.accent)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+                Spacer()
+                Image(systemName: Icons.Discover.chevronRight)
+                    .font(UI.Fonts.caption)
+                    .foregroundStyle(theme.text3)
+            }
+            .padding(.horizontal, UI.Discover.suggestionRowPaddingH)
+            .padding(.vertical, UI.Discover.suggestionRowPaddingV)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(isLoading)
+        .accessibilityIdentifier(AccessibilityID.Discover.smartSearchRow)
+        .accessibilityLabel(String(format: Strings.Discover.smartSearchAccessibilityLabel, query))
+    }
+}
+
 /// A dashed-border card prompting the user to create a custom ingredient or recipe.
 /// Appears in ingredient/recipe grid as a call-to-action cell.
 struct AddYourOwnCard: View {

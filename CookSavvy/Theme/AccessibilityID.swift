@@ -101,6 +101,14 @@ enum AccessibilityID {
         static func badgeBeginner(_ title: String) -> String {
             "discover.badge.beginner.\(AccessibilityID.token(title))"
         }
+
+        static let suggestionPopup = "discover.suggestionPopup"
+        static let smartSearchRow = "discover.smartSearchRow"
+
+        /// Returns the id for a suggestion row by ingredient name.
+        static func suggestion(_ name: String) -> String {
+            "discover.suggestion.\(AccessibilityID.token(name))"
+        }
     }
 
     /// Recipe details screen identifiers.

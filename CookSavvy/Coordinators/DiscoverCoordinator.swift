@@ -115,6 +115,7 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating, Re
             logger: container.loggingService.makeLogger(category: .discoverViewModel),
             dietaryPreferences: container.dietaryPreferences,
             curatedCollectionService: container.curatedCollectionService,
+            smartSearchService: container.smartSearchService,
             initialIngredients: initialIngredients,
             coordinator: self
         )

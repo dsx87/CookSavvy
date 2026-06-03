@@ -14,6 +14,8 @@ struct DiscoverView: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @StateObject var viewModel: DiscoverViewModel
+    /// SwiftUI requires @FocusState to live in the View; this acts as a relay into viewModel.isSearchFocused.
+    @FocusState private var isSearchFocused: Bool
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -44,7 +46,9 @@ struct DiscoverView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: UI.Discover.sectionSpacing) {
                         headerView
+                        // zIndex(1) ensures the popup overlay floats above all sibling views below.
                         searchBar
+                            .zIndex(1)
                         if viewModel.homeLoadError != nil {
                             homeErrorBanner
                         }
@@ -63,6 +67,7 @@ struct DiscoverView: View {
                     }
                     .padding(.horizontal, UI.Discover.horizontalPadding)
                 }
+                .scrollDismissesKeyboard(.interactively)
             }
             
             if viewModel.hasIngredients {
@@ -91,6 +96,41 @@ struct DiscoverView: View {
         .padding(.bottom, UI.Discover.findButtonBottomPadding)
         .transition(.move(edge: .bottom).combined(with: .opacity))
         .accessibilityIdentifier(AccessibilityID.Discover.findRecipesButton)
+    }
+
+    /// Floating card listing matching ingredients and the "✨ Smart search" row below the search bar.
+    /// Ingredient rows tap to select; the smart search row sends the full query text to the AI parser.
+    private var ingredientSuggestionsPopup: some View {
+        VStack(spacing: 0) {
+            let capped = Array(viewModel.ingredientSuggestions.prefix(UI.Discover.suggestionPopupItemLimit))
+            // Total item count including the optional smart search row, used to suppress the last divider.
+            let totalItems = capped.count + (viewModel.hasSmartSearch ? 1 : 0)
+            ForEach(Array(capped.enumerated()), id: \.element.id) { index, ingredient in
+                IngredientSuggestionRow(ingredient: ingredient) {
+                    viewModel.selectSuggestion(ingredient)
+                }
+                if index < totalItems - 1 {
+                    Divider()
+                        .padding(.horizontal, UI.Discover.suggestionRowPaddingH)
+                }
+            }
+            if viewModel.hasSmartSearch {
+                SmartSearchRow(
+                    query: viewModel.searchText,
+                    isLoading: viewModel.isParsingQuery
+                ) {
+                    Task { await viewModel.runSmartSearch(viewModel.searchText) }
+                }
+            }
+        }
+        .background(theme.surface, in: RoundedRectangle(cornerRadius: UI.Discover.suggestionPopupCornerRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: UI.Discover.suggestionPopupCornerRadius, style: .continuous)
+                .strokeBorder(theme.divider, lineWidth: UI.Common.borderWidth)
+        )
+        .shadow(color: Color.black.opacity(UI.Discover.suggestionPopupShadowOpacity), radius: UI.Discover.suggestionPopupShadowRadius, y: UI.Discover.suggestionPopupShadowY)
+        .frame(maxWidth: .infinity)
+        .accessibilityIdentifier(AccessibilityID.Discover.suggestionPopup)
     }
 
     /// Camera icon button in the search bar; shows a weekly scan count badge for free-tier users.
@@ -145,6 +185,7 @@ struct DiscoverView: View {
             TextField(Strings.Discover.searchPlaceholder, text: $viewModel.searchText)
                 .font(UI.Fonts.searchField)
                 .foregroundStyle(theme.text1)
+                .focused($isSearchFocused)
                 .accessibilityIdentifier(AccessibilityID.Discover.searchField)
             if !viewModel.searchText.isEmpty {
                 Button {
@@ -164,6 +205,27 @@ struct DiscoverView: View {
         .overlay(
             RoundedRectangle(cornerRadius: UI.Discover.searchBarCornerRadius, style: .continuous)
                 .strokeBorder(theme.divider, lineWidth: UI.Common.borderWidth)
+        )
+        // Sync FocusState relay into the ViewModel so popup logic stays in the VM.
+        .onChange(of: isSearchFocused) { _, focused in
+            viewModel.isSearchFocused = focused
+        }
+        .overlay(alignment: .topLeading) {
+            let shouldShow = viewModel.isSearchFocused && !viewModel.searchText.isEmpty &&
+                (!viewModel.ingredientSuggestions.isEmpty || viewModel.hasSmartSearch)
+            if shouldShow {
+                ingredientSuggestionsPopup
+                    .offset(y: viewModel.searchBarHeight + UI.Discover.suggestionPopupTopGap)
+            }
+        }
+        // Capture actual rendered height so the popup offset is accurate across Dynamic Type sizes.
+        .background(
+            GeometryReader { proxy in
+                Color.clear
+                    .onChange(of: proxy.size.height, initial: true) { _, h in
+                        viewModel.searchBarHeight = h
+                    }
+            }
         )
     }
 
