@@ -804,4 +804,24 @@ struct UI {
         static let signInButtonCornerRadius: CGFloat = 12
         static let accountIconSize: CGFloat = 40
     }
+
+    // MARK: - ImageProcessing
+
+    /// Tuning constants for image preprocessing before remote AI ingredient detection.
+    ///
+    /// Camera captures are full-resolution (~12MP). The remote vision model internally
+    /// downscales and tiles images anyway, so sending native frames only inflates the
+    /// base64 payload and upload latency without improving detection. Downscaling the long
+    /// edge to `detectionMaxDimension` preserves enough detail for fine-grained items
+    /// (herbs, labels, similar produce) while cutting payload size by roughly an order of
+    /// magnitude. Color is intentionally preserved — it is a primary signal for food
+    /// recognition. The slightly lower `detectionJPEGQuality` is acceptable because the
+    /// resize already removes most redundant detail.
+    struct ImageProcessing {
+        /// Maximum length (in pixels) of the longer image edge sent for AI detection.
+        /// The shorter edge scales proportionally to preserve aspect ratio.
+        static let detectionMaxDimension: CGFloat = 1280
+        /// JPEG compression quality (0...1) applied after downscaling for AI detection.
+        static let detectionJPEGQuality: CGFloat = 0.7
+    }
 }

@@ -23,13 +23,18 @@ final class AIIngredientDetectionAdapter: IngredientDetectionServiceProtocol {
     
     /// Converts `image` to JPEG data and delegates to `AIServiceProtocol.detectIngredients(from:)`.
     ///
+    /// The capture is downscaled to `UI.ImageProcessing.detectionMaxDimension` before encoding:
+    /// the remote vision model downsamples large images regardless, so shrinking on-device trims
+    /// the base64 payload and upload latency without affecting detection accuracy.
+    ///
     /// - Parameter image: The captured camera image to analyse.
     /// - Returns: Detected `Ingredient` values.
     /// - Throws: `IngredientDetectionError.invalidImage` if JPEG encoding fails,
     ///   `IngredientDetectionError.noIngredientsDetected` if none are found,
     ///   or `IngredientDetectionError.processingFailed` for all other AI errors.
     func detectIngredients(in image: UIImage) async throws -> [Ingredient] {
-        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+        let resized = image.downscaled(toMaxDimension: UI.ImageProcessing.detectionMaxDimension)
+        guard let imageData = resized.jpegData(compressionQuality: UI.ImageProcessing.detectionJPEGQuality) else {
             throw IngredientDetectionError.invalidImage
         }
         do {
