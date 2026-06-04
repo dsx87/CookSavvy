@@ -8,7 +8,14 @@ A hobby iOS recipe app that suggests recipes based on user-provided ingredients.
 - **UI Framework:** SwiftUI (UIKit only when absolutely necessary)
 - **Database:** GRDB (SQLite wrapper)
 - **Subscriptions:** StoreKit 2
+- **Backend:** Supabase (Edge Functions proxy AI/online-recipe calls; keys held server-side)
+- **Analytics:** TelemetryDeck in RELEASE when configured, else `os.Logger` (`AnalyticsServiceProtocol`)
+- **Crash reporting:** Sentry in RELEASE when a DSN is configured, else no-op (`CrashReportingServiceProtocol`)
 - **Philosophy:** Maximize use of Apple frameworks
+
+Third-party identifiers live in the gitignored `Support/APIKeys.plist` (all client-safe, never
+secrets): `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `TELEMETRYDECK_APP_ID`, `SENTRY_DSN`. Any key left
+absent makes that integration inert (analytics falls back to `os.Logger`; crash reporting no-ops).
 
 ## Build Instructions
 

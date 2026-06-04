@@ -14,6 +14,8 @@
 		5A17B2E9C4D14B2D91020304 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 5A17B2E9C4D14B2D91020305 /* Supabase */; };
 		8F2A6C4A44D341B1A1020304 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 8F2A6C4A44D341B1A1020305 /* Supabase */; };
 		A1B2C3D42FBD100100000001 /* UITestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D52FBD100100000001 /* UITestPlan.xctestplan */; };
+		D1A2B3C4D5E6F70100000003 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = D1A2B3C4D5E6F70100000002 /* TelemetryDeck */; };
+		D1A2B3C4D5E6F70200000003 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = D1A2B3C4D5E6F70200000002 /* Sentry */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,6 +70,8 @@
 				1D62F36B2DC17E2600F28780 /* ZIPFoundation in Frameworks */,
 				1DE9DF212E624D220077DD75 /* GRDB-dynamic in Frameworks */,
 				8F2A6C4A44D341B1A1020304 /* Supabase in Frameworks */,
+				D1A2B3C4D5E6F70100000003 /* TelemetryDeck in Frameworks */,
+				D1A2B3C4D5E6F70200000003 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -135,6 +139,8 @@
 				1D62F36A2DC17E2600F28780 /* ZIPFoundation */,
 				1DE9DF202E624D220077DD75 /* GRDB-dynamic */,
 				8F2A6C4A44D341B1A1020305 /* Supabase */,
+				D1A2B3C4D5E6F70100000002 /* TelemetryDeck */,
+				D1A2B3C4D5E6F70200000002 /* Sentry */,
 			);
 			productName = CookSavvy;
 			productReference = 1D255FDB2DC135BB008C52B4 /* CookSavvy.app */;
@@ -223,6 +229,8 @@
 				1D62F3692DC17E2600F28780 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 				1DE9DF1F2E624D220077DD75 /* XCRemoteSwiftPackageReference "GRDB" */,
 				8F2A6C4A44D341B1A1020306 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				D1A2B3C4D5E6F70100000001 /* XCRemoteSwiftPackageReference "SwiftSDK" */,
+				D1A2B3C4D5E6F70200000001 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1D255FDC2DC135BB008C52B4 /* Products */;
@@ -640,6 +648,22 @@
 				minimumVersion = 2.43.1;
 			};
 		};
+		D1A2B3C4D5E6F70100000001 /* XCRemoteSwiftPackageReference "SwiftSDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/TelemetryDeck/SwiftSDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+		D1A2B3C4D5E6F70200000001 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -662,6 +686,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 8F2A6C4A44D341B1A1020306 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		D1A2B3C4D5E6F70100000002 /* TelemetryDeck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1A2B3C4D5E6F70100000001 /* XCRemoteSwiftPackageReference "SwiftSDK" */;
+			productName = TelemetryDeck;
+		};
+		D1A2B3C4D5E6F70200000002 /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1A2B3C4D5E6F70200000001 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

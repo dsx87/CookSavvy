@@ -35,6 +35,10 @@ private struct ThemedAppRoot: View {
     /// container is initialized. Any thrown error transitions the view to the `.failed` state,
     /// rendering a blocking error screen instead of a partially initialized UI.
     init() {
+        // Start crash reporting as early as possible so unhandled crashes during startup are
+        // captured (handled container-init failures are captured explicitly in the catch below).
+        // No-op in DEBUG and when no DSN is set.
+        SentryCrashReportingService.bootstrapIfConfigured()
         do {
             #if DEBUG
             let uiTestConfig = UITestConfiguration.fromLaunchArguments()
@@ -50,6 +54,10 @@ private struct ThemedAppRoot: View {
             let container = try AppContainer()
             _startupState = State(initialValue: .ready(container, AppCoordinator(container: container)))
         } catch {
+            // A thrown container-init failure is handled (not a crash), so Sentry would not see it
+            // automatically. Capture it explicitly before showing the blocking error screen so
+            // RELEASE startup failures (e.g. DBInterface() throwing) surface in the dashboard.
+            SentryCrashReportingService().record(error)
             _startupState = State(initialValue: .failed(error))
         }
     }

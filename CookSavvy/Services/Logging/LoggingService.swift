@@ -59,10 +59,19 @@ protocol LoggingServiceProtocol {
 final class LoggingService: LoggingServiceProtocol {
     /// The reverse-DNS subsystem identifier passed to every `os.Logger` instance (defaults to the bundle ID).
     private let subsystem: String
+    /// Optional crash reporter that receives breadcrumbs and captured faults; `nil` disables forwarding.
+    private let crashSink: CrashReportingServiceProtocol?
 
-    /// - Parameter subsystem: Reverse-DNS subsystem string; defaults to the app's bundle identifier.
-    init(subsystem: String = Bundle.main.bundleIdentifier ?? "CookSavvy") {
+    /// - Parameters:
+    ///   - subsystem: Reverse-DNS subsystem string; defaults to the app's bundle identifier.
+    ///   - crashSink: Crash reporter that error/fault logs are forwarded to as breadcrumbs and
+    ///     captured faults. Defaults to `nil` so tests and DEBUG paths log without side effects.
+    init(
+        subsystem: String = Bundle.main.bundleIdentifier ?? "CookSavvy",
+        crashSink: CrashReportingServiceProtocol? = nil
+    ) {
         self.subsystem = subsystem
+        self.crashSink = crashSink
     }
 
     /// Creates an `os.Logger`-backed `LoggerProtocol` scoped to `category`.
@@ -71,7 +80,9 @@ final class LoggingService: LoggingServiceProtocol {
             logger: Logger(
                 subsystem: subsystem,
                 category: category.rawValue
-            )
+            ),
+            category: category.rawValue,
+            crashSink: crashSink
         )
     }
 }
@@ -82,10 +93,20 @@ final class LoggingService: LoggingServiceProtocol {
 /// redaction. Adjust the privacy level for any message that may contain PII in the future.
 private struct OSAppLogger: LoggerProtocol {
     private let logger: Logger
+    /// The category this logger is scoped to, used to label crash breadcrumbs and captured faults.
+    private let category: String
+    /// Optional crash reporter that receives error/fault forwarding; `nil` disables it.
+    private let crashSink: CrashReportingServiceProtocol?
 
     /// Wraps an `os.Logger` instance behind the app's `LoggerProtocol`.
-    init(logger: Logger) {
+    /// - Parameters:
+    ///   - logger: The underlying `os.Logger`.
+    ///   - category: The category name, attached to forwarded crash breadcrumbs/faults for context.
+    ///   - crashSink: Crash reporter to forward error/fault entries to, or `nil` to disable.
+    init(logger: Logger, category: String, crashSink: CrashReportingServiceProtocol?) {
         self.logger = logger
+        self.category = category
+        self.crashSink = crashSink
     }
 
     /// Emits a debug-level log entry.
@@ -103,18 +124,31 @@ private struct OSAppLogger: LoggerProtocol {
         logger.notice("\(message, privacy: .public)")
     }
 
-    /// Emits a warning-level log entry.
+    /// Emits a warning-level log entry and forwards it as a warning breadcrumb.
     func warning(_ message: String) {
         logger.warning("\(message, privacy: .public)")
+        crashSink?.addBreadcrumb("[\(category)] \(message)", level: .warning)
     }
 
-    /// Emits an error-level log entry.
+    /// Emits an error-level log entry and captures it as a non-fatal event so recoverable runtime
+    /// failures (auth, data loads, etc.) surface in the crash dashboard, not just as breadcrumbs.
     func error(_ message: String) {
         logger.error("\(message, privacy: .public)")
+        crashSink?.record(LoggedFailure(category: category, message: message))
     }
 
-    /// Emits a fault-level log entry.
+    /// Emits a fault-level log entry and captures it as a non-fatal event so unrecoverable
+    /// conditions surface in the crash dashboard.
     func fault(_ message: String) {
         logger.fault("\(message, privacy: .public)")
+        crashSink?.record(LoggedFailure(category: category, message: message))
     }
+}
+
+/// Lightweight `Error` used to surface a logged error/fault as a captured non-fatal event in the
+/// crash dashboard, carrying the originating category and message as its description.
+private struct LoggedFailure: LocalizedError {
+    let category: String
+    let message: String
+    var errorDescription: String? { "[\(category)] \(message)" }
 }

@@ -56,8 +56,10 @@ final class AppContainer {
     let recommendationService: RecipeRecommendationServiceProtocol
     /// Curated ingredient substitutions backed by a bundled local catalog.
     let substitutionService: SubstitutionServiceProtocol
-    /// Event analytics; `MockAnalyticsService` in DEBUG builds, `AnalyticsService` in RELEASE.
+    /// Event analytics; `MockAnalyticsService` in DEBUG, TelemetryDeck or `os.Logger` in RELEASE.
     let analyticsService: AnalyticsServiceProtocol
+    /// Crash reporting; Sentry in RELEASE when a DSN is configured, otherwise a no-op.
+    let crashReportingService: CrashReportingServiceProtocol
     /// Creates feature-scoped `os.Logger` instances for structured logging.
     let loggingService: LoggingServiceProtocol
     /// Authentication service; Supabase when configured, mock in DEBUG, no-op in RELEASE without keys.
@@ -85,13 +87,32 @@ final class AppContainer {
     /// - Throws: Propagates any `DBInterface` initialization error, preventing a partially
     ///   initialized container from being used.
     internal init() throws {
-        let loggingService = LoggingService()
+        // Crash reporting is wired before logging so error/fault logs can forward breadcrumbs and
+        // captured faults to it. The Sentry SDK itself is started earlier, at app launch, by
+        // `SentryCrashReportingService.bootstrapIfConfigured()`; this only selects the runtime sink.
+        #if DEBUG
+        let crashReportingService: CrashReportingServiceProtocol = NoOpCrashReportingService()
+        #else
+        let crashReportingService: CrashReportingServiceProtocol = CrashReportingConfiguration().isConfigured
+            ? SentryCrashReportingService()
+            : NoOpCrashReportingService()
+        #endif
+        self.crashReportingService = crashReportingService
+
+        let loggingService = LoggingService(crashSink: crashReportingService)
         self.loggingService = loggingService
 
+        // DEBUG/dev/CI never emit real signals. In RELEASE, route to TelemetryDeck when an app ID
+        // is configured, else fall back to the local os.Logger analytics (no silent failure).
         #if DEBUG
         let analyticsService: AnalyticsServiceProtocol = MockAnalyticsService()
         #else
-        let analyticsService: AnalyticsServiceProtocol = AnalyticsService()
+        let analyticsService: AnalyticsServiceProtocol
+        if let appID = TelemetryDeckConfiguration().appID {
+            analyticsService = TelemetryDeckAnalyticsService(appID: appID)
+        } else {
+            analyticsService = AnalyticsService()
+        }
         #endif
         self.analyticsService = analyticsService
 
@@ -231,6 +252,7 @@ final class AppContainer {
         loggingService: LoggingServiceProtocol,
         authService: AuthServiceProtocol,
         analyticsService: AnalyticsServiceProtocol = MockAnalyticsService(),
+        crashReportingService: CrashReportingServiceProtocol = NoOpCrashReportingService(),
         signInWithAppleAction: SignInWithAppleActionProtocol? = nil
     ) {
         self.dbInterface = dbInterface
@@ -251,6 +273,7 @@ final class AppContainer {
         self.recommendationService = recommendationService
         self.substitutionService = substitutionService
         self.analyticsService = analyticsService
+        self.crashReportingService = crashReportingService
         self.loggingService = loggingService
         self.authService = authService
         self.signInWithAppleAction = signInWithAppleAction ?? SignInWithAppleAction(

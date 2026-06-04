@@ -16,7 +16,9 @@ paths:
 ## Data Services
 - **Data Services**: `RecipeServiceProtocol` / `RecipeService`, `IngredientsServiceProtocol` / `IngredientsService`, `UserDataServiceProtocol` / `UserDataService`
 - **Infrastructure**: `ImageServiceProtocol` / `ImageService`, `RecipeShareCardGenerating` / `RecipeShareCardGenerator`, `DatabaseInitializationServiceProtocol` / `DatabaseInitializationService`, `DataImportServiceProtocol` / `DataImportService`, `RecipeDatasetReading` / `JSONRecipeDatasetReader`
-- **Cross-cutting**: `LoggingServiceProtocol` / `LoggingService` creates feature-scoped `LoggerProtocol` instances backed by `os.Logger`
+- **Cross-cutting**: `LoggingServiceProtocol` / `LoggingService` creates feature-scoped `LoggerProtocol` instances backed by `os.Logger`. `LoggingService` accepts an optional `crashSink: CrashReportingServiceProtocol` — when present, `LoggerProtocol.warning` forwards a breadcrumb and `.error`/`.fault` capture non-fatal events
+- **Analytics** (`Services/Analytics/`): `AnalyticsServiceProtocol` (events = `AnalyticsEvent` enum) with impls `MockAnalyticsService` (DEBUG), `AnalyticsService` (`os.Logger`, RELEASE fallback), `TelemetryDeckAnalyticsService` (RELEASE remote transport, owns TelemetryDeck SDK init). `AppContainer` selects: DEBUG→Mock; RELEASE→TelemetryDeck when `TelemetryDeckConfiguration().appID` set, else `os.Logger`. Event rawValues + `product_id` are preserved across transports (trial funnel continuity)
+- **Crash Reporting** (`Services/CrashReporting/`): `CrashReportingServiceProtocol` (`record(_:)`, `addBreadcrumb(_:level:)` with `CrashBreadcrumbLevel`) with impls `SentryCrashReportingService` (RELEASE; `bootstrapIfConfigured()` starts the Sentry SDK at app launch in `CookSavvyApp`), `NoOpCrashReportingService` (DEBUG / RELEASE-without-DSN), `MockCrashReportingService` (tests)
 - **Feature Services**: `ShoppingListServiceProtocol` / `ShoppingListService`, `PantryServiceProtocol` / `PantryService`, `RecipeRecommendationServiceProtocol` / `RecipeRecommendationService`, `SubstitutionServiceProtocol` / `SubstitutionService`, `CameraScanTrackerProtocol` / `CameraScanTracker`, `IngredientDetectionServiceProtocol` (impl: `AIIngredientDetectionAdapter`), `SubscriptionServiceProtocol` (impl: `StoreKitSubscriptionService` / `MockSubscriptionService`)
 - **Auth Services**: `AuthServiceProtocol`, `SupabaseAuthService`, `MockAuthService`, `NoOpAuthService` (RELEASE fallback when Supabase keys are missing), `SignInWithAppleAction` (shared SIWA flow, analytics, concurrency guard), `AppleSignInManager` / `AppleSignInManaging` (ASAuthorizationController + SHA256 nonce for SIWA flow)
 - **Network Layer**: `NetworkServiceProtocol` / `NetworkService`, `NetworkConfiguration`, `URLBuilder`, `NetworkRequest`, `NetworkResponse`, `NetworkError`, `HTTPMethod`
@@ -40,9 +42,10 @@ paths:
 - **Provider selection** (in `AppContainer`):
   - Normal DEBUG and RELEASE app runtime use `SupabaseServiceAssembly` for AI and online recipe providers when configured
   - `OnlineRecipeSource` receives `SupabaseRecipeAPIProvider` for the `search-recipes` backend flow when Supabase is configured
-- **API keys** stored in `Support/APIKeys.plist` (gitignored)
-  - Active Supabase keys: `SUPABASE_URL`, `SUPABASE_ANON_KEY`
+- **API keys** stored in `Support/APIKeys.plist` (gitignored); all client-safe, never secrets
+  - Active keys: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `TELEMETRYDECK_APP_ID`, `SENTRY_DSN`
   - Direct OpenAI/Gemini keys are not read by the app; model provider keys live in backend secrets
+  - `APIKeysReader` (`Services/Support/`) is the shared plist reader used by `TelemetryDeckConfiguration` and `CrashReportingConfiguration`; `SupabaseConfiguration` keeps its own equivalent reader. Any absent key → that integration is inert
 - **Supabase runtime wiring**:
   - Swift package dependency: `supabase-swift`
   - `SupabaseConfiguration` reads optional `SUPABASE_URL` and `SUPABASE_ANON_KEY` placeholders from `APIKeys.plist`
@@ -100,6 +103,20 @@ Services/
 │   └── RecipeShareCardGenerator.swift
 ├── Logging/
 │   └── LoggingService.swift
+├── Analytics/
+│   ├── AnalyticsServiceProtocol.swift   — AnalyticsServiceProtocol + AnalyticsEvent
+│   ├── AnalyticsService.swift           — os.Logger impl (RELEASE fallback)
+│   ├── MockAnalyticsService.swift
+│   ├── TelemetryDeckConfiguration.swift — reads TELEMETRYDECK_APP_ID
+│   └── TelemetryDeckAnalyticsService.swift  — remote transport (RELEASE)
+├── CrashReporting/
+│   ├── CrashReportingServiceProtocol.swift  — Protocol + CrashBreadcrumbLevel
+│   ├── CrashReportingConfiguration.swift     — reads SENTRY_DSN
+│   ├── SentryCrashReportingService.swift     — Sentry impl (RELEASE)
+│   ├── NoOpCrashReportingService.swift
+│   └── MockCrashReportingService.swift
+├── Support/
+│   └── APIKeysReader.swift              — shared APIKeys.plist reader
 ├── UserData/
 │   └── UserDataService.swift
 ├── Auth/
