@@ -14,14 +14,14 @@ import Foundation
 final class OfflineRecipeSource: RecipeSourceProtocol {
 
     /// Database interface used to query locally stored recipes.
-    private let dbInterface: DBInterfaceProtocol
+    private let dbInterface: RecipeStoreProtocol
 
     /// Identifies this as the `.offline` source type.
     var sourceType: RecipeSourceType { .offline }
     
     /// Initializes the offline source with a database interface
     /// - Parameter dbInterface: Database interface to use for fetching recipes
-    init(dbInterface: DBInterfaceProtocol) {
+    init(dbInterface: RecipeStoreProtocol) {
         self.dbInterface = dbInterface
     }
     

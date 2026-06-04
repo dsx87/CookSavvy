@@ -2,15 +2,15 @@ import Foundation
 
 /// Persistence-backed service for free pantry staples.
 ///
-/// The service is intentionally thin: `DBInterfaceProtocol` owns canonical-name
+/// The service is intentionally thin: `PantryStoreProtocol` owns canonical-name
 /// resolution and SQLite persistence, while callers use this protocol boundary for
 /// testable Discover behavior.
 final class PantryService: PantryServiceProtocol {
-    private let dbInterface: DBInterfaceProtocol
+    private let dbInterface: PantryStoreProtocol
 
     /// Creates a pantry service backed by the given database interface.
     /// - Parameter dbInterface: The database interface used for pantry persistence.
-    init(dbInterface: DBInterfaceProtocol) {
+    init(dbInterface: PantryStoreProtocol) {
         self.dbInterface = dbInterface
     }
 

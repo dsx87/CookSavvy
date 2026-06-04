@@ -7,16 +7,16 @@ import Foundation
 
 /// CRUD service for the premium shopping list feature.
 ///
-/// Delegates all persistence to `DBInterfaceProtocol`, which maps to the
+/// Delegates all persistence to `ShoppingListStoreProtocol`, which maps to the
 /// `shopping_items` SQLite table. Operations include bulk-adding ingredients
 /// from a recipe's missing-items list, toggling the checked state of individual
 /// items, and removing or clearing completed items.
 final class ShoppingListService: ShoppingListServiceProtocol {
-    private let dbInterface: DBInterfaceProtocol
+    private let dbInterface: ShoppingListStoreProtocol
 
     /// Creates a shopping list service backed by the given database interface.
     /// - Parameter dbInterface: The database interface used for all persistence operations.
-    init(dbInterface: DBInterfaceProtocol) {
+    init(dbInterface: ShoppingListStoreProtocol) {
         self.dbInterface = dbInterface
     }
 

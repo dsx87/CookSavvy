@@ -27,10 +27,10 @@ protocol CuratedCollectionServiceProtocol {
 final class CuratedCollectionService: CuratedCollectionServiceProtocol {
 
     /// Database interface used to query recipes matching collection criteria.
-    private let dbInterface: DBInterfaceProtocol
+    private let dbInterface: RecipeStoreProtocol
 
     /// - Parameter dbInterface: Database interface for recipe queries.
-    init(dbInterface: DBInterfaceProtocol) {
+    init(dbInterface: RecipeStoreProtocol) {
         self.dbInterface = dbInterface
     }
 

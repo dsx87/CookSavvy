@@ -10,7 +10,7 @@ import XCTest
 
 // MARK: - Mock DB Interface for Testing
 
-final class MockDBInterfaceForIngredients: DBInterfaceProtocol {
+final class MockDBInterfaceForIngredients: IngredientStoreProtocol {
 
     var storedIngredients: [Ingredient] = []
     var insertCallCount = 0
@@ -48,59 +48,10 @@ final class MockDBInterfaceForIngredients: DBInterfaceProtocol {
         return storedIngredients.filter { $0.name.lowercased() == name.lowercased() }
     }
 
-    // Unused protocol methods
-    func getRecipes(byIngredients: [Ingredient], offset: Int, limit: Int) throws -> [Recipe] { [] }
-    func getAllRecipes(offset: Int, limit: Int) throws -> [Recipe] { [] }
-    func getRecipeId(byTitle title: String) throws -> Int? { nil }
-    func getRecipe(byID id: Int) throws -> Recipe? { nil }
-    func insertRecipes(_ recipes: [Recipe]) throws {}
+    // Remaining IngredientStoreProtocol members — unused by these tests.
     func removeIngredients(_ ingredients: [Ingredient]) throws {}
-    func removeRecipes(_ recipes: [Recipe]) throws {}
-    func clearDatabase() throws {
-        storedIngredients.removeAll()
-        insertCallCount = 0
-        searchCallCount = 0
-        getCallCount = 0
-    }
-    func getRecentIngredients(limit: Int) throws -> [Ingredient] { [] }
-    func getPopularIngredients(limit: Int) throws -> [Ingredient] { [] }
-    func recordIngredientUsage(_ ingredient: Ingredient) throws {}
-    func getRecentRecipes(limit: Int) throws -> [Recipe] { [] }
-    func recordRecipeView(_ recipeId: Int) throws {}
-    func getFavoriteRecipes() throws -> [Recipe] { [] }
-    func addFavorite(_ recipeId: Int) throws {}
-    func removeFavorite(_ recipeId: Int) throws {}
-    func isFavorite(_ recipeId: Int) throws -> Bool { false }
-    func getRecentSearches(limit: Int) throws -> [[Ingredient]] { [] }
-    func recordSearch(ingredients: [Ingredient]) throws {}
-    func getPantryItems() throws -> [Ingredient] { [] }
-    func addPantryItem(_ ingredient: Ingredient) throws {}
-    func removePantryItem(_ ingredient: Ingredient) throws {}
-    func isPantryItem(_ ingredient: Ingredient) throws -> Bool { false }
-    func clearRecentData() throws {}
-    func clearFavorites() throws {}
-    func getRecipeCount() throws -> Int { 0 }
-    func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?, rating: Int?) throws {}
-    func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?, rating: Int?, rescuedIngredients: [String]?) throws {}
-    func getCookingSessions(limit: Int) throws -> [CookingSession] { [] }
-    func getCookingSessionDates(from startDate: Date, to endDate: Date) throws -> [Date] { [] }
-    func getCookingSessionCount() throws -> Int { 0 }
-    func getTotalCookingDuration() throws -> TimeInterval { 0 }
-    func getCookingSessionCount(from startDate: Date, to endDate: Date) throws -> Int { 0 }
-    func getDistinctCookedIngredientCount(from startDate: Date, to endDate: Date) throws -> Int { 0 }
-    func getUserCreatedRecipes() throws -> [Recipe] { [] }
-    func getUserCreatedRecipeCount() throws -> Int { 0 }
-    func insertUserRecipe(_ recipe: Recipe) throws {}
-    func updateUserRecipe(_ recipe: Recipe) throws {}
-    func deleteUserRecipe(recipeId: Int) throws {}
     func getAllIngredients(inGroup foodGroup: String?, limit: Int) throws -> [Ingredient] { storedIngredients }
     func getDistinctFoodGroups() throws -> [String] { [] }
-    func getShoppingItems() throws -> [ShoppingItem] { [] }
-    func addShoppingItems(_ names: [String], recipeTitle: String?) throws -> [ShoppingItem] { [] }
-    func toggleShoppingItem(id: Int) throws -> Bool { false }
-    func removeShoppingItem(id: Int) throws {}
-    func clearCheckedShoppingItems() throws {}
-    func getDistinctCookedIngredientCount() throws -> Int { 0 }
 }
 
 // MARK: - IngredientsService Tests

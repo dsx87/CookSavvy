@@ -21,13 +21,13 @@ private enum DataImportServiceConstants {
 /// On each app start ``DatabaseInitializationService`` calls ``ensureRecipesImported()``, which
 /// performs a lightweight probe (searching for a common ingredient) to detect whether data has
 /// already been imported. If not, it reads the bundled JSON ZIP and bulk-inserts
-/// all recipes via ``DBInterfaceProtocol``. The flag ``isRecipesImported`` prevents redundant
+/// all recipes via the database store protocols. The flag ``isRecipesImported`` prevents redundant
 /// work within the same process lifetime.
 final class DataImportService: DataImportServiceProtocol {
 
     // MARK: - Properties
 
-    private let dbInterface: DBInterfaceProtocol
+    private let dbInterface: IngredientStoreProtocol & RecipeStoreProtocol
     private let datasetReader: RecipeDatasetReading
     private let logger: any LoggerProtocol
 
@@ -41,7 +41,7 @@ final class DataImportService: DataImportServiceProtocol {
     ///   - datasetReader: The JSON ZIP reader used to decode the bundled recipe dataset.
     ///   - logger: A scoped logger for import progress and error reporting.
     init(
-        dbInterface: DBInterfaceProtocol,
+        dbInterface: IngredientStoreProtocol & RecipeStoreProtocol,
         datasetReader: RecipeDatasetReading = JSONRecipeDatasetReader(),
         logger: any LoggerProtocol
     ) {

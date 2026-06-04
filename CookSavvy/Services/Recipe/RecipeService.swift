@@ -16,7 +16,7 @@ final class RecipeService: RecipeServiceProtocol {
     private var sources: [RecipeSourceType: RecipeSourceProtocol]
     
     /// Database interface for storing fetched recipes
-    private let dbInterface: DBInterfaceProtocol
+    private let dbInterface: RecipeStoreProtocol
 
     /// Feature-scoped logger for recipe service events
     private let logger: any LoggerProtocol
@@ -32,7 +32,7 @@ final class RecipeService: RecipeServiceProtocol {
     ///   - sources: Dictionary of available recipe sources
     ///   - shouldStoreRecipes: Whether to automatically store fetched recipes in DB (default: true)
     init(
-        dbInterface: DBInterfaceProtocol,
+        dbInterface: RecipeStoreProtocol,
         sources: [RecipeSourceType: RecipeSourceProtocol],
         logger: any LoggerProtocol = LoggingService().makeLogger(category: .recipeService),
         shouldStoreRecipes: Bool = true
@@ -49,10 +49,10 @@ final class RecipeService: RecipeServiceProtocol {
     ///   - dbInterface: Database interface for storing recipes (default: new DBInterface)
     ///   - shouldStoreRecipes: Whether to automatically store fetched recipes in DB (default: true)
     convenience init(
-        dbInterface: DBInterfaceProtocol? = nil,
+        dbInterface: RecipeStoreProtocol? = nil,
         shouldStoreRecipes: Bool = true
     ) throws {
-        let resolvedDB: DBInterfaceProtocol
+        let resolvedDB: RecipeStoreProtocol
         if let dbInterface {
             resolvedDB = dbInterface
         } else {
@@ -82,7 +82,7 @@ final class RecipeService: RecipeServiceProtocol {
     @available(*, unavailable, message: "The default RecipeService initializer uses MockLLMProvider and is DEBUG-only. Use init(dbInterface:sources:logger:shouldStoreRecipes:) in production.")
     /// Unavailable in non-DEBUG builds to prevent accidental Mock provider wiring in production.
     convenience init(
-        dbInterface: DBInterfaceProtocol? = nil,
+        dbInterface: RecipeStoreProtocol? = nil,
         shouldStoreRecipes: Bool = true
     ) throws {
         fatalError("DEBUG-only initializer")

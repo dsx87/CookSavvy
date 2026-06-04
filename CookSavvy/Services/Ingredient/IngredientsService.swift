@@ -28,7 +28,7 @@ final class IngredientsService: IngredientsServiceProtocol {
     // MARK: - Properties
 
     /// Database interface used for all ingredient read/write operations.
-    private let dbInterface: DBInterfaceProtocol
+    private let dbInterface: IngredientStoreProtocol
 
     /// Tracks whether the service has been marked ready after the initial check.
     private var isImported: Bool = false
@@ -37,7 +37,7 @@ final class IngredientsService: IngredientsServiceProtocol {
 
     /// Initializes the ingredients service.
     /// - Parameter dbInterface: Database interface for storing and retrieving ingredients.
-    init(dbInterface: DBInterfaceProtocol) {
+    init(dbInterface: IngredientStoreProtocol) {
         self.dbInterface = dbInterface
     }
 

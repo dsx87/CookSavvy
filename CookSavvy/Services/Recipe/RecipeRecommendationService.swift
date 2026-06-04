@@ -31,7 +31,7 @@ final class RecipeRecommendationService: RecipeRecommendationServiceProtocol {
     /// Provides access to the user's cooking history and favourites.
     private let userDataService: UserDataServiceProtocol
     /// Database interface used to query candidate recipes.
-    private let dbInterface: DBInterfaceProtocol
+    private let dbInterface: RecipeStoreProtocol
     /// Awaited before querying to ensure the bundled recipe dataset is loaded.
     private let databaseInitService: DatabaseInitializationServiceProtocol
 
@@ -41,7 +41,7 @@ final class RecipeRecommendationService: RecipeRecommendationServiceProtocol {
     ///   - databaseInitService: Awaited to ensure recipe data is seeded before querying.
     init(
         userDataService: UserDataServiceProtocol,
-        dbInterface: DBInterfaceProtocol,
+        dbInterface: RecipeStoreProtocol,
         databaseInitService: DatabaseInitializationServiceProtocol
     ) {
         self.userDataService = userDataService

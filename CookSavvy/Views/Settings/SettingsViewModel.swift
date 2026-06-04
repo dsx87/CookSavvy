@@ -107,7 +107,7 @@ final class SettingsViewModel: ObservableObject {
     let buildNumber: String
 
     private let userDataService: UserDataServiceProtocol
-    private let dbInterface: DBInterfaceProtocol
+    private let dbInterface: StatisticsStoreProtocol
     private let subscriptionService: SubscriptionServiceProtocol
     private let dietaryPreferences: DietaryPreferencesProtocol
     private let authService: AuthServiceProtocol
@@ -122,7 +122,7 @@ final class SettingsViewModel: ObservableObject {
     /// Creates a settings view model with persisted-user, subscription, and auth dependencies.
     init(
         userDataService: UserDataServiceProtocol,
-        dbInterface: DBInterfaceProtocol,
+        dbInterface: StatisticsStoreProtocol,
         subscriptionService: SubscriptionServiceProtocol,
         dietaryPreferences: DietaryPreferencesProtocol,
         authService: AuthServiceProtocol,

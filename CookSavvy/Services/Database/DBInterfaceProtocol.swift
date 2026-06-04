@@ -41,18 +41,16 @@ enum DatabaseError: Error, LocalizedError {
     }
 }
 
-/// The primary database access abstraction for CookSavvy.
-///
-/// Defines every read and write operation against the SQLite database, covering the full
-/// set of domain objects: ingredients, recipes, recent history, favourites, saved searches,
-/// cooking sessions, user-created recipes, shopping list items, and aggregate statistics.
-///
-/// All methods are synchronous and throwing; callers are responsible for dispatching off
-/// the main thread where necessary. The concrete implementation is `DBInterface`, backed
-/// by GRDB's `DatabaseWriter`. An in-memory variant is available for unit tests via
-/// `DBInterface(inMemory: true)`.
-protocol DBInterfaceProtocol {
-    // MARK: - Ingredients
+// MARK: - Domain Store Protocols
+//
+// The database surface is segregated into focused, domain-scoped protocols so each
+// consumer can depend only on the operations it actually uses (Interface Segregation).
+// The concrete `DBInterface` conforms to all of them via the composite
+// `DBInterfaceProtocol` declared at the bottom of this file. All methods are synchronous
+// and throwing; callers are responsible for dispatching off the main thread where necessary.
+
+/// Read/write access to the ingredient catalogue and full-text search.
+protocol IngredientStoreProtocol {
     /// Returns all ingredients whose name exactly matches `name` (case-insensitive).
     /// - Parameter name: The ingredient name to look up.
     /// - Returns: A single-element array if found, or an empty array if no match exists.
@@ -73,7 +71,18 @@ protocol DBInterfaceProtocol {
     /// - Parameter ingredients: The ingredients to delete.
     func removeIngredients(_ ingredients: [Ingredient]) throws
 
-    // MARK: - Recipes
+    /// Returns all ingredients, optionally filtered to a specific food group, sorted alphabetically.
+    /// - Parameters:
+    ///   - foodGroup: Optional food group filter (e.g. `"Vegetables"`). `nil` returns all.
+    ///   - limit: Maximum number of results.
+    func getAllIngredients(inGroup foodGroup: String?, limit: Int) throws -> [Ingredient]
+
+    /// Returns all distinct non-null food group values in the `ingredients` table, sorted alphabetically.
+    func getDistinctFoodGroups() throws -> [String]
+}
+
+/// Read/write access to the recipe catalogue (seeded + user-created).
+protocol RecipeStoreProtocol {
     /// Fetches recipes that contain at least one of the given ingredients.
     /// Uses `LIKE` wildcards for partial matching (e.g., "chicken" matches "chicken breast").
     /// - Parameters:
@@ -105,8 +114,10 @@ protocol DBInterfaceProtocol {
     /// Removes the given recipes from the database by title.
     /// - Parameter recipes: The recipes to delete.
     func removeRecipes(_ recipes: [Recipe]) throws
+}
 
-    // MARK: - Recent Ingredients
+/// Tracking of recent/popular ingredients, recent recipe views, and saved searches.
+protocol RecentActivityStoreProtocol {
     /// Returns the most recently used ingredients, sorted by `last_used_at` descending.
     /// - Parameter limit: Maximum number of results.
     func getRecentIngredients(limit: Int) throws -> [Ingredient]
@@ -120,7 +131,6 @@ protocol DBInterfaceProtocol {
     /// - Parameter ingredient: The ingredient that was used.
     func recordIngredientUsage(_ ingredient: Ingredient) throws
 
-    // MARK: - Recent Recipes
     /// Returns the most recently viewed recipes, sorted by `last_viewed_at` descending.
     /// - Parameter limit: Maximum number of results.
     func getRecentRecipes(limit: Int) throws -> [Recipe]
@@ -129,7 +139,18 @@ protocol DBInterfaceProtocol {
     /// - Parameter recipeId: The ID of the viewed recipe.
     func recordRecipeView(_ recipeId: Int) throws
 
-    // MARK: - Favorites
+    /// Returns the most recent ingredient-combination searches, newest first.
+    /// Each element is the set of ingredients used in a single search.
+    /// - Parameter limit: Maximum number of searches to return.
+    func getRecentSearches(limit: Int) throws -> [[Ingredient]]
+
+    /// Records an ingredient search. Automatically prunes the table to the 50 most recent entries.
+    /// - Parameter ingredients: The ingredient combination that was searched.
+    func recordSearch(ingredients: [Ingredient]) throws
+}
+
+/// Read/write access to the user's favourited recipes.
+protocol FavoritesStoreProtocol {
     /// Returns all favorited recipes, sorted by `added_at` descending.
     func getFavoriteRecipes() throws -> [Recipe]
 
@@ -144,34 +165,10 @@ protocol DBInterfaceProtocol {
     /// Returns whether a recipe is currently in the user's favourites.
     /// - Parameter recipeId: The ID of the recipe to check.
     func isFavorite(_ recipeId: Int) throws -> Bool
+}
 
-    // MARK: - Recent Searches
-    /// Returns the most recent ingredient-combination searches, newest first.
-    /// Each element is the set of ingredients used in a single search.
-    /// - Parameter limit: Maximum number of searches to return.
-    func getRecentSearches(limit: Int) throws -> [[Ingredient]]
-
-    /// Records an ingredient search. Automatically prunes the table to the 50 most recent entries.
-    /// - Parameter ingredients: The ingredient combination that was searched.
-    func recordSearch(ingredients: [Ingredient]) throws
-
-    // MARK: - Pantry
-    /// Returns pantry staples sorted by the time they were added, newest first.
-    func getPantryItems() throws -> [Ingredient]
-
-    /// Adds an ingredient to the user's pantry staples.
-    ///
-    /// The concrete database implementation resolves the canonical ingredient row
-    /// before inserting, so repeated calls with different casing remain idempotent.
-    func addPantryItem(_ ingredient: Ingredient) throws
-
-    /// Removes an ingredient from the user's pantry staples.
-    func removePantryItem(_ ingredient: Ingredient) throws
-
-    /// Returns whether an ingredient is currently marked as a pantry staple.
-    func isPantryItem(_ ingredient: Ingredient) throws -> Bool
-
-    // MARK: - Cooking Sessions
+/// Recording and aggregate querying of cook-mode completion sessions.
+protocol CookingSessionStoreProtocol {
     /// Records a completed cooking session without rescued-ingredient data.
     /// Delegates to the full variant with `rescuedIngredients: nil`.
     func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?, rating: Int?) throws
@@ -213,7 +210,15 @@ protocol DBInterfaceProtocol {
     /// sessions without it join `recipe_ingredients` for the recipe's default ingredient list.
     func getDistinctCookedIngredientCount(from startDate: Date, to endDate: Date) throws -> Int
 
-    // MARK: - User-Created Recipes
+    /// Returns the count of distinct ingredients that appear across all cooking sessions (all time).
+    ///
+    /// Uses the same `UNION` logic as the date-ranged variant: sessions with
+    /// `ingredients_rescued_json` use those names; sessions without use `recipe_ingredients`.
+    func getDistinctCookedIngredientCount() throws -> Int
+}
+
+/// CRUD for recipes authored by the user (`is_user_created = 1`).
+protocol UserRecipeStoreProtocol {
     /// Returns all user-created recipes (`is_user_created = 1`), newest first.
     func getUserCreatedRecipes() throws -> [Recipe]
 
@@ -230,18 +235,28 @@ protocol DBInterfaceProtocol {
     /// Deletes a user-created recipe. The `is_user_created = 1` guard prevents accidental
     /// deletion of seeded recipes.
     func deleteUserRecipe(recipeId: Int) throws
+}
 
-    // MARK: - Ingredient Queries
-    /// Returns all ingredients, optionally filtered to a specific food group, sorted alphabetically.
-    /// - Parameters:
-    ///   - foodGroup: Optional food group filter (e.g. `"Vegetables"`). `nil` returns all.
-    ///   - limit: Maximum number of results.
-    func getAllIngredients(inGroup foodGroup: String?, limit: Int) throws -> [Ingredient]
+/// Read/write access to the free-tier pantry staples.
+protocol PantryStoreProtocol {
+    /// Returns pantry staples sorted by the time they were added, newest first.
+    func getPantryItems() throws -> [Ingredient]
 
-    /// Returns all distinct non-null food group values in the `ingredients` table, sorted alphabetically.
-    func getDistinctFoodGroups() throws -> [String]
+    /// Adds an ingredient to the user's pantry staples.
+    ///
+    /// The concrete database implementation resolves the canonical ingredient row
+    /// before inserting, so repeated calls with different casing remain idempotent.
+    func addPantryItem(_ ingredient: Ingredient) throws
 
-    // MARK: - Shopping List
+    /// Removes an ingredient from the user's pantry staples.
+    func removePantryItem(_ ingredient: Ingredient) throws
+
+    /// Returns whether an ingredient is currently marked as a pantry staple.
+    func isPantryItem(_ ingredient: Ingredient) throws -> Bool
+}
+
+/// CRUD for the premium shopping list.
+protocol ShoppingListStoreProtocol {
     /// Returns all shopping list items ordered by `added_at` ascending.
     func getShoppingItems() throws -> [ShoppingItem]
 
@@ -260,8 +275,16 @@ protocol DBInterfaceProtocol {
 
     /// Deletes all shopping items that are currently checked.
     func clearCheckedShoppingItems() throws
+}
 
-    // MARK: - Database Management
+/// Aggregate catalogue statistics.
+protocol StatisticsStoreProtocol {
+    /// Returns the total number of recipes in the database (seeded + user-created).
+    func getRecipeCount() throws -> Int
+}
+
+/// Bulk-clearing operations used for reset/sign-out flows.
+protocol DatabaseMaintenanceProtocol {
     /// Deletes all rows from every table, returning the database to an empty state.
     func clearDatabase() throws
 
@@ -270,14 +293,30 @@ protocol DBInterfaceProtocol {
 
     /// Deletes all entries from the `favorite_recipes` table.
     func clearFavorites() throws
-
-    // MARK: - Statistics
-    /// Returns the total number of recipes in the database (seeded + user-created).
-    func getRecipeCount() throws -> Int
-
-    /// Returns the count of distinct ingredients that appear across all cooking sessions (all time).
-    ///
-    /// Uses the same `UNION` logic as the date-ranged variant: sessions with
-    /// `ingredients_rescued_json` use those names; sessions without use `recipe_ingredients`.
-    func getDistinctCookedIngredientCount() throws -> Int
 }
+
+// MARK: - Composite Protocol
+
+/// The primary database access abstraction for CookSavvy.
+///
+/// A composite of the focused domain store protocols above, covering the full set of
+/// domain objects: ingredients, recipes, recent history, favourites, saved searches,
+/// cooking sessions, user-created recipes, shopping list items, and aggregate statistics.
+/// Broad facades (`UserDataService`, `AppContainer`, DEBUG seeding) depend on this composite;
+/// focused consumers depend on the narrow protocol(s) they actually use.
+///
+/// All methods are synchronous and throwing; callers are responsible for dispatching off
+/// the main thread where necessary. The concrete implementation is `DBInterface`, backed
+/// by GRDB's `DatabaseWriter`. An in-memory variant is available for unit tests via
+/// `DBInterface(inMemory: true)`.
+protocol DBInterfaceProtocol:
+    IngredientStoreProtocol,
+    RecipeStoreProtocol,
+    RecentActivityStoreProtocol,
+    FavoritesStoreProtocol,
+    CookingSessionStoreProtocol,
+    UserRecipeStoreProtocol,
+    PantryStoreProtocol,
+    ShoppingListStoreProtocol,
+    StatisticsStoreProtocol,
+    DatabaseMaintenanceProtocol {}

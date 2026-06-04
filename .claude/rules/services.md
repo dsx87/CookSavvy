@@ -9,6 +9,7 @@ paths:
 
 ## Database Layer
 - `DBInterfaceProtocol` / `DBInterface` — GRDB-based SQLite database; tables: `ingredients`, `recipes`, `recipe_ingredients`, `recent_ingredients`, `recent_recipes`, `favorite_recipes`, `recent_searches`, `pantry_items`, `cooking_sessions`, `shopping_items`
+- **Segregated store protocols** (all defined in `DBInterfaceProtocol.swift`; `DBInterface` conforms to all via the composite `DBInterfaceProtocol`): `IngredientStoreProtocol`, `RecipeStoreProtocol`, `RecentActivityStoreProtocol`, `FavoritesStoreProtocol`, `CookingSessionStoreProtocol`, `UserRecipeStoreProtocol`, `PantryStoreProtocol`, `ShoppingListStoreProtocol`, `StatisticsStoreProtocol`, `DatabaseMaintenanceProtocol`. Focused consumers depend on the narrow protocol(s) they use (e.g. `RecipeService` → `RecipeStoreProtocol`, `PantryService` → `PantryStoreProtocol`, `DataImportService` → `IngredientStoreProtocol & RecipeStoreProtocol`); broad facades (`UserDataService`, `AppContainer`, `DatabaseInitializationService`, DEBUG seeding) keep the composite `DBInterfaceProtocol`
 - Used by `RecipeService`, `IngredientsService`, `UserDataService`, `DataImportService`, `DatabaseInitializationService`, `ShoppingListService`, `PantryService`, `RecipeRecommendationService`
 - `DBTestHelpers` for test support
 
