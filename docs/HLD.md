@@ -1,6 +1,6 @@
 # CookSavvy — High-Level Design (HLD)
 
-> Generated from source code analysis.
+> Generated from source code analysis. **Directional, not authoritative** — this document captures cross-cutting structure and flows, and may drift as code evolves. For volatile per-layer inventory and conventions, see `.claude/rules/*.md`; verify specific names/signatures against the source before relying on them.
 
 ---
 

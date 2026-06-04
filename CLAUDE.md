@@ -87,6 +87,7 @@ CookSavvyUITests/          — XCUITest suites (see uitests.md rule)
 
 | File | Contents |
 |------|----------|
+| `docs/HLD.md` | Cross-cutting architecture: layer map, coordinator hierarchy, data flows, state machines, DB schema. Read when a task spans multiple layers. Directional — verify specifics against code; per-layer inventory/conventions live in `.claude/rules/*.md` |
 | `docs/IMAGE_SERVICE_README.md` | ImageService usage and API |
 | `docs/INGREDIENTS_SERVICE_README.md` | IngredientsService usage and API |
 | `docs/RECIPE_SERVICE_README.md` | RecipeService usage and API |
