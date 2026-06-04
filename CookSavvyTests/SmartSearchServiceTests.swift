@@ -160,11 +160,16 @@ final class DiscoverViewModelSmartSearchTests: XCTestCase {
     func testRunSmartSearch_appliesFiltersWithoutIngredientsAndRerunsSearch() async {
         // User has ingredients already selected; query adds only filters.
         let chicken = Ingredient(name: "Chicken", description: nil, pictureFileName: nil, foodGroup: nil, foodSubgroup: nil, emoji: "🍗")
-        let vm = makeViewModel(includeSmartSearch: true)
-        vm.selectedIngredients = [chicken]
+        // Stub the provider before building the view model: makeViewModel captures the
+        // current mockSmartSearch at construction time, so it must be set up first.
         mockSmartSearch = MockSmartSearchProvider(result: .success(
             SmartSearchIntent(ingredientNames: [], mood: nil, cookTime: .quick, complexity: .easy, dietary: [])
         ))
+        let vm = makeViewModel(includeSmartSearch: true)
+        vm.selectedIngredients = [chicken]
+        // User is already viewing results; a filter-only query re-runs the search in place
+        // (runSmartSearch only re-runs when showResults is already true).
+        vm.showResults = true
         let initialCount = mockRecipeService.getRecipesCallCount
         await vm.runSmartSearch("make it quick and easy")
 

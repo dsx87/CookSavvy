@@ -143,7 +143,6 @@ Pods/
 /TestResults
 /.tmp-tests/*
 !*.xcworkspace/xcshareddata/
-CookSavvy.xcodeproj/xcshareddata/
 CookSavvy.xcodeproj/project.xcworkspace/xcshareddata/
 
 # API Keys
