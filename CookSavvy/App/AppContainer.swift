@@ -102,6 +102,13 @@ final class AppContainer {
         let loggingService = LoggingService(crashSink: crashReportingService)
         self.loggingService = loggingService
 
+        // TEMP: verify Sentry breadcrumb + non-fatal wiring — remove after confirmation
+        #if !DEBUG
+        let sentryTestLogger = loggingService.makeLogger(category: .recipeService)
+        sentryTestLogger.warning("Sentry breadcrumb test")
+        sentryTestLogger.error("Sentry non-fatal event test")
+        #endif
+
         // DEBUG/dev/CI never emit real signals. In RELEASE, route to TelemetryDeck when an app ID
         // is configured, else fall back to the local os.Logger analytics (no silent failure).
         #if DEBUG
