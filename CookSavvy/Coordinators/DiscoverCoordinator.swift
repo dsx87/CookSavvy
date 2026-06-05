@@ -72,8 +72,7 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating, Re
         onDismiss: @escaping () -> Void,
         onIngredientsDetected: @escaping ([Ingredient]) -> Void
     ) -> CameraViewModel {
-        fatalError("Test error")
-        return CameraViewModel(
+        CameraViewModel(
             detectionService: container.ingredientDetectionService,
             onDismiss: onDismiss,
             onIngredientsDetected: onIngredientsDetected
