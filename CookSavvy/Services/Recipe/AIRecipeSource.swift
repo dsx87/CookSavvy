@@ -18,18 +18,24 @@ final class AIRecipeSource: RecipeSourceProtocol {
 
     /// The AI service used to generate recipes from ingredients.
     private let aiService: AIServiceProtocol
+    /// Number of recipes to request from the AI service per fetch. Kept modest to bound
+    /// backend generation cost (output tokens scale with recipe count); the backend clamps to 1–10.
+    private let recipeCount: Int
 
-    /// - Parameter aiService: The AI service to use for recipe generation.
-    init(aiService: AIServiceProtocol) {
+    /// - Parameters:
+    ///   - aiService: The AI service to use for recipe generation.
+    ///   - recipeCount: Number of recipes to generate per fetch (default: 5).
+    init(aiService: AIServiceProtocol, recipeCount: Int = 5) {
         self.aiService = aiService
+        self.recipeCount = recipeCount
     }
 
-    /// Asks the AI service to generate up to 10 recipes for the provided ingredients.
+    /// Asks the AI service to generate `recipeCount` recipes for the provided ingredients.
     /// - Parameter ingredients: Ingredients to incorporate into generated recipes.
     /// - Returns: AI-generated recipes.
     /// - Throws: Errors from `AIServiceProtocol.generateRecipes` (e.g., network or parsing failures).
     func fetchRecipes(for ingredients: [Ingredient]) async throws -> [Recipe] {
-        return try await aiService.generateRecipes(for: ingredients, count: 10)
+        return try await aiService.generateRecipes(for: ingredients, count: recipeCount)
     }
 
     /// Returns `true` when the underlying AI service has a configured, reachable provider.
