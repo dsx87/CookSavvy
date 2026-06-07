@@ -22,6 +22,11 @@ import Supabase
 /// State is published via a `CurrentValueSubject` (a thread-safe class) so callers can read auth
 /// state synchronously from any context without requiring actor hops or MainActor serialization.
 final class SupabaseAuthService: AuthServiceProtocol {
+    /// Names of the Supabase Edge Functions invoked by this service.
+    private enum FunctionName {
+        static let deleteAccount = "delete-account"
+    }
+
     private let clientProvider: SupabaseClientProviderProtocol
     private let analyticsService: AnalyticsServiceProtocol
     private let logger: any LoggerProtocol
@@ -104,13 +109,15 @@ final class SupabaseAuthService: AuthServiceProtocol {
             do {
                 try await signInAnonymously()
             } catch {
-                logger.warning("Anonymous sign-in failed, will retry on next activation: \(error)")
+                // Log only the error type — the raw Supabase error can embed JWTs/nonces/identity
+                // tokens, and warnings forward a breadcrumb to the crash reporter (Sentry) in RELEASE.
+                logger.warning("Anonymous sign-in failed, will retry on next activation: \(type(of: error))")
             }
         case .unknown where clientProvider.client.auth.currentSession == nil:
             do {
                 try await signInAnonymously()
             } catch {
-                logger.warning("Anonymous sign-in failed (unknown state), will retry on next activation: \(error)")
+                logger.warning("Anonymous sign-in failed (unknown state), will retry on next activation: \(type(of: error))")
             }
         default:
             break
@@ -125,7 +132,9 @@ final class SupabaseAuthService: AuthServiceProtocol {
             try await refreshSessionState()
             analyticsService.track(.anonymousAuthCompleted)
         } catch {
-            logger.error("Anonymous sign-in failed: \(error)")
+            // Log only the error type — the raw Supabase error is captured by Sentry via the logging
+            // service's crash sink in RELEASE and can contain sensitive auth payloads.
+            logger.error("Anonymous sign-in failed: \(type(of: error))")
             throw AuthError.signInFailed
         }
     }
@@ -155,7 +164,7 @@ final class SupabaseAuthService: AuthServiceProtocol {
             )
             try await refreshSessionState()
         } catch {
-            logger.error("Apple sign-in failed: \(error)")
+            logger.error("Apple sign-in failed: \(type(of: error))")
             throw AuthError.signInFailed
         }
     }
@@ -167,9 +176,35 @@ final class SupabaseAuthService: AuthServiceProtocol {
             try await clientProvider.client.auth.signOut()
             stateSubject.send(.signedOut)
         } catch {
-            logger.error("Sign-out failed: \(error)")
+            logger.error("Sign-out failed: \(type(of: error))")
             throw AuthError.signOutFailed
         }
+    }
+
+    /// Permanently deletes the authenticated user's account via the `delete-account` edge function,
+    /// then signs out locally.
+    ///
+    /// The edge function authenticates the caller with the bearer token attached by `invokeFunction`
+    /// and performs the deletion server-side using the Supabase service-role key (never exposed to the
+    /// client). On success we sign out so the app drops the now-invalid session.
+    /// - Throws: `AuthError.notAuthenticated` if there is no active session,
+    ///           or `AuthError.accountDeletionFailed` if the backend call fails.
+    func deleteAccount() async throws {
+        guard currentUserId != nil else {
+            throw AuthError.notAuthenticated
+        }
+
+        do {
+            // Empty body: the function identifies the user from the bearer token, not the payload.
+            _ = try await clientProvider.invokeFunction(FunctionName.deleteAccount, body: [String: String]())
+        } catch {
+            logger.error("Account deletion failed: \(type(of: error))")
+            throw AuthError.accountDeletionFailed
+        }
+
+        // Best-effort local sign-out; the remote session is already gone, so swallow sign-out errors.
+        try? await clientProvider.client.auth.signOut()
+        stateSubject.send(.signedOut)
     }
 
     /// Attempts to rehydrate an existing Supabase session from persistent storage.

@@ -82,9 +82,9 @@ CookSavvy/
 ├── Views/                 — All SwiftUI screens (see views.md rule)
 ├── Extensions/            — Character+Extensions, String+Extensions
 ├── Theme/                 — Theming, UI constants, Strings, Icons (see theme.md rule)
-├── Utilities/             — DeviceUtility
+├── Utilities/             — DeviceUtility, LegalLinks (Terms/Privacy URLs for paywall + Settings)
 ├── Localizable.xcstrings  — String Catalog (Xcode 15+)
-└── Support/               — APIKeys.plist (gitignored), Assets, Substitutions.json
+└── Support/               — APIKeys.plist (gitignored), Assets, Substitutions.json, PrivacyInfo.xcprivacy (App Privacy Manifest)
 
 CookSavvyTests/            — Unit + integration tests (see tests.md rule)
 CookSavvyUITests/          — XCUITest suites (see uitests.md rule)

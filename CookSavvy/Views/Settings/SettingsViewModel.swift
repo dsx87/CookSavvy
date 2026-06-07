@@ -60,6 +60,10 @@ final class SettingsViewModel: ObservableObject {
     @Published var isSigningIn: Bool = false
     /// Controls the sign-out confirmation alert.
     @Published var showSignOutConfirmation: Bool = false
+    /// Controls the delete-account confirmation alert.
+    @Published var showDeleteAccountConfirmation: Bool = false
+    /// `true` while an account-deletion request is in flight.
+    @Published var isDeletingAccount: Bool = false
 
     /// `true` when auth is available on this device/build configuration.
     var isAuthAvailable: Bool {
@@ -222,6 +226,46 @@ final class SettingsViewModel: ObservableObject {
         }
     }
     
+    /// Permanently deletes the user's account (App Store Guideline 5.1.1(v)) and clears local
+    /// personal data, then reverts to a fresh anonymous session so the app stays usable.
+    ///
+    /// Server-side deletion is performed by the backend via `authService.deleteAccount()`. On failure
+    /// nothing is cleared and `errorMessage` is set. On success we clear the user's local caches and
+    /// re-establish an anonymous session, mirroring the post-sign-out behaviour.
+    func deleteAccount() async {
+        errorMessage = nil
+        isDeletingAccount = true
+        defer { isDeletingAccount = false }
+
+        do {
+            try await authService.deleteAccount()
+        } catch {
+            logger.error("Account deletion failed: \(type(of: error))")
+            errorMessage = Strings.Settings.deleteAccountFailed
+            return
+        }
+
+        analyticsService.track(.accountDeleted)
+        logger.info("Account deleted successfully")
+
+        // Clear local personal data (recents + favourites). The seeded recipe/ingredient catalogue is
+        // not user-specific and is intentionally left intact.
+        do {
+            try await userDataService.clearRecentData()
+            try await userDataService.clearFavorites()
+        } catch {
+            logger.error("Failed to clear local data after account deletion: \(type(of: error))")
+        }
+
+        // Re-establish an anonymous session so the app remains functional, as after sign-out.
+        do {
+            try await authService.signInAnonymously()
+        } catch {
+            logger.error("Failed to create anonymous session after account deletion: \(type(of: error))")
+            errorMessage = Strings.Auth.signOutGuestFailed
+        }
+    }
+
     /// Restores previously purchased subscriptions via StoreKit.
     func restorePurchases() async {
         isRestoringPurchases = true
@@ -256,6 +300,20 @@ final class SettingsViewModel: ObservableObject {
     // TODO: check the link
     func openManageSubscriptions() {
         if let url = URL(string: SettingsViewModelConstants.manageSubscriptionURL) {
+            UIApplication.shared.open(url)
+        }
+    }
+
+    /// Opens the hosted Terms of Use page in the system browser.
+    func openTermsOfUse() {
+        if let url = LegalLinks.termsOfUse {
+            UIApplication.shared.open(url)
+        }
+    }
+
+    /// Opens the hosted Privacy Policy page in the system browser.
+    func openPrivacyPolicy() {
+        if let url = LegalLinks.privacyPolicy {
             UIApplication.shared.open(url)
         }
     }

@@ -48,6 +48,8 @@ enum AnalyticsEvent: String {
     case signInWithAppleFailed = "sign_in_with_apple_failed"
     /// Fired when the user signs out.
     case signOutCompleted = "sign_out_completed"
+    /// Fired when the user deletes their account (App Store Guideline 5.1.1(v) flow).
+    case accountDeleted = "account_deleted"
 }
 
 /// Protocol for tracking named user events with optional string properties.

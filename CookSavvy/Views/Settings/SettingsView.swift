@@ -22,6 +22,7 @@ struct SettingsView: View {
             dietarySection
             statsSection
             dataManagementSection
+            legalSection
             appInfoSection
         }
         .navigationTitle(Strings.Settings.navigationTitle)
@@ -67,6 +68,14 @@ struct SettingsView: View {
             }
         } message: {
             Text(Strings.Auth.signOutConfirmMessage)
+        }
+        .alert(Strings.Settings.deleteAccountAlertTitle, isPresented: $viewModel.showDeleteAccountConfirmation) {
+            Button(Strings.Common.cancel, role: .cancel) { }
+            Button(Strings.Settings.deleteAccountConfirm, role: .destructive) {
+                Task { await viewModel.deleteAccount() }
+            }
+        } message: {
+            Text(Strings.Settings.deleteAccountAlertMessage)
         }
     }
 
@@ -145,6 +154,23 @@ struct SettingsView: View {
         } label: {
             Label(Strings.Auth.signOut, systemImage: Icons.Auth.signOut)
         }
+
+        deleteAccountRow
+    }
+
+    private var deleteAccountRow: some View {
+        Button(role: .destructive) {
+            viewModel.showDeleteAccountConfirmation = true
+        } label: {
+            HStack {
+                Label(Strings.Settings.deleteAccountButton, systemImage: Icons.Settings.trash)
+                Spacer()
+                if viewModel.isDeletingAccount {
+                    ProgressView()
+                }
+            }
+        }
+        .disabled(viewModel.isDeletingAccount)
     }
 
     // MARK: - Appearance
@@ -316,6 +342,30 @@ struct SettingsView: View {
             Label(Strings.Settings.clearFavoritesButton, systemImage: Icons.Settings.trash)
         }
         .disabled(viewModel.isLoading || viewModel.favoriteCount == 0)
+    }
+
+    // MARK: - Legal
+
+    private var legalSection: some View {
+        Section {
+            Button { viewModel.openTermsOfUse() } label: {
+                legalRowLabel(Strings.Legal.termsOfUse)
+            }
+            Button { viewModel.openPrivacyPolicy() } label: {
+                legalRowLabel(Strings.Legal.privacyPolicy)
+            }
+        } header: {
+            Text(Strings.Settings.legalHeader)
+        }
+    }
+
+    private func legalRowLabel(_ title: String) -> some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Image(systemName: Icons.Settings.chevronRight)
+                .foregroundStyle(theme.text3)
+        }
     }
 
     // MARK: - App Info

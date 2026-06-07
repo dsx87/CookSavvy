@@ -163,4 +163,24 @@ final class UpgradeViewModelTests: XCTestCase {
             "Free until \(trialStatus.formattedTrialEndDate ?? ""), then $4.99/month"
         )
     }
+
+    // MARK: - Restore Purchases (paywall — Guideline 3.1.1)
+
+    func testRestorePurchasesSuccessCallsServiceAndClearsError() async {
+        await sut.restorePurchases()
+
+        XCTAssertEqual(subscriptionService.restoreCallCount, 1)
+        XCTAssertNil(sut.restoreError)
+        XCTAssertFalse(sut.isRestoringPurchases)
+    }
+
+    func testRestorePurchasesFailureSetsRestoreError() async {
+        subscriptionService.restorePurchasesError = SubscriptionError.noPurchasesToRestore
+
+        await sut.restorePurchases()
+
+        XCTAssertEqual(subscriptionService.restoreCallCount, 1)
+        XCTAssertNotNil(sut.restoreError)
+        XCTAssertFalse(sut.isRestoringPurchases)
+    }
 }

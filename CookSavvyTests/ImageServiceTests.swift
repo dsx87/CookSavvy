@@ -119,15 +119,15 @@ final class ImageServiceTests: XCTestCase {
     
     // MARK: - Initialization Tests
     
-    func testDefaultInitialization() {
-        imageService = ImageService()
+    func testDefaultInitialization() throws {
+        imageService = try ImageService()
         XCTAssertNotNil(imageService)
         XCTAssertEqual(imageService.memoryCacheCount, 0)
     }
     
-    func testCustomInitialization() {
+    func testCustomInitialization() throws {
         let zipURL = URL(fileURLWithPath: "/tmp/test.zip")
-        imageService = ImageService(
+        imageService = try ImageService(
             imageExtractor: ImageExtractor(),
             zipFileURL: zipURL,
             maxCacheSize: 50
@@ -138,7 +138,7 @@ final class ImageServiceTests: XCTestCase {
     // MARK: - Load Image by Name Tests
     
     func testLoadImageFromMemoryCache() async throws {
-        imageService = ImageService(maxCacheSize: 10)
+        imageService = try ImageService(maxCacheSize: 10)
         
         // Pre-populate cache by loading an image (this would normally fail, but we'll test the cache hit)
         // For this test, we'll manually set up the scenario
@@ -152,14 +152,14 @@ final class ImageServiceTests: XCTestCase {
     }
     
     func testLoadImageWithEmptyFileName() async throws {
-        imageService = ImageService()
+        imageService = try ImageService()
         
         let image = try await imageService.loadImage(named: "")
         XCTAssertNil(image)
     }
     
     func testLoadImageNotFound() async throws {
-        imageService = ImageService()
+        imageService = try ImageService()
         
         let image = try await imageService.loadImage(named: "nonexistent.png")
         XCTAssertNil(image)
@@ -176,7 +176,7 @@ final class ImageServiceTests: XCTestCase {
             additionalInfo: .empty
         )
         
-        imageService = ImageService()
+        imageService = try ImageService()
         
         let image = try await imageService.loadImage(for: recipe)
         // Will be nil since we don't have actual images, but should not throw
@@ -192,7 +192,7 @@ final class ImageServiceTests: XCTestCase {
             additionalInfo: .empty
         )
         
-        imageService = ImageService()
+        imageService = try ImageService()
         
         let image = try await imageService.loadImage(for: recipe)
         XCTAssertNil(image)
@@ -209,7 +209,7 @@ final class ImageServiceTests: XCTestCase {
             foodSubgroup: "Poultry"
         )
         
-        imageService = ImageService()
+        imageService = try ImageService()
         
         let image = try await imageService.loadImage(for: ingredient)
         // Will be nil since we don't have actual images, but should not throw
@@ -219,7 +219,7 @@ final class ImageServiceTests: XCTestCase {
     func testLoadImageForIngredientWithNoPicture() async throws {
         let ingredient = Ingredient(name: "Salt")
         
-        imageService = ImageService()
+        imageService = try ImageService()
         
         let image = try await imageService.loadImage(for: ingredient)
         XCTAssertNil(image)
@@ -245,7 +245,7 @@ final class ImageServiceTests: XCTestCase {
             )
         ]
         
-        imageService = ImageService()
+        imageService = try ImageService()
         
         let images = try await imageService.loadImages(for: recipes)
         
@@ -255,7 +255,7 @@ final class ImageServiceTests: XCTestCase {
     }
     
     func testLoadImagesForEmptyRecipeArray() async throws {
-        imageService = ImageService()
+        imageService = try ImageService()
         
         let images = try await imageService.loadImages(for: [])
         
@@ -264,7 +264,7 @@ final class ImageServiceTests: XCTestCase {
     
     // MARK: - Prefetch Tests
     
-    func testPrefetchImagesForRecipes() async {
+    func testPrefetchImagesForRecipes() async throws {
         let recipes = [
             Recipe(
                 title: "Recipe 1",
@@ -275,7 +275,7 @@ final class ImageServiceTests: XCTestCase {
             )
         ]
         
-        imageService = ImageService()
+        imageService = try ImageService()
         
         // Should not throw
         await imageService.prefetchImages(for: recipes)
@@ -287,23 +287,23 @@ final class ImageServiceTests: XCTestCase {
     // MARK: - Cache Management Tests
     
     func testClearMemoryCache() async throws {
-        imageService = ImageService()
+        imageService = try ImageService()
         
         imageService.clearCache()
         
         XCTAssertEqual(imageService.memoryCacheCount, 0)
     }
     
-    func testImageExists() {
-        imageService = ImageService()
+    func testImageExists() throws {
+        imageService = try ImageService()
         
         // Non-existent image
         let exists = imageService.imageExists(named: "nonexistent.png")
         XCTAssertFalse(exists)
     }
     
-    func testMemoryCacheCount() {
-        imageService = ImageService()
+    func testMemoryCacheCount() throws {
+        imageService = try ImageService()
         
         let count = imageService.memoryCacheCount
         XCTAssertEqual(count, 0)
@@ -312,21 +312,21 @@ final class ImageServiceTests: XCTestCase {
     // MARK: - Disk Cache Tests
     
     func testClearDiskCacheSpecificFile() throws {
-        imageService = ImageService()
+        imageService = try ImageService()
         
         // Should not throw even if file doesn't exist
         XCTAssertNoThrow(try imageService.clearDiskCache(fileName: "test.png"))
     }
     
     func testClearAllDiskCache() throws {
-        imageService = ImageService()
+        imageService = try ImageService()
         
         // Should not throw
         XCTAssertNoThrow(try imageService.clearDiskCache())
     }
 
     func testClearAllDiskCacheHandlesMultipleImagesInSameNestedDirectory() throws {
-        imageService = ImageService()
+        imageService = try ImageService()
         let cacheDirectoryName = "image-service-\(UUID().uuidString)"
         let nestedCacheDirectory = try documentsDirectory()
             .appendingPathComponent("images", isDirectory: true)
@@ -346,7 +346,7 @@ final class ImageServiceTests: XCTestCase {
         let cacheDirectoryName = "image-service-\(UUID().uuidString)"
         let fileName = "images/\(cacheDirectoryName)/photo.png"
         let zipURL = try makeImageZip(fileName: fileName)
-        imageService = ImageService(zipFileURL: zipURL)
+        imageService = try ImageService(zipFileURL: zipURL)
         try imageService.clearDiskCache(fileName: fileName)
 
         let image = try await imageService.loadImage(named: fileName)
@@ -417,7 +417,7 @@ final class ImageServiceTests: XCTestCase {
     func testImageExistsAfterLoad() async throws {
         // This test would require actual image data
         // For now, we test that the method works
-        imageService = ImageService()
+        imageService = try ImageService()
         
         let exists = imageService.imageExists(named: "test.png")
         XCTAssertFalse(exists) // Should be false since we haven't loaded anything
@@ -434,7 +434,7 @@ final class ImageServiceTests: XCTestCase {
             )
         }
         
-        imageService = ImageService()
+        imageService = try ImageService()
         
         // Load multiple images concurrently
         await withTaskGroup(of: UIImage?.self) { group in
@@ -472,7 +472,7 @@ final class ImageServiceTests: XCTestCase {
     
     func testCacheSizeLimit() async throws {
         // Test that cache respects max size
-        imageService = ImageService(maxCacheSize: 5)
+        imageService = try ImageService(maxCacheSize: 5)
         
         // Memory cache count starts at 0
         XCTAssertEqual(imageService.memoryCacheCount, 0)
@@ -500,7 +500,7 @@ final class ImageServiceTests: XCTestCase {
             additionalInfo: .empty
         )
         
-        imageService = ImageService()
+        imageService = try ImageService()
         
         // Load both recipe and ingredient images
         let recipeImage = try await imageService.loadImage(for: recipe)

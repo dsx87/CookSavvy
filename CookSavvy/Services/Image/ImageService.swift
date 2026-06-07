@@ -112,15 +112,22 @@ final class ImageService: ImageServiceProtocol {
     ///   - imageExtractor: Actor for extracting images from ZIP
     ///   - zipFileURL: URL to the dataset ZIP file (optional, for extraction)
     ///   - maxCacheSize: Maximum number of images to cache in memory (default: 100)
+    /// - Throws: `ImageServiceError.documentsDirectoryUnavailable` if the Documents directory cannot be resolved.
     init(
         imageExtractor: ImageExtractor = ImageExtractor(),
         zipFileURL: URL? = nil,
         maxCacheSize: Int = ImageServiceConstants.defaultCacheSize
-    ) {
+    ) throws {
         self.imageExtractor = imageExtractor
         self.maxCacheSize = maxCacheSize
         self.fileManager = FileManager.default
-        self.imagesDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        // Resolve the disk-cache root up front. `init` is throwing (not force-unwrapping) so a missing
+        // Documents directory surfaces through AppContainer's throwing init as the blocking startup
+        // error screen instead of an uncatchable launch crash. Mirrors `ImageExtractor` (guard-let).
+        guard let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            throw ImageServiceError.documentsDirectoryUnavailable
+        }
+        self.imagesDirectory = documentsDirectory
         self.imageCache = ImageCache(countLimit: maxCacheSize, totalCostLimit: ImageServiceConstants.memoryCacheLimit)
         
         // Find dataset ZIP if not provided
@@ -378,7 +385,9 @@ enum ImageServiceError: Error, LocalizedError {
     case diskAccessFailed(Error)
     /// Extracting image data from the bundled ZIP archive failed.
     case extractionFailed(Error)
-    
+    /// The user's Documents directory could not be resolved, so the disk cache root is unavailable.
+    case documentsDirectoryUnavailable
+
     var errorDescription: String? {
         switch self {
         case .imageNotFound(let fileName):
@@ -389,6 +398,8 @@ enum ImageServiceError: Error, LocalizedError {
             return "Disk access failed: \(error.localizedDescription)"
         case .extractionFailed(let error):
             return "Image extraction failed: \(error.localizedDescription)"
+        case .documentsDirectoryUnavailable:
+            return "The app could not access local storage for cached images."
         }
     }
 }

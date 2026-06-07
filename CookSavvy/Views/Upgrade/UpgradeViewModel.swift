@@ -5,6 +5,7 @@
 
 import Foundation
 import Combine
+import UIKit
 
 /// ViewModel backing the Upgrade paywall screen.
 ///
@@ -23,6 +24,10 @@ final class UpgradeViewModel: ObservableObject {
     @Published private(set) var purchaseError: String?
     /// Controls the purchase error alert.
     @Published var showErrorAlert: Bool = false
+    /// `true` while a restore-purchases request is in flight.
+    @Published private(set) var isRestoringPurchases: Bool = false
+    /// The error message to display when a restore fails (non-`nil` drives the restore error alert).
+    @Published var restoreError: String?
     /// Cached localised price strings keyed by purchasable option.
     @Published private(set) var priceByOption: [PremiumSubscriptionOption: String] = [:]
     /// Cached numeric prices keyed by purchasable option, used for annual savings math.
@@ -135,6 +140,36 @@ final class UpgradeViewModel: ObservableObject {
 
         priceByOption = prices
         priceAmountByOption = amounts
+    }
+
+    /// Restores previously purchased subscriptions via StoreKit.
+    ///
+    /// Required on the paywall for App Store compliance (Guideline 3.1.1). Mirrors the Settings
+    /// restore flow; failures populate `restoreError` to drive an alert.
+    func restorePurchases() async {
+        isRestoringPurchases = true
+        restoreError = nil
+        defer { isRestoringPurchases = false }
+
+        do {
+            try await subscriptionService.restorePurchases()
+        } catch {
+            restoreError = error.localizedDescription
+        }
+    }
+
+    /// Opens the hosted Terms of Use page in the system browser.
+    func openTermsOfUse() {
+        if let url = LegalLinks.termsOfUse {
+            UIApplication.shared.open(url)
+        }
+    }
+
+    /// Opens the hosted Privacy Policy page in the system browser.
+    func openPrivacyPolicy() {
+        if let url = LegalLinks.privacyPolicy {
+            UIApplication.shared.open(url)
+        }
     }
 
     /// Tracks a dismiss event and calls `onDismiss`.

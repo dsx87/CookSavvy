@@ -93,6 +93,18 @@ enum Strings {
         static let clearRecentAlertMessage = String(localized: "settings.clearRecentAlertMessage", defaultValue: "This will clear all recent ingredients, recipes, and searches. This action cannot be undone.")
         static let clearFavoritesAlertMessage = String(localized: "settings.clearFavoritesAlertMessage", defaultValue: "This will remove all favorited recipes. This action cannot be undone.")
         static let restoreFailed = String(localized: "settings.restoreFailed", defaultValue: "Restore Failed")
+        static let legalHeader = String(localized: "settings.legalHeader", defaultValue: "Legal")
+        static let deleteAccountButton = String(localized: "settings.deleteAccountButton", defaultValue: "Delete Account")
+        static let deleteAccountAlertTitle = String(localized: "settings.deleteAccountAlertTitle", defaultValue: "Delete Account?")
+        static let deleteAccountAlertMessage = String(localized: "settings.deleteAccountAlertMessage", defaultValue: "This permanently deletes your account and all associated data. This cannot be undone.")
+        static let deleteAccountConfirm = String(localized: "settings.deleteAccountConfirm", defaultValue: "Delete Account")
+        static let deleteAccountFailed = String(localized: "settings.deleteAccountFailed", defaultValue: "We couldn't delete your account. Please try again.")
+    }
+
+    /// Legal links surfaced on the paywall and in Settings (App Store Guideline 3.1.2 / 5.1.1).
+    enum Legal {
+        static let termsOfUse = String(localized: "legal.termsOfUse", defaultValue: "Terms of Use")
+        static let privacyPolicy = String(localized: "legal.privacyPolicy", defaultValue: "Privacy Policy")
     }
 
     /// Strings for the Camera ingredient-detection screen.
@@ -110,7 +122,7 @@ enum Strings {
     enum Upgrade {
         static let navigationTitle = String(localized: "upgrade.navigationTitle", defaultValue: "Upgrade")
         static let done = String(localized: "upgrade.done", defaultValue: "Done")
-        static let autoRenew = String(localized: "upgrade.autoRenew", defaultValue: "Subscriptions auto-renew monthly or annually until cancelled.")
+        static let autoRenew = String(localized: "upgrade.autoRenew", defaultValue: "The 7-day free trial applies to the monthly plan only. After any trial, your subscription renews automatically at the displayed price (monthly or annual) until cancelled. Cancel anytime in Settings at least 24 hours before the period ends.")
         static let unlockTitle = String(localized: "upgrade.unlockTitle", defaultValue: "Upgrade to CookSavvy+")
         static let unlockSubtitle = String(localized: "upgrade.unlockSubtitle", defaultValue: "Turn what's in your kitchen into dinner faster.")
         static let trialEligibleSubtitle = String(localized: "upgrade.trialEligibleSubtitle", defaultValue: "Try CookSavvy+ free for 7 days.")

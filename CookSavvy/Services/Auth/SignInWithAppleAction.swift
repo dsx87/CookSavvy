@@ -122,7 +122,9 @@ final class SignInWithAppleAction: SignInWithAppleActionProtocol {
             return .cancelled
         } catch {
             analyticsService.track(.signInWithAppleFailed)
-            logger.error("Sign in with Apple failed: \(String(describing: error))")
+            // Log only the error type — the raw error can embed Apple/Supabase auth payloads and is
+            // forwarded to the crash reporter (Sentry) by the logging service in RELEASE.
+            logger.error("Sign in with Apple failed: \(type(of: error))")
             return .failed
         }
     }

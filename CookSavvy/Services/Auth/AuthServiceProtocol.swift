@@ -28,6 +28,8 @@ enum AuthError: Error, LocalizedError {
     case sessionUnavailable
     /// The operation requires an authenticated session but none exists.
     case notAuthenticated
+    /// Account deletion failed (network error or backend rejection).
+    case accountDeletionFailed
 
     var errorDescription: String? {
         switch self {
@@ -41,6 +43,8 @@ enum AuthError: Error, LocalizedError {
             return "Session is unavailable"
         case .notAuthenticated:
             return "Authentication is required"
+        case .accountDeletionFailed:
+            return "Account deletion failed"
         }
     }
 }
@@ -83,6 +87,13 @@ protocol AuthServiceProtocol: AnyObject {
     /// Signs out the current session.
     /// - Throws: `AuthError.signOutFailed` on failure.
     func signOut() async throws
+    /// Permanently deletes the authenticated user's account and server-side data, then signs out.
+    ///
+    /// Required for App Store compliance (Guideline 5.1.1(v)). The deletion itself is performed by a
+    /// backend (`delete-account` edge function) using a privileged server-side key; the client only
+    /// invokes it with the current session's bearer token.
+    /// - Throws: `AuthError.notAuthenticated` if no session exists, or `AuthError.accountDeletionFailed` on failure.
+    func deleteAccount() async throws
     /// Attempts to restore an existing session from persistent storage without creating a new one.
     func restoreSession() async
 }

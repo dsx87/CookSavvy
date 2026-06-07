@@ -19,11 +19,15 @@ struct UpgradeView: View {
                     planCard(for: option)
                 }
                 
+                restoreButton
+
                 Text(Strings.Upgrade.autoRenew)
                     .font(.caption)
                     .foregroundStyle(theme.text2)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
+
+                legalLinks
             }
             .padding()
         }
@@ -47,6 +51,45 @@ struct UpgradeView: View {
         } message: {
             Text(viewModel.purchaseError ?? Strings.Upgrade.unknownError)
         }
+        .alert(Strings.Settings.restoreFailed, isPresented: restoreErrorBinding) {
+            Button(Strings.Common.ok, role: .cancel) { }
+        } message: {
+            Text(viewModel.restoreError ?? Strings.Upgrade.unknownError)
+        }
+    }
+
+    /// Drives the restore-failure alert from the view model's optional `restoreError`.
+    private var restoreErrorBinding: Binding<Bool> {
+        Binding(
+            get: { viewModel.restoreError != nil },
+            set: { if !$0 { viewModel.restoreError = nil } }
+        )
+    }
+
+    /// "Restore Purchases" action required on the paywall (Guideline 3.1.1).
+    private var restoreButton: some View {
+        Button {
+            Task { await viewModel.restorePurchases() }
+        } label: {
+            if viewModel.isRestoringPurchases {
+                ProgressView()
+            } else {
+                Text(Strings.Settings.restorePurchases)
+                    .font(.subheadline)
+            }
+        }
+        .disabled(viewModel.isRestoringPurchases)
+    }
+
+    /// Terms of Use + Privacy Policy links shown at the point of sale (Guideline 3.1.2).
+    private var legalLinks: some View {
+        HStack(spacing: UI.Upgrade.headerInnerSpacing) {
+            Button(Strings.Legal.termsOfUse) { viewModel.openTermsOfUse() }
+            Text("•")
+                .foregroundStyle(theme.text3)
+            Button(Strings.Legal.privacyPolicy) { viewModel.openPrivacyPolicy() }
+        }
+        .font(.caption)
     }
     
     /// Builds a plan card wired to the view model purchase action and accessibility ids.

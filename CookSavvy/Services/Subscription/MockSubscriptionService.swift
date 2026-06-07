@@ -26,6 +26,12 @@ final class MockSubscriptionService: SubscriptionServiceProtocol {
     /// Tracks how many times `refreshSubscriptionStatus()` has been called; useful in unit tests.
     private(set) var refreshCallCount = 0
 
+    /// Tracks how many times `restorePurchases()` has been called; useful in unit tests.
+    private(set) var restoreCallCount = 0
+
+    /// When set, `restorePurchases()` throws this error instead of succeeding. For failure-path tests.
+    var restorePurchasesError: Error?
+
     /// Override these values in tests that need locale-specific price displays.
     var priceByOption: [PremiumSubscriptionOption: String] = [
         .monthly: "$4.99",
@@ -104,9 +110,12 @@ final class MockSubscriptionService: SubscriptionServiceProtocol {
         try await purchase(option)
     }
     
-    /// No-op for mock — restoring purchases has no effect.
+    /// Records the call and throws `restorePurchasesError` if configured; otherwise a no-op.
     func restorePurchases() async throws {
-        // No-op for mock
+        restoreCallCount += 1
+        if let restorePurchasesError {
+            throw restorePurchasesError
+        }
     }
 
     /// Returns hard-coded display prices matching the live App Store configuration.

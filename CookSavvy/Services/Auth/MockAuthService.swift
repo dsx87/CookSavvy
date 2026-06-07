@@ -23,6 +23,8 @@ final class MockAuthService: AuthServiceProtocol {
     private(set) var signInWithAppleCallCount = 0
     /// Number of times `signOut()` has been called.
     private(set) var signOutCallCount = 0
+    /// Number of times `deleteAccount()` has been called.
+    private(set) var deleteAccountCallCount = 0
     /// Number of times `restoreSession()` has been called.
     private(set) var restoreSessionCallCount = 0
     /// Number of times `startSessionIfNeeded()` has been called.
@@ -42,6 +44,8 @@ final class MockAuthService: AuthServiceProtocol {
     var signInWithAppleError: Error?
     /// When set, `signOut()` throws this error.
     var signOutError: Error?
+    /// When set, `deleteAccount()` throws this error.
+    var deleteAccountError: Error?
     /// When set, `startSessionIfNeeded()` and `restoreSession()` transition to this state instead of their default behaviour.
     var restoreStateAfterCall: AuthState?
     /// Backing value for `isAnonymous`. Defaults to `true`.
@@ -132,6 +136,16 @@ final class MockAuthService: AuthServiceProtocol {
         signOutCallCount += 1
         if let signOutError {
             throw signOutError
+        }
+        stubbedIsAnonymous = true
+        authState = .signedOut
+    }
+
+    /// Transitions to `.signedOut`, or throws `deleteAccountError` if set.
+    func deleteAccount() async throws {
+        deleteAccountCallCount += 1
+        if let deleteAccountError {
+            throw deleteAccountError
         }
         stubbedIsAnonymous = true
         authState = .signedOut

@@ -192,4 +192,35 @@ final class SettingsViewModelAuthTests: XCTestCase {
             XCTAssertEqual(auth.authState, .signedOut)
         }
     }
+
+    // MARK: - Delete Account (Guideline 5.1.1(v))
+
+    func testDeleteAccountSuccessTracksEventAndRevertsToAnonymous() async throws {
+        let auth = MockAuthService(initialState: .signedIn(userId: "apple-user"), isAnonymous: false)
+        let vm = try makeViewModel(authService: auth)
+
+        await vm.deleteAccount()
+
+        XCTAssertEqual(auth.deleteAccountCallCount, 1)
+        XCTAssertNil(vm.errorMessage)
+        XCTAssertFalse(vm.isDeletingAccount)
+        // After deletion the VM re-establishes an anonymous session.
+        XCTAssertEqual(auth.signInAnonymouslyCallCount, 1)
+        XCTAssertTrue(mockAnalytics.trackedEvents.map(\.0).contains(.accountDeleted))
+    }
+
+    func testDeleteAccountFailureSetsErrorAndDoesNotRevert() async throws {
+        let auth = MockAuthService(initialState: .signedIn(userId: "apple-user"), isAnonymous: false)
+        auth.deleteAccountError = AuthError.accountDeletionFailed
+        let vm = try makeViewModel(authService: auth)
+
+        await vm.deleteAccount()
+
+        XCTAssertEqual(auth.deleteAccountCallCount, 1)
+        XCTAssertNotNil(vm.errorMessage)
+        XCTAssertFalse(vm.isDeletingAccount)
+        // On failure we must not sign back in anonymously or fire the analytics event.
+        XCTAssertEqual(auth.signInAnonymouslyCallCount, 0)
+        XCTAssertFalse(mockAnalytics.trackedEvents.map(\.0).contains(.accountDeleted))
+    }
 }

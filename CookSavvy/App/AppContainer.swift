@@ -126,7 +126,7 @@ final class AppContainer {
         )
         
         self.ingredientsService = ingredients
-        let imageService = ImageService()
+        let imageService = try ImageService()
         self.imageService = imageService
         self.recipeShareCardGenerator = RecipeShareCardGenerator(imageService: imageService)
         self.dataImportService = dataImport
@@ -341,7 +341,7 @@ final class AppContainer {
             dbInterface: db,
             ingredientsService: ingredients,
             recipeService: recipeService,
-            imageService: ImageService(),
+            imageService: try ImageService(),
             dataImportService: dataImport,
             userDataService: userDataService,
             databaseInitService: databaseInitService,

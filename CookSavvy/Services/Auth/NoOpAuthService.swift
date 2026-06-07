@@ -36,6 +36,8 @@ final class NoOpAuthService: AuthServiceProtocol {
     func signInWithApple(identityToken: Data, nonce: String) async throws { throw AuthError.signInFailed }
     /// Signs out silently (no session to clear).
     func signOut() async throws {}
+    /// Always throws because there is no account to delete without a configured auth backend.
+    func deleteAccount() async throws { throw AuthError.notAuthenticated }
     /// No-op in fallback mode because there is no persisted auth session.
     func restoreSession() async {}
 }
