@@ -7,10 +7,10 @@ import FoundationModels
 ///
 /// Provider selection at construction time:
 /// - **iOS 26+ with Apple Intelligence on**: `FoundationModelsSmartSearchProvider` (on-device, no network).
-/// - **Anything else**: `makeIfAvailable` returns `nil` and the Smart Search row is hidden from the UI.
-///
-/// `EdgeFunctionSmartSearchProvider` exists as a planned fallback for older devices but is not wired
-/// until the `parse-search-query` Supabase edge function is deployed. See wiring note below.
+/// - **Otherwise, when Supabase is configured**: `SupabaseSmartSearchProvider` (DeepSeek via the
+///   `parse-search-query` edge function), so Smart Search reaches every user regardless of device/OS.
+/// - **Neither available** (Supabase unconfigured): `makeIfAvailable` returns `nil` and the Smart
+///   Search row is hidden from the UI.
 final class SmartSearchService: SmartSearchServiceProtocol {
     private let provider: any SmartSearchProviderProtocol
 
@@ -20,10 +20,10 @@ final class SmartSearchService: SmartSearchServiceProtocol {
 
     /// Creates a service with the best available provider, or `nil` when no working provider exists.
     ///
-    /// Currently only the on-device Foundation Models path is exposed. The `EdgeFunctionSmartSearchProvider`
-    /// code exists but is not wired here until the `parse-search-query` Supabase edge function is deployed —
-    /// exposing a provider that predictably fails would show a Smart Search row to non-iOS-26 users that
-    /// always errors. Wire the edge function path here once the backend function is live.
+    /// Prefers the on-device Foundation Models path (iOS 26+, Apple Intelligence) — zero network, fully
+    /// private. When that is unavailable, falls back to `SupabaseSmartSearchProvider` (DeepSeek via
+    /// the `parse-search-query` edge function) as long as a Supabase client is configured. Returns `nil`
+    /// only when neither path is possible, in which case the Smart Search row is hidden.
     static func makeIfAvailable(clientProvider: SupabaseClientProviderProtocol?) -> SmartSearchServiceProtocol? {
         #if canImport(FoundationModels)
         if #available(iOS 26.0, *) {
@@ -32,6 +32,9 @@ final class SmartSearchService: SmartSearchServiceProtocol {
             }
         }
         #endif
+        if let clientProvider {
+            return SmartSearchService(provider: SupabaseSmartSearchProvider(clientProvider: clientProvider))
+        }
         return nil
     }
 

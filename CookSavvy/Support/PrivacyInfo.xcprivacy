@@ -30,6 +30,22 @@
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
 		</dict>
+		<!-- Smart Search natural-language query text. On devices with on-device AI (Apple
+		     Intelligence) the query never leaves the device; on other devices it is sent to the
+		     backend AI service (DeepSeek proxy) to interpret the search. Processed transiently for
+		     the request; not linked to the user, not used for tracking. -->
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeSearchHistory</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
 		<!-- Crash diagnostics (Sentry) used to fix bugs. -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>

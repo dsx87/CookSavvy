@@ -3,14 +3,13 @@ import Foundation
 /// Fallback smart-search provider that calls the `parse-search-query` Supabase edge function.
 ///
 /// Used on devices where Foundation Models is unavailable (iOS < 26, Apple Intelligence off, or
-/// not yet downloaded). The edge function runs Gemini Flash server-side, keeping the API key
-/// off-device — consistent with the existing Supabase LLM architecture.
+/// not yet downloaded). The edge function runs DeepSeek non-thinking Flash (`deepseek-v4-flash`)
+/// server-side, keeping the API key off-device — consistent with the existing Supabase LLM
+/// architecture. This makes Smart Search available to every user, free of charge.
 ///
-/// **Backend dependency**: Requires a `parse-search-query` Supabase edge function to be deployed.
-/// Until deployed, calls will throw `SmartSearchError.networkError` with the underlying HTTP error.
-/// The UI degrades gracefully: the Smart Search row is shown but the failure surfaces via the
-/// existing `searchError` banner.
-final class EdgeFunctionSmartSearchProvider: SmartSearchProviderProtocol {
+/// On a backend failure the UI degrades gracefully: the parse error surfaces via the existing
+/// `homeLoadError` banner (see `DiscoverViewModel.runSmartSearch`).
+final class SupabaseSmartSearchProvider: SmartSearchProviderProtocol {
     private let clientProvider: SupabaseClientProviderProtocol
     private let decoder: JSONDecoder
 
@@ -32,7 +31,9 @@ final class EdgeFunctionSmartSearchProvider: SmartSearchProviderProtocol {
             let response = try decoder.decode(ParseSearchQueryResponse.self, from: data)
             return SmartSearchIntent(from: response)
         } catch {
-            throw SmartSearchError.parsingFailed(nil)
+            // Carry the decode failure detail so `DiscoverViewModel.runSmartSearch`'s logger records
+            // what went wrong (the user-facing banner stays generic).
+            throw SmartSearchError.parsingFailed(String(describing: error))
         }
     }
 }
@@ -80,7 +81,14 @@ private extension SmartSearchIntent {
         default: nil
         }
 
-        let dietary = response.dietary.compactMap { DietaryRestriction(rawValue: $0) }
+        // DietaryRestriction rawValues are camelCase; match case-insensitively so "GlutenFree" and
+        // "glutenfree" both resolve to .glutenFree (mirrors FoundationModelsSmartSearchProvider).
+        let dietary: [DietaryRestriction] = response.dietary.compactMap { value in
+            let trimmed = value.trimmingCharacters(in: .whitespaces)
+            return DietaryRestriction.allCases.first {
+                $0.rawValue.caseInsensitiveCompare(trimmed) == .orderedSame
+            }
+        }
 
         self.init(ingredientNames: response.ingredients, mood: mood, cookTime: cookTime, complexity: complexity, dietary: dietary)
     }

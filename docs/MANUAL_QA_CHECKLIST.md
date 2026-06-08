@@ -49,6 +49,20 @@ These scenarios remain manual-only after the `CookSavvyUITests` automation pass.
 - With premium enabled and the device offline, verify offline results still load.
 - Confirm online and AI sources fail gracefully without crashing.
 
+## Smart Search
+
+### 14.1 On-device path (iOS 26+ with Apple Intelligence)
+- On a device/simulator with Apple Intelligence available, confirm the Smart Search row appears.
+- Enter a natural-language query (e.g. "quick gluten-free tomato pasta") and verify it resolves to
+  ingredients + filters with **no network activity** (on-device parsing).
+
+### 14.2 Edge-function fallback (older OS / no Apple Intelligence)
+- On a device/simulator without on-device AI (e.g. iOS 18 SE), confirm the Smart Search row still
+  appears and a query parses correctly via the `parse-search-query` edge function (DeepSeek).
+- Verify extracted filters (mood/cook time/complexity/dietary) apply and ingredients resolve.
+- Simulate a backend failure (airplane mode) and confirm the failure surfaces via the Smart Search
+  error banner without crashing (graceful degrade).
+
 ## App Lifecycle
 
 ### 13.3 Background / Foreground

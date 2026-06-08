@@ -188,6 +188,99 @@ final class DiscoverViewModelSmartSearchTests: XCTestCase {
     }
 }
 
+// MARK: - SupabaseSmartSearchProvider Tests
+
+final class SupabaseSmartSearchProviderTests: XCTestCase {
+
+    private var mockClient: MockSupabaseClientProvider!
+    private var provider: SupabaseSmartSearchProvider!
+
+    override func setUp() {
+        super.setUp()
+        mockClient = MockSupabaseClientProvider()
+        provider = SupabaseSmartSearchProvider(clientProvider: mockClient)
+    }
+
+    override func tearDown() {
+        mockClient = nil
+        provider = nil
+        super.tearDown()
+    }
+
+    private func stub(_ json: String) {
+        mockClient.stubbedResponses["parse-search-query"] = Data(json.utf8)
+    }
+
+    func testParse_decodesSnakeCaseAndMapsEnums() async throws {
+        stub("""
+        {"ingredients":["tomato","pasta"],"mood":"quick","cook_time":"quick","complexity":"easy","dietary":["vegetarian"]}
+        """)
+
+        let intent = try await provider.parse(query: "quick easy vegetarian tomato pasta")
+
+        XCTAssertEqual(mockClient.invokedFunctionNames, ["parse-search-query"])
+        XCTAssertEqual(intent.ingredientNames, ["tomato", "pasta"])
+        XCTAssertEqual(intent.mood, .quick)
+        XCTAssertEqual(intent.cookTime, .quick)   // snake_case cook_time decoded
+        XCTAssertEqual(intent.complexity, .easy)
+        XCTAssertEqual(intent.dietary, [.vegetarian])
+    }
+
+    func testParse_mapsMixedCasingAndDietaryCaseInsensitively() async throws {
+        // Model may capitalise enum values and dietary spellings; mapping must tolerate it.
+        stub("""
+        {"ingredients":["Egg"],"mood":"Cozy","cook_time":"LONG","complexity":"Hard","dietary":["GlutenFree","kosher"]}
+        """)
+
+        let intent = try await provider.parse(query: "anything")
+
+        XCTAssertEqual(intent.mood, .cozy)
+        XCTAssertEqual(intent.cookTime, .long)
+        XCTAssertEqual(intent.complexity, .hard)
+        XCTAssertEqual(intent.dietary, [.glutenFree, .kosher])
+    }
+
+    func testParse_dropsUnknownEnumAndDietaryValues() async throws {
+        stub("""
+        {"ingredients":[],"mood":"sparkly","cook_time":null,"complexity":"impossible","dietary":["vegetarian","made_up"]}
+        """)
+
+        let intent = try await provider.parse(query: "anything")
+
+        XCTAssertTrue(intent.ingredientNames.isEmpty)
+        XCTAssertNil(intent.mood)         // unknown mood → nil
+        XCTAssertNil(intent.cookTime)     // explicit null → nil
+        XCTAssertNil(intent.complexity)   // unknown complexity → nil
+        XCTAssertEqual(intent.dietary, [.vegetarian]) // unknown dietary dropped
+    }
+
+    func testParse_wrapsInvokeErrorAsNetworkError() async {
+        mockClient.invokedError = URLError(.notConnectedToInternet)
+
+        do {
+            _ = try await provider.parse(query: "anything")
+            XCTFail("Expected error")
+        } catch let SmartSearchError.networkError(underlying) {
+            XCTAssertTrue(underlying is URLError)
+        } catch {
+            XCTFail("Expected SmartSearchError.networkError, got \(error)")
+        }
+    }
+
+    func testParse_malformedJSONThrowsParsingFailed() async {
+        stub("not json at all")
+
+        do {
+            _ = try await provider.parse(query: "anything")
+            XCTFail("Expected error")
+        } catch SmartSearchError.parsingFailed {
+            // expected
+        } catch {
+            XCTFail("Expected SmartSearchError.parsingFailed, got \(error)")
+        }
+    }
+}
+
 // MARK: - Mock
 
 /// Mock smart-search provider that returns a canned `Result` for any query.

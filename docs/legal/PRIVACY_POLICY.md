@@ -34,6 +34,13 @@ CookSavvy ("the app", "we", "us") is operated by `[COMPANY_LEGAL_NAME]`. Questio
   identify ingredients. Images are processed transiently for that request and are not used to build a
   profile of you or for advertising. (Camera access is governed by the system permission prompt.)
 
+### Search queries (Smart Search)
+- Smart Search lets you type a natural-language request (e.g. "quick vegetarian pasta"). On devices
+  that support on-device AI (Apple Intelligence), this text is processed **entirely on your device**
+  and never leaves it. On devices without on-device AI, the text is sent to our backend, which uses a
+  third-party AI provider (DeepSeek) to interpret it. The query is processed transiently for that
+  request, is not linked to your identity, and is not used for advertising or to build a profile.
+
 ### Usage and diagnostics
 - **Analytics (TelemetryDeck).** Aggregate, privacy-preserving product-interaction events (e.g.
   "recipe viewed") to understand feature usage. No IDFA, no cross-app tracking.
@@ -51,8 +58,9 @@ CookSavvy ("the app", "we", "us") is operated by `[COMPANY_LEGAL_NAME]`. Questio
 
 ## Data sharing
 We share data only with processors that help us run the app: Apple (sign-in, payments), Supabase
-(backend/auth), TelemetryDeck (analytics), and Sentry (crash reporting). We do not sell personal data
-and do not use it for cross-app tracking.
+(backend/auth), TelemetryDeck (analytics), Sentry (crash reporting), and — only for Smart Search on
+devices without on-device AI — DeepSeek (natural-language query interpretation). We do not sell
+personal data and do not use it for cross-app tracking.
 
 ## Data retention and deletion
 - You can delete your account at any time in **Settings → Delete Account**. This permanently deletes

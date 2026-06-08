@@ -67,10 +67,10 @@ paths:
 - `SmartSearchServiceProtocol` / `SmartSearchService` — AI natural-language query parser; free for all users, no subscription gating
 - `SmartSearchProviderProtocol` — common interface for AI providers
 - `FoundationModelsSmartSearchProvider` — on-device provider using `LanguageModelSession`, iOS 26+ / Apple Intelligence only; `@available(iOS 26.0, *)`, wrapped in `#if canImport(FoundationModels)`
-- `EdgeFunctionSmartSearchProvider` — fallback for older devices; calls the `parse-search-query` Supabase edge function (not yet deployed — see backend dependency note in `SmartSearchService.swift`)
+- `SupabaseSmartSearchProvider` — fallback for older devices; calls the `parse-search-query` Supabase edge function (DeepSeek non-thinking Flash server-side, key off-device). Decodes the snake_case response (`cook_time`) into `SmartSearchIntent`, matching enums and dietary values case-insensitively
 - `SmartSearchIntent` — structured output: `ingredientNames`, `mood`, `cookTime`, `complexity`, `dietary`
 - `SmartSearchError` — typed errors: `parsingFailed`, `networkError`
-- Provider selection at construction time via `SmartSearchService.makeIfAvailable(clientProvider:)`: on-device (iOS 26+, Apple Intelligence) if available, else `nil` (Smart Search row hidden). `EdgeFunctionSmartSearchProvider` is implemented but not wired — deferred until the `parse-search-query` Supabase edge function is deployed
+- Provider selection at construction time via `SmartSearchService.makeIfAvailable(clientProvider:)`: on-device (iOS 26+, Apple Intelligence) when available; otherwise `SupabaseSmartSearchProvider` when Supabase is configured (`clientProvider != nil`); else `nil` (row hidden). Smart Search reaches all users regardless of device/OS
 - Errors from `runSmartSearch` surface via `homeLoadError` (State-1 banner), not `searchError` (State-2 only)
 
 ## File Map
@@ -91,7 +91,7 @@ Services/
 │   ├── SmartSearchServiceProtocol.swift   — Service + provider protocols, SmartSearchError
 │   ├── SmartSearchService.swift           — Provider selector + SmartSearchServiceProtocol impl
 │   ├── FoundationModelsSmartSearchProvider.swift  — On-device LLM (iOS 26+)
-│   └── EdgeFunctionSmartSearchProvider.swift      — Supabase edge function fallback
+│   └── SupabaseSmartSearchProvider.swift          — Supabase edge function fallback
 ├── Ingredient/
 │   ├── IngredientsService.swift
 │   └── IngredientDetectionProtocol.swift — Protocol + errors
