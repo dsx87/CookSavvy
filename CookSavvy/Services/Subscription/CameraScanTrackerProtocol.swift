@@ -3,10 +3,11 @@ import Foundation
 /// Interface for tracking and enforcing the free-tier weekly camera scan quota.
 ///
 /// Concrete implementations persist state between calls so quota checks survive
-/// app restarts. The weekly window resets lazily on the caller's next interaction
-/// after a new ISO week begins, rather than at a fixed clock time.
+/// app restarts. The weekly allowance is enforced over a rolling 7-day window — each scan ages out
+/// 7 days after it was recorded — mirroring the backend rate limiter so the local badge/gate never
+/// contradicts the server.
 protocol CameraScanTrackerProtocol: AnyObject {
-    /// Returns `true` if the user has not yet consumed `limit` scans this week.
+    /// Returns `true` if the user has not yet consumed `limit` scans in the rolling 7-day window.
     /// - Parameter limit: The weekly quota ceiling.
     func canScan(limit: Int) -> Bool
 
@@ -17,7 +18,7 @@ protocol CameraScanTrackerProtocol: AnyObject {
     /// Used for premium users whose scans should not count against the free cap.
     func recordScanWithoutQuota()
 
-    /// Returns how many quota scans remain this week.
+    /// Returns how many quota scans remain in the rolling 7-day window.
     /// - Parameter limit: The weekly quota ceiling.
     func remainingScans(limit: Int) -> Int
 

@@ -130,7 +130,7 @@ Services/
 │   ├── SubscriptionServiceProtocol.swift
 │   ├── StoreKitSubscriptionService.swift
 │   ├── MockSubscriptionService.swift
-│   └── CameraScanTracker.swift         — weekly scan counter (UserDefaults, resets each calendar week)
+│   └── CameraScanTracker.swift         — weekly scan counter (UserDefaults timestamps, rolling 7-day window; mirrors backend)
 ├── ShoppingList/
 │   └── ShoppingListService.swift       — CRUD for shopping items via DBInterface
 ├── Pantry/

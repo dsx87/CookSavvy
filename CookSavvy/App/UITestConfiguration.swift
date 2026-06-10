@@ -15,8 +15,7 @@ struct UITestConfiguration {
     /// UserDefaults keys cleared and re-applied during test setup to ensure a clean state.
     private enum Keys {
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
-        static let cameraScansUsedThisWeek = "camera_scans_used_this_week"
-        static let cameraScanWeekStart = "camera_scan_week_start"
+        static let cameraScanTimestamps = "camera_scan_timestamps"
         static let enabledRecipeSources = "enabled_recipe_sources"
         static let themePreference = ThemePreference.storageKey
         static let cachedSubscriptionPlan = "cached_subscription_plan"
@@ -42,7 +41,7 @@ struct UITestConfiguration {
     let isEmptyDatabase: Bool
     /// `--large-dataset`: extends the default recipe set with 125 additional entries for scroll/pagination tests.
     let withLargeDataset: Bool
-    /// `--camera-limit-reached`: preloads the free-tier weekly camera scan counter to its cap.
+    /// `--camera-limit-reached`: fills the rolling 7-day camera-scan window to its free-tier cap.
     let hasReachedCameraLimit: Bool
     /// `--signed-in-apple`: boots with a mock Apple-authenticated (non-anonymous) session.
     let isSignedInWithApple: Bool
@@ -105,9 +104,9 @@ struct UITestConfiguration {
 
     /// Resets and re-applies relevant UserDefaults keys so that each UI test starts from a known state.
     ///
-    /// Clears onboarding completion, camera scan counters, recipe source selection, theme preference,
-    /// and cached subscription plan. Then writes the correct onboarding flag and, when
-    /// `hasReachedCameraLimit` is set, preloads the weekly scan counter to the free-tier cap.
+    /// Clears onboarding completion, the camera scan-timestamp window, recipe source selection, theme
+    /// preference, and cached subscription plan. Then writes the correct onboarding flag and, when
+    /// `hasReachedCameraLimit` is set, fills the rolling scan window to the free-tier cap.
     ///
     /// - Parameter defaults: The `UserDefaults` suite to modify; defaults to `.standard`.
     func prepareDefaults(_ defaults: UserDefaults = .standard) {
@@ -115,8 +114,7 @@ struct UITestConfiguration {
 
         [
             Keys.hasCompletedOnboarding,
-            Keys.cameraScansUsedThisWeek,
-            Keys.cameraScanWeekStart,
+            Keys.cameraScanTimestamps,
             Keys.enabledRecipeSources,
             Keys.themePreference,
             Keys.cachedSubscriptionPlan
@@ -125,8 +123,11 @@ struct UITestConfiguration {
         defaults.set(!isFreshInstall || skipOnboarding, forKey: Keys.hasCompletedOnboarding)
 
         if hasReachedCameraLimit {
-            defaults.set(CameraScanTracker.freeWeeklyLimit, forKey: Keys.cameraScansUsedThisWeek)
-            defaults.set(Date(), forKey: Keys.cameraScanWeekStart)
+            // Fill the rolling window with `freeWeeklyLimit` scans dated now, so the gate reads as
+            // exhausted (matching CameraScanTracker's timestamp-backed quota).
+            let now = Date()
+            let exhausted = Array(repeating: now, count: CameraScanTracker.freeWeeklyLimit)
+            defaults.set(exhausted, forKey: Keys.cameraScanTimestamps)
         }
     }
 }

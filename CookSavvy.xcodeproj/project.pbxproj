@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1D62F36B2DC17E2600F28780 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 1D62F36A2DC17E2600F28780 /* ZIPFoundation */; };
+		1DB70B302FD96ED40081F345 /* GRDB-dynamic in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 1DE9DF202E624D220077DD75 /* GRDB-dynamic */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1DDFE9B12F2CE64E000E8058 /* Configuration.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 1DDFE9B02F2CE64E000E8058 /* Configuration.storekit */; };
 		1DE9DF112E623A250077DD75 /* DefaultTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 1DE9DF102E623A250077DD75 /* DefaultTestPlan.xctestplan */; };
 		1DE9DF212E624D220077DD75 /* GRDB-dynamic in Frameworks */ = {isa = PBXBuildFile; productRef = 1DE9DF202E624D220077DD75 /* GRDB-dynamic */; };
@@ -34,6 +35,20 @@
 			remoteInfo = CookSavvy;
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		1DB70B312FD96ED40081F345 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				1DB70B302FD96ED40081F345 /* GRDB-dynamic in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		1D255FDB2DC135BB008C52B4 /* CookSavvy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CookSavvy.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -127,6 +142,7 @@
 				1D255FD82DC135BB008C52B4 /* Frameworks */,
 				1D255FD92DC135BB008C52B4 /* Resources */,
 				E45D8AEAE4B54A38A7321A4B /* Upload Debug Symbols to Sentry */,
+				1DB70B312FD96ED40081F345 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);

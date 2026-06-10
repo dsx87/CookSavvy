@@ -31,11 +31,11 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 
 | Tier | Display Name | Recipe Source | Ingredient Detection |
 |------|--------------|---------------|---------------------|
-| Free | Free | Local database (`OfflineRecipeSource`) | Manual text input + 5 camera scans/week |
+| Free | Free | Local database (`OfflineRecipeSource`) | Manual text input + 3 camera scans/week |
 | Premium | CookSavvy+ | Local + REST API + AI (`OnlineRecipeSource`, `AIRecipeSource`) | Unlimited AI photo recognition |
 
 - Product identifiers: monthly `com.cooksavvy.subscription.premium` (7-day introductory free trial), annual `com.cooksavvy.subscription.premium.yearly`
-- Free tier weekly camera scan limit tracked via `CameraScanTracker` (UserDefaults)
+- Free tier weekly camera scan limit (3 per rolling 7 days, mirrors the backend) tracked via `CameraScanTracker` (UserDefaults)
 - Premium-gated features: `PaidFeature` enum — `cameraIngredientDetection`, `onlineRecipes`, `aiRecipes`, `shoppingList`
 
 ## Architecture Rules

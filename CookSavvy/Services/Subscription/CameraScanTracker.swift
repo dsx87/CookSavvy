@@ -5,19 +5,24 @@
 
 import Foundation
 
-/// Tracks the number of AI camera ingredient scans a free-tier user has performed in the current calendar week.
+/// Tracks the AI camera ingredient scans a free-tier user has performed within a rolling 7-day window.
 ///
-/// The week boundary is determined lazily — on each `canScan` / `recordScan` /
-/// `remainingScans` call, `resetIfNewWeek()` compares the stored week-of-year and
-/// ISO week year against the current date. If they differ, the counter resets to zero and the
-/// stored week-start date advances. This means a reset does not happen at a fixed clock
-/// time but on the user's **next scan attempt** after a new week begins.
+/// This is a faithful mirror of the backend rate limiter (`_shared/rate-limit.ts`), which counts
+/// `api_usage` rows in a rolling `window_hours` window — 168h (7 days) for free `detect-ingredients`.
+/// Each quota-consuming scan stores its timestamp; on every quota query the tracker prunes
+/// timestamps older than `dateProvider() − 7d` and counts what remains. A rolling window (rather
+/// than a calendar/ISO week) is required so the local badge and pre-camera gate never contradict the
+/// server at a week boundary: a calendar week would reset on Monday while the backend still 429s
+/// until 7 days after the user's oldest scan.
 ///
 /// All state is persisted in `UserDefaults` so counts survive app restarts.
 final class CameraScanTracker: CameraScanTrackerProtocol {
 
-    /// Maximum number of AI camera scans permitted per week on the free tier.
-    static let freeWeeklyLimit = 5
+    /// Maximum number of AI camera scans permitted per rolling 7-day window on the free tier.
+    static let freeWeeklyLimit = 3
+
+    /// Length of the rolling quota window, in seconds (7 days) — matches the backend's 168h window.
+    private static let windowDuration: TimeInterval = 7 * 24 * 60 * 60
 
     /// The UserDefaults store for persisted scan state.
     private let defaults: UserDefaults
@@ -25,13 +30,11 @@ final class CameraScanTracker: CameraScanTrackerProtocol {
     /// Injectable clock for deterministic testing; defaults to `Date()`.
     private let dateProvider: () -> Date
 
-    /// UserDefaults keys for the three persisted values.
+    /// UserDefaults keys for the persisted values.
     private enum Keys {
-        /// Weekly scan counter that resets each new ISO week.
-        static let scansUsed = "camera_scans_used_this_week"
-        /// The date recorded when the current week's tracking started.
-        static let weekStart = "camera_scan_week_start"
-        /// Cumulative all-time scan counter, never reset.
+        /// Timestamps of quota-consuming scans inside the rolling window; pruned on each access.
+        static let scanTimestamps = "camera_scan_timestamps"
+        /// Cumulative all-time scan counter, never reset (drives the `scan_pro` achievement).
         static let totalScans = "camera_scans_total"
     }
 
@@ -44,65 +47,46 @@ final class CameraScanTracker: CameraScanTrackerProtocol {
         self.dateProvider = dateProvider
     }
 
-    /// The number of quota-consuming scans performed during the current week.
-    private var scansUsedThisWeek: Int {
-        get { defaults.integer(forKey: Keys.scansUsed) }
-        set { defaults.set(newValue, forKey: Keys.scansUsed) }
+    /// The quota-consuming scan timestamps currently persisted (before pruning).
+    ///
+    /// `Date` is a property-list type, so the array round-trips through `UserDefaults` directly.
+    private var storedTimestamps: [Date] {
+        get { (defaults.array(forKey: Keys.scanTimestamps) as? [Date]) ?? [] }
+        set { defaults.set(newValue, forKey: Keys.scanTimestamps) }
     }
 
-    /// The date at which the current week's scan window began.
+    /// Drops timestamps older than the rolling window and returns those still inside it.
     ///
-    /// On first access the property seeds itself with the current date to establish
-    /// a baseline week, ensuring the first scan attempt is never incorrectly rejected.
-    private var weekStartDate: Date {
-        get {
-            if let stored = defaults.object(forKey: Keys.weekStart) as? Date {
-                return stored
-            }
-            let now = dateProvider()
-            defaults.set(now, forKey: Keys.weekStart)
-            return now
+    /// Persists the pruned array when anything was removed so the store cannot grow unbounded.
+    /// Mirrors the backend's `since = now − window_hours` filter on `api_usage`.
+    @discardableResult
+    private func pruneWindow() -> [Date] {
+        let cutoff = dateProvider().addingTimeInterval(-Self.windowDuration)
+        let recent = storedTimestamps.filter { $0 > cutoff }
+        if recent.count != storedTimestamps.count {
+            storedTimestamps = recent
         }
-        set { defaults.set(newValue, forKey: Keys.weekStart) }
+        return recent
     }
 
-    /// Resets the weekly counter if the current ISO week/year differs from the stored one.
-    ///
-    /// Uses `Calendar.current` with `.weekOfYear` and `.yearForWeekOfYear` components so
-    /// the reset aligns to the user's locale week boundary rather than a fixed 7-day window.
-    private func resetIfNewWeek() {
-        let calendar = Calendar.current
-        let storedWeek = calendar.component(.weekOfYear, from: weekStartDate)
-        let storedYear = calendar.component(.yearForWeekOfYear, from: weekStartDate)
-        let currentWeek = calendar.component(.weekOfYear, from: dateProvider())
-        let currentYear = calendar.component(.yearForWeekOfYear, from: dateProvider())
-
-        if currentWeek != storedWeek || currentYear != storedYear {
-            scansUsedThisWeek = 0
-            weekStartDate = dateProvider()
-        }
-    }
-
-    /// Returns `true` if the user has not yet reached the weekly scan limit.
-    ///
-    /// Triggers a week-reset check before evaluating.
-    /// - Parameter limit: The weekly cap to check against. Defaults to `freeWeeklyLimit`.
+    /// Returns `true` if fewer than `limit` scans fall within the rolling 7-day window.
+    /// - Parameter limit: The window cap to check against. Defaults to `freeWeeklyLimit`.
     func canScan(limit: Int = freeWeeklyLimit) -> Bool {
-        resetIfNewWeek()
-        return scansUsedThisWeek < limit
+        pruneWindow().count < limit
     }
 
-    /// Records one quota-consuming scan, incrementing both the weekly and lifetime counters.
+    /// Records one quota-consuming scan, appending its timestamp and bumping the lifetime total.
     func recordScan() {
-        resetIfNewWeek()
-        scansUsedThisWeek += 1
+        var recent = pruneWindow()
+        recent.append(dateProvider())
+        storedTimestamps = recent
         defaults.set(defaults.integer(forKey: Keys.totalScans) + 1, forKey: Keys.totalScans)
     }
 
-    /// Increments the lifetime total without consuming weekly quota.
+    /// Increments the lifetime total without consuming window quota.
     ///
-    /// Used for premium users, where scans should be tracked all-time but must not
-    /// count against the free-tier weekly cap.
+    /// Used for premium users, whose scans should be tracked all-time but must not count against
+    /// the free-tier window cap.
     func recordScanWithoutQuota() {
         defaults.set(defaults.integer(forKey: Keys.totalScans) + 1, forKey: Keys.totalScans)
     }
@@ -112,10 +96,9 @@ final class CameraScanTracker: CameraScanTrackerProtocol {
         defaults.integer(forKey: Keys.totalScans)
     }
 
-    /// Returns how many quota scans remain this week, floored at zero.
-    /// - Parameter limit: The weekly cap to compute against. Defaults to `freeWeeklyLimit`.
+    /// Returns how many quota scans remain in the rolling window, floored at zero.
+    /// - Parameter limit: The window cap to compute against. Defaults to `freeWeeklyLimit`.
     func remainingScans(limit: Int = freeWeeklyLimit) -> Int {
-        resetIfNewWeek()
-        return max(0, limit - scansUsedThisWeek)
+        max(0, limit - pruneWindow().count)
     }
 }

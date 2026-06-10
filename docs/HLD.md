@@ -35,7 +35,7 @@ CookSavvy is a hobby iOS recipe app. Users select or scan ingredients, receive r
 
 | Tier | Display Name | Product ID | Recipe Sources | Ingredient Detection | Camera |
 |------|-------------|------------|----------------|----------------------|--------|
-| Free | Free | — | `OfflineRecipeSource` (local SQLite only) | Manual text input | 5 scans/week (`CameraScanTracker`, UserDefaults, resets when `Calendar.current` enters a new week/year) |
+| Free | Free | — | `OfflineRecipeSource` (local SQLite only) | Manual text input | 3 scans / rolling 7 days (`CameraScanTracker`, UserDefaults timestamps; mirrors the backend rate limiter) |
 | Premium | CookSavvy+ | `com.cooksavvy.subscription.premium` | `OfflineRecipeSource` + `OnlineRecipeSource` (Supabase backend) + `AIRecipeSource` | Unlimited AI photo recognition | Unlimited |
 
 ### Gated Features (`PaidFeature` enum)

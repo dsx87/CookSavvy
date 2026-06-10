@@ -24,6 +24,9 @@
     "%lld" : {
 
     },
+    "•" : {
+
+    },
     "accessibility.achievementProgress" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -2498,6 +2501,28 @@
         }
       }
     },
+    "legal.privacyPolicy" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Privacy Policy"
+          }
+        }
+      }
+    },
+    "legal.termsOfUse" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Terms of Use"
+          }
+        }
+      }
+    },
     "minutes" : {
 
     },
@@ -3150,6 +3175,61 @@
         }
       }
     },
+    "settings.deleteAccountAlertMessage" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This permanently deletes your account and all associated data. This cannot be undone."
+          }
+        }
+      }
+    },
+    "settings.deleteAccountAlertTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete Account?"
+          }
+        }
+      }
+    },
+    "settings.deleteAccountButton" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete Account"
+          }
+        }
+      }
+    },
+    "settings.deleteAccountConfirm" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete Account"
+          }
+        }
+      }
+    },
+    "settings.deleteAccountFailed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "We couldn't delete your account. Please try again."
+          }
+        }
+      }
+    },
     "settings.favoriteRecipes" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -3157,6 +3237,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Favorite Recipes"
+          }
+        }
+      }
+    },
+    "settings.legalHeader" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Legal"
           }
         }
       }
@@ -3485,7 +3576,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Subscriptions auto-renew monthly or annually until cancelled."
+            "value" : "The 7-day free trial applies to the monthly plan only. After any trial, your subscription renews automatically at the displayed price (monthly or annual) until cancelled. Cancel anytime in Settings at least 24 hours before the period ends."
           }
         }
       }
