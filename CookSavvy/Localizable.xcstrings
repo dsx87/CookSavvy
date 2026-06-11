@@ -3197,6 +3197,17 @@
         }
       }
     },
+    "settings.deleteAccountAndDataButton" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete Account & Data"
+          }
+        }
+      }
+    },
     "settings.deleteAccountButton" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -3226,6 +3237,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "We couldn't delete your account. Please try again."
+          }
+        }
+      }
+    },
+    "settings.deleteAccountSectionFooter" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Permanently deletes your CookSavvy account and all associated data from our servers. This can't be undone."
           }
         }
       }
