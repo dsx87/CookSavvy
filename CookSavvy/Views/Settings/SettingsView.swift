@@ -22,6 +22,9 @@ struct SettingsView: View {
             dietarySection
             statsSection
             dataManagementSection
+            if viewModel.isAuthAvailable {
+                accountDeletionSection
+            }
             legalSection
             appInfoSection
         }
@@ -154,8 +157,19 @@ struct SettingsView: View {
         } label: {
             Label(Strings.Auth.signOut, systemImage: Icons.Auth.signOut)
         }
+    }
 
-        deleteAccountRow
+    // MARK: - Account Deletion
+
+    /// Always-visible (when an auth backend is configured) account-deletion section, satisfying
+    /// App Store Guideline 5.1.1(v). Lives outside the Account section so anonymous users — not just
+    /// Sign in with Apple users — can delete their account and server-side data.
+    private var accountDeletionSection: some View {
+        Section {
+            deleteAccountRow
+        } footer: {
+            Text(Strings.Settings.deleteAccountSectionFooter)
+        }
     }
 
     private var deleteAccountRow: some View {
@@ -163,7 +177,7 @@ struct SettingsView: View {
             viewModel.showDeleteAccountConfirmation = true
         } label: {
             HStack {
-                Label(Strings.Settings.deleteAccountButton, systemImage: Icons.Settings.trash)
+                Label(Strings.Settings.deleteAccountAndDataButton, systemImage: Icons.Settings.trash)
                 Spacer()
                 if viewModel.isDeletingAccount {
                     ProgressView()

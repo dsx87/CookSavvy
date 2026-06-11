@@ -95,6 +95,8 @@ enum Strings {
         static let restoreFailed = String(localized: "settings.restoreFailed", defaultValue: "Restore Failed")
         static let legalHeader = String(localized: "settings.legalHeader", defaultValue: "Legal")
         static let deleteAccountButton = String(localized: "settings.deleteAccountButton", defaultValue: "Delete Account")
+        static let deleteAccountAndDataButton = String(localized: "settings.deleteAccountAndDataButton", defaultValue: "Delete Account & Data")
+        static let deleteAccountSectionFooter = String(localized: "settings.deleteAccountSectionFooter", defaultValue: "Permanently deletes your CookSavvy account and all associated data from our servers. This can't be undone.")
         static let deleteAccountAlertTitle = String(localized: "settings.deleteAccountAlertTitle", defaultValue: "Delete Account?")
         static let deleteAccountAlertMessage = String(localized: "settings.deleteAccountAlertMessage", defaultValue: "This permanently deletes your account and all associated data. This cannot be undone.")
         static let deleteAccountConfirm = String(localized: "settings.deleteAccountConfirm", defaultValue: "Delete Account")
