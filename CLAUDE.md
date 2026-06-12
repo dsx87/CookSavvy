@@ -8,7 +8,7 @@ A hobby iOS recipe app that suggests recipes based on user-provided ingredients.
 - **UI Framework:** SwiftUI (UIKit only when absolutely necessary)
 - **Database:** GRDB (SQLite wrapper)
 - **Subscriptions:** StoreKit 2
-- **Backend:** Supabase (Edge Functions proxy AI/online-recipe calls; keys held server-side)
+- **Backend:** Supabase (Edge Functions proxy AI/online-recipe calls; keys held server-side). Lives in a **separate repo** at `/Users/dsx/Developer/CookSavvyBE` (`git@github.com:dsx87/CookSavvyBE.git`) — edge functions (`supabase/functions/`), Postgres migrations, and server-side rate-limit/quota logic are there, **not** in this iOS repo. The `supabase/` dir here holds only empty, untracked placeholder folders.
 - **Analytics:** TelemetryDeck in RELEASE when configured, else `os.Logger` (`AnalyticsServiceProtocol`)
 - **Crash reporting:** Sentry in RELEASE when a DSN is configured, else no-op (`CrashReportingServiceProtocol`)
 - **Philosophy:** Maximize use of Apple frameworks
@@ -97,7 +97,7 @@ CookSavvyUITests/          — XCUITest suites (see uitests.md rule)
 | `docs/HLD.md` | Cross-cutting architecture: layer map, coordinator hierarchy, data flows, state machines, DB schema. Read when a task spans multiple layers. Directional — verify specifics against code; per-layer inventory/conventions live in `.claude/rules/*.md` |
 | `docs/services/` | Per-service usage/API references: `IMAGE_SERVICE_README.md`, `INGREDIENTS_SERVICE_README.md`, `RECIPE_SERVICE_README.md` |
 | `docs/audits/` | Dated point-in-time audits. Current cycle (2026-06): `AUDIT_2026-06-06.md` (engineering), `PRODUCT_AUDIT_2026-06-06.md` (product), `UX_UI_AUDIT_2026-06-06.md` (UX/UI), and `APPSTORE_BLOCKERS_STATUS_2026-06-07.md` (live release-blocker tracker, source of truth) |
-| `docs/BACKEND_PLAN.md` | Supabase backend plan; still the reference for open backend work (e.g. server-side scan-quota enforcement) |
+| `docs/BACKEND_PLAN.md` | Supabase backend plan (design/reference). The backend itself lives in the separate `CookSavvyBE` repo (`/Users/dsx/Developer/CookSavvyBE`); consult that repo for the actual edge functions, migrations, and rate-limit/quota logic. Note: server-side scan-quota enforcement is now implemented there (per-user weekly `api_usage` cap in `detect-ingredients`). |
 | `docs/TEST_PLAN_UNIT_TESTS.md` | Test-authoring guidance + remaining unit-test gaps (StoreKit/DataImport services) |
 | `docs/MANUAL_QA_CHECKLIST.md` | Scenarios that remain manual after UI test automation |
 | `prod/` | Product documentation — see `prod/00-README.md` for index |
