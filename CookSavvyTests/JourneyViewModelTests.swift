@@ -338,6 +338,13 @@ final class JourneyViewModelTests: XCTestCase {
 
         await vm.signInWithApple()
 
+        // `isAnonymous` is updated by the auth-state subscription, which delivers on the main
+        // actor asynchronously (a later run-loop turn), so it is not guaranteed to be flipped
+        // the instant `signInWithApple()` returns. Wait briefly for the update to propagate.
+        for _ in 0..<100 where vm.isAnonymous {
+            try? await Task.sleep(nanoseconds: 5_000_000) // 5ms
+        }
+
         XCTAssertFalse(vm.isAnonymous)
         XCTAssertTrue(vm.isSignedInWithApple)
         XCTAssertEqual(mockAuthService.signInWithAppleCallCount, 1)
