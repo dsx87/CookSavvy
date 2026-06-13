@@ -13,7 +13,7 @@ import SwiftUI
 struct DiscoverView: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @StateObject var viewModel: DiscoverViewModel
+    @State var viewModel: DiscoverViewModel
     /// SwiftUI requires @FocusState to live in the View; this acts as a relay into viewModel.isSearchFocused.
     @FocusState private var isSearchFocused: Bool
 

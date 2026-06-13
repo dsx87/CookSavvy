@@ -13,17 +13,17 @@ import SwiftUI
 /// settings navigation. Selected ingredients for recipe detail pushes are stored by recipe
 /// ID so they survive the navigation lifecycle without being embedded in the enum case.
 @MainActor
-final class JourneyCoordinator: ObservableObject, JourneyCoordinating, RecipeListCoordinating {
+@Observable final class JourneyCoordinator: JourneyCoordinating, RecipeListCoordinating {
 
     private let container: AppContainer
     /// Child coordinator responsible for the Settings screen.
     let settingsCoordinator: SettingsCoordinator
     /// Navigation stack path for push destinations (recipe detail, recipe list, settings).
-    @Published var navigationPath = NavigationPath()
+    var navigationPath = NavigationPath()
     /// The currently presented sheet destination, if any.
-    @Published var presentedSheet: SheetDestination?
+    var presentedSheet: SheetDestination?
     /// The currently presented full-screen cover destination, if any.
-    @Published var presentedFullScreenCover: FullScreenCoverDestination?
+    var presentedFullScreenCover: FullScreenCoverDestination?
     /// Cached selected-ingredient lists keyed by recipe ID, used when pushing recipe detail.
     ///
     /// Stored separately from the `NavigationDestination` enum to avoid embedding large
@@ -241,13 +241,13 @@ extension JourneyCoordinator {
 ///
 /// Reloads Journey data via `JourneyViewModel.loadData()` whenever a sheet or cover is dismissed.
 struct JourneyCoordinatorView: View {
-    @ObservedObject var coordinator: JourneyCoordinator
-    @StateObject private var journeyViewModel: JourneyViewModel
+    @Bindable var coordinator: JourneyCoordinator
+    @State private var journeyViewModel: JourneyViewModel
 
     /// Creates the coordinator view and pins the root `JourneyViewModel` as a state object.
     init(coordinator: JourneyCoordinator) {
         self.coordinator = coordinator
-        _journeyViewModel = StateObject(wrappedValue: coordinator.makeJourneyViewModel())
+        _journeyViewModel = State(wrappedValue: coordinator.makeJourneyViewModel())
     }
 
     var body: some View {
@@ -338,16 +338,16 @@ private extension JourneyCoordinator {
 
 /// A navigation destination wrapper that embeds the Settings screen within the Journey navigation stack.
 ///
-/// Owns its own `SettingsViewModel` via `@StateObject` while observing the shared
+/// Owns its own `SettingsViewModel` via `@State` while observing the shared
 /// `SettingsCoordinator` for sheet presentations (e.g., the upgrade sheet).
 struct JourneySettingsDestination: View {
-    @ObservedObject var settingsCoordinator: SettingsCoordinator
-    @StateObject private var viewModel: SettingsViewModel
+    @Bindable var settingsCoordinator: SettingsCoordinator
+    @State private var viewModel: SettingsViewModel
     
     /// Creates a settings destination wrapper that owns a persistent settings view model.
     init(settingsCoordinator: SettingsCoordinator) {
         self.settingsCoordinator = settingsCoordinator
-        _viewModel = StateObject(wrappedValue: settingsCoordinator.makeSettingsViewModel())
+        _viewModel = State(wrappedValue: settingsCoordinator.makeSettingsViewModel())
     }
     
     var body: some View {

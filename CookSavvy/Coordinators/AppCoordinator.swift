@@ -9,18 +9,18 @@ import SwiftUI
 /// transition between onboarding and the main tab interface.
 ///
 /// `AppCoordinator` is created once by `ThemedAppRoot` after the `AppContainer` is
-/// initialized. It exposes `hasCompletedOnboarding` as a `@Published` property so the
+/// initialized. It exposes `hasCompletedOnboarding` as an observable property so the
 /// root view can reactively switch between the onboarding flow and `TabContainerView`.
 /// Child coordinators are created lazily on first access and cached for the lifetime
 /// of the app.
 @MainActor
-final class AppCoordinator: ObservableObject {
+@Observable final class AppCoordinator {
 
     /// Whether the user has finished the first-launch onboarding walkthrough.
     ///
     /// Initialized from `UserDefaults` and written back when onboarding completes.
     /// Changing this value drives the root view's coordinator-based routing.
-    @Published var hasCompletedOnboarding: Bool = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+    var hasCompletedOnboarding: Bool = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
     private let container: AppContainer
     /// Ingredients passed from a successful onboarding camera scan to the Discover tab.
     ///

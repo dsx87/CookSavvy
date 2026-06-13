@@ -8,7 +8,7 @@ import SwiftUI
 /// achievements section, and recent cooking activity.
 struct JourneyView: View {
     @Environment(\.appTheme) private var theme
-    @StateObject var viewModel: JourneyViewModel
+    @State var viewModel: JourneyViewModel
 
     var body: some View {
         ScrollView(showsIndicators: false) {

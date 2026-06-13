@@ -7,7 +7,7 @@ import SwiftUI
 
 /// Concrete paywall view implementation hosting plan cards and purchase CTA.
 struct UpgradeView: View {
-    @ObservedObject var viewModel: UpgradeViewModel
+    @Bindable var viewModel: UpgradeViewModel
     @Environment(\.appTheme) private var theme
     
     var body: some View {

@@ -10,7 +10,7 @@ import SwiftUI
 /// For premium users with missing ingredients, an "Add Missing to List" button appears in the
 /// ingredients section.
 struct RecipeDetailsView: View {
-    @ObservedObject var viewModel: RecipeDetailsViewModel
+    var viewModel: RecipeDetailsViewModel
     @Environment(\.appTheme) private var theme
 
     var body: some View {

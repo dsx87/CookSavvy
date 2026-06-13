@@ -8,7 +8,7 @@ import SwiftUI
 struct CookModeView: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @StateObject var viewModel: CookModeViewModel
+    @State var viewModel: CookModeViewModel
 
     var body: some View {
         ZStack {

@@ -15,7 +15,7 @@ import SwiftUI
 /// - `.permissionDenied` — Settings deep-link card
 /// - `.error` — error message card
 struct OnboardingCameraPage: View {
-    @ObservedObject var viewModel: OnboardingViewModel
+    var viewModel: OnboardingViewModel
     @Environment(\.appTheme) private var theme
 
     var body: some View {

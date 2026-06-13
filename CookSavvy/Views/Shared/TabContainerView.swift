@@ -12,7 +12,7 @@ import SwiftUI
 /// Owned and driven by `AppCoordinator`, which lazily vends the per-tab coordinators.
 /// The accent colour is bound to the active theme so the tab bar tint updates dynamically.
 struct TabContainerView: View {
-    @ObservedObject var coordinator: AppCoordinator
+    var coordinator: AppCoordinator
     @Environment(\.appTheme) var theme
     
     var body: some View {

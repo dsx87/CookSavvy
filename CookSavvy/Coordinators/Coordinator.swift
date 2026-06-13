@@ -7,11 +7,11 @@ import SwiftUI
 
 /// Base protocol that all feature coordinators conform to.
 ///
-/// Coordinators are `ObservableObject` so SwiftUI views can observe navigation state directly.
+/// Coordinators are `@Observable` so SwiftUI views can observe navigation state directly.
 /// Each coordinator is responsible for building its root view via `start()`, owning its
 /// `NavigationPath`, and creating view models for every destination it manages.
 @MainActor
-protocol Coordinator: ObservableObject {
+protocol Coordinator: AnyObject {
     /// The root view type produced by this coordinator.
     associatedtype ContentView: View
 

@@ -25,21 +25,21 @@ protocol JourneyCoordinating: RecipeDetailsCoordinating {
 ///
 /// Delegates all navigation to `JourneyCoordinator` via a weak `coordinator` reference.
 @MainActor
-final class JourneyViewModel: ObservableObject {
+@Observable final class JourneyViewModel {
     /// Total number of times the user has completed a cooking session (all-time).
-    @Published var recipesCooked: Int = 0
+    var recipesCooked: Int = 0
     /// Current consecutive-day cooking streak (reserved for future display).
-    @Published var dayStreak: Int = 0
+    var dayStreak: Int = 0
     /// Total accumulated cooking time in hours (all-time).
-    @Published var hoursCooking: Double = 0
+    var hoursCooking: Double = 0
     /// Count of unique ingredients the user has ever cooked with (all-time).
-    @Published var uniqueIngredientsUsed: Int = 0
+    var uniqueIngredientsUsed: Int = 0
     /// Number of meals cooked in the current calendar month.
-    @Published var monthlyRecipesCooked: Int = 0
+    var monthlyRecipesCooked: Int = 0
     /// Number of ingredients "rescued" (used in cooking) in the current calendar month.
-    @Published var monthlyIngredientsRescued: Int = 0
+    var monthlyIngredientsRescued: Int = 0
     /// Premium current-month summary with approximate savings.
-    @Published private(set) var monthlyInsights = MonthlyCookingInsights(
+    private(set) var monthlyInsights = MonthlyCookingInsights(
         mealsCooked: 0,
         uniqueIngredientsUsed: 0,
         estimatedSavingsAmount: 0,
@@ -47,29 +47,29 @@ final class JourneyViewModel: ObservableObject {
         isApproximate: true
     )
     /// Recipes the user has bookmarked/saved, shown in the saved recipes carousel.
-    @Published var savedRecipes: [Recipe] = []
+    var savedRecipes: [Recipe] = []
     /// Recipes created by the user, shown in the My Recipes carousel.
-    @Published var userRecipes: [Recipe] = []
+    var userRecipes: [Recipe] = []
     /// Day-of-week indices (Monday = 0) on which the user cooked this week.
-    @Published var weekCookingDates: Set<Int> = []
+    var weekCookingDates: Set<Int> = []
     /// The full achievement list, evaluated and updated after each data load.
-    @Published var achievements: [Achievement] = Achievement.allAchievements
+    var achievements: [Achievement] = Achievement.allAchievements
     /// Whether the achievements carousel is expanded to show all badges.
-    @Published var isAchievementsExpanded = false
+    var isAchievementsExpanded = false
     /// The most recent cooking sessions, used in the recent activity feed.
-    @Published var recentSessions: [CookingSession] = []
+    var recentSessions: [CookingSession] = []
     /// `true` while any data load is in progress.
-    @Published var isLoading = false
+    var isLoading = false
     /// Non-`nil` when a "Cook Again" recipe lookup failed; drives a dedicated alert.
-    @Published var cookAgainErrorMessage: String?
+    var cookAgainErrorMessage: String?
     /// Non-`nil` when a general data load failed; drives the generic error alert.
-    @Published var errorMessage: String?
+    var errorMessage: String?
     /// `true` when the current auth session is anonymous (not signed in with Apple).
-    @Published private(set) var isAnonymous: Bool = true
+    private(set) var isAnonymous: Bool = true
     /// `true` while a Sign in with Apple request is in flight.
-    @Published var isSigningIn: Bool = false
+    var isSigningIn: Bool = false
     /// The current subscription plan, mirrored from `SubscriptionServiceProtocol` for reactive premium UI.
-    @Published private(set) var currentPlan: SubscriptionPlan = .free
+    private(set) var currentPlan: SubscriptionPlan = .free
 
     /// `true` when auth is available on this device/build (may be hidden on unsupported configurations).
     var isAuthAvailable: Bool {
@@ -90,7 +90,7 @@ final class JourneyViewModel: ObservableObject {
     private weak var coordinator: (any JourneyCoordinating)?
     private var hasLoadedData = false
     /// Long-lived tasks consuming the service event streams; cancelled on deinit.
-    private var observationTasks: [Task<Void, Never>] = []
+    @ObservationIgnored private var observationTasks: [Task<Void, Never>] = []
 
     deinit {
         observationTasks.forEach { $0.cancel() }

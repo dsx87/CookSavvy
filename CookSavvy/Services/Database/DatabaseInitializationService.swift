@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Observation
 import os.log
 
 /// Represents the current phase of the two-phase database initialisation sequence.
@@ -57,7 +58,7 @@ enum DatabaseInitializationState: Equatable {
 ///
 /// Callers can `await waitForIngredients()` or `await waitForRecipes()` to suspend until
 /// the corresponding phase is complete, enabling ordered startup of dependent services.
-final class DatabaseInitializationService: ObservableObject, DatabaseInitializationServiceProtocol {
+@Observable final class DatabaseInitializationService: DatabaseInitializationServiceProtocol {
     
     private static let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "CookSavvy",
@@ -65,7 +66,7 @@ final class DatabaseInitializationService: ObservableObject, DatabaseInitializat
     )
     
     /// The published initialisation state, observed by the app root to gate startup UI.
-    @Published private(set) var state: DatabaseInitializationState = .notStarted
+    private(set) var state: DatabaseInitializationState = .notStarted
     
     private let dbInterface: DBInterfaceProtocol
     private let ingredientsService: IngredientsServiceProtocol

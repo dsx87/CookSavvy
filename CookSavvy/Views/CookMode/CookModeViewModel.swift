@@ -10,22 +10,22 @@ import Combine
 /// - A post-cook feedback sheet (star rating) shown when the last step is finished
 /// - Persisting the completed cooking session via `UserDataService`
 @MainActor
-final class CookModeViewModel: ObservableObject {
+@Observable final class CookModeViewModel {
     /// The recipe being cooked.
     let recipe: Recipe
 
     /// Zero-indexed position of the currently displayed step.
-    @Published var currentStep: Int = 0
+    var currentStep: Int = 0
     /// Elapsed seconds since the current step's timer was started.
-    @Published var timerSeconds: Int = 0
+    var timerSeconds: Int = 0
     /// `true` when the per-step countdown timer is actively running.
-    @Published var timerRunning: Bool = false
+    var timerRunning: Bool = false
     /// Indices of steps the user has explicitly marked as done.
-    @Published var completedSteps: Set<Int> = []
+    var completedSteps: Set<Int> = []
     /// `true` when the post-cook feedback sheet is visible.
-    @Published var showFeedback: Bool = false
+    var showFeedback: Bool = false
     /// The star rating (1–5) the user gave this cook; `0` means not yet rated.
-    @Published var feedbackRating: Int = 0
+    var feedbackRating: Int = 0
 
     private let userDataService: UserDataServiceProtocol
     private let analyticsService: AnalyticsServiceProtocol

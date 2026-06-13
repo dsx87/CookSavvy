@@ -3,7 +3,6 @@
 //  CookSavvyTests
 //
 
-import Combine
 import XCTest
 @testable import CookSavvy
 
@@ -13,18 +12,15 @@ final class SettingsViewModelAuthTests: XCTestCase {
     private var mockAuth: MockAuthService!
     private var mockAnalytics: MockAnalyticsService!
     private var sut: SettingsViewModel!
-    private var cancellables: Set<AnyCancellable>!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        cancellables = []
         mockAuth = MockAuthService(initialState: .signedIn(userId: "anon-user"), isAnonymous: true)
         mockAnalytics = MockAnalyticsService()
         sut = try makeViewModel(authService: mockAuth)
     }
 
     override func tearDownWithError() throws {
-        cancellables = nil
         sut = nil
         mockAuth = nil
         mockAnalytics = nil
@@ -89,21 +85,19 @@ final class SettingsViewModelAuthTests: XCTestCase {
 
     // MARK: - Auth State Observation
 
-    func testAuthStateUpdatesOnPublisherChange() {
-        let expectation = expectation(description: "authState updates")
-
-        sut.$authState
-            .dropFirst()
-            .sink { state in
-                if case .signedIn(let id) = state, id == "new-user" {
-                    expectation.fulfill()
-                }
-            }
-            .store(in: &cancellables)
-
+    func testAuthStateUpdatesOnAuthServiceChange() async {
         mockAuth.setAuthState(.signedIn(userId: "new-user"))
 
-        wait(for: [expectation], timeout: 2.0)
+        // The view model mirrors auth state via its `authStateUpdates` observation task, which
+        // delivers asynchronously on the main actor. Wait briefly for the update to propagate.
+        for _ in 0..<100 {
+            if case .signedIn(let id) = sut.authState, id == "new-user" { break }
+            try? await Task.sleep(nanoseconds: 5_000_000) // 5ms
+        }
+
+        guard case .signedIn(let id) = sut.authState, id == "new-user" else {
+            return XCTFail("authState did not update to the new signed-in user")
+        }
     }
 
     // MARK: - Sign Out

@@ -7,7 +7,7 @@ import SwiftUI
 
 /// Full-screen shopping list view. Supports grouped items, marking checked, deleting, and clearing completed items.
 struct ShoppingListView: View {
-    @ObservedObject var viewModel: ShoppingListViewModel
+    var viewModel: ShoppingListViewModel
     @Environment(\.appTheme) private var theme
 
     var body: some View {

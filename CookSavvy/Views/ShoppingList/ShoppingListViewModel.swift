@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import Observation
 
 /// ViewModel backing the Shopping List sheet (premium feature).
 ///
@@ -11,15 +12,15 @@ import Foundation
 /// Supports toggling checked state, swipe-to-delete, and clearing all completed items.
 /// All mutations are persisted immediately via `ShoppingListServiceProtocol`.
 @MainActor
-final class ShoppingListViewModel: ObservableObject {
+@Observable final class ShoppingListViewModel {
     // MARK: - Published
 
     /// All shopping items; used as the source of truth for `groupedItems`.
-    @Published var items: [ShoppingItem] = []
+    var items: [ShoppingItem] = []
     /// `true` while items are being loaded from the service.
-    @Published var isLoading = false
+    var isLoading = false
     /// Non-`nil` when any action fails; drives the error alert.
-    @Published var errorMessage: String?
+    var errorMessage: String?
 
     // MARK: - Computed
 

@@ -10,7 +10,7 @@ import SwiftUI
 /// Uses a `TabView` with `.page` style for the swipeable page transitions. Bottom page dots and
 /// a "Next" / "Get Started" CTA are shown on static pages; the camera page renders its own controls.
 struct OnboardingView: View {
-    @StateObject var viewModel: OnboardingViewModel
+    @State var viewModel: OnboardingViewModel
     @Environment(\.appTheme) private var theme
     @Environment(\.scenePhase) private var scenePhase
 

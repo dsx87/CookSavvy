@@ -3,7 +3,7 @@ import SwiftUI
 /// Create Recipe wizard view displaying the five-step form and a progress bar at the top.
 struct CreateRecipeView: View {
     @Environment(\.appTheme) private var theme
-    @StateObject var viewModel: CreateRecipeViewModel
+    @State var viewModel: CreateRecipeViewModel
     /// Shared focus for all wizard text inputs. Drives the keyboard toolbar's Done button so the
     /// user can always dismiss the keyboard and reach the bottom CTA.
     @FocusState private var isInputFocused: Bool

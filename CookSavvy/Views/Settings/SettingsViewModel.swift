@@ -24,45 +24,45 @@ private enum SettingsViewModelConstants {
 /// - Auth state (anonymous vs. Sign in with Apple) and sign-in/sign-out actions
 /// - Subscription restore and upgrade navigation
 @MainActor
-final class SettingsViewModel: ObservableObject {
+@Observable final class SettingsViewModel {
     // MARK: - Published Properties
 
     /// The user's current subscription plan (updated live from `SubscriptionServiceProtocol`).
-    @Published private(set) var currentPlan: SubscriptionPlan = .free
+    private(set) var currentPlan: SubscriptionPlan = .free
     /// The user's current subscription snapshot, including any active trial state.
-    @Published private(set) var currentSubscriptionStatus: SubscriptionStatus = .free()
+    private(set) var currentSubscriptionStatus: SubscriptionStatus = .free()
     /// Total number of recipes in the local database.
-    @Published var recipeCount: Int = 0
+    var recipeCount: Int = 0
     /// Number of recipes the user has bookmarked/saved.
-    @Published var favoriteCount: Int = 0
+    var favoriteCount: Int = 0
     /// Number of recipes in the recent-recipes list.
-    @Published var recentRecipeCount: Int = 0
+    var recentRecipeCount: Int = 0
     /// `true` while any async operation (load/clear) is in progress.
-    @Published var isLoading: Bool = false
+    var isLoading: Bool = false
     /// Controls the "Clear Recent" confirmation alert.
-    @Published var showClearRecentAlert: Bool = false
+    var showClearRecentAlert: Bool = false
     /// Controls the "Clear Favourites" confirmation alert.
-    @Published var showClearFavoritesAlert: Bool = false
+    var showClearFavoritesAlert: Bool = false
     /// `true` while a restore-purchases request is in flight.
-    @Published var isRestoringPurchases: Bool = false
+    var isRestoringPurchases: Bool = false
     /// Non-`nil` when a restore-purchases request fails.
-    @Published var restoreError: String?
+    var restoreError: String?
     /// Non-`nil` when any general action fails; drives the error alert.
-    @Published var errorMessage: String?
+    var errorMessage: String?
     /// The user's selected app appearance preference.
-    @Published var themePreference: ThemePreference = .defaultValue
+    var themePreference: ThemePreference = .defaultValue
     /// The current authentication state (unknown / anonymous / signed in).
-    @Published private(set) var authState: AuthState = .unknown
+    private(set) var authState: AuthState = .unknown
     /// `true` when the current session is anonymous (not linked to Apple ID).
-    @Published private(set) var isAnonymous: Bool = true
+    private(set) var isAnonymous: Bool = true
     /// `true` while a Sign in with Apple flow is in flight.
-    @Published var isSigningIn: Bool = false
+    var isSigningIn: Bool = false
     /// Controls the sign-out confirmation alert.
-    @Published var showSignOutConfirmation: Bool = false
+    var showSignOutConfirmation: Bool = false
     /// Controls the delete-account confirmation alert.
-    @Published var showDeleteAccountConfirmation: Bool = false
+    var showDeleteAccountConfirmation: Bool = false
     /// `true` while an account-deletion request is in flight.
-    @Published var isDeletingAccount: Bool = false
+    var isDeletingAccount: Bool = false
 
     /// `true` when auth is available on this device/build configuration.
     var isAuthAvailable: Bool {
@@ -119,7 +119,7 @@ final class SettingsViewModel: ObservableObject {
     private let logger: any LoggerProtocol
     private weak var coordinator: SettingsCoordinator?
     /// Long-lived tasks consuming the service event streams; cancelled on deinit.
-    private var observationTasks: [Task<Void, Never>] = []
+    @ObservationIgnored private var observationTasks: [Task<Void, Never>] = []
 
     deinit {
         observationTasks.forEach { $0.cancel() }

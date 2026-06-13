@@ -22,7 +22,7 @@ import UIKit
 /// Guards against double-completion via `hasCompletedFlow`. Cancels in-flight detection tasks
 /// on `deinit` or when a new photo is captured.
 @MainActor
-final class OnboardingViewModel: ObservableObject {
+@Observable final class OnboardingViewModel {
 
     /// A single static onboarding page with a title, subtitle, and SF Symbol name.
     struct Page {
@@ -67,9 +67,9 @@ final class OnboardingViewModel: ObservableObject {
     ]
 
     /// Zero-indexed index of the currently displayed page (0 and 1 are static; `pages.count` is the camera page).
-    @Published var currentPage: Int = 0
+    var currentPage: Int = 0
     /// The current state of the embedded camera page.
-    @Published var cameraState: CameraPageState = .idle
+    var cameraState: CameraPageState = .idle
 
     private let analyticsService: AnalyticsServiceProtocol
     private let ingredientDetectionService: IngredientDetectionServiceProtocol
@@ -77,8 +77,8 @@ final class OnboardingViewModel: ObservableObject {
     private let completionDelayNanoseconds: UInt64
     private let onComplete: ([Ingredient]) -> Void
     private var hasCompletedFlow = false
-    private var detectionTask: Task<Void, Never>?
-    private var detectionCompletionTask: Task<Void, Never>?
+    @ObservationIgnored private var detectionTask: Task<Void, Never>?
+    @ObservationIgnored private var detectionCompletionTask: Task<Void, Never>?
 
     /// Creates the onboarding view model with dependencies and completion callback.
     init(

@@ -11,13 +11,13 @@ import SwiftUI
 /// `SettingsCoordinatorView` (used when Settings is its own navigation root) and
 /// `JourneySettingsDestination` (used when Settings is pushed within the Journey stack).
 @MainActor
-final class SettingsCoordinator: ObservableObject {
+@Observable final class SettingsCoordinator {
 
     private let container: AppContainer
     /// Navigation stack path (reserved for future settings sub-screens).
-    @Published var navigationPath = NavigationPath()
+    var navigationPath = NavigationPath()
     /// The currently presented sheet destination, if any.
-    @Published var presentedSheet: SheetDestination?
+    var presentedSheet: SheetDestination?
 
     /// - Parameter container: The shared app DI container.
     init(container: AppContainer) {
@@ -84,13 +84,13 @@ extension SettingsCoordinator {
 /// Internal SwiftUI coordinator view that hosts the Settings navigation stack and applies
 /// sheet presentations driven by `SettingsCoordinator`.
 struct SettingsCoordinatorView: View {
-    @ObservedObject var coordinator: SettingsCoordinator
-    @StateObject private var viewModel: SettingsViewModel
+    @Bindable var coordinator: SettingsCoordinator
+    @State private var viewModel: SettingsViewModel
     
     /// Creates the coordinator view and pins the settings view model as a state object.
     init(coordinator: SettingsCoordinator) {
         self.coordinator = coordinator
-        _viewModel = StateObject(wrappedValue: coordinator.makeSettingsViewModel())
+        _viewModel = State(wrappedValue: coordinator.makeSettingsViewModel())
     }
     
     var body: some View {

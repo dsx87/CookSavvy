@@ -19,7 +19,7 @@ import SwiftUI
 /// - `.noIngredientsFound` — empty-state prompt with retry option
 /// - `.error` — auto-dismissing error toast
 struct CameraView: View {
-    @StateObject var viewModel: CameraViewModel
+    @State var viewModel: CameraViewModel
     
     var body: some View {
         ZStack {

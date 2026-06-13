@@ -16,7 +16,7 @@ import SwiftUI
 /// - Calls `onIngredientsDetected` on success (with found ingredients) and then `onDismiss`
 /// - Handles permission denial, empty results, and processing errors with appropriate states
 @MainActor
-final class CameraViewModel: ObservableObject {
+@Observable final class CameraViewModel {
 
     /// Represents each phase of the camera capture and AI detection lifecycle.
     enum State: Equatable {
@@ -48,9 +48,9 @@ final class CameraViewModel: ObservableObject {
     }
     
     /// The current lifecycle state, driving the camera view's displayed UI.
-    @Published private(set) var state: State = .requestingPermission
+    private(set) var state: State = .requestingPermission
     /// Ingredients identified by the AI service from the last captured image.
-    @Published private(set) var detectedIngredients: [Ingredient] = []
+    private(set) var detectedIngredients: [Ingredient] = []
     
     private let detectionService: IngredientDetectionServiceProtocol
     private let onDismiss: () -> Void

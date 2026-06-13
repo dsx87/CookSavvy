@@ -19,7 +19,7 @@ private enum CreateRecipeViewModelConstants {
 /// Validates each step before allowing forward navigation, builds the final `Recipe` model,
 /// persists it via `UserDataService`, and calls `onDismiss` on completion.
 @MainActor
-final class CreateRecipeViewModel: ObservableObject {
+@Observable final class CreateRecipeViewModel {
 
     /// A mutable row in the steps list, combining instruction text and an optional step timer.
     struct StepRow: Identifiable, Hashable {
@@ -59,31 +59,31 @@ final class CreateRecipeViewModel: ObservableObject {
     // MARK: - Published State
 
     /// The wizard page currently displayed.
-    @Published var currentStep: WizardStep = .nameAndPhoto
+    var currentStep: WizardStep = .nameAndPhoto
     /// User-entered recipe title.
-    @Published var recipeName: String = ""
+    var recipeName: String = ""
     /// Emoji chosen from the picker as the recipe's cover image fallback.
-    @Published var selectedEmoji: String = CreateRecipeViewModelConstants.defaultEmoji
+    var selectedEmoji: String = CreateRecipeViewModelConstants.defaultEmoji
     /// Optional one-line description of the recipe.
-    @Published var tagline: String = ""
+    var tagline: String = ""
     /// Dynamic list of ingredient text fields; always has at least one empty row.
-    @Published var ingredientRows: [String] = [""]
+    var ingredientRows: [String] = [""]
     /// Dynamic list of step rows; always has at least one empty row.
-    @Published var stepRows: [StepRow] = [StepRow(text: "")]
+    var stepRows: [StepRow] = [StepRow(text: "")]
     /// Total cook time in minutes (used to populate `AdditionalInfo`).
-    @Published var cookTimeMinutes: Int = CreateRecipeViewModelConstants.defaultCookTimeMinutes
+    var cookTimeMinutes: Int = CreateRecipeViewModelConstants.defaultCookTimeMinutes
     /// Number of servings the recipe makes.
-    @Published var servings: Int = CreateRecipeViewModelConstants.defaultServings
+    var servings: Int = CreateRecipeViewModelConstants.defaultServings
     /// Selected difficulty string from `difficulties`.
-    @Published var difficulty: String = Strings.CreateRecipe.difficultyEasy
+    var difficulty: String = Strings.CreateRecipe.difficultyEasy
     /// Optional cuisine type (free-text field).
-    @Published var cuisine: String = ""
+    var cuisine: String = ""
     /// `true` while the save operation is in flight.
-    @Published var isSaving: Bool = false
+    var isSaving: Bool = false
     /// Non-`nil` when saving failed; drives the error alert.
-    @Published var saveError: String?
+    var saveError: String?
     /// Set to `true` after the recipe is successfully saved.
-    @Published var didSave: Bool = false
+    var didSave: Bool = false
 
     // MARK: - Dependencies
 

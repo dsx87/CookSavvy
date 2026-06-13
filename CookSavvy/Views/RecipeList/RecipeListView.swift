@@ -4,7 +4,7 @@ import SwiftUI
 /// Used for saved, recent, and user-created recipe collections.
 struct RecipeListView: View {
     @Environment(\.appTheme) private var theme
-    @StateObject var viewModel: RecipeListViewModel
+    @State var viewModel: RecipeListViewModel
 
     var body: some View {
         ScrollView(showsIndicators: false) {

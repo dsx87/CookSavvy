@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import Observation
 import UIKit
 
 /// ViewModel backing the Upgrade paywall screen.
@@ -11,32 +12,32 @@ import UIKit
 /// Loads live pricing from StoreKit and manages the purchase flow for CookSavvy+ options.
 /// Calls `onDismiss` on successful purchase or explicit dismissal.
 @MainActor
-final class UpgradeViewModel: ObservableObject {
+@Observable final class UpgradeViewModel {
 
     /// The user's current subscription plan; updated live from the service.
-    @Published private(set) var currentPlan: SubscriptionPlan = .free
+    private(set) var currentPlan: SubscriptionPlan = .free
     /// Trial-aware subscription snapshot used by the paywall UI.
-    @Published private(set) var currentSubscriptionStatus: SubscriptionStatus = .free()
+    private(set) var currentSubscriptionStatus: SubscriptionStatus = .free()
     /// `true` while a purchase request is in flight.
-    @Published private(set) var isLoading: Bool = false
+    private(set) var isLoading: Bool = false
     /// The error message to display when a purchase fails (non-`nil` triggers `showErrorAlert`).
-    @Published private(set) var purchaseError: String?
+    private(set) var purchaseError: String?
     /// Controls the purchase error alert.
-    @Published var showErrorAlert: Bool = false
+    var showErrorAlert: Bool = false
     /// `true` while a restore-purchases request is in flight.
-    @Published private(set) var isRestoringPurchases: Bool = false
+    private(set) var isRestoringPurchases: Bool = false
     /// The error message to display when a restore fails (non-`nil` drives the restore error alert).
-    @Published var restoreError: String?
+    var restoreError: String?
     /// Cached localised price strings keyed by purchasable option.
-    @Published private(set) var priceByOption: [PremiumSubscriptionOption: String] = [:]
+    private(set) var priceByOption: [PremiumSubscriptionOption: String] = [:]
     /// Cached numeric prices keyed by purchasable option, used for annual savings math.
-    @Published private(set) var priceAmountByOption: [PremiumSubscriptionOption: Decimal] = [:]
+    private(set) var priceAmountByOption: [PremiumSubscriptionOption: Decimal] = [:]
     
     private let subscriptionService: SubscriptionServiceProtocol
     private let analyticsService: AnalyticsServiceProtocol
     private let onDismiss: () -> Void
     /// Long-lived task consuming the subscription-status stream; cancelled on deinit.
-    private var observationTasks: [Task<Void, Never>] = []
+    @ObservationIgnored private var observationTasks: [Task<Void, Never>] = []
     
     /// The entitlement plans shown on the paywall. Kept for compatibility with existing tests.
     let availablePlans: [SubscriptionPlan] = [.premium]

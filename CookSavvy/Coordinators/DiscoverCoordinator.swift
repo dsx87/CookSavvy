@@ -12,17 +12,17 @@ import SwiftUI
 /// published properties for the active sheet and full-screen cover. Factory methods construct
 /// view models for every destination, injecting services from `AppContainer`.
 @MainActor
-final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating, RecipeListCoordinating {
+@Observable final class DiscoverCoordinator: RecipeDetailsCoordinating, RecipeListCoordinating {
 
     private let container: AppContainer
     /// Initial ingredients to pre-select in the Discover view, forwarded from a successful onboarding camera scan.
     private let initialIngredients: [Ingredient]?
     /// Navigation stack path for push destinations (recipe detail, recipe list).
-    @Published var navigationPath = NavigationPath()
+    var navigationPath = NavigationPath()
     /// The currently presented sheet destination, if any.
-    @Published var presentedSheet: SheetDestination?
+    var presentedSheet: SheetDestination?
     /// The currently presented full-screen cover destination, if any.
-    @Published var presentedFullScreenCover: FullScreenCoverDestination?
+    var presentedFullScreenCover: FullScreenCoverDestination?
 
     /// - Parameters:
     ///   - container: The shared app DI container.
@@ -258,13 +258,13 @@ extension DiscoverCoordinator {
 /// Internal SwiftUI coordinator view that hosts the Discover navigation stack and applies
 /// full-screen cover and sheet presentations driven by `DiscoverCoordinator`.
 struct DiscoverCoordinatorView: View {
-    @ObservedObject var coordinator: DiscoverCoordinator
-    @StateObject private var discoverViewModel: DiscoverViewModel
+    @Bindable var coordinator: DiscoverCoordinator
+    @State private var discoverViewModel: DiscoverViewModel
     
     /// Creates the coordinator view and pins the root `DiscoverViewModel` as a state object.
     init(coordinator: DiscoverCoordinator) {
         self.coordinator = coordinator
-        _discoverViewModel = StateObject(wrappedValue: coordinator.makeDiscoverViewModel())
+        _discoverViewModel = State(wrappedValue: coordinator.makeDiscoverViewModel())
     }
     
     var body: some View {

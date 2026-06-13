@@ -29,23 +29,23 @@ protocol RecipeDetailsCoordinating: AnyObject {
 ///
 /// Delegates navigation (Cook Mode, Shopping List, Upgrade) to a `RecipeDetailsCoordinating` coordinator.
 @MainActor
-final class RecipeDetailsViewModel: ObservableObject {
+@Observable final class RecipeDetailsViewModel {
     // MARK: - Published Properties
 
     /// The recipe being displayed; may be mutated if recipe data is refreshed.
-    @Published var recipe: Recipe {
+    var recipe: Recipe {
         didSet { rebuildIngredientMatchCache() }
     }
     /// `true` when this recipe is in the user's favourites list.
-    @Published var isFavorite: Bool = false
+    var isFavorite: Bool = false
     /// `true` while a favourite-toggle request is in flight.
-    @Published var isLoadingFavorite: Bool = false
+    var isLoadingFavorite: Bool = false
     /// Non-`nil` when any action fails; drives the error alert.
-    @Published var errorMessage: String?
+    var errorMessage: String?
     /// Generated PNG image used as the primary system share-sheet item.
-    @Published private(set) var shareCard: RecipeShareCard?
+    private(set) var shareCard: RecipeShareCard?
     /// `true` until the visual share card has rendered.
-    @Published private(set) var isPreparingShareCard: Bool = true
+    private(set) var isPreparingShareCard: Bool = true
 
     // MARK: - Properties
 

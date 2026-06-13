@@ -9,7 +9,7 @@ import SwiftUI
 
 /// Concrete settings content view implementation used by coordinators and previews.
 struct SettingsView: View {
-    @ObservedObject var viewModel: SettingsViewModel
+    @Bindable var viewModel: SettingsViewModel
     @Environment(\.appTheme) private var theme
 
     var body: some View {

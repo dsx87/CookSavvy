@@ -12,13 +12,13 @@ protocol RecipeListCoordinating: AnyObject {
 /// Displays a flat list of recipes passed in from the parent screen (saved, recent, or user-created).
 /// Lazily loads the saved/favourite status for each recipe so bookmark icons render correctly.
 @MainActor
-final class RecipeListViewModel: ObservableObject {
+@Observable final class RecipeListViewModel {
     /// The navigation title for this list (e.g. "Saved Recipes" or "My Recipes").
     let title: String
     /// The recipes to display.
-    @Published var recipes: [Recipe]
+    var recipes: [Recipe]
     /// IDs of recipes the user has saved/favourited; populated by `loadSavedStatus()`.
-    @Published private var savedIds: Set<String> = []
+    private var savedIds: Set<String> = []
 
     private let userDataService: UserDataServiceProtocol
     private let logger: any LoggerProtocol

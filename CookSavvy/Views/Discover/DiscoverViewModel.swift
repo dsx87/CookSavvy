@@ -85,28 +85,28 @@ struct DiscoverMatchBadgeState {
 /// - Loading homepage content: recent/saved/suggested recipes and curated collections
 /// - Delegating all navigation to `DiscoverCoordinator` via a weak reference
 @MainActor
-final class DiscoverViewModel: ObservableObject {
+@Observable final class DiscoverViewModel {
     // MARK: - Published State
 
     /// The ingredients the user has tapped to include in their recipe search.
-    @Published var selectedIngredients: [Ingredient] = []
+    var selectedIngredients: [Ingredient] = []
     /// Ingredients the user has marked as pantry staples and always has available.
-    @Published var pantryIngredients: [Ingredient] = []
+    var pantryIngredients: [Ingredient] = []
     /// The currently active mood filter applied to recipe results (`nil` = no filter).
-    @Published var selectedMood: RecipeMood? = nil
+    var selectedMood: RecipeMood? = nil
     /// The active cook-time bucket applied to recipe results (`nil` = no time filter).
-    @Published var selectedCookTimeFilter: RecipeCookTimeFilter? = nil
+    var selectedCookTimeFilter: RecipeCookTimeFilter? = nil
     /// The active complexity level applied to recipe results (`nil` = no difficulty filter).
-    @Published var selectedComplexityFilter: RecipeComplexityFilter? = nil
+    var selectedComplexityFilter: RecipeComplexityFilter? = nil
     /// Text entered in the ingredient search bar; triggers a debounced ingredient grid refresh.
-    @Published var searchText = "" {
+    var searchText = "" {
         didSet {
             guard searchText != oldValue else { return }
             scheduleIngredientRefresh()
         }
     }
     /// The ingredient category chip selected to filter the ingredient grid (`nil` = all categories).
-    @Published var selectedCategory: IngredientCategory? = nil {
+    var selectedCategory: IngredientCategory? = nil {
         didSet {
             guard selectedCategory != oldValue else { return }
             scheduleIngredientRefresh()
@@ -119,46 +119,46 @@ final class DiscoverViewModel: ObservableObject {
     private var ingredientRefreshToken = 0
 
     /// High-frequency ingredients shown at the top of the grid, populated from user history or DB.
-    @Published var popularIngredients: [Ingredient] = []
+    var popularIngredients: [Ingredient] = []
     /// Recipes the user has recently cooked, shown in the homepage carousel.
-    @Published var recentRecipes: [Recipe] = []
+    var recentRecipes: [Recipe] = []
     /// Recipes the user has bookmarked/saved, shown in the homepage carousel.
-    @Published var savedRecipes: [Recipe] = []
+    var savedRecipes: [Recipe] = []
     /// Raw search results from `RecipeService`; filtered by `filteredRecipes` before display.
-    @Published var searchResultRecipes: [Recipe] = []
+    var searchResultRecipes: [Recipe] = []
     /// `true` while a multi-source recipe search is in flight.
-    @Published var isSearching = false
+    var isSearching = false
     /// Non-`nil` when the recipe search partially or fully failed; drives an inline error banner.
-    @Published var searchError: String? = nil
+    var searchError: String? = nil
     /// Non-`nil` when loading home content failed; drives a top-of-screen error banner.
-    @Published var homeLoadError: String? = nil
+    var homeLoadError: String? = nil
     /// `true` while initial ingredient data is being fetched from the database.
-    @Published var isLoadingIngredients = false
+    var isLoadingIngredients = false
     /// `true` when the screen is in the results state; `false` for ingredient-selection state.
-    @Published var showResults = false
+    var showResults = false
     /// When `true`, results are narrowed to recipes where no ingredients are missing.
-    @Published var useItAllFilter = false
+    var useItAllFilter = false
     /// AI-powered personalised recipe suggestions derived from the user's cooking history.
-    @Published var suggestedRecipes: [Recipe] = []
+    var suggestedRecipes: [Recipe] = []
     /// Human-readable explanation of why `suggestedRecipes` was chosen.
-    @Published var suggestionReason: String? = nil
+    var suggestionReason: String? = nil
     /// The set of dietary restrictions currently toggled on; used to post-filter recipe results.
-    @Published var activeDietaryRestrictions: Set<DietaryRestriction> = []
+    var activeDietaryRestrictions: Set<DietaryRestriction> = []
     /// Curated weekly recipe collections shown on the homepage.
-    @Published var collections: [CuratedCollection] = []
+    var collections: [CuratedCollection] = []
     /// ID of the collection currently being loaded; non-`nil` while a collection fetch is in progress.
-    @Published var loadingCollectionID: String? = nil
+    var loadingCollectionID: String? = nil
     /// Controls visibility of the ingredient match info popover.
-    @Published var isMatchInfoPopoverPresented = false
+    var isMatchInfoPopoverPresented = false
     /// `true` while the search bar text field has keyboard focus; drives the suggestions popup.
-    @Published var isSearchFocused: Bool = false
+    var isSearchFocused: Bool = false
     /// Captured height of the rendered search bar; used to offset the suggestions popup correctly.
-    @Published var searchBarHeight: CGFloat = 47
+    var searchBarHeight: CGFloat = 47
     /// Ingredient matches for the inline search suggestions popup; populated while the search bar has
     /// non-empty text. Already-selected ingredients are excluded so tapping always adds, never removes.
-    @Published var ingredientSuggestions: [Ingredient] = []
+    var ingredientSuggestions: [Ingredient] = []
     /// `true` while the smart-search service is parsing a natural-language query.
-    @Published var isParsingQuery = false
+    var isParsingQuery = false
 
     // MARK: - Dependencies
 
@@ -256,7 +256,7 @@ final class DiscoverViewModel: ObservableObject {
     }
     /// The ingredients displayed in the grid (popular, category-filtered, or search results).
     /// Resets to `popularIngredients` if assigned an empty array.
-    @Published var shownIngredients: [Ingredient] = [] {
+    var shownIngredients: [Ingredient] = [] {
         didSet {
             if shownIngredients.isEmpty {
                 shownIngredients = popularIngredients

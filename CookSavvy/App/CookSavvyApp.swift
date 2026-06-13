@@ -125,7 +125,7 @@ private struct ThemedAppRoot: View {
 /// Injects shared environment values and routes between onboarding and the main tab interface.
 private struct ReadyAppView: View {
     let container: AppContainer
-    @ObservedObject var coordinator: AppCoordinator
+    var coordinator: AppCoordinator
 
     var body: some View {
         Group {
