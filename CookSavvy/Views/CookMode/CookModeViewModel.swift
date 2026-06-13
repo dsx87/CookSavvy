@@ -1,11 +1,10 @@
 import SwiftUI
-import Combine
 
 /// ViewModel backing the Cook Mode full-screen step-by-step cooking flow.
 ///
 /// Manages:
 /// - Navigation through recipe steps (next, previous, mark done)
-/// - An optional per-step countdown timer driven by a `Timer` publisher
+/// - An optional per-step countdown timer driven by an async `Task` loop
 /// - A circular progress ring based on completed step count
 /// - A post-cook feedback sheet (star rating) shown when the last step is finished
 /// - Persisting the completed cooking session via `UserDataService`
@@ -32,7 +31,7 @@ import Combine
     private let logger: any LoggerProtocol
     private let idleTimerService: IdleTimerServiceProtocol
     private let onDismiss: () -> Void
-    private var timerCancellable: AnyCancellable?
+    @ObservationIgnored private var timerTask: Task<Void, Never>?
     private var startDate: Date?
     private var cookDuration: TimeInterval?
 
@@ -191,14 +190,14 @@ import Combine
 
     // MARK: - Private
 
-    /// Starts the `Timer` publisher and increments `timerSeconds` each second until the step duration elapses.
+    /// Starts an async timer loop and increments `timerSeconds` each second until the step duration elapses.
     private func startTimer() {
         timerRunning = true
-        timerCancellable = Timer.publish(every: 1, on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak self] _ in
-                guard let self else { return }
-                guard let timerMin = self.currentStepTimer else { return }
+        timerTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                guard let self, !Task.isCancelled else { return }
+                guard let timerMin = self.currentStepTimer else { continue }
                 if self.timerSeconds < timerMin * 60 {
                     self.timerSeconds += 1
                 } else {
@@ -207,15 +206,17 @@ import Combine
                     // step is explicitly marked Done. Both are tracked as non-blocking
                     // follow-ups on the ticket.
                     self.stopTimer()
+                    return
                 }
             }
+        }
     }
 
-    /// Cancels the timer publisher and marks the timer as stopped.
+    /// Cancels the timer task and marks the timer as stopped.
     private func stopTimer() {
         timerRunning = false
-        timerCancellable?.cancel()
-        timerCancellable = nil
+        timerTask?.cancel()
+        timerTask = nil
     }
 
     /// Stops the timer and resets `timerSeconds` to zero (called on step navigation).
