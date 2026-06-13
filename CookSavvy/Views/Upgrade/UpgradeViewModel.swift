@@ -4,7 +4,6 @@
 //
 
 import Foundation
-import Combine
 import UIKit
 
 /// ViewModel backing the Upgrade paywall screen.
@@ -36,7 +35,8 @@ final class UpgradeViewModel: ObservableObject {
     private let subscriptionService: SubscriptionServiceProtocol
     private let analyticsService: AnalyticsServiceProtocol
     private let onDismiss: () -> Void
-    private var cancellables = Set<AnyCancellable>()
+    /// Long-lived task consuming the subscription-status stream; cancelled on deinit.
+    private var observationTasks: [Task<Void, Never>] = []
     
     /// The entitlement plans shown on the paywall. Kept for compatibility with existing tests.
     let availablePlans: [SubscriptionPlan] = [.premium]
@@ -68,18 +68,18 @@ final class UpgradeViewModel: ObservableObject {
         self.currentSubscriptionStatus = subscriptionService.currentSubscriptionStatus
         self.currentPlan = currentSubscriptionStatus.plan
         
-        subscriptionService.currentSubscriptionStatusPublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] status in
-                self?.currentSubscriptionStatus = status
-                self?.currentPlan = status.plan
+        let statusUpdates = subscriptionService.currentSubscriptionStatusUpdates
+        observationTasks.append(Task { [weak self] in
+            for await status in statusUpdates {
+                guard let self else { return }
+                self.currentSubscriptionStatus = status
+                self.currentPlan = status.plan
             }
-            .store(in: &cancellables)
+        })
     }
-    
-    /// Explicit no-op deinitializer (kept for lifecycle parity with earlier implementations).
+
     deinit {
-        
+        observationTasks.forEach { $0.cancel() }
     }
     
     /// Tracks an upgrade screen view impression for analytics.

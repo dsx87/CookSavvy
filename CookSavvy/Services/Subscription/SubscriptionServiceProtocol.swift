@@ -4,7 +4,6 @@
 //
 
 import Foundation
-import Combine
 
 /// Interface for subscription management, abstracting StoreKit 2 for testability.
 ///
@@ -15,14 +14,16 @@ protocol SubscriptionServiceProtocol: AnyObject {
     /// The user's full subscription snapshot, including trial state and eligibility.
     var currentSubscriptionStatus: SubscriptionStatus { get }
 
-    /// A publisher that emits the full subscription snapshot whenever it changes.
-    var currentSubscriptionStatusPublisher: AnyPublisher<SubscriptionStatus, Never> { get }
+    /// A stream that replays the current snapshot, then yields it whenever it changes.
+    /// A fresh stream is returned per access (single-consumer `AsyncStream` semantics).
+    var currentSubscriptionStatusUpdates: AsyncStream<SubscriptionStatus> { get }
 
     /// The user's currently active subscription plan.
     var currentPlan: SubscriptionPlan { get }
 
-    /// A publisher that emits the subscription plan whenever it changes.
-    var currentPlanPublisher: AnyPublisher<SubscriptionPlan, Never> { get }
+    /// A stream that replays the current plan, then yields it whenever it changes
+    /// (de-duplicated: only distinct plan transitions are emitted).
+    var currentPlanUpdates: AsyncStream<SubscriptionPlan> { get }
 
     /// Returns whether the current plan grants access to the specified premium feature.
     /// - Parameter feature: The feature to check.

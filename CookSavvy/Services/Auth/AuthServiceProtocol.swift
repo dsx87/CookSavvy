@@ -3,7 +3,6 @@
 //  CookSavvy
 //
 
-import Combine
 import Foundation
 
 /// Represents the current authentication state of the user.
@@ -61,8 +60,9 @@ enum AuthError: Error, LocalizedError {
 protocol AuthServiceProtocol: AnyObject {
     /// The current synchronously-readable auth state.
     var authState: AuthState { get }
-    /// Publisher that emits whenever `authState` changes.
-    var authStatePublisher: AnyPublisher<AuthState, Never> { get }
+    /// A stream that replays the current `authState`, then yields every subsequent change.
+    /// A fresh stream is returned per access (single-consumer `AsyncStream` semantics).
+    var authStateUpdates: AsyncStream<AuthState> { get }
     /// The Supabase user ID for the active session, or `nil` when signed out or unknown.
     var currentUserId: String? { get }
     /// `true` when the current session belongs to an anonymous (non-Apple) Supabase user.

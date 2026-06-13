@@ -3,7 +3,6 @@
 //  CookSavvy
 //
 
-import Combine
 import Foundation
 
 /// RELEASE fallback auth service used when Supabase keys are absent from `APIKeys.plist`.
@@ -19,8 +18,12 @@ final class NoOpAuthService: AuthServiceProtocol {
     /// Always `false` — signals to the app that authentication is unavailable in this build configuration.
     let isAuthAvailable: Bool = false
 
-    var authStatePublisher: AnyPublisher<AuthState, Never> {
-        Just(.signedOut).eraseToAnyPublisher()
+    /// Emits the constant signed-out state once, then finishes — auth never changes in this build.
+    var authStateUpdates: AsyncStream<AuthState> {
+        AsyncStream { continuation in
+            continuation.yield(.signedOut)
+            continuation.finish()
+        }
     }
 
     /// Always throws `AuthError.notAuthenticated` since no auth is available.

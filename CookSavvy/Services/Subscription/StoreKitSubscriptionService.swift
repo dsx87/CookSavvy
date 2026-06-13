@@ -5,7 +5,6 @@
 
 import Foundation
 import StoreKit
-import Combine
 
 /// Production StoreKit 2 implementation of `SubscriptionServiceProtocol`.
 ///
@@ -20,8 +19,10 @@ import Combine
 // TODO: Review this
 final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
 
-    /// Backing subject for the reactive subscription-status publisher.
-    private let _currentSubscriptionStatus = CurrentValueSubject<SubscriptionStatus, Never>(.free())
+    /// Broadcaster powering the reactive subscription-status stream.
+    private let statusBroadcaster = AsyncValueBroadcaster<SubscriptionStatus>(.free())
+    /// Broadcaster powering the de-duplicated plan stream (sent only on distinct plan transitions).
+    private let planBroadcaster = AsyncValueBroadcaster<SubscriptionPlan>(SubscriptionStatus.free().plan)
 
     /// Serialises concurrent refresh calls so only one refresh runs at a time.
     private let refreshCoordinator = SubscriptionRefreshCoordinator()
@@ -30,19 +31,16 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
     var currentPlan: SubscriptionPlan { currentSubscriptionStatus.plan }
 
     /// The user's full subscription snapshot, including trial state.
-    var currentSubscriptionStatus: SubscriptionStatus { _currentSubscriptionStatus.value }
+    var currentSubscriptionStatus: SubscriptionStatus { statusBroadcaster.value }
 
-    /// Emits the full subscription snapshot on every change.
-    var currentSubscriptionStatusPublisher: AnyPublisher<SubscriptionStatus, Never> {
-        _currentSubscriptionStatus.eraseToAnyPublisher()
+    /// Replays the current snapshot, then yields the full subscription snapshot on every change.
+    var currentSubscriptionStatusUpdates: AsyncStream<SubscriptionStatus> {
+        statusBroadcaster.updates
     }
 
-    /// Emits the plan on every change, backed by `_currentSubscriptionStatus`.
-    var currentPlanPublisher: AnyPublisher<SubscriptionPlan, Never> {
-        _currentSubscriptionStatus
-            .map(\.plan)
-            .removeDuplicates()
-            .eraseToAnyPublisher()
+    /// Replays the current plan, then yields distinct plan transitions.
+    var currentPlanUpdates: AsyncStream<SubscriptionPlan> {
+        planBroadcaster.updates
     }
     
     /// Loaded StoreKit products keyed by product identifier.
@@ -273,7 +271,7 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
 
         if let data = defaults.data(forKey: statusCacheKey),
            let status = try? JSONDecoder().decode(SubscriptionStatus.self, from: data) {
-            _currentSubscriptionStatus.send(status)
+            broadcast(status)
             return
         }
 
@@ -281,10 +279,20 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
            let plan = SubscriptionPlan(rawValue: rawValue) {
             switch plan {
             case .free:
-                _currentSubscriptionStatus.send(.free())
+                broadcast(.free())
             case .premium:
-                _currentSubscriptionStatus.send(.premium(option: .monthly))
+                broadcast(.premium(option: .monthly))
             }
+        }
+    }
+
+    /// Updates the status broadcaster and, on a distinct plan transition, the plan broadcaster.
+    /// Centralises the "removeDuplicates() on plan" behaviour the Combine publisher provided.
+    private func broadcast(_ status: SubscriptionStatus) {
+        let previousPlan = statusBroadcaster.value.plan
+        statusBroadcaster.send(status)
+        if status.plan != previousPlan {
+            planBroadcaster.send(status.plan)
         }
     }
 
@@ -300,7 +308,7 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
 
     private func publishSubscriptionStatus(_ status: SubscriptionStatus) {
         let previousStatus = currentSubscriptionStatus
-        _currentSubscriptionStatus.send(status)
+        broadcast(status)
         cacheSubscriptionStatus(status)
 
         // TODO(T-002): Preserve these trial lifecycle events when AnalyticsService moves

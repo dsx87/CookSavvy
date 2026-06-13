@@ -1,5 +1,4 @@
 import SwiftUI
-import Combine
 
 @MainActor
 /// Coordinator interface consumed by ``JourneyViewModel`` for navigation actions.
@@ -90,7 +89,12 @@ final class JourneyViewModel: ObservableObject {
     private let logger: any LoggerProtocol
     private weak var coordinator: (any JourneyCoordinating)?
     private var hasLoadedData = false
-    private var cancellables = Set<AnyCancellable>()
+    /// Long-lived tasks consuming the service event streams; cancelled on deinit.
+    private var observationTasks: [Task<Void, Never>] = []
+
+    deinit {
+        observationTasks.forEach { $0.cancel() }
+    }
 
     /// Creates the journey view model with all dependencies and optional coordinator.
     init(
@@ -113,24 +117,27 @@ final class JourneyViewModel: ObservableObject {
         isAnonymous = authService.isAnonymous
         isSigningIn = signInWithAppleAction.isSigningIn
         currentPlan = subscriptionService.currentPlan
-        authService.authStatePublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.isAnonymous = self?.authService.isAnonymous ?? true
+        let authStateUpdates = authService.authStateUpdates
+        observationTasks.append(Task { [weak self] in
+            for await _ in authStateUpdates {
+                guard let self else { return }
+                self.isAnonymous = self.authService.isAnonymous
             }
-            .store(in: &cancellables)
-        signInWithAppleAction.isSigningInPublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] isSigningIn in
-                self?.isSigningIn = isSigningIn
+        })
+        let isSigningInUpdates = signInWithAppleAction.isSigningInUpdates
+        observationTasks.append(Task { [weak self] in
+            for await isSigningIn in isSigningInUpdates {
+                guard let self else { return }
+                self.isSigningIn = isSigningIn
             }
-            .store(in: &cancellables)
-        subscriptionService.currentPlanPublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] plan in
-                self?.currentPlan = plan
+        })
+        let planUpdates = subscriptionService.currentPlanUpdates
+        observationTasks.append(Task { [weak self] in
+            for await plan in planUpdates {
+                guard let self else { return }
+                self.currentPlan = plan
             }
-            .store(in: &cancellables)
+        })
     }
 
     /// Total cooking time formatted as a human-readable string (e.g. "2h 30m" or "45m").

@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Combine
 
 /// Internal constants for Settings defaults, URLs, and query limits.
 private enum SettingsViewModelConstants {
@@ -119,7 +118,12 @@ final class SettingsViewModel: ObservableObject {
     private let signInWithAppleAction: SignInWithAppleActionProtocol
     private let logger: any LoggerProtocol
     private weak var coordinator: SettingsCoordinator?
-    private var cancellables = Set<AnyCancellable>()
+    /// Long-lived tasks consuming the service event streams; cancelled on deinit.
+    private var observationTasks: [Task<Void, Never>] = []
+
+    deinit {
+        observationTasks.forEach { $0.cancel() }
+    }
 
     // MARK: - Initialization
 
@@ -161,32 +165,35 @@ final class SettingsViewModel: ObservableObject {
         currentSubscriptionStatus = subscriptionService.currentSubscriptionStatus
         currentPlan = currentSubscriptionStatus.plan
 
-        subscriptionService.currentSubscriptionStatusPublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] status in
-                self?.currentSubscriptionStatus = status
-                self?.currentPlan = status.plan
+        let statusUpdates = subscriptionService.currentSubscriptionStatusUpdates
+        observationTasks.append(Task { [weak self] in
+            for await status in statusUpdates {
+                guard let self else { return }
+                self.currentSubscriptionStatus = status
+                self.currentPlan = status.plan
             }
-            .store(in: &cancellables)
+        })
 
         themePreference = userDataService.getThemePreference()
 
         authState = authService.authState
         isAnonymous = authService.isAnonymous
         isSigningIn = signInWithAppleAction.isSigningIn
-        authService.authStatePublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] state in
-                self?.authState = state
-                self?.isAnonymous = self?.authService.isAnonymous ?? true
+        let authStateUpdates = authService.authStateUpdates
+        observationTasks.append(Task { [weak self] in
+            for await state in authStateUpdates {
+                guard let self else { return }
+                self.authState = state
+                self.isAnonymous = self.authService.isAnonymous
             }
-            .store(in: &cancellables)
-        signInWithAppleAction.isSigningInPublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] isSigningIn in
-                self?.isSigningIn = isSigningIn
+        })
+        let isSigningInUpdates = signInWithAppleAction.isSigningInUpdates
+        observationTasks.append(Task { [weak self] in
+            for await isSigningIn in isSigningInUpdates {
+                guard let self else { return }
+                self.isSigningIn = isSigningIn
             }
-            .store(in: &cancellables)
+        })
     }
     
     /// Navigates to the subscription upgrade paywall.

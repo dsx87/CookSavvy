@@ -4,7 +4,6 @@
 //
 
 import Foundation
-import Combine
 
 /// Test double for `SubscriptionServiceProtocol`, used in DEBUG builds and UI tests.
 ///
@@ -13,15 +12,17 @@ import Combine
 /// triggers creation with `.premium` to test premium-gated UI paths.
 final class MockSubscriptionService: SubscriptionServiceProtocol {
 
-    /// Backing subject powering both plan-level and trial-aware subscription publishers.
-    private let _currentSubscriptionStatus: CurrentValueSubject<SubscriptionStatus, Never>
+    /// Broadcaster powering the trial-aware subscription-status stream.
+    private let statusBroadcaster: AsyncValueBroadcaster<SubscriptionStatus>
+    /// Broadcaster powering the de-duplicated plan stream (sent only on distinct plan transitions).
+    private let planBroadcaster: AsyncValueBroadcaster<SubscriptionPlan>
     private let analyticsService: AnalyticsServiceProtocol?
 
     /// The currently simulated subscription plan.
     var currentPlan: SubscriptionPlan { currentSubscriptionStatus.plan }
 
     /// The currently simulated subscription snapshot.
-    var currentSubscriptionStatus: SubscriptionStatus { _currentSubscriptionStatus.value }
+    var currentSubscriptionStatus: SubscriptionStatus { statusBroadcaster.value }
 
     /// Tracks how many times `refreshSubscriptionStatus()` has been called; useful in unit tests.
     private(set) var refreshCallCount = 0
@@ -44,17 +45,14 @@ final class MockSubscriptionService: SubscriptionServiceProtocol {
         .yearly: Decimal(string: "39.99") ?? .zero
     ]
 
-    /// Emits full subscription status changes reactively.
-    var currentSubscriptionStatusPublisher: AnyPublisher<SubscriptionStatus, Never> {
-        _currentSubscriptionStatus.eraseToAnyPublisher()
+    /// Replays the current snapshot, then yields full subscription-status changes.
+    var currentSubscriptionStatusUpdates: AsyncStream<SubscriptionStatus> {
+        statusBroadcaster.updates
     }
 
-    /// Emits plan changes reactively.
-    var currentPlanPublisher: AnyPublisher<SubscriptionPlan, Never> {
-        _currentSubscriptionStatus
-            .map(\.plan)
-            .removeDuplicates()
-            .eraseToAnyPublisher()
+    /// Replays the current plan, then yields distinct plan transitions.
+    var currentPlanUpdates: AsyncStream<SubscriptionPlan> {
+        planBroadcaster.updates
     }
 
     /// Creates a mock service with the given initial plan.
@@ -71,7 +69,8 @@ final class MockSubscriptionService: SubscriptionServiceProtocol {
         case .premium:
             initialStatus = .premium(option: .monthly)
         }
-        self._currentSubscriptionStatus = CurrentValueSubject(initialStatus)
+        self.statusBroadcaster = AsyncValueBroadcaster(initialStatus)
+        self.planBroadcaster = AsyncValueBroadcaster(initialStatus.plan)
     }
     
     /// Returns whether the simulated plan grants access to the given feature.
@@ -158,7 +157,11 @@ final class MockSubscriptionService: SubscriptionServiceProtocol {
 
     private func publish(_ status: SubscriptionStatus) {
         let previousStatus = currentSubscriptionStatus
-        _currentSubscriptionStatus.send(status)
+        statusBroadcaster.send(status)
+        // Mirror Combine's removeDuplicates(): only emit on a distinct plan transition.
+        if status.plan != previousStatus.plan {
+            planBroadcaster.send(status.plan)
+        }
 
         guard let analyticsService else {
             return

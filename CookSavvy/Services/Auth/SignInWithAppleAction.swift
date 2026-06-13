@@ -1,4 +1,3 @@
-import Combine
 import Foundation
 
 /// The UI surface from which Sign in with Apple was initiated, used for context-specific analytics logging.
@@ -44,8 +43,8 @@ enum SignInWithAppleActionResult: Equatable {
 protocol SignInWithAppleActionProtocol: AnyObject {
     /// `true` while a sign-in attempt is in progress.
     var isSigningIn: Bool { get }
-    /// Publisher that emits de-duplicated changes to `isSigningIn`.
-    var isSigningInPublisher: AnyPublisher<Bool, Never> { get }
+    /// A stream that replays the current `isSigningIn`, then yields de-duplicated changes.
+    var isSigningInUpdates: AsyncStream<Bool> { get }
 
     /// Starts the full Sign in with Apple flow for the given UI context.
     /// - Parameter context: The screen that triggered the action; used for analytics.
@@ -64,13 +63,19 @@ protocol SignInWithAppleActionProtocol: AnyObject {
 /// Analytics events are fired at the start, on completion, and on failure, regardless of the context.
 @MainActor
 final class SignInWithAppleAction: SignInWithAppleActionProtocol {
-    @Published private(set) var isSigningIn = false
+    /// Broadcasts de-duplicated `isSigningIn` changes to the `isSigningInUpdates` stream.
+    private let isSigningInBroadcaster = AsyncValueBroadcaster<Bool>(false)
 
-    /// Publisher that emits de-duplicated `isSigningIn` changes, useful for driving loading indicators.
-    var isSigningInPublisher: AnyPublisher<Bool, Never> {
-        $isSigningIn
-            .removeDuplicates()
-            .eraseToAnyPublisher()
+    private(set) var isSigningIn = false {
+        didSet {
+            if oldValue != isSigningIn { isSigningInBroadcaster.send(isSigningIn) }
+        }
+    }
+
+    /// A stream that replays the current `isSigningIn`, then yields de-duplicated changes,
+    /// useful for driving loading indicators.
+    var isSigningInUpdates: AsyncStream<Bool> {
+        isSigningInBroadcaster.updates
     }
 
     private let authService: AuthServiceProtocol

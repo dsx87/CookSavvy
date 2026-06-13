@@ -3,7 +3,6 @@
 //  CookSavvy
 //
 
-import Combine
 import Foundation
 
 #if DEBUG
@@ -14,7 +13,9 @@ import Foundation
 /// success and failure scenarios without needing a real Supabase connection.
 /// Call counters on each method allow tests to assert how many times a method was called.
 final class MockAuthService: AuthServiceProtocol {
-    @Published private(set) var authState: AuthState
+    private let authStateBroadcaster: AsyncValueBroadcaster<AuthState>
+    /// The current mock auth state, readable synchronously.
+    var authState: AuthState { authStateBroadcaster.value }
     private let analyticsService: AnalyticsServiceProtocol?
 
     /// Number of times `signInAnonymously()` has been called.
@@ -30,8 +31,8 @@ final class MockAuthService: AuthServiceProtocol {
     /// Number of times `startSessionIfNeeded()` has been called.
     private(set) var startSessionIfNeededCallCount = 0
 
-    var authStatePublisher: AnyPublisher<AuthState, Never> {
-        $authState.eraseToAnyPublisher()
+    var authStateUpdates: AsyncStream<AuthState> {
+        authStateBroadcaster.updates
     }
 
     /// The token returned by `accessToken()`. Defaults to `"mock-supabase-token"`.
@@ -77,7 +78,7 @@ final class MockAuthService: AuthServiceProtocol {
         isAnonymous: Bool = true,
         analyticsService: AnalyticsServiceProtocol? = nil
     ) {
-        self.authState = initialState
+        self.authStateBroadcaster = AsyncValueBroadcaster(initialState)
         self.stubbedAccessToken = stubbedAccessToken
         self.stubbedIsAnonymous = isAnonymous
         self.analyticsService = analyticsService
@@ -99,10 +100,10 @@ final class MockAuthService: AuthServiceProtocol {
     func startSessionIfNeeded() async {
         startSessionIfNeededCallCount += 1
         if let restoreStateAfterCall {
-            authState = restoreStateAfterCall
+            authStateBroadcaster.send(restoreStateAfterCall)
         } else if case .signedOut = authState {
             stubbedIsAnonymous = true
-            authState = .signedIn(userId: "mock-anonymous-user")
+            authStateBroadcaster.send(.signedIn(userId: "mock-anonymous-user"))
             analyticsService?.track(.anonymousAuthCompleted)
         }
     }
@@ -117,7 +118,7 @@ final class MockAuthService: AuthServiceProtocol {
             return
         }
         stubbedIsAnonymous = true
-        authState = .signedIn(userId: "mock-anonymous-user")
+        authStateBroadcaster.send(.signedIn(userId: "mock-anonymous-user"))
         analyticsService?.track(.anonymousAuthCompleted)
     }
 
@@ -128,7 +129,7 @@ final class MockAuthService: AuthServiceProtocol {
             throw signInWithAppleError
         }
         stubbedIsAnonymous = false
-        authState = .signedIn(userId: "mock-apple-user")
+        authStateBroadcaster.send(.signedIn(userId: "mock-apple-user"))
     }
 
     /// Transitions to `.signedOut`, or throws `signOutError` if set.
@@ -138,7 +139,7 @@ final class MockAuthService: AuthServiceProtocol {
             throw signOutError
         }
         stubbedIsAnonymous = true
-        authState = .signedOut
+        authStateBroadcaster.send(.signedOut)
     }
 
     /// Transitions to `.signedOut`, or throws `deleteAccountError` if set.
@@ -148,20 +149,20 @@ final class MockAuthService: AuthServiceProtocol {
             throw deleteAccountError
         }
         stubbedIsAnonymous = true
-        authState = .signedOut
+        authStateBroadcaster.send(.signedOut)
     }
 
     /// Applies `restoreStateAfterCall` if set; otherwise leaves state unchanged.
     func restoreSession() async {
         restoreSessionCallCount += 1
         if let restoreStateAfterCall {
-            authState = restoreStateAfterCall
+            authStateBroadcaster.send(restoreStateAfterCall)
         }
     }
 
     /// Directly sets `authState`, bypassing method call tracking. Useful for arranging test preconditions.
     func setAuthState(_ newState: AuthState) {
-        authState = newState
+        authStateBroadcaster.send(newState)
     }
 }
 #endif

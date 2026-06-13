@@ -3,7 +3,6 @@
 //  CookSavvy
 //
 
-import Combine
 import Foundation
 import os
 import Supabase
@@ -19,8 +18,9 @@ import Supabase
 ///    to the Apple ID rather than creating a new user. This upgrades the account from anonymous to
 ///    named while preserving all user data associated with the original anonymous session.
 ///
-/// State is published via a `CurrentValueSubject` (a thread-safe class) so callers can read auth
-/// state synchronously from any context without requiring actor hops or MainActor serialization.
+/// State is held in a thread-safe `AsyncValueBroadcaster` so callers can read `authState`
+/// synchronously from any context without an actor hop, while observers consume changes via the
+/// `authStateUpdates` `AsyncStream`.
 final class SupabaseAuthService: AuthServiceProtocol {
     /// Names of the Supabase Edge Functions invoked by this service.
     private enum FunctionName {
@@ -33,20 +33,20 @@ final class SupabaseAuthService: AuthServiceProtocol {
     /// Lock protecting concurrent access to the session-start guard flag.
     private let _isStartingSession = OSAllocatedUnfairLock(initialState: false)
 
-    /// Thread-safe backing subject for auth state. Readable synchronously from any context.
-    let stateSubject = CurrentValueSubject<AuthState, Never>(.unknown)
+    /// Thread-safe broadcaster for auth state. `value` is readable synchronously from any context.
+    let authStateBroadcaster = AsyncValueBroadcaster<AuthState>(.unknown)
 
     /// The current auth state, readable synchronously from any context.
-    var authState: AuthState { stateSubject.value }
+    var authState: AuthState { authStateBroadcaster.value }
 
-    /// Publisher that emits whenever auth state changes.
-    var authStatePublisher: AnyPublisher<AuthState, Never> {
-        stateSubject.eraseToAnyPublisher()
+    /// A stream that replays the current auth state, then yields every subsequent change.
+    var authStateUpdates: AsyncStream<AuthState> {
+        authStateBroadcaster.updates
     }
 
     /// The Supabase user ID for the active session, or `nil` when not signed in.
     var currentUserId: String? {
-        switch stateSubject.value {
+        switch authStateBroadcaster.value {
         case .signedIn(let userId): return userId
         case .unknown, .signedOut: return nil
         }
@@ -104,7 +104,7 @@ final class SupabaseAuthService: AuthServiceProtocol {
 
         await restoreSession()
 
-        switch stateSubject.value {
+        switch authStateBroadcaster.value {
         case .signedOut:
             do {
                 try await signInAnonymously()
@@ -174,7 +174,7 @@ final class SupabaseAuthService: AuthServiceProtocol {
     func signOut() async throws {
         do {
             try await clientProvider.client.auth.signOut()
-            stateSubject.send(.signedOut)
+            authStateBroadcaster.send(.signedOut)
         } catch {
             logger.error("Sign-out failed: \(type(of: error))")
             throw AuthError.signOutFailed
@@ -204,7 +204,7 @@ final class SupabaseAuthService: AuthServiceProtocol {
 
         // Best-effort local sign-out; the remote session is already gone, so swallow sign-out errors.
         try? await clientProvider.client.auth.signOut()
-        stateSubject.send(.signedOut)
+        authStateBroadcaster.send(.signedOut)
     }
 
     /// Attempts to rehydrate an existing Supabase session from persistent storage.
@@ -229,12 +229,12 @@ final class SupabaseAuthService: AuthServiceProtocol {
     /// (a network refresh will be needed), or `.signedIn` for a valid cached session.
     private func syncStateFromCurrentSession() {
         guard let session = clientProvider.client.auth.currentSession else {
-            stateSubject.send(.signedOut)
+            authStateBroadcaster.send(.signedOut)
             return
         }
 
         guard !session.isExpired else {
-            stateSubject.send(.unknown)
+            authStateBroadcaster.send(.unknown)
             return
         }
 
@@ -254,11 +254,11 @@ final class SupabaseAuthService: AuthServiceProtocol {
     /// - **All other failures** (network errors, etc.): publishes `.unknown` so the app can retry.
     private func handleSessionResolutionFailure(_ error: Error) {
         if isExplicitAuthFailure(error) {
-            stateSubject.send(.signedOut)
-        } else if case .signedIn = stateSubject.value {
+            authStateBroadcaster.send(.signedOut)
+        } else if case .signedIn = authStateBroadcaster.value {
             return
         } else {
-            stateSubject.send(.unknown)
+            authStateBroadcaster.send(.unknown)
         }
     }
 
@@ -294,6 +294,6 @@ final class SupabaseAuthService: AuthServiceProtocol {
 
     /// Publishes `.signedIn` with the user ID extracted from the given session.
     private func updateAuthState(for session: Session) {
-        stateSubject.send(.signedIn(userId: session.user.id.uuidString))
+        authStateBroadcaster.send(.signedIn(userId: session.user.id.uuidString))
     }
 }
