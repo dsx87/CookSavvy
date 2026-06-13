@@ -4,6 +4,9 @@ import SwiftUI
 struct CreateRecipeView: View {
     @Environment(\.appTheme) private var theme
     @StateObject var viewModel: CreateRecipeViewModel
+    /// Shared focus for all wizard text inputs. Drives the keyboard toolbar's Done button so the
+    /// user can always dismiss the keyboard and reach the bottom CTA.
+    @FocusState private var isInputFocused: Bool
 
     var body: some View {
         ZStack {
@@ -27,11 +30,32 @@ struct CreateRecipeView: View {
                     .padding(.top, UI.CreateRecipe.topPadding)
                     .padding(.bottom, UI.CreateRecipe.bottomScrollPadding)
                 }
+                .scrollDismissesKeyboard(.interactively)
 
                 bottomButton
             }
         }
         .presentationDetents([.large])
+        .toolbar {
+            // Always-available keyboard dismissal so the bottom CTA is never trapped under the keyboard.
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button(Strings.Common.done) { isInputFocused = false }
+            }
+        }
+        .alert(Strings.Errors.errorAlertTitle, isPresented: errorBinding) {
+            Button(Strings.Common.ok, role: .cancel) { viewModel.dismissError() }
+        } message: {
+            Text(viewModel.saveError ?? "")
+        }
+    }
+
+    /// Bridges the optional `saveError` to the alert's `isPresented` binding (mirrors ShoppingList).
+    private var errorBinding: Binding<Bool> {
+        Binding(
+            get: { viewModel.saveError != nil },
+            set: { if !$0 { viewModel.dismissError() } }
+        )
     }
 
     // MARK: - Header
@@ -117,6 +141,7 @@ struct CreateRecipeView: View {
                 TextField(Strings.CreateRecipe.recipeName, text: $viewModel.recipeName)
                     .font(UI.Fonts.inputField)
                     .foregroundStyle(theme.text1)
+                    .focused($isInputFocused)
                     .padding(UI.CreateRecipe.inputPadding)
                     .background(theme.surface, in: RoundedRectangle(cornerRadius: UI.CreateRecipe.inputCornerRadius, style: .continuous))
                     .overlay(
@@ -133,6 +158,7 @@ struct CreateRecipeView: View {
                 TextField(Strings.CreateRecipe.taglinePlaceholder, text: $viewModel.tagline)
                     .font(UI.Fonts.bodyRounded)
                     .foregroundStyle(theme.text1)
+                    .focused($isInputFocused)
                     .padding(UI.CreateRecipe.inputPadding)
                     .background(theme.surface, in: RoundedRectangle(cornerRadius: UI.CreateRecipe.inputCornerRadius, style: .continuous))
                     .overlay(
@@ -182,6 +208,7 @@ struct CreateRecipeView: View {
                         TextField(String(format: Strings.CreateRecipe.ingredientPlaceholder, Int64(i + 1)), text: $viewModel.ingredientRows[i])
                             .font(UI.Fonts.bodyRounded)
                             .foregroundStyle(theme.text1)
+                            .focused($isInputFocused)
                             .padding(UI.CreateRecipe.ingredientInputPadding)
                             .background(theme.surface, in: RoundedRectangle(cornerRadius: UI.CreateRecipe.ingredientInputCornerRadius, style: .continuous))
                             .overlay(
@@ -228,6 +255,7 @@ struct CreateRecipeView: View {
                             get: { viewModel.stepRows[i].text },
                             set: { viewModel.stepRows[i].text = $0 }
                         ),
+                        focused: $isInputFocused,
                         canDelete: viewModel.stepRows.count > 1,
                         onDelete: { viewModel.removeStepRow(at: i) }
                     )
@@ -399,8 +427,13 @@ struct CreateRecipeView: View {
             } label: {
                 HStack(spacing: UI.CreateRecipe.bottomButtonSpacing) {
                     if viewModel.isLastStep {
-                        Image(systemName: Icons.CookMode.checkmark)
-                            .font(UI.Fonts.buttonIcon)
+                        if viewModel.isSaving {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Image(systemName: Icons.CookMode.checkmark)
+                                .font(UI.Fonts.buttonIcon)
+                        }
                     }
                     Text(viewModel.isLastStep ? Strings.CreateRecipe.saveRecipe : Strings.CreateRecipe.next)
                         .font(UI.Fonts.buttonLabel)
@@ -415,7 +448,7 @@ struct CreateRecipeView: View {
                 )
                 .neonGlow(theme.accent, radius: UI.Common.neonRadiusDefault)
             }
-            .disabled(!viewModel.isCurrentStepValid)
+            .disabled(!viewModel.isCurrentStepValid || viewModel.isSaving)
             .opacity(viewModel.isCurrentStepValid ? 1 : UI.CreateRecipe.disabledOpacity)
             .padding(.horizontal, UI.CreateRecipe.bottomPaddingH)
             .padding(.bottom, UI.CreateRecipe.bottomPaddingV)

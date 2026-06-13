@@ -11,6 +11,7 @@ enum Strings {
     /// Strings shared across multiple screens — standard actions and time formatting.
     enum Common {
         static let ok = String(localized: "common.ok", defaultValue: "OK")
+        static let done = String(localized: "common.done", defaultValue: "Done")
         static let cancel = String(localized: "common.cancel", defaultValue: "Cancel")
         static let minutesShort = String(localized: "common.minutesShort", defaultValue: "%lld min")
         static let minutesCompact = String(localized: "common.minutesCompact", defaultValue: "%lldm")
