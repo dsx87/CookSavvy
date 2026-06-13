@@ -18,11 +18,11 @@ protocol ImageServiceProtocol: AnyObject {
     /// Warms the cache for the given recipes without blocking the caller for results.
     func prefetchImages(for recipes: [Recipe]) async
     /// Evicts all images from the in-memory cache.
-    func clearCache()
+    func clearCache() async
     /// Removes cached image files from disk; pass `nil` to clear all cached images.
-    func clearDiskCache(fileName: String?) throws
+    func clearDiskCache(fileName: String?) async throws
     /// Returns `true` if the image is available in memory or disk cache without a network or ZIP fetch.
-    func imageExists(named fileName: String) -> Bool
+    func imageExists(named fileName: String) async -> Bool
     /// Number of images currently held in the in-memory cache.
-    var memoryCacheCount: Int { get }
+    var memoryCacheCount: Int { get async }
 }

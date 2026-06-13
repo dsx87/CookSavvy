@@ -79,7 +79,7 @@ final class RecipeRecommendationServiceTests: XCTestCase {
         ]
         mockUserDataService.stubbedCookingSessions = []
 
-        try db.insertRecipes([
+        try await db.insertRecipes([
             makeRecipe(title: "Chicken Skillet", ingredients: ["chicken"]),
             makeRecipe(title: "Rice Pilaf", ingredients: ["rice"])
         ])
@@ -135,7 +135,7 @@ final class RecipeRecommendationServiceTests: XCTestCase {
         let recipes = (1...10).map { i in
             makeRecipe(title: "Chicken Dish \(i)", ingredients: ["chicken"])
         }
-        try db.insertRecipes(recipes)
+        try await db.insertRecipes(recipes)
 
         let chickenFavorite = makeRecipe(title: "Chicken Tikka", ingredients: ["chicken"])
         mockUserDataService.stubbedFavorites = [chickenFavorite]
@@ -151,7 +151,7 @@ final class RecipeRecommendationServiceTests: XCTestCase {
         mockUserDataService.stubbedCookingSessions = [
             makeCookingSession(recipeTitle: "Mushroom Pasta", recipeId: 999, rating: 5)
         ]
-        try db.insertRecipes([
+        try await db.insertRecipes([
             makeRecipe(title: "Creamy Mushroom Pasta", ingredients: ["mushroom", "pasta"])
         ])
 

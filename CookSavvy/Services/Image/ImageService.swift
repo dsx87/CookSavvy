@@ -30,50 +30,46 @@ private enum ImageServiceConstants {
 /// Each image's cost is estimated as `width × height × 4 bytes` (RGBA). `NSCache` evicts
 /// entries automatically under memory pressure. A separate `keys` set enables an O(1)
 /// `count` property, since `NSCache` does not expose one directly.
+///
+/// This type holds no internal lock: it is used exclusively as actor-isolated state of
+/// `ImageService` (an `actor`), which serialises all access to it.
 private class ImageCache {
     private let cache = NSCache<NSString, UIImage>()
     private var keys = Set<String>()
-    private let lock = NSLock()
-    
+
     /// Creates an image cache with explicit object count and memory-cost limits.
     init(countLimit: Int, totalCostLimit: Int) {
         cache.countLimit = countLimit
         cache.totalCostLimit = totalCostLimit
     }
-    
+
     /// Stores `image` in the cache under `key`, using pixel-area cost for eviction weighting.
     func setImage(_ image: UIImage, forKey key: String) {
         let cost = Int(image.size.width * image.size.height * ImageServiceConstants.bytesPerPixel)
-        lock.lock()
         cache.setObject(image, forKey: key as NSString, cost: cost)
         keys.insert(key)
-        lock.unlock()
     }
-    
+
     /// Returns the cached image for `key`, or `nil` if not present or already evicted.
     func image(forKey key: String) -> UIImage? {
         return cache.object(forKey: key as NSString)
     }
-    
+
     /// Evicts all images from the cache and clears the key tracking set.
     func removeAll() {
-        lock.lock()
         cache.removeAllObjects()
         keys.removeAll()
-        lock.unlock()
     }
-    
+
     /// Maximum number of images the cache will hold before `NSCache` begins evicting entries.
     var countLimit: Int {
         get { cache.countLimit }
         set { cache.countLimit = newValue }
     }
-    
+
     /// Approximate count of images tracked in the cache; may be slightly higher than actual if items were silently evicted by `NSCache`.
     var count: Int {
-        lock.lock()
-        defer { lock.unlock() }
-        return keys.count
+        keys.count
     }
 }
 
@@ -86,7 +82,11 @@ private class ImageCache {
 ///
 /// Remote URLs (`http`/`https`) are downloaded, persisted to disk under a SHA-256-derived filename,
 /// and returned from the disk cache on all subsequent requests, avoiding redundant network calls.
-final class ImageService: ImageServiceProtocol {
+///
+/// Declared as an `actor`: disk I/O, ZIP extraction, and `UIImage` decoding run on the actor's
+/// executor (off the main actor), and actor isolation serialises access to `imageCache` (so the
+/// cache needs no internal lock).
+actor ImageService: ImageServiceProtocol {
     
     // MARK: - Properties
     

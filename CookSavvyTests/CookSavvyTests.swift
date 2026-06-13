@@ -296,7 +296,7 @@ final class DBInterfaceTests: XCTestCase {
 
     func testPantryServicePersistsThroughDatabase() async throws {
         let pepper = Ingredient(name: "Pepper")
-        try dbInterface.insertIngredients([pepper])
+        try await dbInterface.insertIngredients([pepper])
         let service = PantryService(dbInterface: dbInterface)
 
         try await service.addItem(pepper)

@@ -119,10 +119,11 @@ final class ImageServiceTests: XCTestCase {
     
     // MARK: - Initialization Tests
     
-    func testDefaultInitialization() throws {
+    func testDefaultInitialization() async throws {
         imageService = try ImageService()
         XCTAssertNotNil(imageService)
-        XCTAssertEqual(imageService.memoryCacheCount, 0)
+        let count = await imageService.memoryCacheCount
+        XCTAssertEqual(count, 0)
     }
     
     func testCustomInitialization() throws {
@@ -148,7 +149,8 @@ final class ImageServiceTests: XCTestCase {
         // by ensuring subsequent loads are fast (indicating cache hit)
         
         // This test verifies the caching mechanism works
-        XCTAssertEqual(imageService.memoryCacheCount, 0)
+        let count = await imageService.memoryCacheCount
+        XCTAssertEqual(count, 0)
     }
     
     func testLoadImageWithEmptyFileName() async throws {
@@ -288,44 +290,45 @@ final class ImageServiceTests: XCTestCase {
     
     func testClearMemoryCache() async throws {
         imageService = try ImageService()
-        
-        imageService.clearCache()
-        
-        XCTAssertEqual(imageService.memoryCacheCount, 0)
-    }
-    
-    func testImageExists() throws {
-        imageService = try ImageService()
-        
-        // Non-existent image
-        let exists = imageService.imageExists(named: "nonexistent.png")
-        XCTAssertFalse(exists)
-    }
-    
-    func testMemoryCacheCount() throws {
-        imageService = try ImageService()
-        
-        let count = imageService.memoryCacheCount
+
+        await imageService.clearCache()
+
+        let count = await imageService.memoryCacheCount
         XCTAssertEqual(count, 0)
     }
-    
-    // MARK: - Disk Cache Tests
-    
-    func testClearDiskCacheSpecificFile() throws {
+
+    func testImageExists() async throws {
         imageService = try ImageService()
-        
-        // Should not throw even if file doesn't exist
-        XCTAssertNoThrow(try imageService.clearDiskCache(fileName: "test.png"))
-    }
-    
-    func testClearAllDiskCache() throws {
-        imageService = try ImageService()
-        
-        // Should not throw
-        XCTAssertNoThrow(try imageService.clearDiskCache())
+
+        // Non-existent image
+        let exists = await imageService.imageExists(named: "nonexistent.png")
+        XCTAssertFalse(exists)
     }
 
-    func testClearAllDiskCacheHandlesMultipleImagesInSameNestedDirectory() throws {
+    func testMemoryCacheCount() async throws {
+        imageService = try ImageService()
+
+        let count = await imageService.memoryCacheCount
+        XCTAssertEqual(count, 0)
+    }
+
+    // MARK: - Disk Cache Tests
+
+    func testClearDiskCacheSpecificFile() async throws {
+        imageService = try ImageService()
+
+        // Should not throw even if file doesn't exist
+        try await imageService.clearDiskCache(fileName: "test.png")
+    }
+
+    func testClearAllDiskCache() async throws {
+        imageService = try ImageService()
+
+        // Should not throw
+        try await imageService.clearDiskCache()
+    }
+
+    func testClearAllDiskCacheHandlesMultipleImagesInSameNestedDirectory() async throws {
         imageService = try ImageService()
         let cacheDirectoryName = "image-service-\(UUID().uuidString)"
         let nestedCacheDirectory = try documentsDirectory()
@@ -337,7 +340,7 @@ final class ImageServiceTests: XCTestCase {
         try imageData.write(to: nestedCacheDirectory.appendingPathComponent("a.png"))
         try imageData.write(to: nestedCacheDirectory.appendingPathComponent("b.jpg"))
 
-        try imageService.clearDiskCache()
+        try await imageService.clearDiskCache()
 
         XCTAssertFalse(fileManager.fileExists(atPath: nestedCacheDirectory.path))
     }
@@ -347,16 +350,18 @@ final class ImageServiceTests: XCTestCase {
         let fileName = "images/\(cacheDirectoryName)/photo.png"
         let zipURL = try makeImageZip(fileName: fileName)
         imageService = try ImageService(zipFileURL: zipURL)
-        try imageService.clearDiskCache(fileName: fileName)
+        try await imageService.clearDiskCache(fileName: fileName)
 
         let image = try await imageService.loadImage(named: fileName)
 
         XCTAssertNotNil(image)
-        XCTAssertTrue(imageService.imageExists(named: fileName))
+        let existsAfterLoad = await imageService.imageExists(named: fileName)
+        XCTAssertTrue(existsAfterLoad)
 
-        try imageService.clearDiskCache(fileName: fileName)
-        imageService.clearCache()
-        XCTAssertFalse(imageService.imageExists(named: fileName))
+        try await imageService.clearDiskCache(fileName: fileName)
+        await imageService.clearCache()
+        let existsAfterClear = await imageService.imageExists(named: fileName)
+        XCTAssertFalse(existsAfterClear)
         let nestedCacheDirectory = try documentsDirectory()
             .appendingPathComponent("images", isDirectory: true)
             .appendingPathComponent(cacheDirectoryName, isDirectory: true)
@@ -419,7 +424,7 @@ final class ImageServiceTests: XCTestCase {
         // For now, we test that the method works
         imageService = try ImageService()
         
-        let exists = imageService.imageExists(named: "test.png")
+        let exists = await imageService.imageExists(named: "test.png")
         XCTAssertFalse(exists) // Should be false since we haven't loaded anything
     }
     
@@ -475,7 +480,8 @@ final class ImageServiceTests: XCTestCase {
         imageService = try ImageService(maxCacheSize: 5)
         
         // Memory cache count starts at 0
-        XCTAssertEqual(imageService.memoryCacheCount, 0)
+        let count = await imageService.memoryCacheCount
+        XCTAssertEqual(count, 0)
         
         // This is a conceptual test - actual implementation would
         // require loading real images to test the cache limit

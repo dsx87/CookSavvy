@@ -9,7 +9,11 @@ import Foundation
 import ZIPFoundation
 
 /// Extracts individual files from a ZIP archive using ZIPFoundation.
-final class Unarchiver {
+///
+/// Stateless and `nonisolated`: its methods run synchronously on the caller's executor, so the
+/// blocking ZIP/disk work stays off the main actor when invoked from the `ImageExtractor` actor
+/// or from `DataImportService`'s `@concurrent` import path.
+nonisolated final class Unarchiver {
     
     /// Errors thrown by ``Unarchiver`` operations.
     enum UnarchiverError: Error {
