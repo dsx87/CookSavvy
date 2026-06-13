@@ -5,7 +5,7 @@ import Foundation
 /// The savings amount is an approximate product estimate, not a personal finance
 /// calculation. It is derived from monthly cooked meals and must stay labelled
 /// as approximate wherever displayed.
-struct MonthlyCookingInsights: Equatable {
+nonisolated struct MonthlyCookingInsights: Equatable {
     /// Number of cooking sessions recorded during the current calendar month.
     let mealsCooked: Int
     /// Number of distinct ingredients used across current-month cooking sessions.

@@ -57,7 +57,7 @@ enum AuthError: Error, LocalizedError {
 ///
 /// Concrete implementations: `SupabaseAuthService` (production), `MockAuthService` (DEBUG/tests),
 /// `NoOpAuthService` (RELEASE fallback when Supabase keys are absent).
-protocol AuthServiceProtocol: AnyObject {
+protocol AuthServiceProtocol: AnyObject, Sendable {
     /// The current synchronously-readable auth state.
     var authState: AuthState { get }
     /// A stream that replays the current `authState`, then yields every subsequent change.

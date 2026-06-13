@@ -14,7 +14,7 @@ import Foundation
 /// `value` is optional to represent uncountable amounts such as "to taste" or "as needed".
 /// Use `formatted(as:)` to render the amount in the user's preferred display style, including
 /// automatic unit conversions between metric and imperial.
-struct IngredientAmount: Codable, Hashable, Sendable {
+nonisolated struct IngredientAmount: Codable, Hashable, Sendable {
 
     fileprivate enum ConversionDimension {
         case volume
@@ -221,7 +221,7 @@ struct IngredientAmount: Codable, Hashable, Sendable {
 // MARK: - IngredientCategory
 
 /// Broad food-group categories used to organise ingredients in the UI.
-enum IngredientCategory: String, CaseIterable {
+nonisolated enum IngredientCategory: String, CaseIterable {
     /// Meat, poultry, fish, seafood, eggs, and plant-based proteins.
     case proteins
     /// Vegetables and legumes.
@@ -242,7 +242,7 @@ enum IngredientCategory: String, CaseIterable {
 ///
 /// Ingredients are stored in the database and referenced by recipes. The `emoji`
 /// property is populated lazily by ``IngredientEmojiProvider`` before display.
-struct Ingredient: Codable, Identifiable {
+nonisolated struct Ingredient: Codable, Identifiable {
     
     /// A placeholder ingredient with an empty name, used as a safe default value.
     static let empty: Ingredient = ""
@@ -326,14 +326,14 @@ struct Ingredient: Codable, Identifiable {
 }
 
 /// Hashability allows ingredient values to be de-duplicated in sets and diffable collections.
-extension Ingredient: Hashable {}
+nonisolated extension Ingredient: Hashable {}
 /// `Sendable` enables safe transfer of ingredient values across concurrency boundaries.
 extension Ingredient: Sendable {}
 /// `Sendable` conformance for category values used in async view-model code.
 extension IngredientCategory: Sendable {}
 
 /// String-literal conveniences for concise ingredient construction in tests and mocks.
-extension Ingredient: ExpressibleByStringLiteral {
+nonisolated extension Ingredient: ExpressibleByStringLiteral {
     /// Creates an ingredient from a grapheme-cluster string literal.
     init(extendedGraphemeClusterLiteral value: String) {
         self.init(name: value)
@@ -348,7 +348,7 @@ extension Ingredient: ExpressibleByStringLiteral {
 
 // MARK: - Full initializer for richer mocks
 /// Additional initializers used by previews and richer mock fixtures.
-extension Ingredient {
+nonisolated extension Ingredient {
     /// Creates an ingredient with all fields populated; used by test helpers and mock factories.
     init(name: String, description: String?, pictureFileName: String?, foodGroup: String?, foodSubgroup: String?, emoji: String? = nil, rawAmount: String? = nil, structuredAmount: IngredientAmount? = nil, notes: String? = nil, basicComponent: String? = nil) {
         self.name = name
@@ -366,7 +366,7 @@ extension Ingredient {
 
 // MARK: - Mock Factories for Testing
 /// Randomized mock factory helpers for design-time previews and tests.
-extension Ingredient {
+nonisolated extension Ingredient {
     /// Internal helper used by `mockRandom` to bundle name, group, and asset info.
     struct Entry { let name: String; let group: String; let subgroup: String; let picture: String? }
 

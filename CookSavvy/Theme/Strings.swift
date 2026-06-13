@@ -6,7 +6,7 @@ import Foundation
 /// `Localizable.xcstrings` (Xcode 15+ String Catalog) via `String(localized:defaultValue:)`.
 /// Access strings as `Strings.Screen.key` — the localization key is the first argument, and
 /// `defaultValue` serves as the English fallback.
-enum Strings {
+nonisolated enum Strings {
 
     /// Strings shared across multiple screens — standard actions and time formatting.
     enum Common {

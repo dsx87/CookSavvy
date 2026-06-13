@@ -24,7 +24,7 @@ protocol RecipeAPIProviderProtocol: Sendable {
 }
 
 /// Errors thrown by ``RecipeAPIProviderProtocol`` implementations.
-enum RecipeAPIProviderError: Error, LocalizedError, @unchecked Sendable {
+enum RecipeAPIProviderError: Error, LocalizedError {
     /// The API key in `APIKeys.plist` is missing or was rejected by the backend.
     case invalidAPIKey
     /// The request was made without valid session credentials.

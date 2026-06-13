@@ -8,7 +8,7 @@ import Foundation
 /// The user's subscription tier, determining which recipe sources and features are accessible.
 ///
 /// Plans are ordered by value (`free < premium`), enabling comparisons with `<`.
-enum SubscriptionPlan: String, CaseIterable, Codable, Comparable {
+nonisolated enum SubscriptionPlan: String, CaseIterable, Codable, Comparable {
     /// The default, unpaid tier with local recipe discovery only.
     case free = "Free"
     /// The paid CookSavvy+ tier with unlimited recipes, camera scanning, and AI features.
@@ -48,7 +48,7 @@ enum SubscriptionPlan: String, CaseIterable, Codable, Comparable {
 ///
 /// `SubscriptionPlan` models entitlement state (`free` or `premium`), while this type
 /// models the concrete StoreKit products a customer can buy to unlock the premium tier.
-enum PremiumSubscriptionOption: String, CaseIterable, Codable, Hashable, Identifiable {
+nonisolated enum PremiumSubscriptionOption: String, CaseIterable, Codable, Hashable, Identifiable {
     /// Annual billing for CookSavvy+, promoted as the best-value option.
     case yearly
     /// Monthly billing for CookSavvy+.
@@ -112,7 +112,7 @@ enum PremiumSubscriptionOption: String, CaseIterable, Codable, Hashable, Identif
 /// The app still uses `SubscriptionPlan` for premium gating, but T-007 needs extra
 /// context so the UI can distinguish a paid premium customer from someone who is
 /// actively using the monthly introductory free trial.
-struct SubscriptionStatus: Equatable, Codable {
+nonisolated struct SubscriptionStatus: Equatable, Codable {
     /// The effective entitlement tier used for feature access checks.
     let plan: SubscriptionPlan
     /// The currently active product, when StoreKit has enough information to identify it.
@@ -164,7 +164,7 @@ struct SubscriptionStatus: Equatable, Codable {
 }
 
 /// Premium-gated features that require an active CookSavvy+ subscription.
-enum PaidFeature {
+nonisolated enum PaidFeature {
     /// AI-powered camera scanning for ingredient detection.
     case cameraIngredientDetection
     /// Access to the Supabase-backed online recipe catalogue.

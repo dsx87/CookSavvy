@@ -51,7 +51,7 @@ enum DatabaseError: Error, LocalizedError {
 // runs on the actor's executor (off the main actor), and callers `await` each call.
 
 /// Read/write access to the ingredient catalogue and full-text search.
-protocol IngredientStoreProtocol {
+nonisolated protocol IngredientStoreProtocol {
     /// Returns all ingredients whose name exactly matches `name` (case-insensitive).
     /// - Parameter name: The ingredient name to look up.
     /// - Returns: A single-element array if found, or an empty array if no match exists.
@@ -83,7 +83,7 @@ protocol IngredientStoreProtocol {
 }
 
 /// Read/write access to the recipe catalogue (seeded + user-created).
-protocol RecipeStoreProtocol {
+nonisolated protocol RecipeStoreProtocol {
     /// Fetches recipes that contain at least one of the given ingredients.
     /// Uses `LIKE` wildcards for partial matching (e.g., "chicken" matches "chicken breast").
     /// - Parameters:
@@ -118,7 +118,7 @@ protocol RecipeStoreProtocol {
 }
 
 /// Tracking of recent/popular ingredients, recent recipe views, and saved searches.
-protocol RecentActivityStoreProtocol {
+nonisolated protocol RecentActivityStoreProtocol {
     /// Returns the most recently used ingredients, sorted by `last_used_at` descending.
     /// - Parameter limit: Maximum number of results.
     func getRecentIngredients(limit: Int) async throws -> [Ingredient]
@@ -151,7 +151,7 @@ protocol RecentActivityStoreProtocol {
 }
 
 /// Read/write access to the user's favourited recipes.
-protocol FavoritesStoreProtocol {
+nonisolated protocol FavoritesStoreProtocol {
     /// Returns all favorited recipes, sorted by `added_at` descending.
     func getFavoriteRecipes() async throws -> [Recipe]
 
@@ -169,7 +169,7 @@ protocol FavoritesStoreProtocol {
 }
 
 /// Recording and aggregate querying of cook-mode completion sessions.
-protocol CookingSessionStoreProtocol {
+nonisolated protocol CookingSessionStoreProtocol {
     /// Records a completed cooking session without rescued-ingredient data.
     /// Delegates to the full variant with `rescuedIngredients: nil`.
     func recordCookingSession(recipeId: Int, date: Date, duration: TimeInterval?, rating: Int?) async throws
@@ -219,7 +219,7 @@ protocol CookingSessionStoreProtocol {
 }
 
 /// CRUD for recipes authored by the user (`is_user_created = 1`).
-protocol UserRecipeStoreProtocol {
+nonisolated protocol UserRecipeStoreProtocol {
     /// Returns all user-created recipes (`is_user_created = 1`), newest first.
     func getUserCreatedRecipes() async throws -> [Recipe]
 
@@ -239,7 +239,7 @@ protocol UserRecipeStoreProtocol {
 }
 
 /// Read/write access to the free-tier pantry staples.
-protocol PantryStoreProtocol {
+nonisolated protocol PantryStoreProtocol {
     /// Returns pantry staples sorted by the time they were added, newest first.
     func getPantryItems() async throws -> [Ingredient]
 
@@ -257,7 +257,7 @@ protocol PantryStoreProtocol {
 }
 
 /// CRUD for the premium shopping list.
-protocol ShoppingListStoreProtocol {
+nonisolated protocol ShoppingListStoreProtocol {
     /// Returns all shopping list items ordered by `added_at` ascending.
     func getShoppingItems() async throws -> [ShoppingItem]
 
@@ -279,13 +279,13 @@ protocol ShoppingListStoreProtocol {
 }
 
 /// Aggregate catalogue statistics.
-protocol StatisticsStoreProtocol {
+nonisolated protocol StatisticsStoreProtocol {
     /// Returns the total number of recipes in the database (seeded + user-created).
     func getRecipeCount() async throws -> Int
 }
 
 /// Bulk-clearing operations used for reset/sign-out flows.
-protocol DatabaseMaintenanceProtocol {
+nonisolated protocol DatabaseMaintenanceProtocol {
     /// Deletes all rows from every table, returning the database to an empty state.
     func clearDatabase() async throws
 
@@ -310,7 +310,7 @@ protocol DatabaseMaintenanceProtocol {
 /// `actor` backed by GRDB's `DatabaseWriter`; SQL and JSON decoding run on the actor's
 /// executor (off the main actor) and callers `await` each call. An in-memory variant is
 /// available for unit tests via `DBInterface(inMemory: true)`.
-protocol DBInterfaceProtocol:
+nonisolated protocol DBInterfaceProtocol:
     IngredientStoreProtocol,
     RecipeStoreProtocol,
     RecentActivityStoreProtocol,

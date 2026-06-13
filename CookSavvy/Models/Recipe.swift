@@ -14,7 +14,7 @@ import CoreTransferable
 /// the Supabase backend (`OnlineRecipeSource`), or be AI-generated (`AIRecipeSource`).
 /// Optional fields such as `matchPercentage` and `missingIngredients` are populated
 /// by the recommendation engine at query time and are not persisted.
-struct Recipe {
+nonisolated struct Recipe {
 
     /// A single instruction step, optionally paired with a countdown timer.
     struct Step: Codable, Hashable {
@@ -261,13 +261,13 @@ struct Recipe {
 }
 
 /// Identifiable conformance for SwiftUI lists and navigation.
-extension Recipe: Identifiable {
+nonisolated extension Recipe: Identifiable {
     /// Uses `title` as the stable identifier; recipe titles are unique within the local dataset.
     var id: String { title }
 }
 
 /// Hashability enables recipe de-duplication and set operations.
-extension Recipe: Hashable {}
+nonisolated extension Recipe: Hashable {}
 /// `Sendable` conformance for recipe values transferred across task boundaries.
 extension Recipe: Sendable {}
 /// `Sendable` conformance for nested `Step` values.
@@ -279,7 +279,7 @@ extension Recipe.AdditionalInfo.InfoType: Sendable {}
 
 /// Custom Codable for InfoType using flat single-key dicts: {"time": "30 min"}, {"servings": 4}.
 /// This replaces the synthesised format which wraps values in {"_0": ...}.
-extension Recipe.AdditionalInfo.InfoType {
+nonisolated extension Recipe.AdditionalInfo.InfoType {
     private enum CodingKeys: String, CodingKey {
         case time, servings, complexity, calories
     }
@@ -306,7 +306,7 @@ extension Recipe.AdditionalInfo.InfoType {
 }
 
 /// Computed helpers derived directly from stored recipe data.
-extension Recipe {
+nonisolated extension Recipe {
     /// Deduplicated ingredient list used for recipe-ingredient matching.
     ///
     /// Previously stored as a separate field; now derived from `ingredients` so there is a single
@@ -318,7 +318,7 @@ extension Recipe {
 }
 
 /// Derived metadata helpers built from recipe content.
-extension Recipe {
+nonisolated extension Recipe {
     /// The recipe's cook time in minutes, derived by parsing the `time` entry in `additionalInfo`.
     /// Returns `nil` when no time info is present or the format cannot be parsed.
     var cookTimeMinutes: Int? {
@@ -384,13 +384,15 @@ extension Recipe {
 // MARK: - Transferable (Sharing)
 
 /// Share-sheet integration using plain-text recipe representation.
-extension Recipe: Transferable {
+nonisolated extension Recipe: Transferable {
     static var transferRepresentation: some TransferRepresentation {
         ProxyRepresentation { $0.shareText }
     }
 
     /// A plaintext representation of the recipe used by the system share sheet.
-    var shareText: String {
+    /// `nonisolated` so the `Transferable`/`ProxyRepresentation` closure (invoked off the main
+    /// actor by the share sheet) can read it without crossing into main-actor-isolated code.
+    nonisolated var shareText: String {
         var lines = [title, "", "Ingredients:"]
         lines += ingredients.map { "- \($0.name)" }
         lines += ["", "Steps:"]
@@ -402,7 +404,7 @@ extension Recipe: Transferable {
 
 // MARK: - Mock Factories for Testing
 /// Randomized mock recipe builders for previews and test fixtures.
-extension Recipe {
+nonisolated extension Recipe {
     /// Creates a single mock `Recipe` with meaningful randomized values.
     /// - Parameter rng: Optional random number generator for deterministic tests.
     /// - Returns: A `Recipe` instance populated with sensible random content.

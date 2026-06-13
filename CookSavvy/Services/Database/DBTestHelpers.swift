@@ -13,7 +13,7 @@ import Foundation
 /// This helper intercepts `getIngredients(byName:)` calls and returns pre-registered variant
 /// ingredients in round-robin order, allowing tests to control which `Ingredient` value is
 /// returned for a given name without relying on real database content.
-final class DBTestHelpers {
+nonisolated final class DBTestHelpers {
     
     /// Maps lowercase ingredient names to all registered variants for that name.
     private var ingredientVariants: [String: [Ingredient]] = [:]

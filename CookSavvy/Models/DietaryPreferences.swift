@@ -1,7 +1,7 @@
 import Foundation
 
 /// Identifies a dietary restriction or lifestyle choice that filters out incompatible recipes.
-enum DietaryRestriction: String, CaseIterable, Codable {
+nonisolated enum DietaryRestriction: String, CaseIterable, Codable {
     case vegetarian, vegan, glutenFree, dairyFree, nutFree, halal, kosher
 
     /// Localised name suitable for display in the Settings UI.

@@ -8,7 +8,7 @@ import Supabase
 
 /// Abstraction over `SupabaseClient` that enables test mocking and decouples call sites
 /// from the concrete `supabase-swift` SDK type.
-protocol SupabaseClientProviderProtocol {
+nonisolated protocol SupabaseClientProviderProtocol: Sendable {
     /// The underlying Supabase client instance.
     var client: SupabaseClient { get }
     /// Invokes a named Supabase Edge Function with an `Encodable` request body and returns the raw response `Data`.

@@ -6,7 +6,7 @@ import Foundation
 /// user-created recipes, aggregate stats, and UI preferences. The concrete implementation
 /// (`UserDataService`) stores session data in the GRDB SQLite database and persists
 /// lightweight preferences in `UserDefaults`.
-protocol UserDataServiceProtocol: AnyObject {
+protocol UserDataServiceProtocol: AnyObject, Sendable {
     /// - SeeAlso: `UserDataService.getRecentIngredients(limit:)`
     func getRecentIngredients(limit: Int) async throws -> [Ingredient]
     /// - SeeAlso: `UserDataService.getPopularIngredients(limit:)`

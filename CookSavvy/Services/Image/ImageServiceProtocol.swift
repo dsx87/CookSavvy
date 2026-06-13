@@ -5,7 +5,7 @@ import UIKit
 ///
 /// Abstracts `ImageService` so view models and other consumers can be tested with a mock
 /// that doesn't touch the filesystem or network.
-protocol ImageServiceProtocol: AnyObject {
+nonisolated protocol ImageServiceProtocol: AnyObject, Sendable {
     /// Loads (or returns a cached) image for the given recipe.
     func loadImage(for recipe: Recipe) async throws -> UIImage?
     /// Loads (or returns a cached) image for the given ingredient.

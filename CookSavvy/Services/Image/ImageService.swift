@@ -10,7 +10,7 @@ import UIKit
 import CryptoKit
 
 /// Internal constants that define cache sizing and dataset file naming conventions.
-private enum ImageServiceConstants {
+private nonisolated enum ImageServiceConstants {
     static let bytesPerPixel = 4.0
     static let defaultCacheSize = 100
     static let memoryCacheLimit = 50 * 1024 * 1024
@@ -33,7 +33,7 @@ private enum ImageServiceConstants {
 ///
 /// This type holds no internal lock: it is used exclusively as actor-isolated state of
 /// `ImageService` (an `actor`), which serialises all access to it.
-private class ImageCache {
+private nonisolated class ImageCache {
     private let cache = NSCache<NSString, UIImage>()
     private var keys = Set<String>()
 
@@ -94,8 +94,6 @@ actor ImageService: ImageServiceProtocol {
     private let imageExtractor: ImageExtractor
     /// URL to the bundled dataset ZIP, used for extracting assets not yet on disk.
     private let zipFileURL: URL?
-    /// Shared file-manager instance used for all disk I/O.
-    private let fileManager: FileManager
     /// Root directory for the disk cache; maps to the app's Documents directory.
     private let imagesDirectory: URL
     
@@ -120,11 +118,12 @@ actor ImageService: ImageServiceProtocol {
     ) throws {
         self.imageExtractor = imageExtractor
         self.maxCacheSize = maxCacheSize
-        self.fileManager = FileManager.default
         // Resolve the disk-cache root up front. `init` is throwing (not force-unwrapping) so a missing
         // Documents directory surfaces through AppContainer's throwing init as the blocking startup
         // error screen instead of an uncatchable launch crash. Mirrors `ImageExtractor` (guard-let).
-        guard let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+        // `FileManager.default` (a shared instance) is used inline rather than stored, so it is never
+        // sent into this actor's isolated state.
+        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
             throw ImageServiceError.documentsDirectoryUnavailable
         }
         self.imagesDirectory = documentsDirectory
@@ -228,13 +227,13 @@ actor ImageService: ImageServiceProtocol {
     func clearDiskCache(fileName: String? = nil) throws {
         if let fileName = fileName {
             let fileURL = imagesDirectory.appendingPathComponent(fileName)
-            if fileManager.fileExists(atPath: fileURL.path) {
-                try fileManager.removeItem(at: fileURL)
+            if FileManager.default.fileExists(atPath: fileURL.path) {
+                try FileManager.default.removeItem(at: fileURL)
                 try removeEmptyCacheDirectories(startingAt: fileURL.deletingLastPathComponent())
             }
         } else {
             // Clear all cached images, including nested dataset paths such as `images/foo.jpg`.
-            guard let contents = fileManager.enumerator(
+            guard let contents = FileManager.default.enumerator(
                 at: imagesDirectory,
                 includingPropertiesForKeys: nil
             ) else { return }
@@ -242,7 +241,7 @@ actor ImageService: ImageServiceProtocol {
             var removedParentDirectories: [URL] = []
             for case let fileURL as URL in contents where
                 ImageServiceConstants.imageExtensions.contains(fileURL.pathExtension.lowercased()) {
-                try fileManager.removeItem(at: fileURL)
+                try FileManager.default.removeItem(at: fileURL)
                 removedParentDirectories.append(fileURL.deletingLastPathComponent())
             }
 
@@ -264,7 +263,7 @@ actor ImageService: ImageServiceProtocol {
         
         // Check disk cache
         let fileURL = imagesDirectory.appendingPathComponent(fileName)
-        return fileManager.fileExists(atPath: fileURL.path)
+        return FileManager.default.fileExists(atPath: fileURL.path)
     }
     
     /// Gets the number of images currently in memory cache
@@ -279,7 +278,7 @@ actor ImageService: ImageServiceProtocol {
     private func loadFromDisk(fileName: String) async throws -> UIImage? {
         let fileURL = imagesDirectory.appendingPathComponent(fileName)
         
-        guard fileManager.fileExists(atPath: fileURL.path) else {
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
             return nil
         }
         
@@ -329,7 +328,7 @@ actor ImageService: ImageServiceProtocol {
     /// decoded without additional metadata.
     /// - Parameter urlString: The remote image URL.
     /// - Returns: A hex-encoded SHA-256 digest with the original file extension appended.
-    private static func diskCacheKey(for urlString: String) -> String {
+    private nonisolated static func diskCacheKey(for urlString: String) -> String {
         let hash = SHA256.hash(data: Data(urlString.utf8))
         let hex = hash.compactMap { String(format: "%02x", $0) }.joined()
         let ext = URL(string: urlString)?.pathExtension.isEmpty == false
@@ -344,9 +343,9 @@ actor ImageService: ImageServiceProtocol {
         var directory = directory.standardizedFileURL
         while directory.path != cacheRootPath,
               directory.path.hasPrefix(cacheRootPath + "/") {
-            let contents = try fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+            let contents = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
             guard contents.isEmpty else { return }
-            try fileManager.removeItem(at: directory)
+            try FileManager.default.removeItem(at: directory)
             directory.deleteLastPathComponent()
         }
     }

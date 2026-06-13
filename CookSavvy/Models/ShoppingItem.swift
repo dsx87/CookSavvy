@@ -6,7 +6,7 @@
 import Foundation
 
 /// A single row in the premium shopping list.
-struct ShoppingItem: Identifiable, Equatable {
+nonisolated struct ShoppingItem: Identifiable, Equatable {
     /// Unique database row identifier.
     let id: Int
     /// Display name of the ingredient to purchase.

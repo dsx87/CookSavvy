@@ -7,7 +7,7 @@ import Foundation
 
 /// `RecipeAPIProviderProtocol` implementation that calls the `generate-recipes` Supabase Edge Function,
 /// delivering AI-generated recipes for premium users without exposing backend API keys on device.
-final class SupabaseAIRecipeAPIProvider: RecipeAPIProviderProtocol, @unchecked Sendable {
+final class SupabaseAIRecipeAPIProvider: RecipeAPIProviderProtocol {
     var name: String { "SupabaseAI" }
 
     private enum FunctionName {
@@ -16,16 +16,13 @@ final class SupabaseAIRecipeAPIProvider: RecipeAPIProviderProtocol, @unchecked S
 
     private let clientProvider: SupabaseClientProviderProtocol
     private let configuration: SupabaseConfiguration
-    private let decoder: JSONDecoder
 
     init(
         clientProvider: SupabaseClientProviderProtocol,
-        configuration: SupabaseConfiguration = SupabaseConfiguration(),
-        decoder: JSONDecoder = SupabaseRecipeProviderSupport.makeDecoder()
+        configuration: SupabaseConfiguration = SupabaseConfiguration()
     ) {
         self.clientProvider = clientProvider
         self.configuration = configuration
-        self.decoder = decoder
     }
 
     func fetchRecipes(for ingredients: [Ingredient], count: Int) async throws -> [Recipe] {
@@ -45,7 +42,7 @@ final class SupabaseAIRecipeAPIProvider: RecipeAPIProviderProtocol, @unchecked S
             throw SupabaseRecipeProviderSupport.mapError(error)
         }
 
-        let recipes = try SupabaseRecipeProviderSupport.decodeRecipes(from: data, using: decoder)
+        let recipes = try SupabaseRecipeProviderSupport.decodeRecipes(from: data, using: SupabaseRecipeProviderSupport.makeDecoder())
         return recipes.map { var r = $0; r.source = .ai; return r }
     }
 

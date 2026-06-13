@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Sessions are stored in the database and used to track cooking history,
 /// cumulative cook time, and anti-waste achievement progress.
-struct CookingSession: Identifiable, Hashable {
+nonisolated struct CookingSession: Identifiable, Hashable {
     /// Unique database row identifier.
     let id: Int
     /// Identifier of the recipe that was cooked.

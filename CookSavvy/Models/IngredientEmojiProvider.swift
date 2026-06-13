@@ -8,7 +8,7 @@ import Foundation
 /// 3. **Word match** — each whitespace-separated word is checked individually.
 /// 4. **Food group fallback** — `emojiForFoodGroup(_:)` when a `foodGroup` is available.
 /// 5. **Default** — returns `"🍽️"` when all stages fail.
-enum IngredientEmojiProvider {
+nonisolated enum IngredientEmojiProvider {
 
     /// Static lookup table mapping common ingredient names to their representative emoji.
     private static let emojiMap: [String: String] = [

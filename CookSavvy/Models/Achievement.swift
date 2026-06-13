@@ -1,7 +1,7 @@
 import Foundation
 
 /// Groups achievements by theme for display and filtering purposes.
-enum AchievementCategory: String, Hashable {
+nonisolated enum AchievementCategory: String, Hashable {
     /// General cooking milestones such as streaks, recipe counts, and cumulative cooking time.
     case general
     /// Milestones that reward minimising ingredient waste.
@@ -13,7 +13,7 @@ enum AchievementCategory: String, Hashable {
 /// Each achievement tracks progress toward a numeric goal (`maxProgress`) and transitions
 /// to an unlocked state once `currentProgress` reaches that goal.
 /// The complete catalogue is defined in `allAchievements`.
-struct Achievement: Identifiable, Hashable {
+nonisolated struct Achievement: Identifiable, Hashable {
     /// Stable identifier used for persistence and equality checks.
     let id: String
     /// Short display name shown on the achievement card (e.g. `"First Cook"`).

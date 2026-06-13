@@ -4,7 +4,7 @@ import SwiftUI
 ///
 /// Each collection has a visual identity (emoji, gradient) and a ``FilterCriteria``
 /// instance used to select matching recipes from the local or remote catalogue.
-struct CuratedCollection: Identifiable {
+nonisolated struct CuratedCollection: Identifiable {
     /// Stable identifier for the collection.
     let id: String
     /// Headline shown on the collection card (e.g. `"Quick Weeknight Dinners"`).
@@ -22,7 +22,7 @@ struct CuratedCollection: Identifiable {
 /// Defines the recipe-matching rules for a ``CuratedCollection``.
 ///
 /// All non-`nil` fields act as AND-combined filters; `nil` means no constraint on that axis.
-struct FilterCriteria {
+nonisolated struct FilterCriteria {
     /// Maximum total cook time in minutes a recipe may have to qualify.
     let maxCookTime: Int?
     /// Maximum ingredient count a recipe may have to qualify.

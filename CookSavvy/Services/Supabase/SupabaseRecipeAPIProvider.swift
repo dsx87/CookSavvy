@@ -7,7 +7,7 @@ import Foundation
 
 /// `RecipeAPIProviderProtocol` implementation that calls the `search-recipes` Supabase Edge Function,
 /// enabling AI-powered online recipe search for premium users without exposing backend API keys on device.
-final class SupabaseRecipeAPIProvider: RecipeAPIProviderProtocol, @unchecked Sendable {
+final class SupabaseRecipeAPIProvider: RecipeAPIProviderProtocol {
     /// Identifies this provider in logs and error messages.
     var name: String { "Supabase" }
 
@@ -18,20 +18,16 @@ final class SupabaseRecipeAPIProvider: RecipeAPIProviderProtocol, @unchecked Sen
 
     private let clientProvider: SupabaseClientProviderProtocol
     private let configuration: SupabaseConfiguration
-    private let decoder: JSONDecoder
 
     /// - Parameters:
     ///   - clientProvider: Supabase client used to invoke edge functions.
     ///   - configuration: Used by `isAvailable()` to check whether Supabase credentials are present.
-    ///   - decoder: Pre-configured JSON decoder; defaults to the snake_case decoder from `SupabaseRecipeProviderSupport`.
     init(
         clientProvider: SupabaseClientProviderProtocol,
-        configuration: SupabaseConfiguration = SupabaseConfiguration(),
-        decoder: JSONDecoder = SupabaseRecipeProviderSupport.makeDecoder()
+        configuration: SupabaseConfiguration = SupabaseConfiguration()
     ) {
         self.clientProvider = clientProvider
         self.configuration = configuration
-        self.decoder = decoder
     }
 
     /// Fetches AI-matched recipes from the `search-recipes` edge function for the given ingredients.
@@ -62,7 +58,8 @@ final class SupabaseRecipeAPIProvider: RecipeAPIProviderProtocol, @unchecked Sen
             throw SupabaseRecipeProviderSupport.mapError(error)
         }
 
-        return try SupabaseRecipeProviderSupport.decodeRecipes(from: data, using: decoder)
+        // Decoder created locally (not stored) so the provider holds only Sendable state.
+        return try SupabaseRecipeProviderSupport.decodeRecipes(from: data, using: SupabaseRecipeProviderSupport.makeDecoder())
     }
 
     /// Returns `true` when Supabase is fully configured (URL + anon key present).

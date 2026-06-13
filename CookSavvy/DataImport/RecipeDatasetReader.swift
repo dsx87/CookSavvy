@@ -118,7 +118,7 @@ enum RecipeDatasetReaderError: Error, LocalizedError {
 }
 
 /// Lower-camel JSON record used by the canonical bundled dataset.
-private struct RecipeDatasetDTO: Decodable {
+private nonisolated struct RecipeDatasetDTO: Decodable {
     let title: String
     let ingredients: [Ingredient]
     let instructions: [Recipe.Step]

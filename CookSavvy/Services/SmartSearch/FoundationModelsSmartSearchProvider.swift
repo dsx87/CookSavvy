@@ -3,7 +3,10 @@ import Foundation
 // FoundationModels is only available on iOS 26+. The entire file is guarded so that
 // older deployment targets can weak-link against the framework cleanly.
 #if canImport(FoundationModels)
-import FoundationModels
+// FoundationModels (iOS 26+) is not yet Sendable-audited by Apple; `@preconcurrency` suppresses
+// the Sendable warning for `LanguageModelSession.Response` (read only for its `.content` String).
+// Remove when the framework gains Sendable annotations.
+@preconcurrency import FoundationModels
 
 /// Parses natural-language recipe search queries using Apple's on-device Foundation Models.
 ///
@@ -13,7 +16,10 @@ import FoundationModels
 @available(iOS 26.0, *)
 final class FoundationModelsSmartSearchProvider: SmartSearchProviderProtocol {
 
-    func parse(query: String) async throws -> SmartSearchIntent {
+    // `@concurrent` gives `parse` a fixed (cooperative-pool) executor rather than the caller's
+    // inherited isolation, so the non-Sendable `LanguageModelSession.Response` from `refusal.explanation`
+    // is created and consumed entirely within this method and never crosses an isolation boundary.
+    @concurrent func parse(query: String) async throws -> SmartSearchIntent {
         let session = LanguageModelSession {
             Instructions(
                 """
@@ -62,7 +68,7 @@ private struct SearchQueryDTO {
 // MARK: - DTO → Domain mapping
 
 @available(iOS 26.0, *)
-private extension SmartSearchIntent {
+private nonisolated extension SmartSearchIntent {
     init(from dto: SearchQueryDTO) {
         let ingredientNames = dto.ingredients
             .split(separator: ",")

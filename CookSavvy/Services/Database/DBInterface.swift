@@ -53,7 +53,7 @@ actor DBInterface: DBInterfaceProtocol {
     private let decoder = JSONDecoder()
     
     // MARK: - Logging
-    private static let logger = Logger(
+    private nonisolated static let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "CookSavvy",
         category: "Database"
     )
@@ -72,12 +72,12 @@ actor DBInterface: DBInterfaceProtocol {
 
     /// Shared `SELECT` column list used in every recipe query, aliased under `r`.
     /// Keeping this in one place ensures all queries produce the row shape that `decodeRecipe(from:)` expects.
-    private static let recipeColumns = "r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.additional_info_json, r.source, r.tagline, r.user_rating, r.api_rating, r.author, r.is_user_created, r.emoji, r.cuisine"
+    private nonisolated static let recipeColumns = "r.id, r.title, r.image, r.instructions_json, r.ingredients_json, r.additional_info_json, r.source, r.tagline, r.user_rating, r.api_rating, r.author, r.is_user_created, r.emoji, r.cuisine"
 
     // MARK: - Init
     /// Creates a file-based database in the app's Application Support directory (`CookSavvy/db.sqlite`).
     /// - Throws: A `DatabaseError.initializationError` if the directory cannot be created or schema setup fails.
-    convenience init() throws {
+    init() throws {
         let fileManager = FileManager.default
         let appSupportURL = try fileManager.url(
             for: .applicationSupportDirectory,
@@ -97,7 +97,7 @@ actor DBInterface: DBInterfaceProtocol {
     /// `DBTestHelpers` instance for deterministic ingredient variant delivery. Passing `false`
     /// falls through to the default file-based initialiser.
     /// - Parameter inMemory: Pass `true` to force an in-memory SQLite database.
-    convenience init(inMemory: Bool) throws {
+    init(inMemory: Bool) throws {
         guard inMemory else {
             try self.init()
             return
@@ -113,7 +113,7 @@ actor DBInterface: DBInterfaceProtocol {
 
     /// Creates a file-based database at a specific URL using a `DatabasePool`.
     /// - Parameter databaseURL: File URL for the `.sqlite` database file.
-    convenience init(databaseURL: URL) throws {
+    init(databaseURL: URL) throws {
         var configuration = Configuration()
         configuration.prepareDatabase { db in
             try db.execute(sql: "PRAGMA foreign_keys = ON;")
@@ -150,7 +150,7 @@ actor DBInterface: DBInterfaceProtocol {
     /// **Inline migration**: after creating `cooking_sessions`, the method checks whether the
     /// `ingredients_rescued_json` column exists and runs `ALTER TABLE … ADD COLUMN` if absent.
     /// This pattern allows lightweight schema evolution without a separate migration framework.
-    private func createSchema() throws {
+    private nonisolated func createSchema() throws {
         try dbWriter.write { db in
             // 1. Ingredients
             try db.execute(sql: """
@@ -1364,7 +1364,7 @@ actor DBInterface: DBInterfaceProtocol {
     }
 
     /// Decodes a canonical ingredient row returned by database joins.
-    private static func decodeIngredient(from row: Row) -> Ingredient {
+    private nonisolated static func decodeIngredient(from row: Row) -> Ingredient {
         Ingredient(
             name: row["name"],
             description: row["description"],
@@ -1375,7 +1375,7 @@ actor DBInterface: DBInterfaceProtocol {
     }
 
     /// Resolves an ingredient name to the stored primary-key casing, if it exists.
-    private static func canonicalIngredientName(for name: String, in db: Database) throws -> String? {
+    private nonisolated static func canonicalIngredientName(for name: String, in db: Database) throws -> String? {
         try String.fetchOne(
             db,
             sql: "SELECT name FROM ingredients WHERE name = ? COLLATE NOCASE LIMIT 1;",

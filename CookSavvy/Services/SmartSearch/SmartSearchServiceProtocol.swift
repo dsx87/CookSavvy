@@ -8,7 +8,7 @@ protocol SmartSearchServiceProtocol {
 /// A single AI backend capable of parsing a query into structured intent.
 /// Implementations: `FoundationModelsSmartSearchProvider` (iOS 26, on-device) and
 /// `SupabaseSmartSearchProvider` (Supabase edge function fallback).
-protocol SmartSearchProviderProtocol {
+nonisolated protocol SmartSearchProviderProtocol {
     func parse(query: String) async throws -> SmartSearchIntent
 }
 

@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Using typed constants avoids typo-induced crashes at runtime and makes global symbol
 /// changes easy to apply. Access constants as `Icons.Screen.symbolName`.
-enum Icons {
+nonisolated enum Icons {
 
     /// Icons shared across multiple screens — errors and back navigation.
     enum Common {

@@ -377,7 +377,7 @@ private actor SubscriptionRefreshCoordinator {
     private var task: Task<Void, Never>?
 
     /// Runs `operation`, coalescing any callers that arrive while it is in progress.
-    func run(_ operation: @escaping () async -> Void) async {
+    func run(_ operation: sending @escaping () async -> Void) async {
         if let task {
             await task.value
             return

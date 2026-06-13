@@ -40,13 +40,13 @@ final class SupabaseSmartSearchProvider: SmartSearchProviderProtocol {
 
 // MARK: - Wire types
 
-private struct ParseSearchQueryRequest: Encodable {
+private nonisolated struct ParseSearchQueryRequest: Encodable {
     let query: String
 }
 
 /// Expected response shape from the `parse-search-query` edge function.
 /// All fields use snake_case; `keyDecodingStrategy: .convertFromSnakeCase` handles the mapping.
-private struct ParseSearchQueryResponse: Decodable {
+private nonisolated struct ParseSearchQueryResponse: Decodable {
     let ingredients: [String]
     let mood: String?
     let cookTime: String?
@@ -56,7 +56,7 @@ private struct ParseSearchQueryResponse: Decodable {
 
 // MARK: - Domain mapping
 
-private extension SmartSearchIntent {
+private nonisolated extension SmartSearchIntent {
     init(from response: ParseSearchQueryResponse) {
         let mood: RecipeMood? = switch response.mood?.lowercased() {
         case "cozy": .cozy

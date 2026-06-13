@@ -10,7 +10,7 @@ import Foundation
 /// Provides the current plan, reactive plan updates, feature gating, and
 /// purchase/restore operations. Premium entitlement can be purchased through
 /// monthly or annual `PremiumSubscriptionOption` products.
-protocol SubscriptionServiceProtocol: AnyObject {
+protocol SubscriptionServiceProtocol: AnyObject, Sendable {
     /// The user's full subscription snapshot, including trial state and eligibility.
     var currentSubscriptionStatus: SubscriptionStatus { get }
 
