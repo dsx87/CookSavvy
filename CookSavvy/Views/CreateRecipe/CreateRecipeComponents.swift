@@ -32,6 +32,9 @@ struct StepInputRow: View {
     @Environment(\.appTheme) private var theme
     let index: Int
     @Binding var text: String
+    /// Shared focus state for the wizard's text inputs; lets the keyboard toolbar's Done button
+    /// dismiss this field. A single `Bool` is sufficient — we only need dismiss-all, not field nav.
+    let focused: FocusState<Bool>.Binding
     let canDelete: Bool
     let onDelete: () -> Void
 
@@ -51,6 +54,7 @@ struct StepInputRow: View {
             TextField(String(format: Strings.CreateRecipe.stepPlaceholder, Int64(index + 1)), text: $text, axis: .vertical)
                 .font(UI.Fonts.bodyRounded)
                 .foregroundStyle(theme.text1)
+                .focused(focused)
                 .lineLimit(UI.CreateRecipe.stepTextLineLimit)
                 .padding(UI.CreateRecipe.ingredientInputPadding)
                 .background(theme.surface, in: RoundedRectangle(cornerRadius: UI.CreateRecipe.ingredientInputCornerRadius, style: .continuous))

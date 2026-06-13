@@ -205,7 +205,8 @@ final class CreateRecipeViewModel: ObservableObject {
     /// Builds the `Recipe` model from the current form state and persists it via `UserDataService`.
     /// Sets `didSave` on success or `saveError` on failure.
     func saveRecipe() {
-        guard isCurrentStepValid else { return }
+        // `!isSaving` guards against a double-tap starting a second save (duplicate recipes).
+        guard isCurrentStepValid, !isSaving else { return }
         isSaving = true
         saveError = nil
 
@@ -225,6 +226,11 @@ final class CreateRecipeViewModel: ObservableObject {
     /// Cancels the wizard without saving.
     func dismiss() {
         onDismiss()
+    }
+
+    /// Clears the save error, dismissing the alert.
+    func dismissError() {
+        saveError = nil
     }
 
     // MARK: - Private
