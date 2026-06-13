@@ -319,6 +319,8 @@ struct UI {
         static let dotsSpacing: CGFloat = 6
         static let dotsTopPadding: CGFloat = 24
         static let contentSpacing: CGFloat = 24
+        /// Vertical breathing room around the scrollable step content.
+        static let stepContentVerticalPadding: CGFloat = 24
         static let timerSpacing: CGFloat = 12
         static let navigationSpacing: CGFloat = 16
         static let navigationButtonSize: CGFloat = 56

@@ -10,16 +10,19 @@ import XCTest
 final class CookModeViewModelTests: XCTestCase {
 
     var mockUserDataService: MockUserDataService!
+    var mockIdleTimerService: MockIdleTimerService!
     var dismissCallCount = 0
 
     override func setUp() {
         super.setUp()
         mockUserDataService = MockUserDataService()
+        mockIdleTimerService = MockIdleTimerService()
         dismissCallCount = 0
     }
 
     override func tearDown() {
         mockUserDataService = nil
+        mockIdleTimerService = nil
         super.tearDown()
     }
 
@@ -42,6 +45,7 @@ final class CookModeViewModelTests: XCTestCase {
             userDataService: mockUserDataService,
             analyticsService: MockAnalyticsService(),
             logger: MockLogger(),
+            idleTimerService: mockIdleTimerService,
             onDismiss: { [weak self] in self?.dismissCallCount += 1 }
         )
     }
@@ -52,6 +56,17 @@ final class CookModeViewModelTests: XCTestCase {
         XCTAssertFalse(vm.timerRunning)
         XCTAssertEqual(vm.completedSteps.count, 0)
         XCTAssertFalse(vm.showFeedback)
+    }
+
+    func testBeginAndEndKeepingScreenAwakeTogglesIdleTimer() {
+        let vm = makeViewModel()
+
+        vm.beginKeepingScreenAwake()
+        XCTAssertTrue(mockIdleTimerService.isIdleTimerDisabled)
+
+        vm.endKeepingScreenAwake()
+        XCTAssertFalse(mockIdleTimerService.isIdleTimerDisabled)
+        XCTAssertEqual(mockIdleTimerService.disabledStates, [true, false])
     }
 
     func testGoNextAdvancesStep() {

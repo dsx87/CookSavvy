@@ -139,6 +139,7 @@ final class DiscoverCoordinator: ObservableObject, RecipeDetailsCoordinating, Re
             userDataService: container.userDataService,
             analyticsService: container.analyticsService,
             logger: container.loggingService.makeLogger(category: .cookModeViewModel),
+            idleTimerService: container.idleTimerService,
             onDismiss: { [weak self] in
                 self?.dismissFullScreenCover()
             }

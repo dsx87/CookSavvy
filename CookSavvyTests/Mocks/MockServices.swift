@@ -40,6 +40,20 @@ final class MockLogger: LoggerProtocol {
     }
 }
 
+// MARK: - MockIdleTimerService
+
+/// Records every idle-timer state change so tests can assert the keep-awake pairing
+/// without depending on the real `UIApplication` flag.
+@MainActor
+final class MockIdleTimerService: IdleTimerServiceProtocol {
+    private(set) var disabledStates: [Bool] = []
+    var isIdleTimerDisabled: Bool { disabledStates.last ?? false }
+
+    func setIdleTimerDisabled(_ disabled: Bool) {
+        disabledStates.append(disabled)
+    }
+}
+
 // MARK: - MockDatabaseInitService
 
 final class MockDatabaseInitService: DatabaseInitializationServiceProtocol {

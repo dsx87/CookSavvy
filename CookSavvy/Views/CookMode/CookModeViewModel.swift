@@ -30,6 +30,7 @@ final class CookModeViewModel: ObservableObject {
     private let userDataService: UserDataServiceProtocol
     private let analyticsService: AnalyticsServiceProtocol
     private let logger: any LoggerProtocol
+    private let idleTimerService: IdleTimerServiceProtocol
     private let onDismiss: () -> Void
     private var timerCancellable: AnyCancellable?
     private var startDate: Date?
@@ -41,14 +42,30 @@ final class CookModeViewModel: ObservableObject {
         userDataService: UserDataServiceProtocol,
         analyticsService: AnalyticsServiceProtocol,
         logger: any LoggerProtocol,
+        idleTimerService: IdleTimerServiceProtocol,
         onDismiss: @escaping () -> Void
     ) {
         self.recipe = recipe
         self.userDataService = userDataService
         self.analyticsService = analyticsService
         self.logger = logger
+        self.idleTimerService = idleTimerService
         self.onDismiss = onDismiss
         self.startDate = Date()
+    }
+
+    /// Keeps the screen awake for the duration of the cooking session.
+    ///
+    /// Cook Mode is hands-free, so the system idle timer is disabled while the screen is
+    /// visible and re-enabled when it disappears (see `endKeepingScreenAwake`). The view's
+    /// `onAppear`/`onDisappear` lifecycle is the single source of truth for the balanced pair.
+    func beginKeepingScreenAwake() {
+        idleTimerService.setIdleTimerDisabled(true)
+    }
+
+    /// Re-enables the system idle timer when Cook Mode is no longer on screen.
+    func endKeepingScreenAwake() {
+        idleTimerService.setIdleTimerDisabled(false)
     }
 
     /// Total number of steps in the recipe.
@@ -185,6 +202,10 @@ final class CookModeViewModel: ObservableObject {
                 if self.timerSeconds < timerMin * 60 {
                     self.timerSeconds += 1
                 } else {
+                    // T-035 deferred polish: completion is intentionally silent for now
+                    // (no haptic/sound). The progress ring likewise only advances when a
+                    // step is explicitly marked Done. Both are tracked as non-blocking
+                    // follow-ups on the ticket.
                     self.stopTimer()
                 }
             }

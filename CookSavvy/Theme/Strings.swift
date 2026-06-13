@@ -280,6 +280,7 @@ enum Strings {
         static let howWasIt = String(localized: "cookMode.howWasIt", defaultValue: "How was it?")
         static let submit = String(localized: "cookMode.submit", defaultValue: "Submit")
         static let skipRating = String(localized: "cookMode.skipRating", defaultValue: "Skip")
+        static let timerRemaining = String(localized: "cookMode.timerRemaining", defaultValue: "remaining")
     }
 
     /// Strings for the five-step Create Recipe wizard (name, ingredients, steps, details, review).

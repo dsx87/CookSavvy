@@ -72,6 +72,8 @@ final class AppContainer {
     let curatedCollectionService: CuratedCollectionServiceProtocol
     /// AI natural-language query parser; `nil` when neither on-device nor server-side AI is available.
     let smartSearchService: SmartSearchServiceProtocol?
+    /// Controls the system idle timer so Cook Mode can keep the screen awake while cooking.
+    let idleTimerService: IdleTimerServiceProtocol
 
     // MARK: - Initialization
 
@@ -224,6 +226,7 @@ final class AppContainer {
         )
         self.curatedCollectionService = CuratedCollectionService(dbInterface: db)
         self.smartSearchService = SmartSearchService.makeIfAvailable(clientProvider: supabaseAssembly.clientProvider)
+        self.idleTimerService = IdleTimerService()
     }
 
     #if DEBUG
@@ -253,7 +256,8 @@ final class AppContainer {
         authService: AuthServiceProtocol,
         analyticsService: AnalyticsServiceProtocol = MockAnalyticsService(),
         crashReportingService: CrashReportingServiceProtocol = NoOpCrashReportingService(),
-        signInWithAppleAction: SignInWithAppleActionProtocol? = nil
+        signInWithAppleAction: SignInWithAppleActionProtocol? = nil,
+        idleTimerService: IdleTimerServiceProtocol = IdleTimerService()
     ) {
         self.dbInterface = dbInterface
         self.ingredientsService = ingredientsService
@@ -287,6 +291,7 @@ final class AppContainer {
         )
         self.curatedCollectionService = CuratedCollectionService(dbInterface: dbInterface)
         self.smartSearchService = nil
+        self.idleTimerService = idleTimerService
     }
     #endif
 

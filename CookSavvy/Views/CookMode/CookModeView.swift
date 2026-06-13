@@ -21,9 +21,7 @@ struct CookModeView: View {
             VStack(spacing: 0) {
                 topBar
                 stepProgressDots
-                Spacer()
                 stepContent
-                Spacer()
                 navigationButtons
             }
 
@@ -33,6 +31,10 @@ struct CookModeView: View {
             }
         }
         .animation(reduceMotion ? .none : UI.Anim.easeDefault, value: viewModel.showFeedback)
+        // Cook Mode is hands-free, so keep the screen awake for the whole session and
+        // restore the system idle timer once the screen is dismissed.
+        .onAppear { viewModel.beginKeepingScreenAwake() }
+        .onDisappear { viewModel.endKeepingScreenAwake() }
     }
 
     // MARK: - Top Bar
@@ -104,23 +106,33 @@ struct CookModeView: View {
 
     // MARK: - Step Content
 
-    /// The current step instruction text in a scrollable card.
+    /// The current step instruction text and optional timer in a scrollable card.
+    ///
+    /// A `GeometryReader` + `minHeight` keeps short steps vertically centered (matching the
+    /// previous Spacer-sandwiched look) while letting long steps or large Dynamic Type scroll
+    /// instead of clipping.
     private var stepContent: some View {
-        VStack(spacing: UI.CookMode.contentSpacing) {
-            Text(viewModel.currentStepText)
-                .font(UI.Fonts.stepContent)
-                .foregroundStyle(theme.text1)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, UI.CookMode.horizontalPadding)
-                .id(viewModel.currentStep)
-                .transition(reduceMotion ? .opacity : .asymmetric(
-                    insertion: .move(edge: .trailing).combined(with: .opacity),
-                    removal: .move(edge: .leading).combined(with: .opacity)
-                ))
-                .accessibilityIdentifier(AccessibilityID.CookMode.stepText)
+        GeometryReader { proxy in
+            ScrollView {
+                VStack(spacing: UI.CookMode.contentSpacing) {
+                    Text(viewModel.currentStepText)
+                        .font(UI.Fonts.stepContent)
+                        .foregroundStyle(theme.text1)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, UI.CookMode.horizontalPadding)
+                        .id(viewModel.currentStep)
+                        .transition(reduceMotion ? .opacity : .asymmetric(
+                            insertion: .move(edge: .trailing).combined(with: .opacity),
+                            removal: .move(edge: .leading).combined(with: .opacity)
+                        ))
+                        .accessibilityIdentifier(AccessibilityID.CookMode.stepText)
 
-            if let timerMin = viewModel.currentStepTimer {
-                timerView(minutes: timerMin)
+                    if let timerMin = viewModel.currentStepTimer {
+                        timerView(minutes: timerMin)
+                    }
+                }
+                .frame(maxWidth: .infinity, minHeight: proxy.size.height)
+                .padding(.vertical, UI.CookMode.stepContentVerticalPadding)
             }
         }
     }
@@ -144,7 +156,7 @@ struct CookModeView: View {
                         .font(UI.Fonts.timerDisplay)
                         .foregroundStyle(theme.text1)
                         .accessibilityLabel(String(format: Strings.Accessibility.timerRemaining, viewModel.timerDisplayText()))
-                    Text("minutes")
+                    Text(Strings.CookMode.timerRemaining)
                         .font(UI.Fonts.tinyCaption)
                         .foregroundStyle(theme.text3)
                         .accessibilityHidden(true)
