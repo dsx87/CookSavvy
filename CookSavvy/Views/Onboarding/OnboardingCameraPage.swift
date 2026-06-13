@@ -77,6 +77,12 @@ struct OnboardingCameraPage: View {
                 .font(UI.Fonts.body)
                 .foregroundStyle(.white.opacity(0.82))
                 .multilineTextAlignment(.center)
+
+            // Privacy disclosure: photos are uploaded off-device for AI detection (T-034).
+            Text(Strings.Camera.aiProcessingDisclosure)
+                .font(UI.Fonts.smallCaption)
+                .foregroundStyle(.white.opacity(0.7))
+                .multilineTextAlignment(.center)
         }
         .padding(.horizontal, UI.Onboarding.cameraOverlayPadding)
         .padding(.top, UI.Onboarding.overlayTopPadding)

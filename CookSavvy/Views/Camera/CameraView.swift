@@ -32,7 +32,8 @@ struct CameraView: View {
                 
             case .capturing:
                 CameraCaptureView(onPhotoCaptured: viewModel.photoCaptured)
-                
+                    .overlay(alignment: .top) { disclosureBanner }
+
             case .processing(let image):
                 processingView(image: image)
                 
@@ -48,6 +49,25 @@ struct CameraView: View {
         }
     }
     
+    /// One-line privacy disclosure overlaid on the live preview, informing users that captured
+    /// photos are sent off-device to the AI service for ingredient detection (ticket T-034).
+    /// Top-center placement clears the top-left close button and the bottom-center shutter.
+    private var disclosureBanner: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "info.circle")
+            Text(Strings.Camera.aiProcessingDisclosure)
+        }
+        .font(UI.Fonts.smallCaption)
+        .foregroundColor(.white.opacity(0.8))
+        .multilineTextAlignment(.center)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(.ultraThinMaterial, in: Capsule())
+        .padding(.top, 12)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Strings.Camera.aiProcessingDisclosure)
+    }
+
     /// Full-screen instruction card shown when camera permission is denied or restricted.
     private var permissionDeniedView: some View {
         VStack(spacing: 24) {

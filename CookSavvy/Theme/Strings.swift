@@ -118,6 +118,7 @@ enum Strings {
         static let noIngredientsTitle = String(localized: "camera.noIngredientsTitle", defaultValue: "No Ingredients Found")
         static let noIngredientsSubtitle = String(localized: "camera.noIngredientsSubtitle", defaultValue: "Try taking another photo with ingredients clearly visible")
         static let tryAgain = String(localized: "camera.tryAgain", defaultValue: "Try Again")
+        static let aiProcessingDisclosure = String(localized: "camera.aiProcessingDisclosure", defaultValue: "Photos are processed by our AI service")
     }
 
     /// Strings for the Upgrade / subscription paywall screen.
