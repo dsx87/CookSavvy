@@ -544,6 +544,17 @@
         }
       }
     },
+    "camera.aiProcessingDisclosure" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Photos are processed by our AI service"
+          }
+        }
+      }
+    },
     "camera.detecting" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
