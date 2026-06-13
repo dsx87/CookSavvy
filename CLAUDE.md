@@ -4,7 +4,13 @@ A hobby iOS recipe app that suggests recipes based on user-provided ingredients.
 
 ## Tech Stack
 
-- **Language:** Swift
+- **Language:** Swift 6 — the app target builds in **Swift 6 language mode** with complete
+  data-race safety. The test targets (`CookSavvyTests`, `CookSavvyUITests`) remain Swift 5 mode
+  (strict-concurrency settings still apply as warnings) because every `XCTestCase` subclass hits the
+  `@MainActor`-init-vs-nonisolated-override mismatch under Swift 6; the shipping app is fully Swift 6.
+- **Concurrency:** Approachable Concurrency is on (`SWIFT_APPROACHABLE_CONCURRENCY = YES`,
+  `SWIFT_STRICT_CONCURRENCY = complete`) with **default actor isolation = `MainActor`**
+  (`SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`), set at the project level. See "Concurrency Model" below.
 - **UI Framework:** SwiftUI (UIKit only when absolutely necessary)
 - **Database:** GRDB (SQLite wrapper)
 - **Subscriptions:** StoreKit 2
@@ -57,6 +63,34 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 - Construction is throwing; startup database/container failures render a blocking startup error instead of falling back to in-memory storage
 - Maintains single source of truth for app-wide dependencies
 - TODO: refactor away from singleton pattern
+
+### Concurrency Model
+The app is **`@MainActor` by default** (project-level `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`).
+*Everything is main-actor-isolated unless it says otherwise* — so the work is to push genuinely
+background work explicitly **off** the main actor, not to sprinkle annotations.
+- **UI layer stays on main (the default):** `AppContainer`, all ViewModels, Coordinators. Explicit
+  `@MainActor` on these is redundant (kept for readability).
+- **ViewModels & Coordinators use `@Observable`** (the Observation macro), not `ObservableObject`/
+  `@Published`. Views own them with `@State` and bind via `@Bindable` (passed-in objects); plain
+  `var`/`let` for observe-only. Internal task-handle properties are `@ObservationIgnored`.
+- **Stateful background services are `actor`s** so their work runs off main: `DBInterface` (GRDB SQL +
+  recipe JSON decode + the `recipeCache`, no explicit lock/queue), `ImageService` (disk I/O + ZIP +
+  `UIImage` decode + `imageCache`), and `ImageExtractor` (serialised ZIP reads). Their protocol methods
+  are `async` and callers `await`.
+- **Stateless CPU/IO leaves are `nonisolated`**: `Unarchiver`, the rankers (`RecipeMatchRanker`,
+  `RecipeMoodRanker`). Genuinely heavy off-main work uses `@concurrent` (e.g.
+  `JSONRecipeDatasetReader.readRecipes` decodes the dataset on the cooperative pool;
+  `FoundationModelsSmartSearchProvider.parse`).
+- **Data models are `nonisolated`** (Recipe, Ingredient, CookingSession, SubscriptionStatus, etc.) so
+  the off-main actors can construct/encode/decode them.
+- **Service event streams use `AsyncStream`, not Combine** — Combine is fully removed from the app
+  layer. `AuthServiceProtocol.authStateUpdates`, `SubscriptionServiceProtocol`'s
+  `currentSubscriptionStatusUpdates`/`currentPlanUpdates`, and `SignInWithAppleActionProtocol`'s
+  `isSigningInUpdates` are vended by `AsyncValueBroadcaster<Value>` (`Services/Support/`), a
+  thread-safe `CurrentValueSubject` replacement (sync `value` reads + replay-then-updates streams).
+  Consumers observe via `for await … in` Tasks stored and cancelled in `deinit`.
+- **No GCD / locks for app logic:** prefer actors / structured concurrency. `@preconcurrency import`
+  is used only for not-yet-Sendable Apple SDKs (AVFoundation, FoundationModels), documented inline.
 
 ### Code Duplication Policy
 - **No duplication** — search for existing solutions first
