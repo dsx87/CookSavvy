@@ -54,7 +54,7 @@ final class UserDataService: UserDataServiceProtocol {
     /// - Parameter limit: Maximum number of ingredients to return (default: 10)
     /// - Returns: Array of recent ingredients ordered by last used date
     func getRecentIngredients(limit: Int = UserDataServiceConstants.recentIngredientsLimit) async throws -> [Ingredient] {
-        return try dbInterface.getRecentIngredients(limit: limit)
+        return try await dbInterface.getRecentIngredients(limit: limit)
     }
 
     // TODO: do some cleanup for this flow
@@ -63,12 +63,12 @@ final class UserDataService: UserDataServiceProtocol {
     /// - Returns: Array of popular ingredients ordered by usage count
     func getPopularIngredients(limit: Int = 10) async throws -> [Ingredient] {
         do {
-            let popular = try dbInterface.getPopularIngredients(limit: limit)
+            let popular = try await dbInterface.getPopularIngredients(limit: limit)
             if !popular.isEmpty {
                 return popular
             }
 
-            let fallback = try dbInterface.getAllIngredients(inGroup: nil, limit: max(limit, 20))
+            let fallback = try await dbInterface.getAllIngredients(inGroup: nil, limit: max(limit, 20))
             if !fallback.isEmpty {
                 return fallback
             }
@@ -94,7 +94,7 @@ final class UserDataService: UserDataServiceProtocol {
     /// - Parameter ingredients: Array of ingredients to record
     func recordIngredientUsage(_ ingredients: [Ingredient]) async throws {
         for ingredient in ingredients {
-            try dbInterface.recordIngredientUsage(ingredient)
+            try await dbInterface.recordIngredientUsage(ingredient)
         }
     }
 
@@ -104,22 +104,22 @@ final class UserDataService: UserDataServiceProtocol {
     /// - Parameter limit: Maximum number of recipes to return (default: 20)
     /// - Returns: Array of recent recipes ordered by last viewed date
     func getRecentRecipes(limit: Int = UserDataServiceConstants.recentRecipesLimit) async throws -> [Recipe] {
-        return try dbInterface.getRecentRecipes(limit: limit)
+        return try await dbInterface.getRecentRecipes(limit: limit)
     }
 
     /// Fetches a recipe by its database ID.
     /// - Parameter id: The primary key of the recipe in the database.
     /// - Returns: The matching `Recipe`, or `nil` if none is found.
     func getRecipe(byID id: Int) async throws -> Recipe? {
-        try dbInterface.getRecipe(byID: id)
+        try await dbInterface.getRecipe(byID: id)
     }
 
     /// Records that a recipe was viewed
     /// - Parameter recipe: The recipe that was viewed
     func recordRecipeView(_ recipe: Recipe) async throws {
         // Get the recipe ID from the database by title
-        if let recipeId = try getRecipeId(byTitle: recipe.title) {
-            try dbInterface.recordRecipeView(recipeId)
+        if let recipeId = try await getRecipeId(byTitle: recipe.title) {
+            try await dbInterface.recordRecipeView(recipeId)
         }
     }
 
@@ -128,7 +128,7 @@ final class UserDataService: UserDataServiceProtocol {
     /// Gets all favorite recipes
     /// - Returns: Array of favorite recipes ordered by added date (newest first)
     func getFavorites() async throws -> [Recipe] {
-        return try dbInterface.getFavoriteRecipes()
+        return try await dbInterface.getFavoriteRecipes()
     }
 
     /// Gets saved recipes, combining explicit favorites with user-created recipes.
@@ -136,8 +136,8 @@ final class UserDataService: UserDataServiceProtocol {
     /// User-created recipes are always treated as implicitly saved, so this method merges both
     /// sets and deduplicates by recipe ID to avoid showing the same recipe twice.
     func getSavedRecipes() async throws -> [Recipe] {
-        let favorites = try dbInterface.getFavoriteRecipes()
-        let userRecipes = try dbInterface.getUserCreatedRecipes()
+        let favorites = try await dbInterface.getFavoriteRecipes()
+        let userRecipes = try await dbInterface.getUserCreatedRecipes()
 
         var savedRecipes = favorites
         var seenRecipeIDs = Set(favorites.map(\.id))
@@ -153,24 +153,24 @@ final class UserDataService: UserDataServiceProtocol {
     /// - Parameter recipe: The recipe to toggle
     /// - Returns: True if the recipe is now favorited, false if it was unfavorited
     func toggleFavorite(_ recipe: Recipe) async throws -> Bool {
-        guard let recipeId = try getRecipeId(byTitle: recipe.title) else {
+        guard let recipeId = try await getRecipeId(byTitle: recipe.title) else {
             throw UserDataServiceError.recipeNotFound
         }
 
         if recipe.isUserCreated {
-            if try !dbInterface.isFavorite(recipeId) {
-                try dbInterface.addFavorite(recipeId)
+            if try await !dbInterface.isFavorite(recipeId) {
+                try await dbInterface.addFavorite(recipeId)
             }
             return true
         }
 
-        let isFavorited = try dbInterface.isFavorite(recipeId)
+        let isFavorited = try await dbInterface.isFavorite(recipeId)
 
         if isFavorited {
-            try dbInterface.removeFavorite(recipeId)
+            try await dbInterface.removeFavorite(recipeId)
             return false
         } else {
-            try dbInterface.addFavorite(recipeId)
+            try await dbInterface.addFavorite(recipeId)
             return true
         }
     }
@@ -182,10 +182,10 @@ final class UserDataService: UserDataServiceProtocol {
         if recipe.isUserCreated {
             return true
         }
-        guard let recipeId = try getRecipeId(byTitle: recipe.title) else {
+        guard let recipeId = try await getRecipeId(byTitle: recipe.title) else {
             return false
         }
-        return try dbInterface.isFavorite(recipeId)
+        return try await dbInterface.isFavorite(recipeId)
     }
 
     // MARK: - Recent Searches
@@ -194,13 +194,13 @@ final class UserDataService: UserDataServiceProtocol {
     /// - Parameter limit: Maximum number of searches to return (default: 10)
     /// - Returns: Array of ingredient arrays representing past searches
     func getRecentSearches(limit: Int = UserDataServiceConstants.recentSearchesLimit) async throws -> [[Ingredient]] {
-        return try dbInterface.getRecentSearches(limit: limit)
+        return try await dbInterface.getRecentSearches(limit: limit)
     }
 
     /// Records a search with the given ingredients
     /// - Parameter ingredients: The ingredients that were searched for
     func recordSearch(ingredients: [Ingredient]) async throws {
-        try dbInterface.recordSearch(ingredients: ingredients)
+        try await dbInterface.recordSearch(ingredients: ingredients)
     }
 
     // MARK: - Cooking Sessions
@@ -215,10 +215,10 @@ final class UserDataService: UserDataServiceProtocol {
     ///   - duration: Time spent cooking, if tracked.
     ///   - rating: User's rating (1–5), if provided.
     func markAsCooked(recipe: Recipe, duration: TimeInterval? = nil, rating: Int? = nil) async throws {
-        guard let recipeId = try getRecipeId(byTitle: recipe.title) else {
+        guard let recipeId = try await getRecipeId(byTitle: recipe.title) else {
             throw UserDataServiceError.recipeNotFound
         }
-        try dbInterface.recordCookingSession(
+        try await dbInterface.recordCookingSession(
             recipeId: recipeId,
             date: Date(),
             duration: duration,
@@ -247,7 +247,7 @@ final class UserDataService: UserDataServiceProtocol {
     /// Returns past cooking sessions in reverse chronological order.
     /// - Parameter limit: Maximum number of sessions to return (default: 50).
     func getCookingSessions(limit: Int = UserDataServiceConstants.cookingSessionsLimit) async throws -> [CookingSession] {
-        return try dbInterface.getCookingSessions(limit: limit)
+        return try await dbInterface.getCookingSessions(limit: limit)
     }
 
     /// Returns the dates on which the user cooked something during the current calendar week.
@@ -258,7 +258,7 @@ final class UserDataService: UserDataServiceProtocol {
             return []
         }
         let weekEnd = calendar.date(byAdding: .day, value: UserDataServiceConstants.weekDurationDays, to: weekStart) ?? now
-        return try dbInterface.getCookingSessionDates(from: weekStart, to: weekEnd)
+        return try await dbInterface.getCookingSessionDates(from: weekStart, to: weekEnd)
     }
 
     /// Calculates the user's current consecutive-day cooking streak.
@@ -273,7 +273,7 @@ final class UserDataService: UserDataServiceProtocol {
         let calendar = Calendar.current
         let now = Date()
         let lookbackStart = calendar.date(byAdding: .day, value: -UserDataServiceConstants.streakLookbackDays, to: now) ?? now
-        let dates = try dbInterface.getCookingSessionDates(from: lookbackStart, to: now)
+        let dates = try await dbInterface.getCookingSessionDates(from: lookbackStart, to: now)
 
         let uniqueDays = Set(dates.map { calendar.startOfDay(for: $0) }).sorted(by: >)
         guard !uniqueDays.isEmpty else { return 0 }
@@ -298,41 +298,41 @@ final class UserDataService: UserDataServiceProtocol {
 
     /// Returns the total time the user has spent cooking across all sessions.
     func totalCookingTime() async throws -> TimeInterval {
-        return try dbInterface.getTotalCookingDuration()
+        return try await dbInterface.getTotalCookingDuration()
     }
 
     /// Returns the total number of cooking sessions recorded (all-time).
     func recipesCooked() async throws -> Int {
-        return try dbInterface.getCookingSessionCount()
+        return try await dbInterface.getCookingSessionCount()
     }
 
     // MARK: - User-Created Recipes
 
     /// Returns all recipes created by the user.
     func getUserRecipes() async throws -> [Recipe] {
-        return try dbInterface.getUserCreatedRecipes()
+        return try await dbInterface.getUserCreatedRecipes()
     }
 
     /// Returns the number of recipes the user has created.
     func getUserRecipeCount() async throws -> Int {
-        return try dbInterface.getUserCreatedRecipeCount()
+        return try await dbInterface.getUserCreatedRecipeCount()
     }
 
     /// Returns the count of distinct ingredients the user has cooked with (all-time).
     func getDistinctIngredientsUsedCount() async throws -> Int {
-        return try dbInterface.getDistinctCookedIngredientCount()
+        return try await dbInterface.getDistinctCookedIngredientCount()
     }
 
     /// Returns the number of recipes cooked during the current calendar month.
     func monthlyRecipesCooked() async throws -> Int {
         let (monthStart, monthEnd) = currentMonthRange()
-        return try dbInterface.getCookingSessionCount(from: monthStart, to: monthEnd)
+        return try await dbInterface.getCookingSessionCount(from: monthStart, to: monthEnd)
     }
 
     /// Returns the count of distinct ingredients used in sessions during the current calendar month.
     func monthlyIngredientsRescued() async throws -> Int {
         let (monthStart, monthEnd) = currentMonthRange()
-        return try dbInterface.getDistinctCookedIngredientCount(from: monthStart, to: monthEnd)
+        return try await dbInterface.getDistinctCookedIngredientCount(from: monthStart, to: monthEnd)
     }
 
     /// Returns a premium monthly cooking summary with an approximate savings estimate.
@@ -381,35 +381,35 @@ final class UserDataService: UserDataServiceProtocol {
     /// Inserts a new user-created recipe into the database.
     /// - Parameter recipe: The recipe to save.
     func saveUserRecipe(_ recipe: Recipe) async throws {
-        try dbInterface.insertUserRecipe(recipe)
+        try await dbInterface.insertUserRecipe(recipe)
     }
 
     /// Updates an existing user-created recipe in the database.
     /// - Parameter recipe: The recipe with updated fields.
     func updateUserRecipe(_ recipe: Recipe) async throws {
-        try dbInterface.updateUserRecipe(recipe)
+        try await dbInterface.updateUserRecipe(recipe)
     }
 
     /// Deletes a user-created recipe from the database.
     /// - Parameter recipe: The recipe to delete.
     /// - Throws: `UserDataServiceError.recipeNotFound` if the recipe cannot be located by title.
     func deleteUserRecipe(recipe: Recipe) async throws {
-        guard let recipeId = try getRecipeId(byTitle: recipe.title) else {
+        guard let recipeId = try await getRecipeId(byTitle: recipe.title) else {
             throw UserDataServiceError.recipeNotFound
         }
-        try dbInterface.deleteUserRecipe(recipeId: recipeId)
+        try await dbInterface.deleteUserRecipe(recipeId: recipeId)
     }
 
     // MARK: - Data Management
 
     /// Clears all recent data (ingredients, recipes, searches)
     func clearRecentData() async throws {
-        try dbInterface.clearRecentData()
+        try await dbInterface.clearRecentData()
     }
 
     /// Clears all favorite recipes
     func clearFavorites() async throws {
-        try dbInterface.clearFavorites()
+        try await dbInterface.clearFavorites()
     }
     
     // MARK: - Private Helpers
@@ -417,10 +417,10 @@ final class UserDataService: UserDataServiceProtocol {
     /// Gets the database ID for a recipe by its title
     /// - Parameter title: The recipe title
     /// - Returns: The database ID if found, nil otherwise
-    private func getRecipeId(byTitle title: String) throws -> Int? {
+    private func getRecipeId(byTitle title: String) async throws -> Int? {
         // This requires direct database access - we need to query the recipes table
         // Since DBInterfaceProtocol doesn't expose this, we need to cast to DBInterface
-        return try dbInterface.getRecipeId(byTitle: title)
+        return try await dbInterface.getRecipeId(byTitle: title)
     }
 }
 

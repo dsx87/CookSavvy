@@ -395,7 +395,11 @@ final class AppContainer {
             isAnonymous: !config.isSignedInWithApple
         )
 
-        UITestDataSeeder(db: container.dbInterface).seed(config: config)
+        // Seed deterministic UI-test data off the main actor. `DBInterface` is now an `actor`, so
+        // its writes are `async`; construction stays synchronous (so the SwiftUI `App` entry point
+        // can build the container in `init`) and the seeding is deferred into a `Task`, mirroring
+        // the production deferred-seeding model (`DatabaseInitializationService.startInitialization`).
+        Task { await UITestDataSeeder(db: container.dbInterface).seed(config: config) }
         return container
     }
     #endif

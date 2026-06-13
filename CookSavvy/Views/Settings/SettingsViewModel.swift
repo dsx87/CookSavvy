@@ -378,7 +378,7 @@ final class SettingsViewModel: ObservableObject {
 
     /// Returns the total number of recipes in the local database.
     private func getRecipeCount() async throws -> Int {
-        return try dbInterface.getRecipeCount()
+        return try await dbInterface.getRecipeCount()
     }
 
     /// Returns the count of saved/favourited recipes.

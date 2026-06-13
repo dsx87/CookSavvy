@@ -181,19 +181,29 @@ final class OfflineRecipeSourceTests: XCTestCase {
     // MARK: - Performance Tests
     
     func testFetchRecipesPerformance() throws {
-        // Setup: Insert many recipes
+        // This stays a *synchronous* test method on purpose: `measure`'s closure is synchronous
+        // and `wait(for:)` must pump the run loop so the main-actor fetch `Task` can run. In an
+        // `async` test method `wait(for:)` would block the main actor and deadlock the Task.
+        let source = offlineSource!
+        let db = dbInterface!
         let recipes = Recipe.mocks(count: 100)
-        try dbInterface.insertRecipes(recipes)
-        
         let ingredients = Array(recipes.first!.ingredients.prefix(3))
-        
+
+        // Setup: insert many recipes (awaited synchronously by pumping the run loop).
+        let setup = expectation(description: "Seed recipes")
+        Task {
+            try? await db.insertRecipes(recipes)
+            setup.fulfill()
+        }
+        wait(for: [setup], timeout: 30.0)
+
         measure {
-            let expectation = XCTestExpectation(description: "Fetch recipes")
+            let fetched = expectation(description: "Fetch recipes")
             Task {
-                _ = try? await offlineSource.fetchRecipes(for: ingredients)
-                expectation.fulfill()
+                _ = try? await source.fetchRecipes(for: ingredients)
+                fetched.fulfill()
             }
-            wait(for: [expectation], timeout: 5.0)
+            wait(for: [fetched], timeout: 5.0)
         }
     }
 }

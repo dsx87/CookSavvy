@@ -16,21 +16,21 @@ final class PantryService: PantryServiceProtocol {
 
     /// Fetches all pantry staples.
     func getItems() async throws -> [Ingredient] {
-        try dbInterface.getPantryItems()
+        try await dbInterface.getPantryItems()
     }
 
     /// Adds an ingredient to pantry staples.
     func addItem(_ ingredient: Ingredient) async throws {
-        try dbInterface.addPantryItem(ingredient)
+        try await dbInterface.addPantryItem(ingredient)
     }
 
     /// Removes an ingredient from pantry staples.
     func removeItem(_ ingredient: Ingredient) async throws {
-        try dbInterface.removePantryItem(ingredient)
+        try await dbInterface.removePantryItem(ingredient)
     }
 
     /// Checks pantry membership.
     func contains(_ ingredient: Ingredient) async throws -> Bool {
-        try dbInterface.isPantryItem(ingredient)
+        try await dbInterface.isPantryItem(ingredient)
     }
 }

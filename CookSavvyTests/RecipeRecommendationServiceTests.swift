@@ -46,9 +46,15 @@ final class RecipeRecommendationServiceTests: XCTestCase {
         )
     }
 
-    private func insertRecipes(_ recipes: [Recipe]) throws -> [Int] {
-        try db.insertRecipes(recipes)
-        return try recipes.compactMap { try db.getRecipeId(byTitle: $0.title) }
+    private func insertRecipes(_ recipes: [Recipe]) async throws -> [Int] {
+        try await db.insertRecipes(recipes)
+        var ids: [Int] = []
+        for recipe in recipes {
+            if let id = try await db.getRecipeId(byTitle: recipe.title) {
+                ids.append(id)
+            }
+        }
+        return ids
     }
 
     private var sessionIdCounter = 1
@@ -84,7 +90,7 @@ final class RecipeRecommendationServiceTests: XCTestCase {
     }
 
     func testHighlyRatedSessionsBoostWeight() async throws {
-        let recipeIDs = try insertRecipes([
+        let recipeIDs = try await insertRecipes([
             makeRecipe(title: "Salmon Plate", ingredients: ["salmon", "rice"]),
             makeRecipe(title: "Salmon Noodles", ingredients: ["salmon", "noodle"]),
             makeRecipe(title: "Tofu Bowl", ingredients: ["tofu", "rice"]),
@@ -103,7 +109,7 @@ final class RecipeRecommendationServiceTests: XCTestCase {
     }
 
     func testRecentlyCookedFiltered() async throws {
-        let ids = try insertRecipes([
+        let ids = try await insertRecipes([
             makeRecipe(title: "Chicken Soup", ingredients: ["chicken"]),
             makeRecipe(title: "Chicken Salad", ingredients: ["chicken"])
         ])

@@ -63,7 +63,7 @@ final class DataImportService: DataImportServiceProtocol {
     ///   or any error thrown by the database or dataset reader.
     func ensureRecipesImported() async throws {
         // Check if recipes already exist in database
-        let commonIngredients = try dbInterface.searchIngredients(
+        let commonIngredients = try await dbInterface.searchIngredients(
             matching: DataImportServiceConstants.populationProbe,
             limit: DataImportServiceConstants.populationProbeLimit
         )
@@ -71,7 +71,7 @@ final class DataImportService: DataImportServiceProtocol {
         logger.info("Checking for existing recipes")
 
         if !commonIngredients.isEmpty {
-            let existingRecipes = try dbInterface.getRecipes(
+            let existingRecipes = try await dbInterface.getRecipes(
                 byIngredients: commonIngredients,
                 offset: 0,
                 limit: DataImportServiceConstants.existingRecipeLimit
@@ -97,7 +97,7 @@ final class DataImportService: DataImportServiceProtocol {
 
         logger.info("Parsed \(importedRecipes.count) recipes from JSON dataset")
 
-        try dbInterface.insertRecipes(importedRecipes)
+        try await dbInterface.insertRecipes(importedRecipes)
 
         // Seed the ingredients table from basicComponent values so the ingredient grid
         // shows short canonical names (e.g. "chicken", "olive oil") rather than Food.json entries.
@@ -116,7 +116,7 @@ final class DataImportService: DataImportServiceProtocol {
                 ))
             }
         }
-        try dbInterface.insertIngredients(basicIngredients)
+        try await dbInterface.insertIngredients(basicIngredients)
 
         logger.info("Successfully imported \(importedRecipes.count) recipes and \(basicIngredients.count) unique ingredients to database")
         isRecipesImported = true

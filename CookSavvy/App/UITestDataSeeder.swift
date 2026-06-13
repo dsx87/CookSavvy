@@ -34,27 +34,27 @@ struct UITestDataSeeder {
     /// based on the flags in `config`.
     ///
     /// - Parameter config: The launch-argument configuration that controls what is seeded.
-    func seed(config: UITestConfiguration) {
+    func seed(config: UITestConfiguration) async {
         guard !config.isEmptyDatabase else { return }
 
         do {
             let ingredients = Self.makeIngredients()
-            try db.insertIngredients(ingredients)
+            try await db.insertIngredients(ingredients)
 
             var recipes = Self.makeRecipes(ingredients: ingredients)
             if config.withLargeDataset {
                 recipes.append(contentsOf: Self.makeLargeDatasetRecipes(ingredients: ingredients))
             }
-            try db.insertRecipes(recipes)
+            try await db.insertRecipes(recipes)
 
             if config.withCookingHistory {
-                try seedCookingHistory(recipes: recipes)
+                try await seedCookingHistory(recipes: recipes)
             }
             if config.withFavorites {
-                try seedFavorites(recipes: recipes)
+                try await seedFavorites(recipes: recipes)
             }
             if config.withShoppingItems {
-                try seedShoppingItems(recipes: recipes)
+                try await seedShoppingItems(recipes: recipes)
             }
         } catch {
             assertionFailure("UITestDataSeeder failed: \(error)")
@@ -247,7 +247,7 @@ struct UITestDataSeeder {
     ///
     /// - Parameter recipes: The full recipe set to pull session subjects from (cycled by index).
     /// - Throws: Database write errors.
-    private func seedCookingHistory(recipes: [Recipe]) throws {
+    private func seedCookingHistory(recipes: [Recipe]) async throws {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = .current
         let today = calendar.startOfDay(for: Date())
@@ -256,8 +256,8 @@ struct UITestDataSeeder {
         for (index, dayOffset) in Self.cookingSessionOffsets.enumerated() {
             let date = calendar.date(byAdding: .day, value: dayOffset, to: sessionBase) ?? sessionBase
             let recipe = recipes[index % recipes.count]
-            if let recipeId = try db.getRecipeId(byTitle: recipe.title) {
-                try db.recordCookingSession(
+            if let recipeId = try await db.getRecipeId(byTitle: recipe.title) {
+                try await db.recordCookingSession(
                     recipeId: recipeId,
                     date: date,
                     duration: Self.cookingSessionDurations[index],
@@ -273,10 +273,10 @@ struct UITestDataSeeder {
     ///
     /// - Parameter recipes: The full recipe set.
     /// - Throws: Database write errors.
-    private func seedFavorites(recipes: [Recipe]) throws {
+    private func seedFavorites(recipes: [Recipe]) async throws {
         for recipe in recipes.prefix(2) {
-            if let recipeId = try db.getRecipeId(byTitle: recipe.title) {
-                try db.addFavorite(recipeId)
+            if let recipeId = try await db.getRecipeId(byTitle: recipe.title) {
+                try await db.addFavorite(recipeId)
             }
         }
     }
@@ -287,9 +287,9 @@ struct UITestDataSeeder {
     ///
     /// - Parameter recipes: The full recipe set; uses the first recipe for title attribution.
     /// - Throws: Database write errors.
-    private func seedShoppingItems(recipes: [Recipe]) throws {
+    private func seedShoppingItems(recipes: [Recipe]) async throws {
         guard let firstRecipe = recipes.first else { return }
-        _ = try db.addShoppingItems(["Garlic", "Olive Oil", "Parmesan"], recipeTitle: firstRecipe.title)
+        _ = try await db.addShoppingItems(["Garlic", "Olive Oil", "Parmesan"], recipeTitle: firstRecipe.title)
     }
 }
 #endif

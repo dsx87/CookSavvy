@@ -24,7 +24,7 @@ final class ShoppingListService: ShoppingListServiceProtocol {
     /// - Returns: An array of all current `ShoppingItem` records.
     /// - Throws: A database error if the query fails.
     func getItems() async throws -> [ShoppingItem] {
-        try dbInterface.getShoppingItems()
+        try await dbInterface.getShoppingItems()
     }
 
     /// Bulk-inserts ingredient names as new unchecked shopping items, optionally tagged with a recipe title.
@@ -37,7 +37,7 @@ final class ShoppingListService: ShoppingListServiceProtocol {
     /// - Returns: The newly created `ShoppingItem` records.
     /// - Throws: A database error if the insert fails.
     func addItems(_ names: [String], recipeTitle: String?) async throws -> [ShoppingItem] {
-        try dbInterface.addShoppingItems(names, recipeTitle: recipeTitle)
+        try await dbInterface.addShoppingItems(names, recipeTitle: recipeTitle)
     }
 
     /// Toggles the `isChecked` state of the given item.
@@ -45,19 +45,19 @@ final class ShoppingListService: ShoppingListServiceProtocol {
     /// - Returns: The new checked state of the item.
     /// - Throws: A database error if the update fails.
     func toggleItem(_ item: ShoppingItem) async throws -> Bool {
-        try dbInterface.toggleShoppingItem(id: item.id)
+        try await dbInterface.toggleShoppingItem(id: item.id)
     }
 
     /// Permanently removes a single shopping item.
     /// - Parameter item: The item to remove.
     /// - Throws: A database error if the deletion fails.
     func removeItem(_ item: ShoppingItem) async throws {
-        try dbInterface.removeShoppingItem(id: item.id)
+        try await dbInterface.removeShoppingItem(id: item.id)
     }
 
     /// Deletes all items that are currently marked as checked.
     /// - Throws: A database error if the deletion fails.
     func clearCompleted() async throws {
-        try dbInterface.clearCheckedShoppingItems()
+        try await dbInterface.clearCheckedShoppingItems()
     }
 }

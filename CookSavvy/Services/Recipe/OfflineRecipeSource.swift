@@ -51,7 +51,7 @@ final class OfflineRecipeSource: RecipeSourceProtocol {
         }
         
         do {
-            var recipes = try dbInterface.getRecipes(byIngredients: ingredients, offset: 0, limit: 20)
+            var recipes = try await dbInterface.getRecipes(byIngredients: ingredients, offset: 0, limit: 20)
             
             if recipes.isEmpty {
                 throw RecipeSourceError.noRecipesFound

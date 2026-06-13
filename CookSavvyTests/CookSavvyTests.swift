@@ -21,30 +21,31 @@ final class DBInterfaceTests: XCTestCase {
 //        mockRecipes.removeAll()
     }
 
-    func testInsertionRecipes() throws {
+    func testInsertionRecipes() async throws {
         let mockRecipes = Recipe.mocks(count: 10)
-        try dbInterface.insertRecipes(mockRecipes)
+        try await dbInterface.insertRecipes(mockRecipes)
         let ingredients = mockRecipes.flatMap(\.ingredients)
-        
-        let result = try dbInterface.getRecipes(byIngredients: ingredients, offset: 0, limit: 20)
+
+        let result = try await dbInterface.getRecipes(byIngredients: ingredients, offset: 0, limit: 20)
         XCTAssertEqual(mockRecipes, result, "Not all recipes were extracted")
     }
 
-    func testInsertionIngredients() throws {
+    func testInsertionIngredients() async throws {
         let mockIngredients = Ingredient.mocks(count: 5)
         let names = mockIngredients.map(\.name)
-        try dbInterface.insertIngredients(mockIngredients)
-        let result = try names.map { name in
-            let ingr = try dbInterface.getIngredients(byName: name)
+        try await dbInterface.insertIngredients(mockIngredients)
+        var result: [Ingredient] = []
+        for name in names {
+            let ingr = try await dbInterface.getIngredients(byName: name)
             XCTAssertEqual(ingr.count, 1, "Should be only one component")
-            return try XCTUnwrap(ingr.first, "Empty result")
+            result.append(try XCTUnwrap(ingr.first, "Empty result"))
         }
         XCTAssertEqual(mockIngredients, result, "Not all ingredients were extracted")
     }
     
-    func testGettingRecipes() throws {
+    func testGettingRecipes() async throws {
         let mockRecipes = Recipe.mocks(count: 5)
-        try dbInterface.insertRecipes(mockRecipes)
+        try await dbInterface.insertRecipes(mockRecipes)
         let failableIngredients = [
             Ingredient(name: "Failable name 3"),
             Ingredient(name: "Failable name 2"),
@@ -54,10 +55,10 @@ final class DBInterfaceTests: XCTestCase {
             .flatMap(\.ingredients)
             .randomElements(count: 5)
         
-        let failResult = try dbInterface.getRecipes(byIngredients: failableIngredients, offset: 0, limit: 20)
+        let failResult = try await dbInterface.getRecipes(byIngredients: failableIngredients, offset: 0, limit: 20)
         XCTAssertTrue(failResult.isEmpty, "Should not be results with failable ingredients")
-        
-        let success = try dbInterface.getRecipes(byIngredients: successfullIngredients, offset: 0, limit: 20)
+
+        let success = try await dbInterface.getRecipes(byIngredients: successfullIngredients, offset: 0, limit: 20)
         XCTAssertFalse(success.isEmpty, "the result is empty")
         let allInMocks = Set(success).isSubset(of: Set(mockRecipes))
         XCTAssertTrue(allInMocks, "Some returned recipes were not among the inserted mocks")
@@ -65,15 +66,29 @@ final class DBInterfaceTests: XCTestCase {
     
     func testPerformanceIngredientsInsertion() throws {
         let ingredients = Ingredient.mocks(count: 5000)
+        let db = dbInterface!
+        // `measure`'s closure is synchronous and `DBInterface` is now an actor, so the async
+        // insertion is driven inside the closure via an expectation that awaits the actor hop.
         measure {
-            try? dbInterface.insertIngredients(ingredients)
+            let expectation = expectation(description: "insert ingredients")
+            Task {
+                try? await db.insertIngredients(ingredients)
+                expectation.fulfill()
+            }
+            wait(for: [expectation], timeout: 60)
         }
     }
 
     func testPerformanceRecipesInsertion() throws {
         let recipes = Recipe.mocks(count: 5000)
+        let db = dbInterface!
         measure {
-            try? dbInterface.insertRecipes(recipes)
+            let expectation = expectation(description: "insert recipes")
+            Task {
+                try? await db.insertRecipes(recipes)
+                expectation.fulfill()
+            }
+            wait(for: [expectation], timeout: 60)
         }
     }
 
@@ -87,60 +102,70 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertThrowsError(try DBInterface(databaseURL: directory))
     }
 
-    func testConcurrentRecipeCacheAccessDoesNotCrash() throws {
+    func testConcurrentRecipeCacheAccessDoesNotCrash() async throws {
         let recipes = Recipe.mocks(count: 25)
-        try dbInterface.insertRecipes(recipes)
+        try await dbInterface.insertRecipes(recipes)
         let ingredients = Array(recipes.flatMap(\.ingredients).prefix(20))
-        let lock = NSLock()
-        var errors: [Error] = []
+        let db = dbInterface!
 
-        DispatchQueue.concurrentPerform(iterations: 100) { index in
-            do {
-                if index.isMultiple(of: 3) {
-                    _ = try dbInterface.getAllRecipes(offset: 0, limit: 25)
-                } else if index.isMultiple(of: 5), let id = try dbInterface.getRecipeId(byTitle: recipes[index % recipes.count].title) {
-                    _ = try dbInterface.getRecipe(byID: id)
-                } else {
-                    _ = try dbInterface.getRecipes(byIngredients: ingredients, offset: 0, limit: 25)
+        // `DBInterface` is an actor, so its executor serialises cache access. Fan out 100
+        // overlapping reads through a task group; each hops onto the actor for the read.
+        // The group must complete without crashing or racing, and surface no errors.
+        let errors: [Error] = await withTaskGroup(of: Error?.self) { group in
+            for index in 0..<100 {
+                group.addTask {
+                    do {
+                        if index.isMultiple(of: 3) {
+                            _ = try await db.getAllRecipes(offset: 0, limit: 25)
+                        } else if index.isMultiple(of: 5), let id = try await db.getRecipeId(byTitle: recipes[index % recipes.count].title) {
+                            _ = try await db.getRecipe(byID: id)
+                        } else {
+                            _ = try await db.getRecipes(byIngredients: ingredients, offset: 0, limit: 25)
+                        }
+                        return nil
+                    } catch {
+                        return error
+                    }
                 }
-            } catch {
-                lock.lock()
-                errors.append(error)
-                lock.unlock()
             }
+            var collected: [Error] = []
+            for await result in group where result != nil {
+                collected.append(result!)
+            }
+            return collected
         }
 
         XCTAssertTrue(errors.isEmpty)
     }
 
-    func testGetRecipesWithEmptyIngredientsReturnsEmpty() throws {
-        let result = try dbInterface.getRecipes(byIngredients: [], offset: 0, limit: 20)
+    func testGetRecipesWithEmptyIngredientsReturnsEmpty() async throws {
+        let result = try await dbInterface.getRecipes(byIngredients: [], offset: 0, limit: 20)
         XCTAssertTrue(result.isEmpty, "Expected empty result for empty ingredient query")
     }
 
-    func testDuplicateIngredientVariantsReturnInOrderAndClamp() throws {
+    func testDuplicateIngredientVariantsReturnInOrderAndClamp() async throws {
         // Same name, different metadata to ensure Equatable distinguishes them
         let v1 = Ingredient(name: "Garlic", description: "fresh garlic", pictureFileName: nil, foodGroup: "Vegetables", foodSubgroup: "Alliums")
         let v2 = Ingredient(name: "Garlic", description: "minced garlic", pictureFileName: "garlic.png", foodGroup: "Vegetables", foodSubgroup: "Alliums")
-        try dbInterface.insertIngredients([v1, v2])
+        try await dbInterface.insertIngredients([v1, v2])
 
         // Successive calls should walk through variants and then clamp to last
-        let f1 = try dbInterface.getIngredients(byName: "Garlic")
+        let f1 = try await dbInterface.getIngredients(byName: "Garlic")
         XCTAssertEqual(f1, [v1])
 
-        let f2 = try dbInterface.getIngredients(byName: "Garlic")
+        let f2 = try await dbInterface.getIngredients(byName: "Garlic")
         XCTAssertEqual(f2, [v2])
 
-        let f3 = try dbInterface.getIngredients(byName: "Garlic")
+        let f3 = try await dbInterface.getIngredients(byName: "Garlic")
         XCTAssertEqual(f3, [v2])
     }
 
-    func testGetIngredientsUnknownNameReturnsEmpty() throws {
-        let res = try dbInterface.getIngredients(byName: "__unknown__")
+    func testGetIngredientsUnknownNameReturnsEmpty() async throws {
+        let res = try await dbInterface.getIngredients(byName: "__unknown__")
         XCTAssertTrue(res.isEmpty)
     }
 
-    func testGetRecipesFiltersByProvidedIngredients() throws {
+    func testGetRecipesFiltersByProvidedIngredients() async throws {
         // Build two distinct recipes
         let garlic: Ingredient = "Garlic"
         let onion: Ingredient = "Onion"
@@ -160,20 +185,20 @@ final class DBInterfaceTests: XCTestCase {
             additionalInfo: .mock
         )
 
-        try dbInterface.insertRecipes([r1, r2])
+        try await dbInterface.insertRecipes([r1, r2])
 
         // Query by garlic -> only r1
-        let resGarlic = try dbInterface.getRecipes(byIngredients: [garlic], offset: 0, limit: 20)
+        let resGarlic = try await dbInterface.getRecipes(byIngredients: [garlic], offset: 0, limit: 20)
         XCTAssertEqual(resGarlic.count, 1)
         XCTAssertEqual(resGarlic.first?.title, r1.title)
 
         // Query by onion -> only r2
-        let resOnion = try dbInterface.getRecipes(byIngredients: [onion], offset: 0, limit: 20)
+        let resOnion = try await dbInterface.getRecipes(byIngredients: [onion], offset: 0, limit: 20)
         XCTAssertEqual(resOnion.count, 1)
         XCTAssertEqual(resOnion.first?.title, r2.title)
     }
 
-    func testGetRecipesWithKnownAndUnknownIngredientsStillReturnsMatches() throws {
+    func testGetRecipesWithKnownAndUnknownIngredientsStillReturnsMatches() async throws {
         let known: Ingredient = "Basil"
         let r = Recipe(
             title: "Tomato Basil Pasta",
@@ -182,15 +207,15 @@ final class DBInterfaceTests: XCTestCase {
             image: "tb_pasta",
             additionalInfo: .mock
         )
-        try dbInterface.insertRecipes([r])
+        try await dbInterface.insertRecipes([r])
 
         let unknown = Ingredient(name: "__does_not_exist__")
-        let res = try dbInterface.getRecipes(byIngredients: [unknown, known], offset: 0, limit: 20)
+        let res = try await dbInterface.getRecipes(byIngredients: [unknown, known], offset: 0, limit: 20)
         XCTAssertFalse(res.isEmpty)
         XCTAssertTrue(res.contains { $0.title == r.title })
     }
 
-    func testInsertRecipeWithDuplicateIngredientNames() throws {
+    func testInsertRecipeWithDuplicateIngredientNames() async throws {
         // Duplicate "Lemon" appears twice; linking should deduplicate per recipe
         let lemon: Ingredient = "Lemon"
         let r = Recipe(
@@ -200,69 +225,73 @@ final class DBInterfaceTests: XCTestCase {
             image: "lemonade",
             additionalInfo: .mock
         )
-        try dbInterface.insertRecipes([r])
+        try await dbInterface.insertRecipes([r])
 
         // Query by "Lemon" should find the recipe (and only once)
-        let res = try dbInterface.getRecipes(byIngredients: [lemon], offset: 0, limit: 20)
+        let res = try await dbInterface.getRecipes(byIngredients: [lemon], offset: 0, limit: 20)
         XCTAssertEqual(res.count, 1)
         XCTAssertEqual(res.first?.title, r.title)
     }
 
     // MARK: - Pantry tests
 
-    func testAddAndFetchPantryItems() throws {
+    func testAddAndFetchPantryItems() async throws {
         let salt = Ingredient(name: "Salt", description: nil, pictureFileName: nil, foodGroup: "Spices", foodSubgroup: nil)
         let oliveOil = Ingredient(name: "Olive Oil", description: nil, pictureFileName: nil, foodGroup: "Pantry", foodSubgroup: nil)
-        try dbInterface.insertIngredients([salt, oliveOil])
+        try await dbInterface.insertIngredients([salt, oliveOil])
 
-        try dbInterface.addPantryItem(salt)
-        try dbInterface.addPantryItem(oliveOil)
+        try await dbInterface.addPantryItem(salt)
+        try await dbInterface.addPantryItem(oliveOil)
 
-        let pantryItems = try dbInterface.getPantryItems()
+        let pantryItems = try await dbInterface.getPantryItems()
         XCTAssertEqual(Set(pantryItems.map(\.name)), Set(["Salt", "Olive Oil"]))
-        XCTAssertTrue(try dbInterface.isPantryItem(salt))
+        let isSaltPantryItem = try await dbInterface.isPantryItem(salt)
+        XCTAssertTrue(isSaltPantryItem)
     }
 
-    func testAddPantryItemDedupesCaseInsensitively() throws {
+    func testAddPantryItemDedupesCaseInsensitively() async throws {
         let salt = Ingredient(name: "Salt", description: nil, pictureFileName: nil, foodGroup: "Spices", foodSubgroup: nil)
-        try dbInterface.insertIngredients([salt])
+        try await dbInterface.insertIngredients([salt])
 
-        try dbInterface.addPantryItem(Ingredient(name: "salt"))
-        try dbInterface.addPantryItem(Ingredient(name: "SALT"))
+        try await dbInterface.addPantryItem(Ingredient(name: "salt"))
+        try await dbInterface.addPantryItem(Ingredient(name: "SALT"))
 
-        let pantryItems = try dbInterface.getPantryItems()
+        let pantryItems = try await dbInterface.getPantryItems()
         XCTAssertEqual(pantryItems.map(\.name), ["Salt"])
     }
 
-    func testRemovePantryItem() throws {
+    func testRemovePantryItem() async throws {
         let salt = Ingredient(name: "Salt")
-        try dbInterface.insertIngredients([salt])
-        try dbInterface.addPantryItem(salt)
+        try await dbInterface.insertIngredients([salt])
+        try await dbInterface.addPantryItem(salt)
 
-        try dbInterface.removePantryItem(Ingredient(name: "salt"))
+        try await dbInterface.removePantryItem(Ingredient(name: "salt"))
 
-        XCTAssertFalse(try dbInterface.isPantryItem(salt))
-        XCTAssertTrue(try dbInterface.getPantryItems().isEmpty)
+        let isSaltPantryItem = try await dbInterface.isPantryItem(salt)
+        XCTAssertFalse(isSaltPantryItem)
+        let pantryItems = try await dbInterface.getPantryItems()
+        XCTAssertTrue(pantryItems.isEmpty)
     }
 
-    func testPantryItemsPersistWithinDatabaseInstance() throws {
+    func testPantryItemsPersistWithinDatabaseInstance() async throws {
         let flour = Ingredient(name: "Flour", description: nil, pictureFileName: nil, foodGroup: "Grains", foodSubgroup: nil)
-        try dbInterface.insertIngredients([flour])
-        try dbInterface.addPantryItem(flour)
+        try await dbInterface.insertIngredients([flour])
+        try await dbInterface.addPantryItem(flour)
 
-        let fetched = try dbInterface.getPantryItems()
+        let fetched = try await dbInterface.getPantryItems()
 
         XCTAssertEqual(fetched, [flour])
     }
 
-    func testClearDatabaseRemovesPantryItems() throws {
+    func testClearDatabaseRemovesPantryItems() async throws {
         let sugar = Ingredient(name: "Sugar")
-        try dbInterface.insertIngredients([sugar])
-        try dbInterface.addPantryItem(sugar)
+        try await dbInterface.insertIngredients([sugar])
+        try await dbInterface.addPantryItem(sugar)
 
-        try dbInterface.clearDatabase()
+        try await dbInterface.clearDatabase()
 
-        XCTAssertTrue(try dbInterface.getPantryItems().isEmpty)
+        let pantryItems = try await dbInterface.getPantryItems()
+        XCTAssertTrue(pantryItems.isEmpty)
     }
 
     func testPantryServicePersistsThroughDatabase() async throws {
@@ -281,45 +310,45 @@ final class DBInterfaceTests: XCTestCase {
 
     // MARK: - Removal tests (pending implementation)
 
-    func testRemoveSpecificIngredientByName() throws {
+    func testRemoveSpecificIngredientByName() async throws {
         let garlic: Ingredient = "Garlic"
         let onion: Ingredient = "Onion"
-        try dbInterface.insertIngredients([garlic, onion])
+        try await dbInterface.insertIngredients([garlic, onion])
 
-        try dbInterface.removeIngredient(named: garlic.name)
+        try await dbInterface.removeIngredient(named: garlic.name)
 
-        let resGarlic = try dbInterface.getIngredients(byName: garlic.name)
+        let resGarlic = try await dbInterface.getIngredients(byName: garlic.name)
         XCTAssertTrue(resGarlic.isEmpty)
 
-        let resOnion = try dbInterface.getIngredients(byName: onion.name)
+        let resOnion = try await dbInterface.getIngredients(byName: onion.name)
         XCTAssertEqual(resOnion, [onion])
     }
 
-    func testRemoveAllIngredients() throws {
+    func testRemoveAllIngredients() async throws {
         let ingredients = ["Basil", "Parsley", "Tomato"].map(Ingredient.init(stringLiteral:))
-        try dbInterface.insertIngredients(ingredients)
+        try await dbInterface.insertIngredients(ingredients)
 
-        try dbInterface.removeAllIngredients()
+        try await dbInterface.removeAllIngredients()
 
         for ing in ingredients {
-            let res = try dbInterface.getIngredients(byName: ing.name)
+            let res = try await dbInterface.getIngredients(byName: ing.name)
             XCTAssertTrue(res.isEmpty)
         }
     }
 
-    func testRemoveNonexistentIngredientIsNoop() throws {
+    func testRemoveNonexistentIngredientIsNoop() async throws {
         let ingredients = ["Rice", "Quinoa"].map(Ingredient.init(stringLiteral:))
-        try dbInterface.insertIngredients(ingredients)
+        try await dbInterface.insertIngredients(ingredients)
 
-        try dbInterface.removeIngredients(["__unknown__"])
+        try await dbInterface.removeIngredients(["__unknown__"])
 
         for ing in ingredients {
-            let res = try dbInterface.getIngredients(byName: ing.name)
+            let res = try await dbInterface.getIngredients(byName: ing.name)
             XCTAssertEqual(res, [ing])
         }
     }
 
-    func testRemoveRecipeByTitleOrId() throws {
+    func testRemoveRecipeByTitleOrId() async throws {
         let garlic: Ingredient = "Garlic"
         let basil: Ingredient = "Basil"
         let r1 = Recipe(
@@ -336,29 +365,29 @@ final class DBInterfaceTests: XCTestCase {
             image: "img2",
             additionalInfo: .mock
         )
-        try dbInterface.insertRecipes([r1, r2])
+        try await dbInterface.insertRecipes([r1, r2])
 
-        try dbInterface.removeRecipe(withTitle: r1.title)
+        try await dbInterface.removeRecipe(withTitle: r1.title)
 
-        let resGarlic = try dbInterface.getRecipes(byIngredients: [garlic], offset: 0, limit: 20)
+        let resGarlic = try await dbInterface.getRecipes(byIngredients: [garlic], offset: 0, limit: 20)
         XCTAssertTrue(resGarlic.isEmpty)
 
-        let resBasil = try dbInterface.getRecipes(byIngredients: [basil], offset: 0, limit: 20)
+        let resBasil = try await dbInterface.getRecipes(byIngredients: [basil], offset: 0, limit: 20)
         XCTAssertTrue(resBasil.contains { $0.title == r2.title })
     }
 
-    func testRemoveAllRecipes() throws {
+    func testRemoveAllRecipes() async throws {
         let r = Recipe.mocks(count: 5)
-        try dbInterface.insertRecipes(r)
+        try await dbInterface.insertRecipes(r)
 
-        try dbInterface.removeAllRecipes()
+        try await dbInterface.removeAllRecipes()
 
         let someIngredient = Ingredient(name: "Anything")
-        let res = try dbInterface.getRecipes(byIngredients: [someIngredient], offset: 0, limit: 20)
+        let res = try await dbInterface.getRecipes(byIngredients: [someIngredient], offset: 0, limit: 20)
         XCTAssertTrue(res.isEmpty)
     }
 
-    func testRemoveRecipesByIngredientsCascade() throws {
+    func testRemoveRecipesByIngredientsCascade() async throws {
         let garlic: Ingredient = "Garlic"
         let tomato: Ingredient = "Tomato"
         let r1 = Recipe(
@@ -375,20 +404,20 @@ final class DBInterfaceTests: XCTestCase {
             image: "img",
             additionalInfo: .mock
         )
-        try dbInterface.insertRecipes([r1, r2])
+        try await dbInterface.insertRecipes([r1, r2])
 
-        try dbInterface.removeRecipes(byIngredients: [garlic])
+        try await dbInterface.removeRecipes(byIngredients: [garlic])
 
-        let resGarlic = try dbInterface.getRecipes(byIngredients: [garlic], offset: 0, limit: 20)
+        let resGarlic = try await dbInterface.getRecipes(byIngredients: [garlic], offset: 0, limit: 20)
         XCTAssertTrue(resGarlic.isEmpty)
 
-        let resTomato = try dbInterface.getRecipes(byIngredients: [tomato], offset: 0, limit: 20)
+        let resTomato = try await dbInterface.getRecipes(byIngredients: [tomato], offset: 0, limit: 20)
         XCTAssertTrue(resTomato.contains { $0.title == r2.title })
     }
 
     // MARK: - New searchIngredients API tests
 
-    func testSearchIngredientsReturnsSubstringMatchesCaseInsensitive() throws {
+    func testSearchIngredientsReturnsSubstringMatchesCaseInsensitive() async throws {
         // Fresh DB from setUp
         let items: [Ingredient] = [
             "Chicken",
@@ -397,9 +426,9 @@ final class DBInterfaceTests: XCTestCase {
             "Pasta",
             "Rice"
         ]
-        try dbInterface.insertIngredients(items)
+        try await dbInterface.insertIngredients(items)
 
-        let res = try dbInterface.searchIngredients(matching: "CHICKEN", limit: 10)
+        let res = try await dbInterface.searchIngredients(matching: "CHICKEN", limit: 10)
 
         let names = Set(res.map { $0.name })
         XCTAssertTrue(names.contains("Chicken"))
@@ -409,37 +438,37 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertFalse(names.contains("Rice"))
     }
 
-    func testSearchIngredientsRespectsLimit() throws {
+    func testSearchIngredientsRespectsLimit() async throws {
         let many = (1...10).map { Ingredient(name: "Chicken \($0)") }
-        try dbInterface.insertIngredients(many)
+        try await dbInterface.insertIngredients(many)
 
-        let res = try dbInterface.searchIngredients(matching: "chicken", limit: 3)
+        let res = try await dbInterface.searchIngredients(matching: "chicken", limit: 3)
         XCTAssertEqual(res.count, 3)
         // Ensure all results contain the query (case-insensitive)
         XCTAssertTrue(res.allSatisfy { $0.name.lowercased().contains("chicken") })
     }
 
-    func testSearchIngredientsEmptyQueryReturnsEmpty() throws {
-        let res = try dbInterface.searchIngredients(matching: "", limit: 5)
+    func testSearchIngredientsEmptyQueryReturnsEmpty() async throws {
+        let res = try await dbInterface.searchIngredients(matching: "", limit: 5)
         XCTAssertTrue(res.isEmpty)
     }
 
-    func testSearchIngredientsNoMatchesReturnsEmpty() throws {
-        try dbInterface.insertIngredients(["Pasta", "Rice"])
-        let res = try dbInterface.searchIngredients(matching: "chicken", limit: 10)
+    func testSearchIngredientsNoMatchesReturnsEmpty() async throws {
+        try await dbInterface.insertIngredients(["Pasta", "Rice"])
+        let res = try await dbInterface.searchIngredients(matching: "chicken", limit: 10)
         XCTAssertTrue(res.isEmpty)
     }
 
-    func testGetIngredientsExactMatchIsCaseInsensitive() throws {
-        try dbInterface.insertIngredients(["Chicken"]) // capitalized insert
-        let resLower = try dbInterface.getIngredients(byName: "chicken")
+    func testGetIngredientsExactMatchIsCaseInsensitive() async throws {
+        try await dbInterface.insertIngredients(["Chicken"]) // capitalized insert
+        let resLower = try await dbInterface.getIngredients(byName: "chicken")
         XCTAssertEqual(resLower.count, 1)
         XCTAssertEqual(resLower.first?.name, "Chicken")
     }
 
     // MARK: - basicComponent-based recipe matching tests
 
-    func testGetRecipesMatchesByBasicComponent() throws {
+    func testGetRecipesMatchesByBasicComponent() async throws {
         // "Chicken Breast" has basicComponent "chicken" — querying "chicken" should find it
         let chickenBreast = Ingredient(name: "Chicken Breast", description: nil, pictureFileName: nil,
                                        foodGroup: nil, foodSubgroup: nil, basicComponent: "chicken")
@@ -450,14 +479,14 @@ final class DBInterfaceTests: XCTestCase {
             image: "img",
             additionalInfo: .mock
         )
-        try dbInterface.insertRecipes([r])
+        try await dbInterface.insertRecipes([r])
 
-        let results = try dbInterface.getRecipes(byIngredients: [Ingredient(name: "chicken")], offset: 0, limit: 20)
+        let results = try await dbInterface.getRecipes(byIngredients: [Ingredient(name: "chicken")], offset: 0, limit: 20)
         XCTAssertEqual(results.count, 1)
         XCTAssertEqual(results.first?.title, "Grilled Chicken")
     }
 
-    func testGetRecipesExactBasicComponentMatch() throws {
+    func testGetRecipesExactBasicComponentMatch() async throws {
         // Querying a component not present in the recipe should return nothing
         let chickenBreast = Ingredient(name: "Chicken Breast", description: nil, pictureFileName: nil,
                                        foodGroup: nil, foodSubgroup: nil, basicComponent: "chicken")
@@ -468,19 +497,19 @@ final class DBInterfaceTests: XCTestCase {
             image: "img",
             additionalInfo: .mock
         )
-        try dbInterface.insertRecipes([r])
+        try await dbInterface.insertRecipes([r])
 
         // "breast" is not stored as basic_component — should return nothing
-        let misses = try dbInterface.getRecipes(byIngredients: [Ingredient(name: "breast")], offset: 0, limit: 20)
+        let misses = try await dbInterface.getRecipes(byIngredients: [Ingredient(name: "breast")], offset: 0, limit: 20)
         XCTAssertTrue(misses.isEmpty)
 
         // "chicken" is the stored basic_component — should find the recipe
-        let hits = try dbInterface.getRecipes(byIngredients: [Ingredient(name: "chicken")], offset: 0, limit: 20)
+        let hits = try await dbInterface.getRecipes(byIngredients: [Ingredient(name: "chicken")], offset: 0, limit: 20)
         XCTAssertEqual(hits.count, 1)
         XCTAssertEqual(hits.first?.title, "Stuffed Breast")
     }
 
-    func testGetRecipesBasicComponentMatchIsCaseSensitiveToStoredValue() throws {
+    func testGetRecipesBasicComponentMatchIsCaseSensitiveToStoredValue() async throws {
         // basicComponent stored as-is; querying with the same value must match
         let ingredient = Ingredient(name: "CHICKEN BREAST", description: nil, pictureFileName: nil,
                                     foodGroup: nil, foodSubgroup: nil, basicComponent: "chicken")
@@ -491,13 +520,13 @@ final class DBInterfaceTests: XCTestCase {
             image: "img",
             additionalInfo: .mock
         )
-        try dbInterface.insertRecipes([r])
+        try await dbInterface.insertRecipes([r])
 
-        let results = try dbInterface.getRecipes(byIngredients: [Ingredient(name: "chicken")], offset: 0, limit: 20)
+        let results = try await dbInterface.getRecipes(byIngredients: [Ingredient(name: "chicken")], offset: 0, limit: 20)
         XCTAssertEqual(results.count, 1)
     }
 
-    func testGetRecipesMatchesMultipleBasicComponents() throws {
+    func testGetRecipesMatchesMultipleBasicComponents() async throws {
         let chicken = Ingredient(name: "Chicken Breast", description: nil, pictureFileName: nil,
                                  foodGroup: nil, foodSubgroup: nil, basicComponent: "chicken")
         let tomato = Ingredient(name: "Tomato Sauce", description: nil, pictureFileName: nil,
@@ -509,10 +538,10 @@ final class DBInterfaceTests: XCTestCase {
             image: "img",
             additionalInfo: .mock
         )
-        try dbInterface.insertRecipes([r])
+        try await dbInterface.insertRecipes([r])
 
         // Querying either basicComponent should find the recipe
-        let results = try dbInterface.getRecipes(
+        let results = try await dbInterface.getRecipes(
             byIngredients: [Ingredient(name: "chicken"), Ingredient(name: "tomato")],
             offset: 0, limit: 20
         )
@@ -520,7 +549,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertEqual(results.first?.title, "Chicken Tomato Pasta")
     }
 
-    func testGetRecipesNoBasicComponentMatchReturnsEmpty() throws {
+    func testGetRecipesNoBasicComponentMatchReturnsEmpty() async throws {
         let chicken = Ingredient(name: "Chicken Breast", description: nil, pictureFileName: nil,
                                  foodGroup: nil, foodSubgroup: nil, basicComponent: "chicken")
         let r = Recipe(
@@ -530,14 +559,14 @@ final class DBInterfaceTests: XCTestCase {
             image: "img",
             additionalInfo: .mock
         )
-        try dbInterface.insertRecipes([r])
+        try await dbInterface.insertRecipes([r])
 
         // "beef" is not a basicComponent in this recipe — should return nothing
-        let results = try dbInterface.getRecipes(byIngredients: [Ingredient(name: "beef")], offset: 0, limit: 20)
+        let results = try await dbInterface.getRecipes(byIngredients: [Ingredient(name: "beef")], offset: 0, limit: 20)
         XCTAssertTrue(results.isEmpty)
     }
 
-    func testGetRecipesDistinctResultsNoDuplicates() throws {
+    func testGetRecipesDistinctResultsNoDuplicates() async throws {
         let chicken = Ingredient(name: "Chicken Breast", description: nil, pictureFileName: nil,
                                  foodGroup: nil, foodSubgroup: nil, basicComponent: "chicken")
         let pasta = Ingredient(name: "Pasta", description: nil, pictureFileName: nil,
@@ -549,10 +578,10 @@ final class DBInterfaceTests: XCTestCase {
             image: "img",
             additionalInfo: .mock
         )
-        try dbInterface.insertRecipes([r])
+        try await dbInterface.insertRecipes([r])
 
         // Both basicComponents match — recipe should appear exactly once
-        let results = try dbInterface.getRecipes(
+        let results = try await dbInterface.getRecipes(
             byIngredients: [Ingredient(name: "chicken"), Ingredient(name: "pasta")],
             offset: 0, limit: 20
         )

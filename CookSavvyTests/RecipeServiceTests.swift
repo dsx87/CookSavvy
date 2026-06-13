@@ -55,8 +55,8 @@ final class RecipeServiceTests: XCTestCase {
         dbInterface = try DBInterface(inMemory: true)
     }
     
-    override func tearDownWithError() throws {
-        try dbInterface.clearDatabase()
+    override func tearDown() async throws {
+        try await dbInterface.clearDatabase()
         dbInterface = nil
         recipeService = nil
     }
@@ -158,7 +158,7 @@ final class RecipeServiceTests: XCTestCase {
         _ = try await recipeService.getRecipes(for: ingredients, from: .online)
         
         // Verify recipes were stored
-        let storedRecipes = try recipeService.getStoredRecipes(for: mockRecipes.flatMap(\.ingredients))
+        let storedRecipes = try await recipeService.getStoredRecipes(for: mockRecipes.flatMap(\.ingredients))
         XCTAssertEqual(storedRecipes.count, 2)
     }
     
@@ -185,7 +185,7 @@ final class RecipeServiceTests: XCTestCase {
         _ = try await recipeService.getRecipes(for: ingredients, from: .online)
         
         // Verify recipes were NOT stored
-        let storedRecipes = try recipeService.getStoredRecipes(for: mockRecipes.flatMap(\.ingredients))
+        let storedRecipes = try await recipeService.getStoredRecipes(for: mockRecipes.flatMap(\.ingredients))
         XCTAssertTrue(storedRecipes.isEmpty)
     }
     
@@ -253,26 +253,26 @@ final class RecipeServiceTests: XCTestCase {
     
     // MARK: - Store Recipes Tests
     
-    func testStoreRecipesManually() throws {
+    func testStoreRecipesManually() async throws {
         recipeService = try RecipeService(dbInterface: dbInterface)
-        
+
         let recipes = Recipe.mocks(count: 3)
-        try recipeService.storeRecipes(recipes)
-        
-        let stored = try recipeService.getStoredRecipes(for: recipes.flatMap(\.ingredients))
+        try await recipeService.storeRecipes(recipes)
+
+        let stored = try await recipeService.getStoredRecipes(for: recipes.flatMap(\.ingredients))
         XCTAssertEqual(stored.count, 3)
     }
-    
-    func testStoreEmptyRecipesIsNoop() throws {
+
+    func testStoreEmptyRecipesIsNoop() async throws {
         recipeService = try RecipeService(dbInterface: dbInterface)
-        
+
         // Should not throw
-        try recipeService.storeRecipes([])
+        try await recipeService.storeRecipes([])
     }
-    
-    func testGetStoredRecipes() throws {
+
+    func testGetStoredRecipes() async throws {
         recipeService = try RecipeService(dbInterface: dbInterface)
-        
+
         let chicken: Ingredient = "Chicken"
         let recipe = Recipe(
             title: "Chicken Dish",
@@ -281,18 +281,18 @@ final class RecipeServiceTests: XCTestCase {
             image: "img",
             additionalInfo: .mock
         )
-        
-        try recipeService.storeRecipes([recipe])
-        
-        let stored = try recipeService.getStoredRecipes(for: [chicken])
+
+        try await recipeService.storeRecipes([recipe])
+
+        let stored = try await recipeService.getStoredRecipes(for: [chicken])
         XCTAssertEqual(stored.count, 1)
         XCTAssertEqual(stored.first?.title, "Chicken Dish")
     }
-    
-    func testGetStoredRecipesWithNoMatches() throws {
+
+    func testGetStoredRecipesWithNoMatches() async throws {
         recipeService = try RecipeService(dbInterface: dbInterface)
-        
-        let stored = try recipeService.getStoredRecipes(for: ["NonExistent"])
+
+        let stored = try await recipeService.getStoredRecipes(for: ["NonExistent"])
         XCTAssertTrue(stored.isEmpty)
     }
     
@@ -310,8 +310,8 @@ final class RecipeServiceTests: XCTestCase {
             image: "img",
             additionalInfo: .mock
         )
-        try recipeService.storeRecipes([recipe])
-        
+        try await recipeService.storeRecipes([recipe])
+
         // 2. Fetch from offline source
         let results = try await recipeService.getRecipes(for: [chicken], from: .offline)
         

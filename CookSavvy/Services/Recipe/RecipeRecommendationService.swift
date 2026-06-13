@@ -79,7 +79,7 @@ final class RecipeRecommendationService: RecipeRecommendationServiceProtocol {
                 ? RecommendationConstants.highlyRatedWeight
                 : RecommendationConstants.standardSessionWeight
 
-            for ingredient in try affinityIngredients(from: session) {
+            for ingredient in try await affinityIngredients(from: session) {
                 ingredientCounts[ingredient, default: 0] += weight
             }
         }
@@ -99,7 +99,7 @@ final class RecipeRecommendationService: RecipeRecommendationServiceProtocol {
 
         let affinityKeywords = Array(rankedIngredients.prefix(max(limit, RecommendationConstants.defaultLimit)))
         let recentlyCookedTitles = Set(sessions.prefix(RecommendationConstants.recentSessionWindow).map { $0.recipeTitle.lowercased() })
-        let candidates = try dbInterface.getRecipes(
+        let candidates = try await dbInterface.getRecipes(
             byIngredients: affinityKeywords.map(Ingredient.init(name:)),
             offset: 0,
             limit: RecommendationConstants.candidateLimit
@@ -137,8 +137,8 @@ final class RecipeRecommendationService: RecipeRecommendationServiceProtocol {
     }
 
     /// Uses the session's recipe ingredients when the recipe still exists, falling back to title tokens otherwise.
-    private func affinityIngredients(from session: CookingSession) throws -> Set<String> {
-        if let recipe = try dbInterface.getRecipe(byID: session.recipeId) {
+    private func affinityIngredients(from session: CookingSession) async throws -> Set<String> {
+        if let recipe = try await dbInterface.getRecipe(byID: session.recipeId) {
             return affinityIngredients(from: recipe)
         }
 

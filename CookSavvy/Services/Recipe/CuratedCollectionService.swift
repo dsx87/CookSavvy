@@ -122,9 +122,9 @@ final class CuratedCollectionService: CuratedCollectionServiceProtocol {
 
         let rawRecipes: [Recipe]
         if keywords.isEmpty {
-            rawRecipes = try dbInterface.getAllRecipes(offset: 0, limit: 100)
+            rawRecipes = try await dbInterface.getAllRecipes(offset: 0, limit: 100)
         } else {
-            rawRecipes = try dbInterface.getRecipes(
+            rawRecipes = try await dbInterface.getRecipes(
                 byIngredients: keywords.map { Ingredient(name: $0) },
                 offset: 0,
                 limit: 100

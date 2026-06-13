@@ -40,7 +40,7 @@ import os.log
 ///
 /// **Schema migrations**: `createSchema()` applies lightweight `ALTER TABLE` migrations inline
 /// using a `db.columns(in:).contains(…)` guard. New migrations should follow the same pattern.
-final class DBInterface: DBInterfaceProtocol {
+actor DBInterface: DBInterfaceProtocol {
     // MARK: - DB
     /// GRDB writer providing thread-safe reads and serialised writes.
     /// `DatabasePool` for file-based databases; `DatabaseQueue` for in-memory test databases.
@@ -65,9 +65,8 @@ final class DBInterface: DBInterfaceProtocol {
     
     // MARK: - Recipe caching
     /// In-memory title-keyed recipe cache to avoid repeated JSON decoding for hot recipes.
+    /// Access is serialised by actor isolation (no explicit lock/queue required).
     private var recipeCache: [String: Recipe] = [:]
-    /// Serialises all access to `recipeCache` for thread safety.
-    private let cacheQueue = DispatchQueue(label: "com.cooksavvy.database.recipe-cache")
     /// Maximum number of recipes held in `recipeCache`. Eviction is simple FIFO.
     private let maxRecipeCacheSize = 100
 
@@ -523,34 +522,28 @@ final class DBInterface: DBInterfaceProtocol {
     
     /// Stores a recipe in the cache, evicting the oldest entry (FIFO) when the limit is reached.
     private func cacheRecipe(_ recipe: Recipe) {
-        cacheQueue.sync {
-            // Enforce cache size limit with simple FIFO
-            if recipeCache.count >= maxRecipeCacheSize {
-                if let firstKey = recipeCache.keys.first {
-                    recipeCache.removeValue(forKey: firstKey)
-                }
+        // Enforce cache size limit with simple FIFO. Actor isolation serialises access.
+        if recipeCache.count >= maxRecipeCacheSize {
+            if let firstKey = recipeCache.keys.first {
+                recipeCache.removeValue(forKey: firstKey)
             }
-            recipeCache[recipe.title] = recipe
         }
+        recipeCache[recipe.title] = recipe
     }
 
-    /// Thread-safe read from `recipeCache` keyed by recipe title.
+    /// Reads from `recipeCache` keyed by recipe title (serialised by actor isolation).
     private func cachedRecipe(forTitle title: String) -> Recipe? {
-        cacheQueue.sync { recipeCache[title] }
+        recipeCache[title]
     }
 
     /// Removes all entries from `recipeCache`.
     private func clearRecipeCache() {
-        cacheQueue.sync {
-            recipeCache.removeAll()
-        }
+        recipeCache.removeAll()
     }
 
     /// Removes a single recipe from `recipeCache` by title; called after update and delete operations.
     private func removeCachedRecipe(forTitle title: String) {
-        cacheQueue.sync {
-            _ = recipeCache.removeValue(forKey: title)
-        }
+        _ = recipeCache.removeValue(forKey: title)
     }
 
     /// Inserts or replaces a batch of ingredients using `INSERT OR REPLACE`.

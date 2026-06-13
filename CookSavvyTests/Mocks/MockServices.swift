@@ -146,11 +146,11 @@ final class MockRecipeService: RecipeServiceProtocol {
         stubbedAvailableSources
     }
 
-    func storeRecipes(_ recipes: [Recipe]) throws {
+    func storeRecipes(_ recipes: [Recipe]) async throws {
         if let error = shouldThrow { throw error }
     }
 
-    func getStoredRecipes(for ingredients: [Ingredient]) throws -> [Recipe] {
+    func getStoredRecipes(for ingredients: [Ingredient]) async throws -> [Recipe] {
         if let error = shouldThrow { throw error }
         return stubbedStoredRecipes
     }

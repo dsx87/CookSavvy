@@ -26,13 +26,13 @@ protocol RecipeServiceProtocol: AnyObject {
     /// Persists recipes directly into the local database cache.
     /// - Parameter recipes: Recipes to insert or replace.
     /// - Throws: `RecipeSourceError.databaseError` if the write fails.
-    func storeRecipes(_ recipes: [Recipe]) throws
+    func storeRecipes(_ recipes: [Recipe]) async throws
 
     /// Retrieves ingredient-matched recipes directly from the local database, bypassing any remote source.
     /// - Parameter ingredients: Ingredients to match against stored recipes.
     /// - Returns: Up to 20 recipes ordered by match quality.
     /// - Throws: `RecipeSourceError.databaseError` if the read fails.
-    func getStoredRecipes(for ingredients: [Ingredient]) throws -> [Recipe]
+    func getStoredRecipes(for ingredients: [Ingredient]) async throws -> [Recipe]
 
     /// Fetches all locally-stored recipes without an ingredient constraint, for ingredient-free browse searches.
     /// - Parameter limit: Maximum number of recipes to return.

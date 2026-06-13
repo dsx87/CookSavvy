@@ -73,7 +73,7 @@ final class IngredientsService: IngredientsServiceProtocol {
         guard !query.isEmpty else { return [] }
 
         do {
-            let ingredients = try dbInterface.searchIngredients(matching: query, limit: limit)
+            let ingredients = try await dbInterface.searchIngredients(matching: query, limit: limit)
             return ingredients.map { $0.name }
         } catch {
             throw IngredientsServiceError.searchFailed(error)
@@ -94,7 +94,7 @@ final class IngredientsService: IngredientsServiceProtocol {
         guard !query.isEmpty else { return [] }
 
         do {
-            return try dbInterface.searchIngredients(matching: query, limit: limit)
+            return try await dbInterface.searchIngredients(matching: query, limit: limit)
         } catch {
             throw IngredientsServiceError.searchFailed(error)
         }
@@ -110,7 +110,7 @@ final class IngredientsService: IngredientsServiceProtocol {
         }
 
         do {
-            let results = try dbInterface.getIngredients(byName: name)
+            let results = try await dbInterface.getIngredients(byName: name)
             return results.first
         } catch {
             throw IngredientsServiceError.retrievalFailed(error)
@@ -137,20 +137,20 @@ final class IngredientsService: IngredientsServiceProtocol {
 
         do {
             if let category {
-                let groups = try dbInterface.getDistinctFoodGroups()
+                let groups = try await dbInterface.getDistinctFoodGroups()
                 let matchingGroups = groups.filter { group in
                     let testIngredient = Ingredient(name: "", description: nil, pictureFileName: nil, foodGroup: group, foodSubgroup: nil)
                     return testIngredient.category == category
                 }
                 var results: [Ingredient] = []
                 for group in matchingGroups {
-                    let batch = try dbInterface.getAllIngredients(inGroup: group, limit: limit - results.count)
+                    let batch = try await dbInterface.getAllIngredients(inGroup: group, limit: limit - results.count)
                     results.append(contentsOf: batch)
                     if results.count >= limit { break }
                 }
                 return Array(results.prefix(limit))
             } else {
-                return try dbInterface.getAllIngredients(inGroup: nil, limit: limit)
+                return try await dbInterface.getAllIngredients(inGroup: nil, limit: limit)
             }
         } catch {
             throw IngredientsServiceError.searchFailed(error)
@@ -171,7 +171,7 @@ final class IngredientsService: IngredientsServiceProtocol {
         }
 
         do {
-            let groups = try dbInterface.getDistinctFoodGroups()
+            let groups = try await dbInterface.getDistinctFoodGroups()
             let categories = Set(groups.map { group -> IngredientCategory in
                 let testIngredient = Ingredient(name: "", description: nil, pictureFileName: nil, foodGroup: group, foodSubgroup: nil)
                 return testIngredient.category

@@ -111,7 +111,7 @@ final class RecipeService: RecipeServiceProtocol {
         
         // Store recipes in database if enabled (skip offline — already in DB)
         if shouldStoreRecipes && sourceType != .offline && !recipes.isEmpty {
-            try storeRecipes(recipes)
+            try await storeRecipes(recipes)
         }
         
         return recipes
@@ -144,11 +144,11 @@ final class RecipeService: RecipeServiceProtocol {
     /// Manually stores recipes in the database
     /// - Parameter recipes: Recipes to store
     /// - Throws: RecipeSourceError if storage fails
-    func storeRecipes(_ recipes: [Recipe]) throws {
+    func storeRecipes(_ recipes: [Recipe]) async throws {
         guard !recipes.isEmpty else { return }
-        
+
         do {
-            try dbInterface.insertRecipes(recipes)
+            try await dbInterface.insertRecipes(recipes)
         } catch {
             throw RecipeSourceError.databaseError(error)
         }
@@ -158,9 +158,9 @@ final class RecipeService: RecipeServiceProtocol {
     /// - Parameter ingredients: List of ingredients to search for
     /// - Returns: Array of matching recipes from the database
     /// - Throws: RecipeSourceError if retrieval fails
-    func getStoredRecipes(for ingredients: [Ingredient]) throws -> [Recipe] {
+    func getStoredRecipes(for ingredients: [Ingredient]) async throws -> [Recipe] {
         do {
-            return try dbInterface.getRecipes(byIngredients: ingredients, offset: 0, limit: 20)
+            return try await dbInterface.getRecipes(byIngredients: ingredients, offset: 0, limit: 20)
         } catch {
             throw RecipeSourceError.databaseError(error)
         }
@@ -208,7 +208,7 @@ final class RecipeService: RecipeServiceProtocol {
             let nonOfflineRecipes = allRecipes.filter { $0.source != .offline }
             if !nonOfflineRecipes.isEmpty {
                 do {
-                    try storeRecipes(nonOfflineRecipes)
+                    try await storeRecipes(nonOfflineRecipes)
                 } catch {
                     logger.warning("Failed to cache recipes: \(error)")
                 }
@@ -220,7 +220,7 @@ final class RecipeService: RecipeServiceProtocol {
 
     func getAllRecipes(limit: Int) async throws -> [Recipe] {
         do {
-            return try dbInterface.getAllRecipes(offset: 0, limit: limit)
+            return try await dbInterface.getAllRecipes(offset: 0, limit: limit)
         } catch {
             throw RecipeSourceError.databaseError(error)
         }
