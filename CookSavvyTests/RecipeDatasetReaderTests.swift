@@ -27,29 +27,37 @@ final class RecipeDatasetReaderTests: XCTestCase {
         XCTAssertTrue(reader.canReadDataset(at: zipURL))
     }
 
-    func testReaderRejectsNonZipArchive() throws {
+    func testReaderRejectsNonZipArchive() async throws {
         let directory = try makeTemporaryDirectory()
         let url = directory.appendingPathComponent("dataset.txt")
         try Data("not a zip".utf8).write(to: url)
         let reader = JSONRecipeDatasetReader()
 
         XCTAssertFalse(reader.canReadDataset(at: url))
-        XCTAssertThrowsError(try reader.readRecipes(from: url))
+        do {
+            _ = try await reader.readRecipes(from: url)
+            XCTFail("Expected readRecipes to throw for a non-zip archive")
+        } catch {
+            // Expected
+        }
     }
 
-    func testReaderRejectsZipWithoutRecipesJSON() throws {
+    func testReaderRejectsZipWithoutRecipesJSON() async throws {
         let zipURL = try makeDatasetZip(recipeJSON: nil)
         let reader = JSONRecipeDatasetReader()
 
         XCTAssertFalse(reader.canReadDataset(at: zipURL))
-        XCTAssertThrowsError(try reader.readRecipes(from: zipURL)) { error in
+        do {
+            _ = try await reader.readRecipes(from: zipURL)
+            XCTFail("Expected readRecipes to throw when recipes.json is missing")
+        } catch {
             XCTAssertTrue(error is RecipeDatasetReaderError)
         }
     }
 
-    func testReaderDecodesStructuredRecipeJSONAndPreservesImagePath() throws {
+    func testReaderDecodesStructuredRecipeJSONAndPreservesImagePath() async throws {
         let zipURL = try makeDatasetZip(recipeJSON: makeRecipeJSONArray())
-        let recipes = try JSONRecipeDatasetReader().readRecipes(from: zipURL)
+        let recipes = try await JSONRecipeDatasetReader().readRecipes(from: zipURL)
 
         XCTAssertEqual(recipes.count, 1)
         let recipe = try XCTUnwrap(recipes.first)
@@ -60,7 +68,7 @@ final class RecipeDatasetReaderTests: XCTestCase {
         XCTAssertEqual(recipe.source, .offline)
     }
 
-    func testReaderReportsDecodeErrorForInvalidJSON() throws {
+    func testReaderReportsDecodeErrorForInvalidJSON() async throws {
         let json = """
         [
           {
@@ -73,7 +81,10 @@ final class RecipeDatasetReaderTests: XCTestCase {
         """
         let zipURL = try makeDatasetZip(recipeJSON: json)
 
-        XCTAssertThrowsError(try JSONRecipeDatasetReader().readRecipes(from: zipURL)) { error in
+        do {
+            _ = try await JSONRecipeDatasetReader().readRecipes(from: zipURL)
+            XCTFail("Expected readRecipes to throw a decoding error")
+        } catch {
             guard case RecipeDatasetReaderError.decodingFailed(let underlying) = error else {
                 return XCTFail("Expected decodingFailed, got \(error)")
             }

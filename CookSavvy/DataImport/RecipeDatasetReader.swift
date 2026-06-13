@@ -9,11 +9,16 @@ import Foundation
 import ZIPFoundation
 
 /// Reads the bundled offline recipe dataset and converts archive contents into app models.
-protocol RecipeDatasetReading {
+///
+/// `Sendable` so a reader can be handed to the `@concurrent` `readRecipes` execution.
+protocol RecipeDatasetReading: Sendable {
     /// Returns `true` when the URL points to a ZIP archive containing `recipes.json`.
     func canReadDataset(at url: URL) -> Bool
     /// Extracts and decodes every recipe from the archive's `recipes.json` entry.
-    func readRecipes(from zipURL: URL) throws -> [Recipe]
+    ///
+    /// `async` and offloaded: decoding the full dataset (potentially thousands of recipes) runs
+    /// off the main actor so first-launch import does not block the UI.
+    func readRecipes(from zipURL: URL) async throws -> [Recipe]
 }
 
 /// ZIP-backed reader for the canonical bundled JSON recipe dataset.
@@ -21,18 +26,15 @@ protocol RecipeDatasetReading {
 /// The archive stores a root `recipes.json` file plus image assets under nested paths such as
 /// `images/example.jpg`. The reader owns only recipe decoding; image extraction remains lazy in
 /// `ImageService`, using the image paths preserved on each decoded recipe.
-final class JSONRecipeDatasetReader: RecipeDatasetReading {
+nonisolated final class JSONRecipeDatasetReader: RecipeDatasetReading {
     private enum Constants {
         static let recipeFileName = "recipes.json"
         static let zipExtension = "zip"
     }
 
-    private let decoder: JSONDecoder
-
-    /// Creates a JSON dataset reader with an injectable decoder for focused tests.
-    init(decoder: JSONDecoder = JSONDecoder()) {
-        self.decoder = decoder
-    }
+    /// Stateless: holds no stored properties so the reader is `Sendable` and can be handed to the
+    /// `@concurrent` `readRecipes` execution. The decoder is created locally per decode.
+    init() {}
 
     func canReadDataset(at url: URL) -> Bool {
         guard url.pathExtension.lowercased() == Constants.zipExtension,
@@ -43,7 +45,7 @@ final class JSONRecipeDatasetReader: RecipeDatasetReading {
         return recipeEntry(in: archive) != nil
     }
 
-    func readRecipes(from zipURL: URL) throws -> [Recipe] {
+    @concurrent func readRecipes(from zipURL: URL) async throws -> [Recipe] {
         guard zipURL.pathExtension.lowercased() == Constants.zipExtension,
               let archive = Archive(url: zipURL, accessMode: .read) else {
             throw RecipeDatasetReaderError.invalidArchive
@@ -82,6 +84,7 @@ final class JSONRecipeDatasetReader: RecipeDatasetReading {
     /// Decodes the canonical lower-camel dataset DTO from `recipes.json`.
     private func decodeRecipes(from data: Data) throws -> [Recipe] {
         do {
+            let decoder = JSONDecoder()
             return try decoder.decode([RecipeDatasetDTO].self, from: data).map { $0.recipe }
         } catch {
             throw RecipeDatasetReaderError.decodingFailed(error)

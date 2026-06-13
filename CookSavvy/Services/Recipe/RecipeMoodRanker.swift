@@ -71,7 +71,12 @@ enum RecipeMood: Int, CaseIterable, Identifiable {
 /// All keyword lists, score weights, and cook-time ranges are centralised in the private
 /// `Keywords`, `Score`, and `CookTimeRange` enums so changes to the ranking logic
 /// are confined to those namespaces.
-enum RecipeMoodRanker {
+///
+/// `nonisolated` (not pinned to the main actor by default isolation): a pure, stateless scoring
+/// utility. Its `score`/`rank` entry points stay synchronous because they are consumed from
+/// synchronous contexts (`RecipeMatchRanker`'s sort key, `sorted(by:)` comparators) that cannot
+/// `await`.
+nonisolated enum RecipeMoodRanker {
     /// Groups a keyword list with a per-match point value.
     private struct MoodProfile {
         let keywordGroups: [KeywordGroup]

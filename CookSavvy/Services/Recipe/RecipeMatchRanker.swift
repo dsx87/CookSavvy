@@ -3,7 +3,12 @@ import Foundation
 /// Stateless comparator that ranks recipes by ingredient match quality and user-friendly tie-breakers.
 ///
 /// Ingredient coverage stays primary, while mood only refines otherwise comparable matches.
-enum RecipeMatchRanker {
+///
+/// `nonisolated` (not pinned to the main actor by default isolation): a pure value-in/value-out
+/// utility. Its entry points are synchronous because they are consumed from synchronous contexts —
+/// `DiscoverViewModel.filteredRecipes` (a computed property) and `sorted(by:)` comparators — that
+/// cannot `await`. The ranked sets are small (search results), so the work is negligible.
+nonisolated enum RecipeMatchRanker {
     private struct SortKey {
         let coverageRatio: Double
         let missingCount: Int

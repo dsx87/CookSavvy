@@ -93,7 +93,7 @@ final class DataImportService: DataImportServiceProtocol {
             throw DataImportError.datasetNotFound
         }
 
-        let importedRecipes = try datasetReader.readRecipes(from: zipURL)
+        let importedRecipes = try await datasetReader.readRecipes(from: zipURL)
 
         logger.info("Parsed \(importedRecipes.count) recipes from JSON dataset")
 
