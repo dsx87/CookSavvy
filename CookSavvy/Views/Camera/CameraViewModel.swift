@@ -142,9 +142,11 @@ final class CameraViewModel: ObservableObject {
             state = .noIngredientsFound
         } catch {
             state = .error(error.localizedDescription)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-                self?.onDismiss()
-            }
+            // Briefly show the error, then auto-dismiss. The wait is a non-blocking suspension;
+            // the dismissal runs on the main actor (this method's isolation).
+            try? await Task.sleep(for: .seconds(2))
+            guard !Task.isCancelled else { return }
+            onDismiss()
         }
     }
 }

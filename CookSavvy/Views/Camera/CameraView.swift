@@ -4,7 +4,10 @@
 //
 
 import SwiftUI
-import AVFoundation
+// AVFoundation is not yet Sendable-audited by Apple. `@preconcurrency` suppresses the
+// Sendable warnings for its types (AVCaptureSession etc.), which are safe to use across the
+// capture-session start/stop calls below. Remove when AVFoundation gains Sendable annotations.
+@preconcurrency import AVFoundation
 
 /// Camera screen for AI ingredient detection.
 ///
@@ -311,7 +314,8 @@ final class CameraCaptureViewController: UIViewController {
         self.photoOutput = output
         self.previewLayer = previewLayer
         
-        DispatchQueue.global(qos: .userInitiated).async {
+        // `startRunning()` blocks until the session starts and must run off the main actor.
+        Task { @concurrent in
             session.startRunning()
         }
     }
@@ -373,7 +377,9 @@ extension CameraCaptureViewController: AVCapturePhotoCaptureDelegate {
             return
         }
         
-        DispatchQueue.main.async { [weak self] in
+        // The AVFoundation delegate callback arrives off the main actor; hop back to deliver the
+        // image to the main-actor `onPhotoCaptured` handler.
+        Task { @MainActor [weak self] in
             self?.onPhotoCaptured?(image)
         }
     }
