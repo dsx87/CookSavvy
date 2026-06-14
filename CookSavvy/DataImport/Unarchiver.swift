@@ -12,7 +12,9 @@ import ZIPFoundation
 ///
 /// Stateless and `nonisolated`: its methods run synchronously on the caller's executor, so the
 /// blocking ZIP/disk work stays off the main actor when invoked from the `ImageExtractor` actor
-/// or from `DataImportService`'s `@concurrent` import path.
+/// (its only caller). Each extraction writes to a unique temporary file, so the type is safe to
+/// call concurrently as its `nonisolated` annotation implies — it relies on no caller-side
+/// serialisation.
 nonisolated final class Unarchiver {
     
     /// Errors thrown by ``Unarchiver`` operations.
@@ -33,15 +35,19 @@ nonisolated final class Unarchiver {
     /// - Throws: ``UnarchiverError`` if the archive or entry cannot be accessed.
     func extract(file filename: String, fromZipFileUrl zipUrl: URL) throws -> Data {
         let destinationURL = try extractAndSave(file: filename, fromZipFileUrl: zipUrl)
+        // The extracted file is only needed to read its bytes; remove it afterwards so the unique
+        // per-extraction temp files do not accumulate in the temporary directory.
+        defer { try? FileManager.default.removeItem(at: destinationURL) }
         let data = try Data(contentsOf: destinationURL)
         return data
     }
     
-    /// Extracts a named file from a ZIP archive, saves it to the system's temporary directory,
-    /// and returns its location on disk.
+    /// Extracts a named file from a ZIP archive, saves it to a unique file in the system's temporary
+    /// directory, and returns its location on disk.
     ///
-    /// Any existing file at the destination path is removed before extraction to prevent
-    /// stale data from a prior run.
+    /// A unique per-extraction filename is used so concurrent extractions never collide on a shared
+    /// path. The caller owns the returned file and is responsible for removing it when done — see
+    /// ``extract(file:fromZipFileUrl:)``, which deletes it after reading its bytes.
     ///
     /// - Parameters:
     ///   - filename: The exact entry name inside the archive.
@@ -53,28 +59,25 @@ nonisolated final class Unarchiver {
         guard fileManager.fileExists(atPath: zipUrl.path) else {
             throw UnarchiverError.zipFileNotFound
         }
-        
+
         let temporaryDirectory = fileManager.temporaryDirectory
-        
+
         let archive = try Archive(url: URL(filePath: zipUrl.path),
                                   accessMode: .read)
-        
+
         guard let entry = archive[filename] else {
             throw UnarchiverError.fileNotFoundInZipArchive
         }
-        
-        let destinationURL = temporaryDirectory.appendingPathComponent("tmp")
-        
-        if fileManager.fileExists(atPath: destinationURL.path) {
-            try fileManager.removeItem(at: destinationURL)
-        }
-        
+
+        // Unique destination per call so concurrent extractions cannot overwrite each other's output.
+        let destinationURL = temporaryDirectory.appendingPathComponent("unarchiver-\(UUID().uuidString)")
+
         _ = try archive.extract(entry, to: destinationURL)
-        
+
         guard fileManager.fileExists(atPath: destinationURL.path) else {
             throw UnarchiverError.fileNotExtracted
         }
-        
+
         return destinationURL
     }
     

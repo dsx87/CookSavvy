@@ -56,7 +56,7 @@ private enum CreateRecipeViewModelConstants {
         "🥕", "🌽", "🥦", "🍆", "🫑", "🍄", "🥥", "🍋"
     ]
 
-    // MARK: - Published State
+    // MARK: - Observable State
 
     /// The wizard page currently displayed.
     var currentStep: WizardStep = .nameAndPhoto

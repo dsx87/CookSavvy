@@ -17,6 +17,7 @@ CookSavvyTests/
 ├── SupabaseConfigurationTests.swift
 ├── SupabaseProviderTests.swift
 ├── SupabaseServiceAssemblyTests.swift
+├── AsyncValueBroadcasterTests.swift     — AsyncValueBroadcaster replay/fan-out/ordering (Combine→AsyncStream primitive)
 ├── CookSavvyTests.swift                — DBInterface integration tests
 ├── IngredientsServiceTests.swift
 ├── RecipeServiceTests.swift

@@ -30,7 +30,7 @@ protocol RecipeDetailsCoordinating: AnyObject {
 /// Delegates navigation (Cook Mode, Shopping List, Upgrade) to a `RecipeDetailsCoordinating` coordinator.
 @MainActor
 @Observable final class RecipeDetailsViewModel {
-    // MARK: - Published Properties
+    // MARK: - Observable State
 
     /// The recipe being displayed; may be mutated if recipe data is refreshed.
     var recipe: Recipe {

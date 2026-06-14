@@ -25,7 +25,7 @@ private enum SettingsViewModelConstants {
 /// - Subscription restore and upgrade navigation
 @MainActor
 @Observable final class SettingsViewModel {
-    // MARK: - Published Properties
+    // MARK: - Observable State
 
     /// The user's current subscription plan (updated live from `SubscriptionServiceProtocol`).
     private(set) var currentPlan: SubscriptionPlan = .free

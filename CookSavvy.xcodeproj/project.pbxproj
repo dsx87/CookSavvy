@@ -291,6 +291,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		E45D8AEAE4B54A38A7321A4B /* Upload Debug Symbols to Sentry */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);

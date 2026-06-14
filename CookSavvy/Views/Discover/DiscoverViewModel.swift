@@ -86,7 +86,7 @@ struct DiscoverMatchBadgeState {
 /// - Delegating all navigation to `DiscoverCoordinator` via a weak reference
 @MainActor
 @Observable final class DiscoverViewModel {
-    // MARK: - Published State
+    // MARK: - Observable State
 
     /// The ingredients the user has tapped to include in their recipe search.
     var selectedIngredients: [Ingredient] = []
@@ -114,8 +114,8 @@ struct DiscoverMatchBadgeState {
     }
     private var categoryIngredients: [Ingredient] = []
     private var loadedCategory: IngredientCategory?
-    private var ingredientRefreshTask: Task<Void, Never>?
-    private var pantryMutationTask: Task<Void, Never>?
+    @ObservationIgnored private var ingredientRefreshTask: Task<Void, Never>?
+    @ObservationIgnored private var pantryMutationTask: Task<Void, Never>?
     private var ingredientRefreshToken = 0
 
     /// High-frequency ingredients shown at the top of the grid, populated from user history or DB.
@@ -213,6 +213,11 @@ struct DiscoverMatchBadgeState {
         self.smartSearchService = smartSearchService
         self.initialIngredients = initialIngredients
         self.coordinator = coordinator
+    }
+
+    deinit {
+        ingredientRefreshTask?.cancel()
+        pantryMutationTask?.cancel()
     }
 
     // MARK: - Computed

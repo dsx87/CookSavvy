@@ -50,6 +50,9 @@ struct CameraView: View {
         .onAppear {
             viewModel.checkCameraPermission()
         }
+        .onDisappear {
+            viewModel.cancelProcessing()
+        }
     }
     
     /// One-line privacy disclosure overlaid on the live preview, informing users that captured

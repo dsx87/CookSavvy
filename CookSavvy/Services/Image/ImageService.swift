@@ -99,9 +99,14 @@ actor ImageService: ImageServiceProtocol {
     
     /// LRU in-memory cache for loaded images
     private let imageCache: ImageCache
-    
+
     /// Maximum number of images to keep in memory cache
     private let maxCacheSize: Int
+
+    /// Coalesces concurrent loads for the same key onto a single shared `Task`, so a burst of
+    /// identical requests (e.g. a grid prefetch racing a visible cell) performs the expensive
+    /// disk read / ZIP extraction / network download only once instead of once per caller.
+    private var inFlightLoads: [String: Task<UIImage?, Error>] = [:]
     
     // MARK: - Initialization
     
@@ -176,18 +181,16 @@ actor ImageService: ImageServiceProtocol {
             return cached
         }
 
-        if let image = try await loadFromDisk(fileName: fileName) {
-            imageCache.setImage(image, forKey: fileName)
-            return image
+        // Coalesce concurrent misses for the same file onto one disk/ZIP load (see helper).
+        return try await coalescedImageLoad(forKey: fileName) { [self] in
+            if let diskImage = try await loadFromDisk(fileName: fileName) {
+                return diskImage
+            }
+            if let zipURL = zipFileURL {
+                return try await extractFromZip(fileName: fileName, zipURL: zipURL)
+            }
+            return nil
         }
-
-        if let zipURL = zipFileURL,
-           let image = try await extractFromZip(fileName: fileName, zipURL: zipURL) {
-            imageCache.setImage(image, forKey: fileName)
-            return image
-        }
-
-        return nil
     }
     
     /// Loads images for multiple recipes in batch using optimized batch extraction
@@ -272,7 +275,34 @@ actor ImageService: ImageServiceProtocol {
     }
     
     // MARK: - Private Methods
-    
+
+    /// Runs `operation` to produce an image for `key`, coalescing concurrent callers onto one shared
+    /// `Task` so the expensive disk/ZIP/network work happens once per key. The winning task's non-nil
+    /// result is written to `imageCache` before the in-flight entry is cleared, so a later caller never
+    /// observes a gap where both the memory cache and the in-flight map miss. Callers that arrive while
+    /// a load is in flight await the same task instead of repeating the work.
+    ///
+    /// Race-free: the in-flight check, task creation, and registration all run synchronously on the
+    /// actor with no suspension between them, so two callers cannot both create a task for one key.
+    private func coalescedImageLoad(
+        forKey key: String,
+        operation: @Sendable @escaping () async throws -> UIImage?
+    ) async throws -> UIImage? {
+        if let existing = inFlightLoads[key] {
+            return try await existing.value
+        }
+
+        let task = Task { try await operation() }
+        inFlightLoads[key] = task
+        defer { inFlightLoads[key] = nil }
+
+        let image = try await task.value
+        if let image {
+            imageCache.setImage(image, forKey: key)
+        }
+        return image
+    }
+
     /// Reads an image from the disk cache (Documents directory) by file name.
     /// - Returns: The decoded image, or `nil` if no file exists at the expected path.
     private func loadFromDisk(fileName: String) async throws -> UIImage? {
@@ -295,29 +325,31 @@ actor ImageService: ImageServiceProtocol {
     /// - Returns: The downloaded image, or `nil` if the request fails or the URL is malformed.
     private func loadRemoteImage(urlString: String) async throws -> UIImage? {
         let cacheKey = Self.diskCacheKey(for: urlString)
-        
+
         if let cached = imageCache.image(forKey: cacheKey) {
             return cached
         }
-        
-        if let diskImage = try await loadFromDisk(fileName: cacheKey) {
-            imageCache.setImage(diskImage, forKey: cacheKey)
-            return diskImage
+
+        // Coalesce concurrent misses for the same URL onto one disk-read / download, so a burst of
+        // identical requests issues a single network round-trip and a single disk write per URL.
+        return try await coalescedImageLoad(forKey: cacheKey) { [self] in
+            if let diskImage = try await loadFromDisk(fileName: cacheKey) {
+                return diskImage
+            }
+
+            guard let url = URL(string: urlString) else { return nil }
+
+            let (data, response) = try await URLSession.shared.data(from: url)
+            guard let httpResponse = response as? HTTPURLResponse,
+                  (200..<300).contains(httpResponse.statusCode),
+                  let image = UIImage(data: data) else {
+                return nil
+            }
+
+            let diskURL = imagesDirectory.appendingPathComponent(cacheKey)
+            try? data.write(to: diskURL)
+            return image
         }
-        
-        guard let url = URL(string: urlString) else { return nil }
-        
-        let (data, response) = try await URLSession.shared.data(from: url)
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200..<300).contains(httpResponse.statusCode),
-              let image = UIImage(data: data) else {
-            return nil
-        }
-        
-        let diskURL = imagesDirectory.appendingPathComponent(cacheKey)
-        try? data.write(to: diskURL)
-        imageCache.setImage(image, forKey: cacheKey)
-        return image
     }
     
     /// Derives a stable disk-cache filename from a remote URL by SHA-256 hashing the URL string.

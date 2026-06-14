@@ -55,7 +55,11 @@ import SwiftUI
     private let detectionService: IngredientDetectionServiceProtocol
     private let onDismiss: () -> Void
     private let onIngredientsDetected: ([Ingredient]) -> Void
-    
+
+    /// In-flight AI detection task. Cancelled on `deinit` and from the view's `onDisappear` so its
+    /// completion callbacks cannot fire after the camera screen is dismissed mid-detection.
+    @ObservationIgnored private var processingTask: Task<Void, Never>?
+
     /// Creates a camera view model with injected detection and completion callbacks.
     init(
         detectionService: IngredientDetectionServiceProtocol,
@@ -66,7 +70,11 @@ import SwiftUI
         self.onDismiss = onDismiss
         self.onIngredientsDetected = onIngredientsDetected
     }
-    
+
+    deinit {
+        processingTask?.cancel()
+    }
+
     /// Checks the current camera authorization status and transitions to the appropriate state.
     /// Requests permission if it has not yet been determined.
     func checkCameraPermission() {
@@ -95,13 +103,19 @@ import SwiftUI
     func dismiss() {
         onDismiss()
     }
-    
+
+    /// Cancels any in-flight AI detection. Called from the view's `onDisappear` so a sheet dismissal
+    /// (including an interactive swipe-down) stops detection before its callbacks mutate Discover state.
+    func cancelProcessing() {
+        processingTask?.cancel()
+    }
+
     /// Called when the camera captures a photo; transitions to `.processing` and runs AI detection.
     func photoCaptured(_ image: UIImage) {
         state = .processing(image)
-        
-        Task {
-            await processImage(image)
+
+        processingTask = Task { [weak self] in
+            await self?.processImage(image)
         }
     }
     
@@ -130,7 +144,10 @@ import SwiftUI
     private func processImage(_ image: UIImage) async {
         do {
             let ingredients = try await detectionService.detectIngredients(in: image)
-            
+            // Bail out if the screen was dismissed mid-detection — otherwise the callbacks below
+            // would mutate Discover's selection and re-trigger dismissal after the user cancelled.
+            guard !Task.isCancelled else { return }
+
             if ingredients.isEmpty {
                 state = .noIngredientsFound
             } else {

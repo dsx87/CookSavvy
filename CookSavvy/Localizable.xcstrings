@@ -621,6 +621,17 @@
         }
       }
     },
+    "common.done" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Done"
+          }
+        }
+      }
+    },
     "common.minutesCompact" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -749,6 +760,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Submit"
+          }
+        }
+      }
+    },
+    "cookMode.timerRemaining" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "remaining"
           }
         }
       }
@@ -2533,9 +2555,6 @@
           }
         }
       }
-    },
-    "minutes" : {
-
     },
     "moodFilter.bold" : {
       "extractionState" : "extracted_with_value",

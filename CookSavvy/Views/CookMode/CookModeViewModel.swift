@@ -53,6 +53,10 @@ import SwiftUI
         self.startDate = Date()
     }
 
+    deinit {
+        timerTask?.cancel()
+    }
+
     /// Keeps the screen awake for the duration of the cooking session.
     ///
     /// Cook Mode is hands-free, so the system idle timer is disabled while the screen is
@@ -190,21 +194,32 @@ import SwiftUI
 
     // MARK: - Private
 
-    /// Starts an async timer loop and increments `timerSeconds` each second until the step duration elapses.
+    /// Starts an async timer loop that advances `timerSeconds` until the step duration elapses.
+    ///
+    /// Elapsed time is derived from a wall-clock start `Date` rather than counting `+1` per tick, so the
+    /// countdown stays accurate despite per-tick scheduler latency and reconciles correctly after the app
+    /// is backgrounded and resumed. The start is back-dated by the seconds already elapsed so pausing
+    /// (which keeps `timerSeconds`) and resuming continues seamlessly. The per-second loop only drives UI
+    /// refreshes; it does not accumulate drift.
     private func startTimer() {
         timerRunning = true
+        // Back-date the reference point so a resume after pause continues from the elapsed value.
+        let start = Date().addingTimeInterval(-Double(timerSeconds))
         timerTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
                 guard let self, !Task.isCancelled else { return }
                 guard let timerMin = self.currentStepTimer else { continue }
-                if self.timerSeconds < timerMin * 60 {
-                    self.timerSeconds += 1
+                let totalSeconds = timerMin * 60
+                let elapsed = Int(Date().timeIntervalSince(start))
+                if elapsed < totalSeconds {
+                    self.timerSeconds = elapsed
                 } else {
                     // T-035 deferred polish: completion is intentionally silent for now
                     // (no haptic/sound). The progress ring likewise only advances when a
                     // step is explicitly marked Done. Both are tracked as non-blocking
                     // follow-ups on the ticket.
+                    self.timerSeconds = totalSeconds
                     self.stopTimer()
                     return
                 }

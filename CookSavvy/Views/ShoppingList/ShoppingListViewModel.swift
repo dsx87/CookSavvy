@@ -13,7 +13,7 @@ import Observation
 /// All mutations are persisted immediately via `ShoppingListServiceProtocol`.
 @MainActor
 @Observable final class ShoppingListViewModel {
-    // MARK: - Published
+    // MARK: - Observable State
 
     /// All shopping items; used as the source of truth for `groupedItems`.
     var items: [ShoppingItem] = []
