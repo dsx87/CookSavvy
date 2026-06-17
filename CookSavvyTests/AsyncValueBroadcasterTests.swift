@@ -104,6 +104,37 @@ final class AsyncValueBroadcasterTests: XCTestCase {
         let values = await collectValues(2, from: survivor)
         XCTAssertEqual(values, [0, 1])
     }
+
+    // MARK: - Send vs. cancellation races
+
+    func testConcurrentSendsAndConsumerTerminationsStayConsistent() async {
+        let broadcaster = AsyncValueBroadcaster<Int>(0)
+
+        // Flood sends while many consumers subscribe and immediately terminate, so each consumer's
+        // `onTermination` (which takes the lock to deregister) races the writer's lock-held `yield`s.
+        // `yield` never re-enters our code, so this contends but cannot deadlock; reaching the
+        // assertions proves it, and that the broadcaster stays consistent after the churn.
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask {
+                for value in 1...500 {
+                    broadcaster.send(value)
+                }
+            }
+            for _ in 0..<50 {
+                group.addTask {
+                    for await _ in broadcaster.updates {
+                        break  // take the replayed value, then terminate
+                    }
+                }
+            }
+            await group.waitForAll()
+        }
+
+        broadcaster.send(123)
+        XCTAssertEqual(broadcaster.value, 123)
+        let values = await collectValues(1, from: broadcaster.updates)
+        XCTAssertEqual(values, [123])
+    }
 }
 
 /// Collects up to `count` values from `stream`, bounded by a `timeout` so a missing value fails the

@@ -820,10 +820,12 @@ struct UI {
     /// recognition. The slightly lower `detectionJPEGQuality` is acceptable because the
     /// resize already removes most redundant detail.
     struct ImageProcessing {
+        // `nonisolated` so the off-main (`@concurrent`) image encode in
+        // `AIIngredientDetectionAdapter` can read these constants without hopping to the main actor.
         /// Maximum length (in pixels) of the longer image edge sent for AI detection.
         /// The shorter edge scales proportionally to preserve aspect ratio.
-        static let detectionMaxDimension: CGFloat = 1280
+        nonisolated static let detectionMaxDimension: CGFloat = 1280
         /// JPEG compression quality (0...1) applied after downscaling for AI detection.
-        static let detectionJPEGQuality: CGFloat = 0.7
+        nonisolated static let detectionJPEGQuality: CGFloat = 0.7
     }
 }

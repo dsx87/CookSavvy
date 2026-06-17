@@ -1,6 +1,5 @@
 import SwiftUI
 
-@MainActor
 /// Coordinator interface consumed by ``JourneyViewModel`` for navigation actions.
 protocol JourneyCoordinating: RecipeDetailsCoordinating {
     /// Opens recipe details for a selected recipe and selection context.
@@ -24,7 +23,6 @@ protocol JourneyCoordinating: RecipeDetailsCoordinating {
 /// - Sign in with Apple state, forwarded from `AuthServiceProtocol`
 ///
 /// Delegates all navigation to `JourneyCoordinator` via a weak `coordinator` reference.
-@MainActor
 @Observable final class JourneyViewModel {
     /// Total number of times the user has completed a cooking session (all-time).
     var recipesCooked: Int = 0

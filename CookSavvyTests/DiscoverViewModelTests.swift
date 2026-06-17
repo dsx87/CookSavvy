@@ -122,6 +122,49 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.searchResultRecipes.first?.title, recipe.title)
     }
 
+    /// A slower earlier search must not overwrite the results of a newer search that finished first.
+    /// Drives two overlapping searches via the gated mock and resumes the newer one before the older.
+    func testStaleSearchDoesNotOverwriteNewerResults() async {
+        let older = Recipe(title: "OlderSearchResult", ingredients: [Ingredient(name: "Chicken")],
+                           instructions: ["Cook"], image: "", additionalInfo: .empty)
+        let newer = Recipe(title: "NewerSearchResult", ingredients: [Ingredient(name: "Chicken")],
+                           instructions: ["Cook"], image: "", additionalInfo: .empty)
+        mockRecipeService.gateGetRecipes = true
+        mockRecipeService.perCallStubbedRecipes = [[older], [newer]]
+
+        let vm = makeViewModel()
+        vm.selectedIngredients = [Ingredient(name: "Chicken")]
+        vm.showResults = true
+
+        // Launch search A (older); let it reach the gate so its token (1) is taken first.
+        vm.findRecipes()
+        await yield(until: { self.mockRecipeService.getRecipesCallCount >= 1 })
+
+        // Launch search B (newer); let it reach the gate with the live token (2).
+        vm.findRecipes()
+        await yield(until: { self.mockRecipeService.getRecipesCallCount >= 2 })
+
+        // Resume the newer search first — it should write its result.
+        mockRecipeService.resumeGetRecipes(at: 1)
+        await yield(until: { vm.searchResultRecipes.first?.title == newer.title })
+
+        // Resume the stale older search — its token no longer matches, so it must be discarded.
+        mockRecipeService.resumeGetRecipes(at: 0)
+        for _ in 0..<30 { await Task.yield() }
+
+        XCTAssertEqual(vm.searchResultRecipes.map(\.title), [newer.title],
+                       "Stale search overwrote the newer search's results")
+    }
+
+    /// Yields the main actor until `condition` holds or a bounded iteration cap is hit (prevents hangs).
+    private func yield(until condition: () -> Bool, max iterations: Int = 200) async {
+        var count = 0
+        while !condition() && count < iterations {
+            await Task.yield()
+            count += 1
+        }
+    }
+
     func testMoodFilterRanking() {
         let vm = makeViewModel()
         let soupRecipe = Recipe(

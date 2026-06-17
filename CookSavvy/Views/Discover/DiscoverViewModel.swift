@@ -84,7 +84,6 @@ struct DiscoverMatchBadgeState {
 /// - Applying mood, dietary restriction, and "use it all" post-fetch filters on `filteredRecipes`
 /// - Loading homepage content: recent/saved/suggested recipes and curated collections
 /// - Delegating all navigation to `DiscoverCoordinator` via a weak reference
-@MainActor
 @Observable final class DiscoverViewModel {
     // MARK: - Observable State
 
@@ -117,6 +116,12 @@ struct DiscoverMatchBadgeState {
     @ObservationIgnored private var ingredientRefreshTask: Task<Void, Never>?
     @ObservationIgnored private var pantryMutationTask: Task<Void, Never>?
     private var ingredientRefreshToken = 0
+    /// Monotonic token guarding `searchRecipes` / `searchBrowseRecipes` against stale overwrites: a
+    /// slower earlier search whose token no longer matches the live value is discarded instead of
+    /// clobbering a newer result. Mirrors `ingredientRefreshToken` / `isCurrentRefresh`.
+    private var searchToken = 0
+    /// Memoised `filteredRecipes` result keyed on its six inputs; recomputed only when the key changes.
+    @ObservationIgnored private var filteredRecipesCache: (key: FilteredRecipesKey, value: [Recipe])?
 
     /// High-frequency ingredients shown at the top of the grid, populated from user history or DB.
     var popularIngredients: [Ingredient] = []
@@ -277,36 +282,70 @@ struct DiscoverMatchBadgeState {
     /// 3. Applies active cook-time and complexity filters, excluding unknown metadata only while active.
     /// 4. When `useItAllFilter` is on, keeps only perfect-match recipes (falls back to all if none qualify).
     var filteredRecipes: [Recipe] {
-        guard !searchResultRecipes.isEmpty else { return [] }
+        // Read all six inputs up front so `@Observable` registers a dependency on each one on every
+        // access — even when the cached value is returned below — otherwise SwiftUI would miss
+        // updates when a filter changes.
+        let key = FilteredRecipesKey(
+            recipes: searchResultRecipes,
+            mood: selectedMood,
+            dietary: activeDietaryRestrictions,
+            cookTime: selectedCookTimeFilter,
+            complexity: selectedComplexityFilter,
+            useItAll: useItAllFilter
+        )
+        if let cache = filteredRecipesCache, cache.key == key {
+            return cache.value
+        }
+        let value = Self.computeFilteredRecipes(key)
+        filteredRecipesCache = (key, value)
+        return value
+    }
 
-        let rankedRecipes = RecipeMatchRanker.rank(searchResultRecipes, mood: selectedMood)
+    /// Cache key for `filteredRecipes`. The pipeline is pure in these six inputs, so an equal key
+    /// guarantees an identical result. Must enumerate *every* input the pipeline reads or the cache
+    /// would return stale results.
+    private struct FilteredRecipesKey: Equatable {
+        let recipes: [Recipe]
+        let mood: RecipeMood?
+        let dietary: Set<DietaryRestriction>
+        let cookTime: RecipeCookTimeFilter?
+        let complexity: RecipeComplexityFilter?
+        let useItAll: Bool
+    }
+
+    /// Pure ranking + filtering pipeline backing `filteredRecipes`. Reads nothing but `key`, so the
+    /// same key always yields the same result — which is what makes the memoisation above safe.
+    private static func computeFilteredRecipes(_ key: FilteredRecipesKey) -> [Recipe] {
+        guard !key.recipes.isEmpty else { return [] }
+
+        let rankedRecipes = RecipeMatchRanker.rank(key.recipes, mood: key.mood)
 
         var filtered: [Recipe]
-        if activeDietaryRestrictions.isEmpty {
+        if key.dietary.isEmpty {
             filtered = rankedRecipes
         } else {
-            let blockedKeywords = activeDietaryRestrictions.flatMap { $0.filterKeywords }
+            let blockedKeywords = key.dietary.flatMap { $0.filterKeywords }
             filtered = rankedRecipes.filter { recipe in
                 let ingredientText = recipe.cleanedIngredients.map { $0.name.lowercased() }.joined(separator: " ")
                 return !blockedKeywords.contains { ingredientText.contains($0) }
             }
         }
 
-        if let selectedCookTimeFilter {
+        if let cookTime = key.cookTime {
             filtered = filtered.filter { recipe in
                 guard let minutes = recipe.cookTimeMinutes else { return false }
-                return selectedCookTimeFilter.includes(minutes)
+                return cookTime.includes(minutes)
             }
         }
 
-        if let selectedComplexityFilter {
+        if let complexity = key.complexity {
             filtered = filtered.filter { recipe in
-                guard let complexity = recipe.firstComplexityLabel else { return false }
-                return selectedComplexityFilter.matches(complexity)
+                guard let label = recipe.firstComplexityLabel else { return false }
+                return complexity.matches(label)
             }
         }
 
-        if useItAllFilter {
+        if key.useItAll {
             let perfect = filtered.filter { $0.missingIngredients?.isEmpty == true }
             if !perfect.isEmpty { return perfect }
         }
@@ -840,6 +879,8 @@ struct DiscoverMatchBadgeState {
     /// Sets `searchError` for partial source failures; clears `searchResultRecipes` on total failure.
     private func searchRecipes() async {
         guard hasIngredients else { return }
+        searchToken += 1
+        let token = searchToken
         isSearching = true
         searchError = nil
         do {
@@ -852,20 +893,11 @@ struct DiscoverMatchBadgeState {
                 for: ingredients,
                 from: enabledSources
             )
-            var results = rawResults
-            for index in results.indices {
-                let breakdown = RecipeMatchExplainer.ingredientBreakdown(
-                    recipe: results[index],
-                    selectedIngredients: ingredients
-                )
-                let missing = breakdown.missingIngredientNames
-                results[index].missingIngredients = missing
-                results[index].assumedPantryIngredients = breakdown.assumedPantryIngredientNames
-                results[index].matchReason = RecipeMatchExplainer.explain(
-                    recipe: results[index],
-                    missingIngredients: missing
-                )
-            }
+            // Discard a stale search whose results a newer search has already superseded. The guard
+            // sits immediately after the only suspension point so the annotation + assignment below
+            // run synchronously on main with the token still current.
+            guard isCurrentSearch(token) else { return }
+            let results = Self.annotateMatches(rawResults, selectedIngredients: ingredients)
             searchResultRecipes = results
             if hadSourceFailures {
                 searchError = rawResults.isEmpty
@@ -873,10 +905,35 @@ struct DiscoverMatchBadgeState {
                     : Strings.Discover.searchErrorMessage
             }
         } catch {
+            guard isCurrentSearch(token) else { return }
             searchResultRecipes = []
             searchError = Strings.Discover.searchFailedMessage
         }
         isSearching = false
+    }
+
+    /// Annotates raw search results with missing-ingredient and match-reason data via
+    /// `RecipeMatchExplainer`. Pure and `nonisolated`, so it stays cheap and could be hoisted off
+    /// main later if a large ingredient-search result set ever warrants it.
+    private nonisolated static func annotateMatches(
+        _ recipes: [Recipe],
+        selectedIngredients: [Ingredient]
+    ) -> [Recipe] {
+        var results = recipes
+        for index in results.indices {
+            let breakdown = RecipeMatchExplainer.ingredientBreakdown(
+                recipe: results[index],
+                selectedIngredients: selectedIngredients
+            )
+            let missing = breakdown.missingIngredientNames
+            results[index].missingIngredients = missing
+            results[index].assumedPantryIngredients = breakdown.assumedPantryIngredientNames
+            results[index].matchReason = RecipeMatchExplainer.explain(
+                recipe: results[index],
+                missingIngredients: missing
+            )
+        }
+        return results
     }
 
     /// Fetches all local recipes for ingredient-free smart searches (e.g. "give me something quick").
@@ -886,12 +943,17 @@ struct DiscoverMatchBadgeState {
     /// filters on top of the raw results, and `RecipeMatchRanker` uses cook time, complexity, and rating
     /// as tiebreakers, naturally surfacing simpler and higher-rated recipes first.
     private func searchBrowseRecipes() async {
+        searchToken += 1
+        let token = searchToken
         isSearching = true
         searchError = nil
         do {
             await databaseInitService.waitForRecipes()
-            searchResultRecipes = try await recipeService.getAllRecipes(limit: UI.Discover.browseRecipeLimit)
+            let results = try await recipeService.getAllRecipes(limit: UI.Discover.browseRecipeLimit)
+            guard isCurrentSearch(token) else { return }
+            searchResultRecipes = results
         } catch {
+            guard isCurrentSearch(token) else { return }
             searchResultRecipes = []
             searchError = Strings.Discover.searchFailedMessage
         }
@@ -1000,6 +1062,13 @@ struct DiscoverMatchBadgeState {
     /// Returns `true` if the given token matches the live refresh token and the task has not been cancelled.
     private func isCurrentRefresh(_ token: Int) -> Bool {
         !Task.isCancelled && token == ingredientRefreshToken
+    }
+
+    /// Returns `true` if `token` is still the live search token, i.e. no newer search has started.
+    /// Used to discard stale `searchRecipes` / `searchBrowseRecipes` results before they overwrite a
+    /// newer search's output.
+    private func isCurrentSearch(_ token: Int) -> Bool {
+        token == searchToken
     }
 }
 

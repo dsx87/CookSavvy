@@ -131,11 +131,29 @@ final class MockRecipeService: RecipeServiceProtocol {
 
     var stubbedHadSourceFailures = false
 
+    // MARK: Deterministic gating (opt-in, off by default)
+    /// When `true`, `getRecipes(for:from:Set)` suspends until the test resumes it by call index,
+    /// enabling deterministic ordering tests such as the stale-search race.
+    var gateGetRecipes = false
+    /// Per-call results keyed by zero-based call index; falls back to `stubbedRecipes` when absent.
+    var perCallStubbedRecipes: [[Recipe]] = []
+    private var gateContinuations: [CheckedContinuation<Void, Never>] = []
+
+    /// Resumes the gated `getRecipes` call that suspended at the given zero-based index.
+    func resumeGetRecipes(at index: Int) {
+        gateContinuations[index].resume()
+    }
+
     func getRecipes(for ingredients: [Ingredient], from sourceTypes: Set<RecipeSourceType>) async throws -> (recipes: [Recipe], hadSourceFailures: Bool) {
         if let error = shouldThrow { throw error }
+        let callIndex = getRecipesCallCount
         getRecipesCallCount += 1
         requestedIngredients = ingredients
-        return (stubbedRecipes, stubbedHadSourceFailures)
+        if gateGetRecipes {
+            await withCheckedContinuation { gateContinuations.append($0) }
+        }
+        let result = callIndex < perCallStubbedRecipes.count ? perCallStubbedRecipes[callIndex] : stubbedRecipes
+        return (result, stubbedHadSourceFailures)
     }
 
     func isSourceAvailable(_ sourceType: RecipeSourceType) async -> Bool {

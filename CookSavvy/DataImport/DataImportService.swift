@@ -62,6 +62,10 @@ final class DataImportService: DataImportServiceProtocol {
     /// - Throws: ``DataImportError/datasetNotFound`` if the ZIP is missing from the app bundle,
     ///   or any error thrown by the database or dataset reader.
     func ensureRecipesImported() async throws {
+        // Honor the documented in-memory short-circuit: once a prior call has confirmed/performed the
+        // import this process lifetime, skip the database probe entirely.
+        if isRecipesImported { return }
+
         // Check if recipes already exist in database
         let commonIngredients = try await dbInterface.searchIngredients(
             matching: DataImportServiceConstants.populationProbe,
@@ -99,23 +103,13 @@ final class DataImportService: DataImportServiceProtocol {
 
         try await dbInterface.insertRecipes(importedRecipes)
 
-        // Seed the ingredients table from basicComponent values so the ingredient grid
-        // shows short canonical names (e.g. "chicken", "olive oil") rather than Food.json entries.
-        var seenComponents = Set<String>()
-        var basicIngredients: [Ingredient] = []
-        for recipe in importedRecipes {
-            for ingredient in recipe.ingredients {
-                let component = ingredient.basicComponent ?? ingredient.name
-                guard !component.isEmpty, seenComponents.insert(component.lowercased()).inserted else { continue }
-                basicIngredients.append(Ingredient(
-                    name: component,
-                    description: nil,
-                    pictureFileName: nil,
-                    foodGroup: ingredient.foodGroup,
-                    foodSubgroup: ingredient.foodSubgroup
-                ))
-            }
-        }
+        // Seed the ingredients table from basicComponent values so the ingredient grid shows short
+        // canonical names (e.g. "chicken", "olive oil") rather than Food.json entries. Deriving them
+        // walks every ingredient of the whole (~39 MB) dataset, so it runs off the MainActor-isolated
+        // import method on the cooperative pool, matching the already-offloaded `readRecipes` parse.
+        let basicIngredients = await Task { @concurrent in
+            Self.deriveBasicIngredients(from: importedRecipes)
+        }.value
         try await dbInterface.insertIngredients(basicIngredients)
 
         logger.info("Successfully imported \(importedRecipes.count) recipes and \(basicIngredients.count) unique ingredients to database")
@@ -130,6 +124,32 @@ final class DataImportService: DataImportServiceProtocol {
     func forceReimportRecipes() async throws {
         isRecipesImported = false
         try await ensureRecipesImported()
+    }
+
+    // MARK: - Private
+
+    /// Derives the canonical, de-duplicated ingredient list (by `basicComponent`) from the parsed
+    /// recipes. CPU-bound string work over the entire dataset (tens of thousands of ingredients), so
+    /// callers dispatch it off the MainActor — `ensureRecipesImported` runs it via
+    /// `Task { @concurrent in … }` so first-launch import never blocks the main thread on this pass.
+    /// `nonisolated` so the `@concurrent` task can run it without hopping back to the main actor.
+    private nonisolated static func deriveBasicIngredients(from recipes: [Recipe]) -> [Ingredient] {
+        var seenComponents = Set<String>()
+        var basicIngredients: [Ingredient] = []
+        for recipe in recipes {
+            for ingredient in recipe.ingredients {
+                let component = ingredient.basicComponent ?? ingredient.name
+                guard !component.isEmpty, seenComponents.insert(component.lowercased()).inserted else { continue }
+                basicIngredients.append(Ingredient(
+                    name: component,
+                    description: nil,
+                    pictureFileName: nil,
+                    foodGroup: ingredient.foodGroup,
+                    foodSubgroup: ingredient.foodSubgroup
+                ))
+            }
+        }
+        return basicIngredients
     }
 }
 

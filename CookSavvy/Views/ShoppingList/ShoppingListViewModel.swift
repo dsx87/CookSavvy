@@ -11,7 +11,6 @@ import Observation
 /// Maintains a flat list of `ShoppingItem` values and a grouped view for display.
 /// Supports toggling checked state, swipe-to-delete, and clearing all completed items.
 /// All mutations are persisted immediately via `ShoppingListServiceProtocol`.
-@MainActor
 @Observable final class ShoppingListViewModel {
     // MARK: - Observable State
 

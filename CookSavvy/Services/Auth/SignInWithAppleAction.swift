@@ -39,7 +39,6 @@ enum SignInWithAppleActionResult: Equatable {
 }
 
 /// Protocol for the shared Sign in with Apple action object.
-@MainActor
 protocol SignInWithAppleActionProtocol: AnyObject {
     /// `true` while a sign-in attempt is in progress.
     var isSigningIn: Bool { get }
@@ -61,7 +60,6 @@ protocol SignInWithAppleActionProtocol: AnyObject {
 ///    existing anonymous Supabase session.
 ///
 /// Analytics events are fired at the start, on completion, and on failure, regardless of the context.
-@MainActor
 final class SignInWithAppleAction: SignInWithAppleActionProtocol {
     /// Broadcasts de-duplicated `isSigningIn` changes to the `isSigningInUpdates` stream.
     private let isSigningInBroadcaster = AsyncValueBroadcaster<Bool>(false)

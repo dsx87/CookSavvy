@@ -23,7 +23,6 @@ private enum SettingsViewModelConstants {
 /// - Dietary restrictions (toggled per restriction)
 /// - Auth state (anonymous vs. Sign in with Apple) and sign-in/sign-out actions
 /// - Subscription restore and upgrade navigation
-@MainActor
 @Observable final class SettingsViewModel {
     // MARK: - Observable State
 

@@ -10,7 +10,6 @@ import SwiftUI
 /// `SettingsCoordinator` is a child of `AppCoordinator`, shared between the standalone
 /// `SettingsCoordinatorView` (used when Settings is its own navigation root) and
 /// `JourneySettingsDestination` (used when Settings is pushed within the Journey stack).
-@MainActor
 @Observable final class SettingsCoordinator {
 
     private let container: AppContainer

@@ -21,7 +21,6 @@ import UIKit
 ///
 /// Guards against double-completion via `hasCompletedFlow`. Cancels in-flight detection tasks
 /// on `deinit` or when a new photo is captured.
-@MainActor
 @Observable final class OnboardingViewModel {
 
     /// A single static onboarding page with a title, subtitle, and SF Symbol name.

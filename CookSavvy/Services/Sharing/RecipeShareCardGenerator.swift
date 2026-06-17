@@ -6,12 +6,10 @@ import UIKit
 /// The generator owns only presentation concerns for the share image: it loads the recipe photo
 /// through `ImageServiceProtocol`, falls back to deterministic artwork when that image is missing,
 /// and renders a fixed 4:5 SwiftUI composition to PNG data.
-@MainActor
 protocol RecipeShareCardGenerating: AnyObject {
     func makeShareCard(for recipe: Recipe) async -> RecipeShareCard
 }
 
-@MainActor
 final class RecipeShareCardGenerator: RecipeShareCardGenerating {
     private let imageService: ImageServiceProtocol
     private static let placeholderImageName = "recipe_placeholder"

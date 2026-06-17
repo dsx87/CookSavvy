@@ -20,13 +20,23 @@ nonisolated enum RecipeMatchRanker {
     }
 
     static func rank(_ recipes: [Recipe], mood: RecipeMood? = nil) -> [Recipe] {
-        recipes.sorted { compare($0, $1, mood: mood) }
+        // Precompute each recipe's SortKey once (O(n)) rather than rebuilding both operands' keys on
+        // every comparison — each key allocates the cleaned-ingredient set, parses cook time, and
+        // scores mood, so the old `sorted { compare(...) }` did that work ~O(n log n) times.
+        recipes
+            .map { (recipe: $0, key: sortKey(for: $0, mood: mood)) }
+            .sorted { precedes($0.key, $1.key) }
+            .map(\.recipe)
     }
 
     static func compare(_ lhs: Recipe, _ rhs: Recipe, mood: RecipeMood? = nil) -> Bool {
-        let lhsKey = sortKey(for: lhs, mood: mood)
-        let rhsKey = sortKey(for: rhs, mood: mood)
+        precedes(sortKey(for: lhs, mood: mood), sortKey(for: rhs, mood: mood))
+    }
 
+    /// Total ordering over two precomputed `SortKey`s. Field order and tie-breaks are identical to
+    /// the previous inline `compare` logic, so ranking output is unchanged; both `rank` and
+    /// `compare` (and thus `RecipeRecommendationService`) delegate here to avoid duplicated logic.
+    private static func precedes(_ lhsKey: SortKey, _ rhsKey: SortKey) -> Bool {
         if lhsKey.coverageRatio != rhsKey.coverageRatio {
             return lhsKey.coverageRatio > rhsKey.coverageRatio
         }

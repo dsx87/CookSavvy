@@ -4,7 +4,13 @@ import Foundation
 ///
 /// Used in recipe result cards to surface human-readable explanations such as
 /// "You have 4 of 6 ingredients · 20 min".
-enum RecipeMatchExplainer {
+///
+/// `nonisolated` so it is not pinned to the main actor, matching its stateless sibling rankers
+/// `RecipeMatchRanker` / `RecipeMoodRanker`. Note `nonisolated` only removes actor isolation — it
+/// does not move work off main: a `nonisolated` sync call runs on its caller's executor (the main
+/// thread when `DiscoverViewModel` invokes it after a search). Being nonisolated simply leaves it
+/// callable from a future `@concurrent` hop without an actor bounce should profiling ever warrant it.
+nonisolated enum RecipeMatchExplainer {
 
     /// Snapshot of which recipe ingredients the user has versus which are missing.
     struct IngredientAvailability: Equatable {

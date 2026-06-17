@@ -8,7 +8,6 @@ import SwiftUI
 /// - A circular progress ring based on completed step count
 /// - A post-cook feedback sheet (star rating) shown when the last step is finished
 /// - Persisting the completed cooking session via `UserDataService`
-@MainActor
 @Observable final class CookModeViewModel {
     /// The recipe being cooked.
     let recipe: Recipe

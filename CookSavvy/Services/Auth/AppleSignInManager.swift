@@ -22,7 +22,6 @@ struct AppleSignInResult {
 }
 
 /// Protocol for objects that can present the Sign in with Apple UI and return a credential.
-@MainActor
 protocol AppleSignInManaging: AnyObject {
     /// Presents the Sign in with Apple authorization sheet and returns the resulting credential.
     /// - Throws: `AuthError.signInCancelled` if the user dismisses the sheet, `AuthError.signInFailed` otherwise.
@@ -41,7 +40,6 @@ protocol AppleSignInManaging: AnyObject {
 ///
 /// The async/await interface is bridged to `ASAuthorizationControllerDelegate` via a
 /// `CheckedContinuation`, which is held in `continuation` for the lifetime of the authorization UI.
-@MainActor
 final class AppleSignInManager: NSObject, AppleSignInManaging {
 
     /// Bridges the delegate callbacks back to the `async` caller. Held for the duration of the auth flow.
@@ -117,7 +115,6 @@ final class AppleSignInManager: NSObject, AppleSignInManaging {
 
 #if DEBUG
 /// DEBUG-only mock that returns a preset `AppleSignInResult` without presenting any UI.
-@MainActor
 final class MockAppleSignInManager: AppleSignInManaging {
     /// Number of times `signIn()` has been called.
     var signInCallCount = 0

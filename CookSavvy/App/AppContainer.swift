@@ -9,7 +9,7 @@ import Foundation
 
 /// Central dependency injection container that owns all shared service instances for the app.
 ///
-/// `AppContainer` is a `@MainActor` class that wires every service together at startup.
+/// `AppContainer` is main-actor-isolated (the project-wide default) and wires every service together at startup.
 /// Services are created once, stored as protocol-typed properties, and injected into coordinators
 /// and view models. Construction is throwing — a database failure or other critical error
 /// propagates up and renders a blocking startup error screen instead of allowing the app to
@@ -17,7 +17,6 @@ import Foundation
 ///
 /// In DEBUG builds the container can be replaced with an in-memory variant (``makeInMemory``)
 /// or a fully deterministic UI-test variant (``configureForUITesting(_:)``).
-@MainActor
 final class AppContainer {
 
     // MARK: - Services
@@ -308,7 +307,6 @@ final class AppContainer {
     ///   - isAnonymous: Whether the mock user is treated as anonymous.
     /// - Returns: A fully initialized `AppContainer` backed by in-memory storage.
     /// - Throws: `DBInterface` initialization errors (unlikely in in-memory mode).
-    @MainActor
     static func makeInMemory(
         subscriptionPlan: SubscriptionPlan = .free,
         authState: AuthState = .signedIn(userId: "mock-anonymous-user"),
@@ -384,7 +382,6 @@ final class AppContainer {
     /// - Parameter config: Parsed launch-argument configuration from `UITestConfiguration`.
     /// - Returns: A container ready for UI testing.
     /// - Throws: Database initialization errors.
-    @MainActor
     static func configureForUITesting(_ config: UITestConfiguration) throws -> AppContainer {
         let subscriptionPlan: SubscriptionPlan = config.isPremiumUser ? .premium : .free
         let container = try makeInMemory(

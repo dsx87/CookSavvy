@@ -68,8 +68,13 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 The app is **`@MainActor` by default** (project-level `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`).
 *Everything is main-actor-isolated unless it says otherwise* — so the work is to push genuinely
 background work explicitly **off** the main actor, not to sprinkle annotations.
-- **UI layer stays on main (the default):** `AppContainer`, all ViewModels, Coordinators. Explicit
-  `@MainActor` on these is redundant (kept for readability).
+- **UI layer stays on main (the default):** `AppContainer`, all ViewModels, Coordinators. Redundant
+  declaration-level `@MainActor` on these types/members/protocols has been **removed** — the
+  project-wide default already pins them to the main actor, so adding it back is noise. Load-bearing
+  `@MainActor` is kept only where it actually does work: closures that hop back to main from a
+  *nonisolated* delegate context (e.g. `Task { @MainActor in … }` inside
+  `AppleSignInManager`'s `ASAuthorizationControllerDelegate` callbacks and `CameraView`'s
+  `AVCapturePhotoCaptureDelegate`).
 - **ViewModels & Coordinators use `@Observable`** (the Observation macro), not `ObservableObject`/
   `@Published`. Views own them with `@State` and bind via `@Bindable` (passed-in objects); plain
   `var`/`let` for observe-only. Internal task-handle properties are `@ObservationIgnored`.
@@ -78,9 +83,21 @@ background work explicitly **off** the main actor, not to sprinkle annotations.
   `UIImage` decode + `imageCache`), and `ImageExtractor` (serialised ZIP reads). Their protocol methods
   are `async` and callers `await`.
 - **Stateless CPU/IO leaves are `nonisolated`**: `Unarchiver`, the rankers (`RecipeMatchRanker`,
-  `RecipeMoodRanker`). Genuinely heavy off-main work uses `@concurrent` (e.g.
+  `RecipeMoodRanker`, `RecipeMatchExplainer`). **`nonisolated` only removes actor isolation — it does
+  not move work off main.** A `nonisolated` *sync* func runs on its caller's executor (the main thread
+  when called from a `@MainActor` default context); a `nonisolated` *async* func, under Swift 6.2's
+  `nonisolated(nonsending)` default, likewise runs on the caller's executor. Pushing work onto the
+  background (cooperative pool) requires **`@concurrent`** (or an `actor` / `Task.detached`), not
+  `nonisolated`. Genuinely heavy off-main work therefore uses `@concurrent` (e.g.
   `JSONRecipeDatasetReader.readRecipes` decodes the dataset on the cooperative pool;
-  `FoundationModelsSmartSearchProvider.parse`).
+  `FoundationModelsSmartSearchProvider.parse`; `AIIngredientDetectionAdapter` JPEG-encodes the capture
+  via `Task { @concurrent in … }`). `DiscoverViewModel`'s result annotation (`RecipeMatchExplainer`)
+  runs **synchronously on main** right after the search `await`, behind the stale-result token guard —
+  deliberately on main for result determinism; its `nonisolated` helper only keeps it cheap to hoist
+  off main later if a large result set ever warrants it.
+- **Async results that can race carry a monotonic token:** `DiscoverViewModel` guards both ingredient
+  refresh (`ingredientRefreshToken`/`isCurrentRefresh`) and recipe search
+  (`searchToken`/`isCurrentSearch`) so a slower earlier task cannot overwrite a newer result.
 - **Data models are `nonisolated`** (Recipe, Ingredient, CookingSession, SubscriptionStatus, etc.) so
   the off-main actors can construct/encode/decode them.
 - **Service event streams use `AsyncStream`, not Combine** — Combine is fully removed from the app

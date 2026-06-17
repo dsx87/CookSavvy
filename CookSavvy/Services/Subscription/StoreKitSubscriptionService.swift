@@ -241,8 +241,11 @@ final class StoreKitSubscriptionService: SubscriptionServiceProtocol {
     /// This async sequence emits out-of-band StoreKit events that do not arrive through a
     /// normal purchase call — e.g. family-sharing grants, subscription renewals, billing
     /// recovery, and revocations. Each verified transaction is finished immediately and
-    /// triggers a full entitlement re-check. Using `Task.detached` avoids inheriting any
-    /// actor context so the loop can't block the main actor.
+    /// triggers a full entitlement re-check. This service is already `nonisolated` (it conforms
+    /// to the `Sendable` `SubscriptionServiceProtocol`, which opts it out of the project's default
+    /// MainActor isolation), so a plain `Task` here would not inherit a MainActor context anyway.
+    /// `Task.detached` is used because this listener is app-lifetime-scoped and must be decoupled
+    /// from the caller's task-local values and priority, not tied to whoever started it.
     private func listenForTransactions() -> Task<Void, Error> {
         Task.detached { [weak self] in
             for await result in Transaction.updates {

@@ -11,7 +11,6 @@ import UIKit
 ///
 /// Loads live pricing from StoreKit and manages the purchase flow for CookSavvy+ options.
 /// Calls `onDismiss` on successful purchase or explicit dismissal.
-@MainActor
 @Observable final class UpgradeViewModel {
 
     /// The user's current subscription plan; updated live from the service.

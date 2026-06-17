@@ -6,7 +6,6 @@ import Foundation
 /// minutes at a time, so the screen must be kept awake while cooking. Implementations
 /// wrap `UIApplication.isIdleTimerDisabled` behind this protocol so the behaviour can be
 /// mocked in tests and DEBUG builds.
-@MainActor
 protocol IdleTimerServiceProtocol: AnyObject {
     /// Disables (`true`) or re-enables (`false`) the system idle timer.
     ///

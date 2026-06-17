@@ -11,7 +11,6 @@ import SwiftUI
 /// Owns a `NavigationPath` for push destinations (recipe detail, recipe list) and separate
 /// published properties for the active sheet and full-screen cover. Factory methods construct
 /// view models for every destination, injecting services from `AppContainer`.
-@MainActor
 @Observable final class DiscoverCoordinator: RecipeDetailsCoordinating, RecipeListCoordinating {
 
     private let container: AppContainer

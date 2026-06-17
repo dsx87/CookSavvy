@@ -15,7 +15,6 @@ import SwiftUI
 /// - Submits the captured image to `IngredientDetectionServiceProtocol`
 /// - Calls `onIngredientsDetected` on success (with found ingredients) and then `onDismiss`
 /// - Handles permission denial, empty results, and processing errors with appropriate states
-@MainActor
 @Observable final class CameraViewModel {
 
     /// Represents each phase of the camera capture and AI detection lifecycle.

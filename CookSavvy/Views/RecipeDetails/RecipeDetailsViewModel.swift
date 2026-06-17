@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-@MainActor
 /// Coordinator interface consumed by ``RecipeDetailsViewModel`` for navigation.
 protocol RecipeDetailsCoordinating: AnyObject {
     /// Opens cook mode for a specific recipe.
@@ -28,7 +27,6 @@ protocol RecipeDetailsCoordinating: AnyObject {
 /// - Automatic view recording on load for recents and analytics
 ///
 /// Delegates navigation (Cook Mode, Shopping List, Upgrade) to a `RecipeDetailsCoordinating` coordinator.
-@MainActor
 @Observable final class RecipeDetailsViewModel {
     // MARK: - Observable State
 

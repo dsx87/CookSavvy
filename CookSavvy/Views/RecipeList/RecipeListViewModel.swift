@@ -1,6 +1,5 @@
 import SwiftUI
 
-@MainActor
 /// Coordinator interface consumed by ``RecipeListViewModel`` for detail navigation.
 protocol RecipeListCoordinating: AnyObject {
     /// Opens recipe details from a list row selection.
@@ -11,7 +10,6 @@ protocol RecipeListCoordinating: AnyObject {
 ///
 /// Displays a flat list of recipes passed in from the parent screen (saved, recent, or user-created).
 /// Lazily loads the saved/favourite status for each recipe so bookmark icons render correctly.
-@MainActor
 @Observable final class RecipeListViewModel {
     /// The navigation title for this list (e.g. "Saved Recipes" or "My Recipes").
     let title: String

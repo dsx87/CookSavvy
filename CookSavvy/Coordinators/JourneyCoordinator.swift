@@ -12,7 +12,6 @@ import SwiftUI
 /// the active sheet and full-screen cover. A `settingsCoordinator` child handles nested
 /// settings navigation. Selected ingredients for recipe detail pushes are stored by recipe
 /// ID so they survive the navigation lifecycle without being embedded in the enum case.
-@MainActor
 @Observable final class JourneyCoordinator: JourneyCoordinating, RecipeListCoordinating {
 
     private let container: AppContainer

@@ -11,7 +11,6 @@ import Foundation
 /// Called from `AppContainer.configureForUITesting(_:)` after the in-memory database is
 /// created. All seeded data uses fixed, predictable values so that UI assertions can rely on
 /// specific recipe titles, ingredient names, and session dates.
-@MainActor
 struct UITestDataSeeder {
     /// Day offsets from today used to distribute cooking sessions across the past week.
     private static let cookingSessionOffsets = [-1, -2, -4, -6, -8]

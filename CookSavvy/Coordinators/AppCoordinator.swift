@@ -13,7 +13,6 @@ import SwiftUI
 /// root view can reactively switch between the onboarding flow and `TabContainerView`.
 /// Child coordinators are created lazily on first access and cached for the lifetime
 /// of the app.
-@MainActor
 @Observable final class AppCoordinator {
 
     /// Whether the user has finished the first-launch onboarding walkthrough.

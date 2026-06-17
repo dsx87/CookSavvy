@@ -17,7 +17,10 @@ extension UIImage {
     ///
     /// - Parameter maxDimension: The maximum allowed length, in pixels, of the longer edge.
     /// - Returns: A downscaled image, or the original if it already fits within `maxDimension`.
-    func downscaled(toMaxDimension maxDimension: CGFloat) -> UIImage {
+    ///
+    /// `nonisolated` so it can run off the main actor: `UIGraphicsImageRenderer` rendering is
+    /// thread-safe and this is invoked from a `@concurrent` task in `AIIngredientDetectionAdapter`.
+    nonisolated func downscaled(toMaxDimension maxDimension: CGFloat) -> UIImage {
         let longestEdge = max(size.width, size.height)
         guard longestEdge > maxDimension else { return self }
 

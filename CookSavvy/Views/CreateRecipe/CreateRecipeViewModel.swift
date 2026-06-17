@@ -18,7 +18,6 @@ private enum CreateRecipeViewModelConstants {
 ///
 /// Validates each step before allowing forward navigation, builds the final `Recipe` model,
 /// persists it via `UserDataService`, and calls `onDismiss` on completion.
-@MainActor
 @Observable final class CreateRecipeViewModel {
 
     /// A mutable row in the steps list, combining instruction text and an optional step timer.
