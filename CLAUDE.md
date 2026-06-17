@@ -5,9 +5,10 @@ A hobby iOS recipe app that suggests recipes based on user-provided ingredients.
 ## Tech Stack
 
 - **Language:** Swift 6 — the app target builds in **Swift 6 language mode** with complete
-  data-race safety. The test targets (`CookSavvyTests`, `CookSavvyUITests`) remain Swift 5 mode
-  (strict-concurrency settings still apply as warnings) because every `XCTestCase` subclass hits the
+  data-race safety. The `CookSavvyTests` test target remains Swift 5 mode (strict-concurrency settings
+  still apply as warnings) because every `XCTestCase` subclass hits the
   `@MainActor`-init-vs-nonisolated-override mismatch under Swift 6; the shipping app is fully Swift 6.
+  There is **no UI test target** — UI flows are covered by manual QA (see `docs/MANUAL_QA_CHECKLIST.md`).
 - **Concurrency:** Approachable Concurrency is on (`SWIFT_APPROACHABLE_CONCURRENCY = YES`,
   `SWIFT_STRICT_CONCURRENCY = complete`) with **default actor isolation = `MainActor`**
   (`SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`), set at the project level. See "Concurrency Model" below.
@@ -30,8 +31,6 @@ To build the app for any available iOS Simulator (avoiding specific version issu
 ```bash
 xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 ```
-
-> **DO NOT run UI tests** — UITests are disabled in all test plans and must not be executed by Claude or any automated tool. They require manual execution only.
 
 ## Subscription Tiers
 
@@ -138,7 +137,6 @@ CookSavvy/
 └── Support/               — APIKeys.plist (gitignored), Assets, Substitutions.json, PrivacyInfo.xcprivacy (App Privacy Manifest)
 
 CookSavvyTests/            — Unit + integration tests (see tests.md rule)
-CookSavvyUITests/          — XCUITest suites (see uitests.md rule)
 ```
 
 ## Documentation
@@ -150,7 +148,7 @@ CookSavvyUITests/          — XCUITest suites (see uitests.md rule)
 | `docs/audits/` | Dated point-in-time audits. Current cycle (2026-06): `AUDIT_2026-06-06.md` (engineering), `PRODUCT_AUDIT_2026-06-06.md` (product), `UX_UI_AUDIT_2026-06-06.md` (UX/UI), and `APPSTORE_BLOCKERS_STATUS_2026-06-07.md` (live release-blocker tracker, source of truth) |
 | `docs/BACKEND_PLAN.md` | Supabase backend plan (design/reference). The backend itself lives in the separate `CookSavvyBE` repo (`/Users/dsx/Developer/CookSavvyBE`); consult that repo for the actual edge functions, migrations, and rate-limit/quota logic. Note: server-side scan-quota enforcement is now implemented there (per-user weekly `api_usage` cap in `detect-ingredients`). |
 | `docs/TEST_PLAN_UNIT_TESTS.md` | Test-authoring guidance + remaining unit-test gaps (StoreKit/DataImport services) |
-| `docs/MANUAL_QA_CHECKLIST.md` | Scenarios that remain manual after UI test automation |
+| `docs/MANUAL_QA_CHECKLIST.md` | Manual QA scenarios for end-to-end UI flows (no automated UI tests) |
 | `prod/` | Product documentation — see `prod/00-README.md` for index |
 | `prod/2026-06-07/` | Current product assessment (analysis, decision audit, strategy). `prod/2026-03-30/04-decisions-log.md` is the live decisions ledger |
 

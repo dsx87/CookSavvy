@@ -12,10 +12,9 @@ Guidance for writing unit/integration tests in CookSavvy, plus the remaining tes
 
 - **Test target:** `CookSavvyTests`
 - **Framework:** XCTest (not Swift Testing — the existing tests use XCTest, stay consistent)
-- **Test plans:** the project ships four `.xctestplan` files at the repo root:
+- **Test plans:** the project ships three `.xctestplan` files at the repo root:
   - `UnitTests.xctestplan` — fast, no network, mocks only
   - `IntegrationTests.xctestplan` — includes DB integration tests (real `DBInterface(inMemory:)`)
-  - `UITestPlan.xctestplan` — XCUITest target (`CookSavvyUITests`); **do not run from automation**
   - `DefaultTestPlan.xctestplan` — runs everything
 - **Mocking approach:** All services have protocols. Create mock implementations in the test target.
   Follow the pattern in `RecipeServiceTests.swift` (`MockRecipeSource`) and `IngredientsServiceTests.swift`

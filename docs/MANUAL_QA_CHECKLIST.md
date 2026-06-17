@@ -1,6 +1,6 @@
 # Manual QA Checklist
 
-These scenarios remain manual-only after the `CookSavvyUITests` automation pass.
+The project has no automated UI tests; these scenarios are verified manually.
 
 ## Cook Mode
 

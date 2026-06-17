@@ -19,14 +19,6 @@
         "identifier" : "1DE9DF152E623A380077DD75",
         "name" : "CookSavvyTests"
       }
-    },
-    {
-      "enabled" : false,
-      "target" : {
-        "containerPath" : "container:CookSavvy.xcodeproj",
-        "identifier" : "A1B2C3DD2FBD100100000001",
-        "name" : "CookSavvyUITests"
-      }
     }
   ],
   "version" : 1

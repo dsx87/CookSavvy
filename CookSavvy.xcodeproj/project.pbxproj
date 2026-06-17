@@ -14,20 +14,12 @@
 		1DE9DF212E624D220077DD75 /* GRDB-dynamic in Frameworks */ = {isa = PBXBuildFile; productRef = 1DE9DF202E624D220077DD75 /* GRDB-dynamic */; };
 		5A17B2E9C4D14B2D91020304 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 5A17B2E9C4D14B2D91020305 /* Supabase */; };
 		8F2A6C4A44D341B1A1020304 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 8F2A6C4A44D341B1A1020305 /* Supabase */; };
-		A1B2C3D42FBD100100000001 /* UITestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D52FBD100100000001 /* UITestPlan.xctestplan */; };
 		D1A2B3C4D5E6F70100000003 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = D1A2B3C4D5E6F70100000002 /* TelemetryDeck */; };
 		D1A2B3C4D5E6F70200000003 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = D1A2B3C4D5E6F70200000002 /* Sentry */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		1DE9DF1A2E623A380077DD75 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 1D255FD32DC135BB008C52B4 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 1D255FDA2DC135BB008C52B4;
-			remoteInfo = CookSavvy;
-		};
-		A1B2C3DB2FBD100100000001 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 1D255FD32DC135BB008C52B4 /* Project object */;
 			proxyType = 1;
@@ -55,8 +47,6 @@
 		1DDFE9B02F2CE64E000E8058 /* Configuration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Configuration.storekit; sourceTree = "<group>"; };
 		1DE9DF102E623A250077DD75 /* DefaultTestPlan.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = DefaultTestPlan.xctestplan; sourceTree = "<group>"; };
 		1DE9DF162E623A380077DD75 /* CookSavvyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CookSavvyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		A1B2C3D52FBD100100000001 /* UITestPlan.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UITestPlan.xctestplan; sourceTree = "<group>"; };
-		A1B2C3D62FBD100100000001 /* CookSavvyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CookSavvyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -68,11 +58,6 @@
 		1DE9DF172E623A380077DD75 /* CookSavvyTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = CookSavvyTests;
-			sourceTree = "<group>";
-		};
-		A1B2C3D72FBD100100000001 /* CookSavvyUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = CookSavvyUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -98,13 +83,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A1B2C3D82FBD100100000001 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -113,10 +91,8 @@
 			children = (
 				1DDFE9B02F2CE64E000E8058 /* Configuration.storekit */,
 				1DE9DF102E623A250077DD75 /* DefaultTestPlan.xctestplan */,
-				A1B2C3D52FBD100100000001 /* UITestPlan.xctestplan */,
 				1D255FDD2DC135BB008C52B4 /* CookSavvy */,
 				1DE9DF172E623A380077DD75 /* CookSavvyTests */,
-				A1B2C3D72FBD100100000001 /* CookSavvyUITests */,
 				1D255FDC2DC135BB008C52B4 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -126,7 +102,6 @@
 			children = (
 				1D255FDB2DC135BB008C52B4 /* CookSavvy.app */,
 				1DE9DF162E623A380077DD75 /* CookSavvyTests.xctest */,
-				A1B2C3D62FBD100100000001 /* CookSavvyUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -187,29 +162,6 @@
 			productReference = 1DE9DF162E623A380077DD75 /* CookSavvyTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		A1B2C3DD2FBD100100000001 /* CookSavvyUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = A1B2C3E02FBD100100000001 /* Build configuration list for PBXNativeTarget "CookSavvyUITests" */;
-			buildPhases = (
-				A1B2C3D92FBD100100000001 /* Sources */,
-				A1B2C3D82FBD100100000001 /* Frameworks */,
-				A1B2C3DA2FBD100100000001 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				A1B2C3DC2FBD100100000001 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				A1B2C3D72FBD100100000001 /* CookSavvyUITests */,
-			);
-			name = CookSavvyUITests;
-			packageProductDependencies = (
-			);
-			productName = CookSavvyUITests;
-			productReference = A1B2C3D62FBD100100000001 /* CookSavvyUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -224,10 +176,6 @@
 						CreatedOnToolsVersion = 16.0;
 					};
 					1DE9DF152E623A380077DD75 = {
-						CreatedOnToolsVersion = 16.4;
-						TestTargetID = 1D255FDA2DC135BB008C52B4;
-					};
-					A1B2C3DD2FBD100100000001 = {
 						CreatedOnToolsVersion = 16.4;
 						TestTargetID = 1D255FDA2DC135BB008C52B4;
 					};
@@ -256,7 +204,6 @@
 			targets = (
 				1D255FDA2DC135BB008C52B4 /* CookSavvy */,
 				1DE9DF152E623A380077DD75 /* CookSavvyTests */,
-				A1B2C3DD2FBD100100000001 /* CookSavvyUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -268,18 +215,10 @@
 			files = (
 				1DDFE9B12F2CE64E000E8058 /* Configuration.storekit in Resources */,
 				1DE9DF112E623A250077DD75 /* DefaultTestPlan.xctestplan in Resources */,
-				A1B2C3D42FBD100100000001 /* UITestPlan.xctestplan in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		1DE9DF142E623A380077DD75 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		A1B2C3DA2FBD100100000001 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -322,13 +261,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A1B2C3D92FBD100100000001 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -336,11 +268,6 @@
 			isa = PBXTargetDependency;
 			target = 1D255FDA2DC135BB008C52B4 /* CookSavvy */;
 			targetProxy = 1DE9DF1A2E623A380077DD75 /* PBXContainerItemProxy */;
-		};
-		A1B2C3DC2FBD100100000001 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 1D255FDA2DC135BB008C52B4 /* CookSavvy */;
-			targetProxy = A1B2C3DB2FBD100100000001 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -594,48 +521,6 @@
 			};
 			name = Release;
 		};
-		A1B2C3DE2FBD100100000001 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = FCLYBXX3KC;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.cooksavvy.uitests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = CookSavvy;
-			};
-			name = Debug;
-		};
-		A1B2C3DF2FBD100100000001 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = FCLYBXX3KC;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.cooksavvy.uitests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = CookSavvy;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -662,15 +547,6 @@
 			buildConfigurations = (
 				1DE9DF1D2E623A380077DD75 /* Debug */,
 				1DE9DF1E2E623A380077DD75 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		A1B2C3E02FBD100100000001 /* Build configuration list for PBXNativeTarget "CookSavvyUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				A1B2C3DE2FBD100100000001 /* Debug */,
-				A1B2C3DF2FBD100100000001 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
