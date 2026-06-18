@@ -20,7 +20,8 @@ import SwiftUI
 /// - `.error` — auto-dismissing error toast
 struct CameraView: View {
     @State var viewModel: CameraViewModel
-    
+    @Environment(\.scenePhase) private var scenePhase
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -34,21 +35,30 @@ struct CameraView: View {
                 permissionDeniedView
                 
             case .capturing:
-                CameraCaptureView(onPhotoCaptured: viewModel.photoCaptured)
-                    .overlay(alignment: .top) { disclosureBanner }
+                CameraCaptureView(
+                    onPhotoCaptured: viewModel.photoCaptured,
+                    onSetupFailed: viewModel.cameraSetupFailed
+                )
+                .overlay(alignment: .top) { disclosureBanner }
 
             case .processing(let image):
                 processingView(image: image)
-                
+
             case .noIngredientsFound:
                 noIngredientsView
-                
+
             case .error(let message):
                 errorToastView(message: message)
+
+            case .cameraUnavailable:
+                cameraUnavailableView
             }
         }
         .onAppear {
             viewModel.checkCameraPermission()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            viewModel.handleScenePhaseChange(newPhase)
         }
         .onDisappear {
             viewModel.cancelProcessing()
@@ -199,6 +209,59 @@ struct CameraView: View {
         }
     }
     
+    /// Recovery screen shown when the capture session fails to configure. Mirrors `noIngredientsView`
+    /// so a setup failure offers Retry/Cancel instead of stranding the user on a black preview.
+    private var cameraUnavailableView: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+
+            VStack(spacing: 24) {
+                Image(systemName: Icons.Camera.warning)
+                    .font(.system(size: 60))
+                    .foregroundColor(.orange)
+
+                Text(Strings.Camera.cameraUnavailableTitle)
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+
+                Text(Strings.Camera.cameraUnavailableSubtitle)
+                    .font(.body)
+                    .foregroundColor(.white.opacity(0.7))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+
+                VStack(spacing: 12) {
+                    Button {
+                        viewModel.retryCapture()
+                    } label: {
+                        Text(Strings.Camera.tryAgain)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(12)
+                    }
+
+                    Button {
+                        viewModel.dismiss()
+                    } label: {
+                        Text(Strings.Common.cancel)
+                            .fontWeight(.medium)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.white.opacity(0.2))
+                            .cornerRadius(12)
+                    }
+                }
+                .padding(.horizontal, 40)
+                .padding(.top, 20)
+            }
+        }
+    }
+
     /// Brief error toast displayed at the bottom of the screen before auto-dismissal.
     private func errorToastView(message: String) -> some View {
         ZStack {
@@ -228,12 +291,15 @@ struct CameraView: View {
 /// SwiftUI wrapper around `CameraCaptureViewController`, bridging UIKit camera capture to SwiftUI.
 struct CameraCaptureView: UIViewControllerRepresentable {
     let onPhotoCaptured: (UIImage) -> Void
+    /// Invoked when the capture session fails to configure, so the ViewModel can show a recovery screen.
+    var onSetupFailed: () -> Void = {}
     var showsCloseButton: Bool = true
-    
+
     /// Creates and configures the UIKit camera controller used by this representable.
     func makeUIViewController(context: Context) -> CameraCaptureViewController {
         let controller = CameraCaptureViewController()
         controller.onPhotoCaptured = onPhotoCaptured
+        controller.onSetupFailed = onSetupFailed
         controller.showsCloseButton = showsCloseButton
         return controller
     }
@@ -248,8 +314,9 @@ struct CameraCaptureView: UIViewControllerRepresentable {
 /// and lays out a round capture button and optional close button using Auto Layout.
 final class CameraCaptureViewController: UIViewController {
     var onPhotoCaptured: ((UIImage) -> Void)?
+    var onSetupFailed: (() -> Void)?
     var showsCloseButton: Bool = true
-    
+
     private var captureSession: AVCaptureSession?
     private var photoOutput: AVCapturePhotoOutput?
     private var previewLayer: AVCaptureVideoPreviewLayer?
@@ -297,6 +364,12 @@ final class CameraCaptureViewController: UIViewController {
         
         guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
               let input = try? AVCaptureDeviceInput(device: device) else {
+            // The simulator has no camera, so `default(...)` always returns nil there — capture still
+            // works via the `DeviceUtility.isSimulator` short-circuit in `capturePhoto`, so don't
+            // surface a failure screen. On a real device this is a genuine setup failure.
+            if !DeviceUtility.isSimulator {
+                onSetupFailed?()
+            }
             return
         }
         

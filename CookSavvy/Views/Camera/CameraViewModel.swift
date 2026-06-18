@@ -29,6 +29,8 @@ import SwiftUI
         case noIngredientsFound
         /// An unrecoverable error occurred; the associated string is shown to the user.
         case error(String)
+        /// The capture session failed to configure (e.g. no usable camera); shows a retry/cancel screen.
+        case cameraUnavailable
     }
     
     /// Camera-specific failures surfaced by the capture flow.
@@ -92,6 +94,31 @@ import SwiftUI
         }
     }
     
+    /// `true` when camera permission should be re-checked on foreground (the user may have changed
+    /// it in Settings). Only meaningful before capture has started — mirrors the Onboarding flow's
+    /// `shouldRefreshPermissionOnForeground` gate.
+    var shouldRefreshPermissionOnForeground: Bool {
+        switch state {
+        case .requestingPermission, .permissionDenied:
+            return true
+        case .capturing, .processing, .noIngredientsFound, .error, .cameraUnavailable:
+            return false
+        }
+    }
+
+    /// Re-checks camera permission when the app returns to the foreground, so a permission granted
+    /// in Settings is picked up without the user having to back out and re-enter the screen.
+    func handleScenePhaseChange(_ scenePhase: ScenePhase) {
+        guard scenePhase == .active, shouldRefreshPermissionOnForeground else { return }
+        checkCameraPermission()
+    }
+
+    /// Called by the capture controller when it fails to configure the AV session, so the user sees
+    /// a recoverable retry/cancel screen instead of a silent black preview with a no-op shutter.
+    func cameraSetupFailed() {
+        state = .cameraUnavailable
+    }
+
     /// Opens the iOS Settings app so the user can grant camera permission.
     func openSettings() {
         guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else { return }

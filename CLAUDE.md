@@ -4,6 +4,8 @@ A hobby iOS recipe app that suggests recipes based on user-provided ingredients.
 
 ## Tech Stack
 
+- **Minimum deployment target:** **iOS 18.0**, set uniformly via `IPHONEOS_DEPLOYMENT_TARGET`
+  across the app, test, and project-level build settings (single floor — keep them in sync).
 - **Language:** Swift 6 — the app target builds in **Swift 6 language mode** with complete
   data-race safety. The `CookSavvyTests` test target remains Swift 5 mode (strict-concurrency settings
   still apply as warnings) because every `XCTestCase` subclass hits the
