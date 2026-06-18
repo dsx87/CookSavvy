@@ -198,6 +198,7 @@ nonisolated enum Strings {
         static let resultsFound = String(localized: "discover.resultsFound", defaultValue: "%lld found")
         static let searchErrorMessage = String(localized: "discover.searchErrorMessage", defaultValue: "Some recipe sources couldn't be reached — showing available results")
         static let searchFailedMessage = String(localized: "discover.searchFailedMessage", defaultValue: "Search failed — please try again")
+        static let searchBypassingCategory = String(localized: "discover.searchBypassingCategory", defaultValue: "Searching all ingredients — tap to clear the %@ filter")
         static let quickMealSuffix = String(localized: "discover.quickMealSuffix", defaultValue: " · Quick %lld-min meal")
         static let retry = String(localized: "discover.retry", defaultValue: "Retry")
         static let collectionsSection = String(localized: "discover.collectionsSection", defaultValue: "THIS WEEK'S COLLECTIONS")

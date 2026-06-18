@@ -11,6 +11,9 @@ import Foundation
 private enum IngredientsServiceConstants {
     static let defaultSearchLimit = 50
     static let defaultCategoryLimit = 100
+    /// Upper bound for fetching the entire ingredient catalogue in one read so it can be categorised
+    /// in memory. Comfortably exceeds the ~3.5k unique ingredients derived from the bundled dataset.
+    static let allIngredientsLimit = 8000
 }
 
 /// Manages the ingredient catalog and user ingredient history.
@@ -32,6 +35,12 @@ final class IngredientsService: IngredientsServiceProtocol {
 
     /// Tracks whether the service has been marked ready after the initial check.
     private var isImported: Bool = false
+
+    /// Lazily-built, cached grouping of the full ingredient catalogue by ``IngredientCategory``.
+    /// The dataset has no `food_group` data, so categories are classified from ingredient names; that
+    /// classification is computed once **off the main actor** (see `categorizedIngredients()`). The
+    /// catalogue is static after import, so every subsequent category tap is a cheap dictionary lookup.
+    private var cachedCategorizedIngredients: [IngredientCategory: [Ingredient]]?
 
     // MARK: - Initialization
 
@@ -119,11 +128,10 @@ final class IngredientsService: IngredientsServiceProtocol {
 
     /// Returns ingredients, optionally filtered by category, up to `limit` results.
     ///
-    /// Filtering by `IngredientCategory` requires a two-step mapping because the database
-    /// stores raw `foodGroup` strings rather than a typed category column. All distinct food
-    /// group strings are fetched first; each is mapped to an `IngredientCategory` by constructing
-    /// a throwaway `Ingredient` and reading its computed `.category` property. Only groups that
-    /// match the requested category are then queried for actual ingredients.
+    /// The bundled dataset carries no `food_group` data, so categories are derived from ingredient
+    /// names via `Ingredient.category` (backed by `IngredientCategoryClassifier`). The catalogue is
+    /// classified once off the main actor and cached as a category→ingredients map, so this call is a
+    /// dictionary lookup (see `categorizedIngredients()`).
     ///
     /// - Parameters:
     ///   - category: If provided, only ingredients in this category are returned. Pass `nil` for all ingredients.
@@ -136,34 +144,22 @@ final class IngredientsService: IngredientsServiceProtocol {
         }
 
         do {
-            if let category {
-                let groups = try await dbInterface.getDistinctFoodGroups()
-                let matchingGroups = groups.filter { group in
-                    let testIngredient = Ingredient(name: "", description: nil, pictureFileName: nil, foodGroup: group, foodSubgroup: nil)
-                    return testIngredient.category == category
-                }
-                var results: [Ingredient] = []
-                for group in matchingGroups {
-                    let batch = try await dbInterface.getAllIngredients(inGroup: group, limit: limit - results.count)
-                    results.append(contentsOf: batch)
-                    if results.count >= limit { break }
-                }
-                return Array(results.prefix(limit))
-            } else {
+            guard let category else {
                 return try await dbInterface.getAllIngredients(inGroup: nil, limit: limit)
             }
+            let grouped = try await categorizedIngredients()
+            return Array((grouped[category] ?? []).prefix(limit))
         } catch {
             throw IngredientsServiceError.searchFailed(error)
         }
     }
 
-    /// Returns the set of `IngredientCategory` values that have at least one ingredient in the database.
+    /// Returns the set of `IngredientCategory` values that have at least one ingredient in the
+    /// catalogue, classified by name (the dataset has no `food_group` column).
     ///
-    /// Like `getAllIngredients(category:limit:)`, this requires mapping raw `foodGroup` strings
-    /// to `IngredientCategory` via a proxy `Ingredient`. Results are deduplicated with a `Set`
-    /// and returned in the canonical order defined by `IngredientCategory.allCases`.
+    /// Returned in the canonical order defined by `IngredientCategory.allCases`.
     ///
-    /// - Returns: Categories present in the database, in canonical declaration order.
+    /// - Returns: Categories present in the catalogue, in canonical declaration order.
     /// - Throws: `IngredientsServiceError.databaseError` if the database query fails.
     func getCategories() async throws -> [IngredientCategory] {
         if !isImported {
@@ -171,15 +167,30 @@ final class IngredientsService: IngredientsServiceProtocol {
         }
 
         do {
-            let groups = try await dbInterface.getDistinctFoodGroups()
-            let categories = Set(groups.map { group -> IngredientCategory in
-                let testIngredient = Ingredient(name: "", description: nil, pictureFileName: nil, foodGroup: group, foodSubgroup: nil)
-                return testIngredient.category
-            })
-            return IngredientCategory.allCases.filter { categories.contains($0) }
+            let grouped = try await categorizedIngredients()
+            return IngredientCategory.allCases.filter { !(grouped[$0]?.isEmpty ?? true) }
         } catch {
             throw IngredientsServiceError.databaseError(error)
         }
+    }
+
+    /// Fetches the full catalogue once and groups it by category, caching the result.
+    ///
+    /// `IngredientCategoryClassifier` is `nonisolated`, which only removes actor isolation — on its
+    /// own it would run on the caller's executor (the main actor, since this service is main-actor
+    /// isolated by default). Classifying the whole catalogue (~3.5k rows) is therefore wrapped in a
+    /// `@concurrent` task so it runs on the cooperative pool, off the main thread. The catalogue is
+    /// static after import, so the grouped result is cached and reused for every category tap.
+    private func categorizedIngredients() async throws -> [IngredientCategory: [Ingredient]] {
+        if let cachedCategorizedIngredients {
+            return cachedCategorizedIngredients
+        }
+        let all = try await dbInterface.getAllIngredients(inGroup: nil, limit: IngredientsServiceConstants.allIngredientsLimit)
+        let grouped = await Task { @concurrent in
+            Dictionary(grouping: all, by: { $0.category })
+        }.value
+        cachedCategorizedIngredients = grouped
+        return grouped
     }
 }
 

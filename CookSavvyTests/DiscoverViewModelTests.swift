@@ -617,6 +617,47 @@ final class DiscoverViewModelTests: XCTestCase {
 
         XCTAssertEqual(vm.homeLoadError, Strings.Errors.loadFailed)
     }
+
+    /// Typing a query while a category chip is selected must search the FULL catalogue, not just the
+    /// category subset — otherwise an ingredient outside the category (e.g. garlic while "Grains" is
+    /// selected) would never surface in the suggestions popup.
+    func testSearchWithCategorySelectedQueriesFullCatalogue() async {
+        mockIngredientsService.stubbedAllIngredients = [Ingredient(name: "Rice"), Ingredient(name: "Oats")]
+        mockIngredientsService.stubbedFullSearchResults = [Ingredient(name: "Garlic")]
+
+        let vm = makeViewModel()
+        vm.selectedCategory = .grains
+        vm.searchText = "garlic"
+
+        await yield(until: { vm.ingredientSuggestions.contains { $0.name == "Garlic" } })
+
+        XCTAssertTrue(vm.ingredientSuggestions.contains { $0.name == "Garlic" },
+                      "Search should query the full catalogue, ignoring the selected category")
+        XCTAssertTrue(vm.isSearchBypassingCategory)
+    }
+
+    func testIsSearchBypassingCategory() {
+        let vm = makeViewModel()
+        XCTAssertFalse(vm.isSearchBypassingCategory)
+
+        vm.selectedCategory = .grains
+        XCTAssertFalse(vm.isSearchBypassingCategory, "A category alone (empty search box) is not a bypass")
+
+        vm.searchText = "garlic"
+        XCTAssertTrue(vm.isSearchBypassingCategory)
+
+        vm.selectedCategory = nil
+        XCTAssertFalse(vm.isSearchBypassingCategory)
+    }
+
+    func testClearSelectedCategoryNilsCategory() {
+        let vm = makeViewModel()
+        vm.selectedCategory = .grains
+
+        vm.clearSelectedCategory()
+
+        XCTAssertNil(vm.selectedCategory)
+    }
 }
 
 // MARK: - RecipeSourceTypeTests

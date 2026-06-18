@@ -122,6 +122,15 @@ struct DiscoverView: View {
                     Task { await viewModel.runSmartSearch(viewModel.searchText) }
                 }
             }
+            if viewModel.isSearchBypassingCategory, let category = viewModel.selectedCategory {
+                if !capped.isEmpty || viewModel.hasSmartSearch {
+                    Divider()
+                        .padding(.horizontal, UI.Discover.suggestionRowPaddingH)
+                }
+                SearchBypassingCategoryHintRow(categoryName: category.rawValue.capitalized) {
+                    viewModel.clearSelectedCategory()
+                }
+            }
         }
         .background(theme.surface, in: RoundedRectangle(cornerRadius: UI.Discover.suggestionPopupCornerRadius, style: .continuous))
         .overlay(
@@ -212,7 +221,7 @@ struct DiscoverView: View {
         }
         .overlay(alignment: .topLeading) {
             let shouldShow = viewModel.isSearchFocused && !viewModel.searchText.isEmpty &&
-                (!viewModel.ingredientSuggestions.isEmpty || viewModel.hasSmartSearch)
+                (!viewModel.ingredientSuggestions.isEmpty || viewModel.hasSmartSearch || viewModel.isSearchBypassingCategory)
             if shouldShow {
                 ingredientSuggestionsPopup
                     .offset(y: viewModel.searchBarHeight + UI.Discover.suggestionPopupTopGap)
