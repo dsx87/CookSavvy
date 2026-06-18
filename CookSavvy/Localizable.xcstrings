@@ -555,6 +555,28 @@
         }
       }
     },
+    "camera.cameraUnavailableSubtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "We couldn't start the camera. Please try again."
+          }
+        }
+      }
+    },
+    "camera.cameraUnavailableTitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Camera Unavailable"
+          }
+        }
+      }
+    },
     "camera.detecting" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
