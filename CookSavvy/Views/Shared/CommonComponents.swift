@@ -25,6 +25,58 @@ struct StarRating: View {
     }
 }
 
+/// A left-aligned flow layout that lays subviews out left-to-right and wraps onto a new row
+/// whenever the next subview would exceed the proposed width. Each subview keeps its intrinsic
+/// size — nothing is compressed — so it is well suited to rows of capsule pills/badges that may
+/// overflow a width-constrained column (e.g. `RecipeBadges` inside a `RecipeRow`).
+struct WrappingFlowLayout: Layout {
+    var horizontalSpacing: CGFloat
+    var verticalSpacing: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let maxWidth = proposal.width ?? .infinity
+        var rowWidth: CGFloat = 0      // width consumed by the current row (incl. trailing spacing)
+        var rowHeight: CGFloat = 0     // tallest subview in the current row
+        var totalWidth: CGFloat = 0    // widest row seen so far
+        var totalHeight: CGFloat = 0   // accumulated height of completed rows
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            // Wrap to a new row when this subview no longer fits (but never on an empty row).
+            if rowWidth > 0, rowWidth + size.width > maxWidth {
+                totalWidth = max(totalWidth, rowWidth - horizontalSpacing)
+                totalHeight += rowHeight + verticalSpacing
+                rowWidth = 0
+                rowHeight = 0
+            }
+            rowWidth += size.width + horizontalSpacing
+            rowHeight = max(rowHeight, size.height)
+        }
+        totalWidth = max(totalWidth, rowWidth - horizontalSpacing)
+        totalHeight += rowHeight
+        return CGSize(width: min(totalWidth, maxWidth), height: totalHeight)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX
+        var y = bounds.minY
+        var rowHeight: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            // Move to the next row when this subview would overflow the available width.
+            if x > bounds.minX, x + size.width > bounds.maxX {
+                x = bounds.minX
+                y += rowHeight + verticalSpacing
+                rowHeight = 0
+            }
+            subview.place(at: CGPoint(x: x, y: y), anchor: .topLeading, proposal: ProposedViewSize(size))
+            x += size.width + horizontalSpacing
+            rowHeight = max(rowHeight, size.height)
+        }
+    }
+}
+
 /// A vertically stacked icon + value + label pill used in the recipe details stats row.
 /// Expands to fill its parent width so multiple pills share available space equally.
 struct StatPill: View {

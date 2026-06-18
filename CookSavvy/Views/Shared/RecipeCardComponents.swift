@@ -401,7 +401,7 @@ struct RecipeBadges: View {
     let recipe: Recipe
 
     var body: some View {
-        HStack(spacing: UI.RecipeBadge.spacing) {
+        WrappingFlowLayout(horizontalSpacing: UI.RecipeBadge.spacing, verticalSpacing: UI.RecipeBadge.rowSpacing) {
             if isQuick {
                 badge(Strings.Discover.badgeQuick, icon: Icons.Discover.badgeQuick, color: theme.sky)
                     .accessibilityIdentifier(AccessibilityID.Discover.badgeQuick(recipe.title))
@@ -443,6 +443,8 @@ struct RecipeBadges: View {
         Label(text, systemImage: icon)
             .font(UI.Fonts.tinyCaption)
             .foregroundStyle(color)
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
             .padding(.horizontal, UI.RecipeBadge.paddingH)
             .padding(.vertical, UI.RecipeBadge.paddingV)
             .background(color.opacity(UI.RecipeBadge.backgroundOpacity), in: Capsule())

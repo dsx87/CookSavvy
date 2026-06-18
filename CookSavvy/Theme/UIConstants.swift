@@ -751,6 +751,8 @@ struct UI {
     /// Thresholds and layout constants for recipe badge labels ("Quick", "Easy", "Beginner").
     struct RecipeBadge {
         static let spacing: CGFloat = 4
+        /// Vertical gap between badge rows when they wrap in `WrappingFlowLayout`.
+        static let rowSpacing: CGFloat = 4
         static let paddingH: CGFloat = 8
         static let paddingV: CGFloat = 4
         static let backgroundOpacity: Double = 0.12
