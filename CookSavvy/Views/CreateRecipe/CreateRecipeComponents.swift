@@ -42,7 +42,7 @@ struct StepInputRow: View {
         HStack(alignment: .top, spacing: UI.CreateRecipe.stepRowItemSpacing) {
             Text("\(index + 1)")
                 .font(UI.Fonts.stepNumber)
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.onAccent)
                 .frame(width: UI.RecipeDetails.stepNumberSize, height: UI.RecipeDetails.stepNumberSize)
                 .background(
                     LinearGradient(colors: [theme.accent, theme.rose],

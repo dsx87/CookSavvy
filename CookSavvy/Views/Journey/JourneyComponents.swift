@@ -35,7 +35,7 @@ struct WeekdayDotView: View {
         if isActive {
             Image(systemName: Icons.Journey.checkmark)
                 .font(UI.Fonts.smallCaptionBold)
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.onAccent)
         }
     }
 
@@ -118,7 +118,7 @@ struct ActivitySessionRow: View {
                 .foregroundStyle(theme.text1)
             Text(relativeDate(session.cookedAt))
                 .font(UI.Fonts.tinyCaption)
-                .foregroundStyle(theme.text3)
+                .foregroundStyle(theme.text2)
         }
     }
 
@@ -134,7 +134,7 @@ struct ActivitySessionRow: View {
         if let duration = session.durationFormatted {
             Text(duration)
                 .font(UI.Fonts.smallCaptionMedium)
-                .foregroundStyle(theme.text3)
+                .foregroundStyle(theme.text2)
         }
     }
 
@@ -218,7 +218,7 @@ struct ShoppingListShortcutCard: View {
                 .foregroundStyle(theme.text1)
             Text(shoppingListDescription)
                 .font(UI.Fonts.caption)
-                .foregroundStyle(theme.text3)
+                .foregroundStyle(theme.text2)
                 .multilineTextAlignment(.leading)
         }
     }

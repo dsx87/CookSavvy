@@ -105,7 +105,7 @@ struct MiniRecipeCard: View {
                     Text(cookTimeText)
                         .font(UI.Fonts.tinyCaption)
                 }
-                .foregroundStyle(theme.text3)
+                .foregroundStyle(theme.text2)
             }
             .padding(.horizontal, UI.Components.miniCardPaddingH)
             .padding(.vertical, UI.Components.miniCardPaddingV)

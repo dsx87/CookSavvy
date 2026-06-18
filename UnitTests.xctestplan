@@ -13,6 +13,8 @@
     {
       "parallelizable": false,
       "selectedTests": [
+        "ThemeContrastTests/testLightThemeMeetsAAContrast()",
+        "ThemeContrastTests/testDarkThemeMeetsAAContrast()",
         "AIRecipeSourceTests/testAIRecipeSourceFetchesFromAIService()",
         "AIRecipeSourceTests/testAIRecipeSourceIsAvailableWhenServiceIsAvailable()",
         "AIRecipeSourceTests/testAIRecipeSourceIsUnavailableWhenServiceIsUnavailable()",

@@ -158,7 +158,7 @@ struct CookModeView: View {
                         .accessibilityLabel(String(format: Strings.Accessibility.timerRemaining, viewModel.timerDisplayText()))
                     Text(Strings.CookMode.timerRemaining)
                         .font(UI.Fonts.tinyCaption)
-                        .foregroundStyle(theme.text3)
+                        .foregroundStyle(theme.text2)
                         .accessibilityHidden(true)
                 }
             }
@@ -234,7 +234,7 @@ struct CookModeView: View {
             Button { viewModel.submitFeedback() } label: {
                 Text(Strings.CookMode.submit)
                     .font(UI.Fonts.buttonLabel)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(theme.onAccent)
                     .frame(maxWidth: .infinity)
                     .frame(height: UI.CookMode.feedbackButtonHeight)
                     .background(
@@ -282,7 +282,7 @@ struct CookModeView: View {
                     Text(viewModel.isLastStep ? Strings.CookMode.finish : Strings.CookMode.done)
                         .font(UI.Fonts.buttonLabel)
                 }
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.onAccent)
                 .frame(maxWidth: .infinity)
                 .frame(height: UI.CookMode.navigationButtonSize)
                 .background(

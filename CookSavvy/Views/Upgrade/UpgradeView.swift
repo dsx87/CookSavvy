@@ -247,7 +247,7 @@ struct PlanCard: View {
                     HStack {
                         if isLoading {
                             ProgressView()
-                                .tint(.white)
+                                .tint(theme.onAccent)
                         } else {
                             Text(buttonTitle)
                                 .fontWeight(.semibold)
@@ -263,7 +263,7 @@ struct PlanCard: View {
                         ),
                         in: RoundedRectangle(cornerRadius: UI.Upgrade.subscribeCornerRadius, style: .continuous)
                     )
-                    .foregroundStyle(.white)
+                    .foregroundStyle(theme.onAccent)
                     .clipShape(RoundedRectangle(cornerRadius: UI.Upgrade.subscribeCornerRadius, style: .continuous))
                 }
                 .disabled(isLoading)

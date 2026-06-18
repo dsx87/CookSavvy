@@ -119,7 +119,7 @@ struct JourneyView: View {
                     .foregroundStyle(theme.text1)
                 Text(Strings.Auth.signInSubtitle)
                     .font(UI.Fonts.caption)
-                    .foregroundStyle(theme.text3)
+                    .foregroundStyle(theme.text2)
             }
 
             Spacer()
@@ -165,7 +165,7 @@ struct JourneyView: View {
                     .foregroundStyle(theme.text1)
                 Text(Strings.Journey.accountSecured)
                     .font(UI.Fonts.caption)
-                    .foregroundStyle(theme.text3)
+                    .foregroundStyle(theme.text2)
             }
 
             Spacer()
@@ -234,7 +234,7 @@ struct JourneyView: View {
     private var emptySavedRecipesView: some View {
         Text(Strings.Journey.savedRecipesEmpty)
             .font(UI.Fonts.caption)
-            .foregroundStyle(theme.text3)
+            .foregroundStyle(theme.text2)
             .padding(.vertical, UI.Journey.shortcutButtonPaddingV)
             .padding(.horizontal, UI.Journey.shortcutHorizontalPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -281,7 +281,7 @@ struct JourneyView: View {
                 .foregroundStyle(theme.text1)
             Text(label)
                 .font(UI.Fonts.tinyCaptionMedium)
-                .foregroundStyle(theme.text3)
+                .foregroundStyle(theme.text2)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
@@ -337,7 +337,7 @@ struct JourneyView: View {
                     .accessibilityIdentifier(AccessibilityID.Journey.Stats.monthlySavings)
                 Text(viewModel.monthlySavingsCaveat)
                     .font(UI.Fonts.tinyCaption)
-                    .foregroundStyle(theme.text3)
+                    .foregroundStyle(theme.text2)
             }
 
             Spacer(minLength: 0)
@@ -370,7 +370,7 @@ struct JourneyView: View {
             if viewModel.userRecipes.isEmpty {
                 Text(Strings.Journey.shareCreations)
                     .font(UI.Fonts.caption)
-                    .foregroundStyle(theme.text3)
+                    .foregroundStyle(theme.text2)
             }
         }
         .accessibilityIdentifier(AccessibilityID.Journey.myRecipes)
@@ -398,7 +398,7 @@ struct JourneyView: View {
             if !viewModel.userRecipes.isEmpty {
                 Text(recipeCountText)
                     .font(UI.Fonts.smallCaptionMedium)
-                    .foregroundStyle(theme.text3)
+                    .foregroundStyle(theme.text2)
                 seeAllButton(
                     title: Strings.RecipeList.myRecipes,
                     recipes: viewModel.userRecipes
@@ -493,7 +493,7 @@ struct JourneyView: View {
         VStack(alignment: .leading, spacing: UI.Journey.achievementCompactSpacing) {
             Text(Strings.Journey.achievementsSummary)
                 .font(UI.Fonts.caption)
-                .foregroundStyle(theme.text3)
+                .foregroundStyle(theme.text2)
 
             antiWasteAchievementsRow
 

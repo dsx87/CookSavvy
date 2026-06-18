@@ -120,7 +120,7 @@ struct RecipeDetailsView: View {
                 if let author = viewModel.recipe.author {
                     Text(String(format: Strings.RecipeDetails.byAuthor, author))
                         .font(UI.Fonts.caption)
-                        .foregroundStyle(theme.text3)
+                        .foregroundStyle(theme.text2)
                 }
             }
         }
@@ -258,7 +258,7 @@ struct RecipeDetailsView: View {
         HStack(alignment: .top, spacing: UI.RecipeDetails.stepItemSpacing) {
             Text("\(index + 1)")
                 .font(UI.Fonts.stepNumber)
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.onAccent)
                 .frame(width: UI.RecipeDetails.stepNumberSize, height: UI.RecipeDetails.stepNumberSize)
                 .background(
                     LinearGradient(colors: [theme.accent, theme.rose],
@@ -306,7 +306,7 @@ struct RecipeDetailsView: View {
                 Text(Strings.CookMode.startCooking)
                     .font(UI.Fonts.buttonLabel)
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(theme.onAccent)
             .frame(maxWidth: .infinity)
             .padding(.vertical, UI.RecipeDetails.buttonVerticalPadding)
             .background(

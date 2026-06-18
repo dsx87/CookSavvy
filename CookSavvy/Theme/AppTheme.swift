@@ -21,6 +21,10 @@ protocol AppTheme {
     var card: Color { get }
     /// The primary accent color (orange-amber), used for CTAs and interactive highlights.
     var accent: Color { get }
+    /// The foreground color for content placed *on top of* `accent` (e.g. primary CTA labels
+    /// like "Find Dinner"/subscribe). A near-black so it clears WCAG AA (>= 4.5:1) on the
+    /// accent fill — plain white fails AA on the orange in both light and dark.
+    var onAccent: Color { get }
     /// A low-opacity tint of `accent`, used for soft accent backgrounds on chips and badges.
     var accentSoft: Color { get }
     /// A teal/mint complementary color, used for positive states and secondary highlights.
@@ -110,6 +114,7 @@ struct LightTheme: AppTheme {
     var surfaceLight: Color { Color(red: 0xE6/255, green: 0xDB/255, blue: 0xCF/255) }
     var card: Color { Color(red: 0xFF/255, green: 0xFC/255, blue: 0xF8/255) }
     var accent: Color { Color(red: 0xE4/255, green: 0x7A/255, blue: 0x2E/255) }
+    var onAccent: Color { Color(red: 0x1F/255, green: 0x1A/255, blue: 0x17/255) }
     var accentSoft: Color { accent.opacity(0.15) }
     var mint: Color { Color(red: 0x2F/255, green: 0x9F/255, blue: 0x88/255) }
     var mintSoft: Color { mint.opacity(0.15) }
@@ -121,7 +126,9 @@ struct LightTheme: AppTheme {
     var skySoft: Color { sky.opacity(0.15) }
     var gold: Color { Color(red: 0xD7/255, green: 0xA6/255, blue: 0x42/255) }
     var text1: Color { Color(red: 0x1F/255, green: 0x1A/255, blue: 0x17/255) }
-    var text2: Color { Color(red: 0x6D/255, green: 0x63/255, blue: 0x5B/255) }
+    // Darkened from #6D635B to clear WCAG AA (>= 4.5:1) on the darkest light surface
+    // (`surfaceLight` #E6DBCF), where the old value measured ~4.29:1 (T-039).
+    var text2: Color { Color(red: 0x64/255, green: 0x5B/255, blue: 0x53/255) }
     var text3: Color { Color(red: 0xA0/255, green: 0x94/255, blue: 0x8A/255) }
     var divider: Color { text1.opacity(0.10) }
 
@@ -156,6 +163,7 @@ struct DarkTheme: AppTheme {
     var surfaceLight: Color { Color(red: 0x29/255, green: 0x29/255, blue: 0x36/255) }
     var card: Color { Color(red: 0x21/255, green: 0x21/255, blue: 0x2E/255) }
     var accent: Color { Color(red: 0xFF/255, green: 0x8C/255, blue: 0x33/255) }
+    var onAccent: Color { Color(red: 0x1F/255, green: 0x1A/255, blue: 0x17/255) }
     var accentSoft: Color { accent.opacity(0.15) }
     var mint: Color { Color(red: 0x4D/255, green: 0xD9/255, blue: 0xB8/255) }
     var mintSoft: Color { mint.opacity(0.15) }

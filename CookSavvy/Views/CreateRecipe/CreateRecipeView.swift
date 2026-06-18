@@ -401,7 +401,7 @@ struct CreateRecipeView: View {
                         Label(String(format: Strings.CreateRecipe.stepCount, Int64(viewModel.validSteps.count)), systemImage: Icons.CreateRecipe.number)
                     }
                     .font(UI.Fonts.captionSemibold)
-                    .foregroundStyle(theme.text3)
+                    .foregroundStyle(theme.text2)
                 }
                 .padding(UI.CreateRecipe.reviewContentPadding)
             }
@@ -429,7 +429,7 @@ struct CreateRecipeView: View {
                     if viewModel.isLastStep {
                         if viewModel.isSaving {
                             ProgressView()
-                                .tint(.white)
+                                .tint(theme.onAccent)
                         } else {
                             Image(systemName: Icons.CookMode.checkmark)
                                 .font(UI.Fonts.buttonIcon)
@@ -438,7 +438,7 @@ struct CreateRecipeView: View {
                     Text(viewModel.isLastStep ? Strings.CreateRecipe.saveRecipe : Strings.CreateRecipe.next)
                         .font(UI.Fonts.buttonLabel)
                 }
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.onAccent)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, UI.CreateRecipe.bottomButtonVerticalPadding)
                 .background(

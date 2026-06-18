@@ -46,7 +46,7 @@ struct OnboardingView: View {
                     } label: {
                         Text(viewModel.primaryButtonTitle)
                             .font(UI.Fonts.buttonLabel)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(theme.onAccent)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, UI.Onboarding.buttonVerticalPadding)
                             .background(theme.accent, in: RoundedRectangle(cornerRadius: UI.Onboarding.buttonCornerRadius, style: .continuous))

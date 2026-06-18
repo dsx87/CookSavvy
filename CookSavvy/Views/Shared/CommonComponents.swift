@@ -96,7 +96,7 @@ struct StatPill: View {
                 .foregroundStyle(theme.text1)
             Text(label)
                 .font(UI.Fonts.statPillLabel)
-                .foregroundStyle(theme.text3)
+                .foregroundStyle(theme.text2)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, UI.Components.statPillPadding)

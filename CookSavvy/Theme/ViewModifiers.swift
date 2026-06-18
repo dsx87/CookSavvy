@@ -55,7 +55,7 @@ struct NeonGlowModifier: ViewModifier {
 }
 
 /// Applies the standard section label style: small bold rounded font, uppercased text,
-/// wide letter-spacing, and `theme.text3` foreground color.
+/// wide letter-spacing, and `theme.text2` foreground color.
 ///
 /// Use on `Text` views that head a content section (e.g. "SAVED RECIPES", "RECENT COOKS").
 struct SectionLabelModifier: ViewModifier {
@@ -66,7 +66,9 @@ struct SectionLabelModifier: ViewModifier {
             .font(theme.sectionLabelFont)
             .textCase(.uppercase)
             .tracking(UI.V2.SectionLabel.tracking)
-            .foregroundStyle(theme.text3)
+            // text2 (not text3): section headings are load-bearing text and must clear
+            // WCAG AA. text3 is reserved for decoration. (T-039)
+            .foregroundStyle(theme.text2)
     }
 }
 

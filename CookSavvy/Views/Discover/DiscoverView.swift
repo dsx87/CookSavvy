@@ -85,7 +85,7 @@ struct DiscoverView: View {
         } label: {
             Text(Strings.Discover.findRecipes)
                 .font(UI.Fonts.buttonLabel)
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.onAccent)
                 .frame(maxWidth: .infinity)
                 .frame(height: UI.Discover.findButtonHeight)
                 .background(theme.accent)
@@ -175,7 +175,7 @@ struct DiscoverView: View {
         VStack(alignment: .leading, spacing: UI.Discover.headerSpacing) {
             Text(viewModel.greeting)
                 .font(UI.Fonts.greeting)
-                .foregroundStyle(theme.text3)
+                .foregroundStyle(theme.text2)
             Text(Strings.Discover.kitchenTitle)
                 .font(UI.Fonts.heroTitle)
                 .foregroundStyle(theme.text1)
@@ -351,7 +351,7 @@ struct DiscoverView: View {
                     if let reason = viewModel.suggestionReason {
                         Text(reason)
                             .font(UI.Fonts.caption)
-                            .foregroundStyle(theme.text3)
+                            .foregroundStyle(theme.text2)
                     }
                 }
 
@@ -604,7 +604,7 @@ struct DiscoverView: View {
             VStack(alignment: .leading, spacing: UI.Discover.resultsHeaderSpacing) {
                 Text(viewModel.greeting)
                     .font(UI.Fonts.greeting)
-                    .foregroundStyle(theme.text3)
+                    .foregroundStyle(theme.text2)
                 Text(Strings.Discover.recipesForYou)
                     .font(UI.Fonts.largeTitle)
                     .foregroundStyle(theme.text1)
@@ -682,7 +682,7 @@ struct DiscoverView: View {
                         .sectionLabel()
                     Text(Strings.Discover.alwaysHaveHelper)
                         .font(UI.Fonts.caption)
-                        .foregroundStyle(theme.text3)
+                        .foregroundStyle(theme.text2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
