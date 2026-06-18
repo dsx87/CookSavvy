@@ -11,6 +11,10 @@ import Foundation
 nonisolated enum RecipeMatchRanker {
     private struct SortKey {
         let coverageRatio: Double
+        /// Coarse coverage band derived from `coverageRatio`. Used only when a mood is active so that
+        /// recipes with *similar* match quality share a tier and the mood score can reorder within it
+        /// — without a tier, the continuous `coverageRatio` almost never ties and mood never surfaces.
+        let coverageTier: Int
         let missingCount: Int
         let moodScore: Int?
         let weightedRating: Double
@@ -18,6 +22,11 @@ nonisolated enum RecipeMatchRanker {
         let complexityRank: Int
         let title: String
     }
+
+    /// Number of coarse coverage bands. Higher = finer tiers (mood reorders less); lower = coarser
+    /// (mood reorders more). Four bands groups e.g. ~0-12%, ~13-37%, ~38-62%, ~63-87%, ~88-100% match
+    /// quality together. Tunable.
+    private static let coverageTierBands = 4
 
     static func rank(_ recipes: [Recipe], mood: RecipeMood? = nil) -> [Recipe] {
         // Precompute each recipe's SortKey once (O(n)) rather than rebuilding both operands' keys on
@@ -37,16 +46,27 @@ nonisolated enum RecipeMatchRanker {
     /// the previous inline `compare` logic, so ranking output is unchanged; both `rank` and
     /// `compare` (and thus `RecipeRecommendationService`) delegate here to avoid duplicated logic.
     private static func precedes(_ lhsKey: SortKey, _ rhsKey: SortKey) -> Bool {
-        if lhsKey.coverageRatio != rhsKey.coverageRatio {
-            return lhsKey.coverageRatio > rhsKey.coverageRatio
-        }
-
-        if lhsKey.missingCount != rhsKey.missingCount {
-            return lhsKey.missingCount < rhsKey.missingCount
-        }
-
-        if let lhsMoodScore = lhsKey.moodScore, let rhsMoodScore = rhsKey.moodScore, lhsMoodScore != rhsMoodScore {
-            return lhsMoodScore > rhsMoodScore
+        // When a mood is active (both keys carry a mood score), coverage stays primary but only as a
+        // coarse *tier*, so mood becomes a strong second signal that visibly reorders recipes of
+        // similar match quality. When no mood is active the ordering below is identical to before:
+        // full-resolution coverage → missing count → rating → … (no behavioural change).
+        if let lhsMoodScore = lhsKey.moodScore, let rhsMoodScore = rhsKey.moodScore {
+            if lhsKey.coverageTier != rhsKey.coverageTier {
+                return lhsKey.coverageTier > rhsKey.coverageTier
+            }
+            if lhsMoodScore != rhsMoodScore {
+                return lhsMoodScore > rhsMoodScore
+            }
+            if lhsKey.missingCount != rhsKey.missingCount {
+                return lhsKey.missingCount < rhsKey.missingCount
+            }
+        } else {
+            if lhsKey.coverageRatio != rhsKey.coverageRatio {
+                return lhsKey.coverageRatio > rhsKey.coverageRatio
+            }
+            if lhsKey.missingCount != rhsKey.missingCount {
+                return lhsKey.missingCount < rhsKey.missingCount
+            }
         }
 
         if lhsKey.weightedRating != rhsKey.weightedRating {
@@ -79,6 +99,7 @@ nonisolated enum RecipeMatchRanker {
 
         return SortKey(
             coverageRatio: coverageRatio,
+            coverageTier: Int((coverageRatio * Double(coverageTierBands)).rounded()),
             missingCount: missingCount,
             moodScore: mood.map { RecipeMoodRanker.score(for: recipe, mood: $0) },
             weightedRating: weightedRating(for: recipe),

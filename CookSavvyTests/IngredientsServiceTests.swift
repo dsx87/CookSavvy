@@ -289,6 +289,42 @@ final class IngredientsServiceTests: XCTestCase {
         }
     }
 
+    // MARK: - Category Filtering Tests
+
+    func testGetAllIngredientsByCategoryFiltersByName() async throws {
+        // The dataset has no food_group data, so categories are derived from ingredient names.
+        mockDB.storedIngredients = [
+            Ingredient(name: "Chicken"),
+            Ingredient(name: "Salmon"),
+            Ingredient(name: "Tofu"),
+            Ingredient(name: "Tomato"),
+            Ingredient(name: "Cheddar"),
+            Ingredient(name: "Rice")
+        ]
+        ingredientsService = IngredientsService(dbInterface: mockDB)
+
+        let proteins = try await ingredientsService.getAllIngredients(category: .proteins)
+        let proteinNames = Set(proteins.map(\.name))
+
+        XCTAssertEqual(proteinNames, ["Chicken", "Salmon", "Tofu"])
+        XCTAssertFalse(proteinNames.contains("Tomato"))
+        XCTAssertFalse(proteinNames.contains("Rice"))
+    }
+
+    func testGetCategoriesReturnsOnlyPresentCategoriesInCanonicalOrder() async throws {
+        mockDB.storedIngredients = [
+            Ingredient(name: "Chicken"),  // proteins
+            Ingredient(name: "Tomato"),   // veggies
+            Ingredient(name: "Rice")      // grains
+        ]
+        ingredientsService = IngredientsService(dbInterface: mockDB)
+
+        let categories = try await ingredientsService.getCategories()
+
+        // Canonical declaration order: proteins, veggies, dairy, grains, ...
+        XCTAssertEqual(categories, [.proteins, .veggies, .grains])
+    }
+
     // MARK: - Error Description Tests
 
     func testErrorDescriptions() {

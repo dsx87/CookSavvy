@@ -104,6 +104,7 @@ enum AccessibilityID {
 
         static let suggestionPopup = "discover.suggestionPopup"
         static let smartSearchRow = "discover.smartSearchRow"
+        static let searchBypassingCategoryHint = "discover.searchBypassingCategoryHint"
 
         /// Returns the id for a suggestion row by ingredient name.
         static func suggestion(_ name: String) -> String {

@@ -340,6 +340,36 @@ struct SmartSearchRow: View {
     }
 }
 
+/// Footer row shown in the ingredient suggestions popup when the user types while a category chip
+/// is still selected. It explains that the search is querying the full catalogue (not just the
+/// category) and lets the user clear the now-bypassed category filter by tapping the row.
+struct SearchBypassingCategoryHintRow: View {
+    @Environment(\.appTheme) private var theme
+    let categoryName: String
+    let onClear: () -> Void
+
+    var body: some View {
+        Button(action: onClear) {
+            HStack(spacing: UI.Components.categoryChipSpacing) {
+                Text(String(format: Strings.Discover.searchBypassingCategory, categoryName))
+                    .font(UI.Fonts.caption)
+                    .foregroundStyle(theme.text3)
+                    .lineLimit(2)
+                Spacer()
+                Image(systemName: Icons.SearchBar.clear)
+                    .font(UI.Fonts.caption)
+                    .foregroundStyle(theme.text3)
+            }
+            .padding(.horizontal, UI.Discover.suggestionRowPaddingH)
+            .padding(.vertical, UI.Discover.suggestionRowPaddingV)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(AccessibilityID.Discover.searchBypassingCategoryHint)
+        .accessibilityLabel(String(format: Strings.Discover.searchBypassingCategory, categoryName))
+    }
+}
+
 /// A dashed-border card prompting the user to create a custom ingredient or recipe.
 /// Appears in ingredient/recipe grid as a call-to-action cell.
 struct AddYourOwnCard: View {

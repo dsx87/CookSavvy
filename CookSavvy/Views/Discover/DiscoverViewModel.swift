@@ -412,6 +412,12 @@ struct DiscoverMatchBadgeState {
         selectedCategory == category
     }
 
+    /// `true` when the search box is filtering the full catalogue while a category chip is still
+    /// selected — the suggestions popup surfaces a hint that the category filter is currently bypassed.
+    var isSearchBypassingCategory: Bool {
+        selectedCategory != nil && !searchText.isEmpty
+    }
+
     /// Returns `true` when the ingredient bubble should render as selected.
     func isIngredientSelected(_ ingredient: Ingredient) -> Bool {
         selectedIngredients.contains { $0.id == ingredient.id }
@@ -697,6 +703,12 @@ struct DiscoverMatchBadgeState {
     /// - Parameter category: The category to toggle.
     func toggleCategory(_ category: IngredientCategory) {
         selectedCategory = selectedCategory == category ? nil : category
+    }
+
+    /// Clears the selected category. Backs the "searching all ingredients" popup hint so the grid
+    /// doesn't snap back to the category once the user clears the search box.
+    func clearSelectedCategory() {
+        selectedCategory = nil
     }
 
     /// Clears all result-only filters that should not survive a new empty ingredient state.
@@ -1009,18 +1021,27 @@ struct DiscoverMatchBadgeState {
         let query = searchText
 
         do {
-            if let category {
+            if !query.isEmpty {
+                // A search query always queries the full catalogue, regardless of any selected
+                // category, so typing always surfaces what the user types (e.g. "garlic" while the
+                // "Grains" chip is selected). The category only governs the grid when the box is empty.
+                let fetchedIngredients = try await ingredientsService.searchFullIngredients(matching: query)
+                guard isCurrentRefresh(token) else { return }
+                shownIngredients = fetchedIngredients
+                ingredientSuggestions = makeSuggestions(from: fetchedIngredients, query: query)
+            } else if let category {
                 if loadedCategory != category || categoryIngredients.isEmpty {
-                    let fetchedIngredients = try await ingredientsService.getAllIngredients(category: category)
+                    var fetchedIngredients = try await ingredientsService.getAllIngredients(category: category)
                     guard isCurrentRefresh(token) else { return }
+                    // Match the popular-grid treatment so category bubbles render with emoji too.
+                    IngredientEmojiProvider.fillIngredientsWithEmoji(&fetchedIngredients)
                     categoryIngredients = fetchedIngredients
                     loadedCategory = category
                 }
 
                 guard isCurrentRefresh(token) else { return }
-                let filtered = filterCategoryIngredients(categoryIngredients, query: query)
-                shownIngredients = filtered
-                ingredientSuggestions = makeSuggestions(from: filtered, query: query)
+                shownIngredients = categoryIngredients
+                ingredientSuggestions = []
             } else {
                 let fetchedIngredients = try await ingredientsService.searchFullIngredients(matching: query)
                 guard isCurrentRefresh(token) else { return }
@@ -1049,14 +1070,6 @@ struct DiscoverMatchBadgeState {
         guard !query.isEmpty else { return [] }
         let selectedIDs = Set(selectedIngredients.map { $0.id })
         return ingredients.filter { !selectedIDs.contains($0.id) }
-    }
-
-    /// Filters a pre-fetched ingredient list by a search query (case-insensitive contains).
-    private func filterCategoryIngredients(_ ingredients: [Ingredient], query: String) -> [Ingredient] {
-        guard !query.isEmpty else { return ingredients }
-        return ingredients.filter { ingredient in
-            ingredient.name.localizedCaseInsensitiveContains(query)
-        }
     }
 
     /// Returns `true` if the given token matches the live refresh token and the task has not been cancelled.

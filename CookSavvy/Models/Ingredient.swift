@@ -286,12 +286,26 @@ nonisolated struct Ingredient: Codable, Identifiable {
         case basicComponent
     }
     
-    /// Derives a broad ``IngredientCategory`` by matching `foodGroup` against known keyword patterns.
+    /// Derives a broad ``IngredientCategory`` for the ingredient.
     ///
-    /// The mapping is intentionally liberal — any `foodGroup` containing `"protein"` or `"meat"`
-    /// resolves to `.proteins`, for example. Falls back to `.other` for unrecognised groups.
+    /// Prefers the dataset's `foodGroup` when it maps to a known category (forward-compatible if a
+    /// future dataset ships food groups), and otherwise classifies by name via
+    /// ``IngredientCategoryClassifier``. The current bundled dataset has no `foodGroup` values, so in
+    /// practice the name path is what drives the ingredient-grid category chips. Falls back to
+    /// `.other` when neither signal resolves.
     var category: IngredientCategory {
-        guard let group = foodGroup?.lowercased(), !group.isEmpty else { return .other }
+        if let group = Self.category(forFoodGroup: foodGroup) {
+            return group
+        }
+        return IngredientCategoryClassifier.category(forName: basicComponent ?? name)
+    }
+
+    /// Maps a raw `foodGroup` string to an ``IngredientCategory`` using liberal keyword matching —
+    /// any group containing `"protein"` or `"meat"` resolves to `.proteins`, for example. Returns
+    /// `nil` when the group is absent/empty or unrecognised, so callers can fall back to name-based
+    /// classification.
+    private static func category(forFoodGroup foodGroup: String?) -> IngredientCategory? {
+        guard let group = foodGroup?.lowercased(), !group.isEmpty else { return nil }
         switch group {
         case let g where g.contains("protein") || g.contains("meat") || g.contains("poultry") || g.contains("fish") || g.contains("seafood") || g.contains("egg"):
             return .proteins
@@ -306,7 +320,7 @@ nonisolated struct Ingredient: Codable, Identifiable {
         case let g where g.contains("spice") || g.contains("herb") || g.contains("seasoning") || g.contains("condiment"):
             return .spices
         default:
-            return .other
+            return nil
         }
     }
     

@@ -81,6 +81,15 @@ background work explicitly **off** the main actor, not to sprinkle annotations.
   recipe JSON decode + the `recipeCache`, no explicit lock/queue), `ImageService` (disk I/O + ZIP +
   `UIImage` decode + `imageCache`), and `ImageExtractor` (serialised ZIP reads). Their protocol methods
   are `async` and callers `await`.
+- **The *other* services are plain classes = `MainActor` by default** (`IngredientsService`,
+  `RecipeService`, `UserDataService`, the recipe sources, etc. — they are **not** `actor`s). They
+  `await` the actors above for I/O, but **their own code, including the continuation after each
+  `await`, resumes on the main actor.** So CPU work done *in* such a service (e.g. classifying the
+  whole ingredient catalogue, mapping/filtering large arrays) runs **on main** unless explicitly
+  wrapped in `@concurrent` — calling a `nonisolated` helper does **not** change this (see next bullet).
+  Worked example: `IngredientsService.categorizedIngredients()` fetches via the `DBInterface` actor
+  but groups the ~3.5k-row catalogue inside `await Task { @concurrent in … }.value` precisely because
+  the grouping would otherwise execute on the main thread.
 - **Stateless CPU/IO leaves are `nonisolated`**: `Unarchiver`, the rankers (`RecipeMatchRanker`,
   `RecipeMoodRanker`, `RecipeMatchExplainer`). **`nonisolated` only removes actor isolation — it does
   not move work off main.** A `nonisolated` *sync* func runs on its caller's executor (the main thread

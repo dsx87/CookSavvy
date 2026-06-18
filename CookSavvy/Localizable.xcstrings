@@ -1842,6 +1842,17 @@
         }
       }
     },
+    "discover.searchBypassingCategory" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Searching all ingredients — tap to clear the %@ filter"
+          }
+        }
+      }
+    },
     "discover.searchErrorMessage" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {

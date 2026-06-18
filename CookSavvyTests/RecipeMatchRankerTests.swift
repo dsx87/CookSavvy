@@ -107,4 +107,46 @@ final class RecipeMatchRankerTests: XCTestCase {
         let ranked = RecipeMatchRanker.rank([unknownMetadata, longer, shorterAndEasier])
         XCTAssertEqual(ranked.map(\.title), ["Alpha", "Beta", "Gamma"])
     }
+
+    // MARK: - Mood Ranking
+
+    func testMoodReordersRecipesWithinSameCoverageTier() {
+        // Both recipes: 4 ingredients, 1 missing → coverage 0.75, identical coverage tier + missing count.
+        let warmStew = makeRecipe(
+            title: "Warm Stew",
+            ingredientNames: ["chicken", "rice", "beef", "water"],
+            missingIngredients: ["water"]
+        )
+        let appleBowl = makeRecipe(
+            title: "Apple Bowl",
+            ingredientNames: ["chicken", "rice", "apple", "water"],
+            missingIngredients: ["water"]
+        )
+
+        // With a cozy mood, the mood-matching recipe rises within the shared coverage tier...
+        let rankedWithMood = RecipeMatchRanker.rank([appleBowl, warmStew], mood: .cozy)
+        XCTAssertEqual(rankedWithMood.first?.title, "Warm Stew")
+
+        // ...but with no mood the tie falls through to the alphabetical title tie-break (unchanged behaviour).
+        let rankedNoMood = RecipeMatchRanker.rank([warmStew, appleBowl])
+        XCTAssertEqual(rankedNoMood.first?.title, "Apple Bowl")
+    }
+
+    func testCoverageTierStaysPrimaryEvenWhenMoodIsActive() {
+        // Perfect coverage (1.0 → top tier), no cozy signal.
+        let perfectMatch = makeRecipe(
+            title: "Apple Bowl",
+            ingredientNames: ["chicken", "rice"],
+            missingIngredients: []
+        )
+        // Strong cozy signal but only 0.5 coverage (lower tier).
+        let cozyButFewerMatches = makeRecipe(
+            title: "Warm Stew Soup Ramen",
+            ingredientNames: ["chicken", "rice", "beef", "fish", "pork", "lamb"],
+            missingIngredients: ["beef", "fish", "pork"]
+        )
+
+        let ranked = RecipeMatchRanker.rank([cozyButFewerMatches, perfectMatch], mood: .cozy)
+        XCTAssertEqual(ranked.first?.title, "Apple Bowl")
+    }
 }
