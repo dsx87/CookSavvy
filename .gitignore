@@ -157,3 +157,6 @@ APIKeys.plist
 # Internal product & audit docs — kept locally, not published
 /prod/
 /docs/audits/
+
+# Local MCP server config (contains personal Sentry org slug)
+.mcp.json
