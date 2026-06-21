@@ -153,3 +153,7 @@ APIKeys.plist
 !.claude/rules
 
 .sentryclirc
+
+# Internal product & audit docs — kept locally, not published
+/prod/
+/docs/audits/

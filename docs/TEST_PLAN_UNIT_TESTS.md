@@ -32,8 +32,8 @@ Guidance for writing unit/integration tests in CookSavvy, plus the remaining tes
 
 ## Remaining Gaps
 
-The two most release-sensitive services still have **no direct unit tests**. Both are called out in
-the engineering audit (`docs/audits/AUDIT_2026-06-06.md`) as the highest-value missing coverage.
+The two most release-sensitive services still have **no direct unit tests**. Both are the
+highest-value missing coverage.
 
 ### 1. `StoreKitSubscriptionService` — `CookSavvy/Services/Subscription/StoreKitSubscriptionService.swift`
 
