@@ -12,7 +12,7 @@ import Foundation
 /// client-safe identifier, not a secret — consistent with how the Supabase anon key is shipped.
 struct TelemetryDeckConfiguration {
     /// The `APIKeys.plist` key used to look up the TelemetryDeck application identifier.
-    static let appIDKey = "TELEMETRYDECK_APP_ID"
+    static let appIDKey = "2A42D757-6BA9-45FA-B1DC-424A0C4ADF72"
 
     /// The TelemetryDeck application identifier, or `nil` when unconfigured.
     private(set) var appID: String?
