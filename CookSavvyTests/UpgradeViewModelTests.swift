@@ -87,6 +87,22 @@ final class UpgradeViewModelTests: XCTestCase {
         XCTAssertTrue(didDismiss)
     }
 
+    func testPurchasingMonthlyTracksUpgradePurchasedWithProductId() async {
+        await sut.purchase(.monthly)
+
+        let purchaseEvents = analyticsService.trackedEvents.filter { $0.0 == .upgradePurchased }
+        XCTAssertEqual(purchaseEvents.count, 1)
+        XCTAssertEqual(purchaseEvents.first?.1, ["product_id": PremiumSubscriptionOption.monthly.productIdentifier])
+    }
+
+    func testPurchasingYearlyTracksUpgradePurchasedWithProductId() async {
+        await sut.purchase(.yearly)
+
+        let purchaseEvents = analyticsService.trackedEvents.filter { $0.0 == .upgradePurchased }
+        XCTAssertEqual(purchaseEvents.count, 1)
+        XCTAssertEqual(purchaseEvents.first?.1, ["product_id": PremiumSubscriptionOption.yearly.productIdentifier])
+    }
+
     func testProductIdentifierMappingTreatsBothProductsAsPremium() {
         XCTAssertEqual(
             PremiumSubscriptionOption.option(for: "com.cooksavvy.subscription.premium")?.associatedPlan,

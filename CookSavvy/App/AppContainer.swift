@@ -226,6 +226,13 @@ final class AppContainer {
         self.curatedCollectionService = CuratedCollectionService(dbInterface: db)
         self.smartSearchService = SmartSearchService.makeIfAvailable(clientProvider: supabaseAssembly.clientProvider)
         self.idleTimerService = IdleTimerService()
+
+        // Emit the funnel-entry signal once per successful cold launch. Placed at the end of the
+        // production initializer so it only fires for a fully wired container (a thrown init never
+        // counts as an app open) and exactly once per process — foreground/background cycles do not
+        // re-fire it, keeping `app_opened` a clean denominator for the remote funnels (T-002).
+        // DEBUG/test containers use the memberwise initializer below and deliberately do not emit it.
+        analyticsService.track(.appOpened)
     }
 
     #if DEBUG

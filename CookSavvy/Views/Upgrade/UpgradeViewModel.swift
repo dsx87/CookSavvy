@@ -98,7 +98,9 @@ import UIKit
         
         do {
             try await subscriptionService.purchase(option)
-            analyticsService.track(.upgradePurchased)
+            // Attach the StoreKit product id so the upgrade-conversion funnel can split monthly vs.
+            // yearly remotely, mirroring the `product_id` already carried by the trial events.
+            analyticsService.track(.upgradePurchased, properties: ["product_id": option.productIdentifier])
             onDismiss()
         } catch let error as SubscriptionError {
             if case .userCancelled = error {
