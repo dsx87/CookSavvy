@@ -44,6 +44,7 @@ xcodebuild -scheme CookSavvy -destination 'generic/platform=iOS Simulator' build
 - Product identifiers: monthly `com.cooksavvy.subscription.premium` (7-day introductory free trial), annual `com.cooksavvy.subscription.premium.yearly`
 - Free tier weekly camera scan limit (3 per rolling 7 days, mirrors the backend) tracked via `CameraScanTracker` (UserDefaults)
 - Premium-gated features: `PaidFeature` enum — `cameraIngredientDetection`, `onlineRecipes`, `aiRecipes`, `shoppingList`
+- **DEBUG builds run as CookSavvy+** — `AppContainer`'s DEBUG `init()` seeds `MockSubscriptionService` with `.premium`, so every gate is open and no paywall is shown. RELEASE uses `StoreKitSubscriptionService`. (Tests/UI tests are unaffected — they construct subscription state via `makeInMemory`/`--premium-user`.)
 
 ## Architecture Rules
 
