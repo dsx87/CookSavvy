@@ -1,7 +1,7 @@
 # CookSavvy Privacy Policy
 
-**Last updated:** 2026-06-07
-**Placeholder fields to complete before publishing:** `[COMPANY_LEGAL_NAME]`, `[CONTACT_EMAIL]`, `[GOVERNING_JURISDICTION]`, hosted URL (`https://cooksavvy.app/privacy`).
+**Last updated:** 2026-06-24
+**Published at:** https://dsx87.github.io/CookSavvySite/privacy.html (referenced by `LegalLinks.privacyPolicy`).
 
 > This is a standard, app-specific privacy policy drafted to satisfy App Store Review Guideline 5.1.1
 > and to back the in-app Privacy Policy link. Have it reviewed by counsel before publishing. It must be
@@ -10,8 +10,8 @@
 
 ## Who we are
 
-CookSavvy ("the app", "we", "us") is operated by `[COMPANY_LEGAL_NAME]`. Questions about this policy:
-`[CONTACT_EMAIL]`.
+CookSavvy ("the app", "we", "us") is operated by Igor Pivnyk. Questions about this policy:
+consul87@gmail.com.
 
 ## Summary
 
@@ -70,7 +70,7 @@ personal data and do not use it for cross-app tracking.
 
 ## Your rights
 Depending on your region, you may have rights to access, correct, or delete your data. Contact
-`[CONTACT_EMAIL]` or use in-app account deletion.
+consul87@gmail.com or use in-app account deletion.
 
 ## Children
 CookSavvy is not directed to children under 13 (or the equivalent minimum age in your region).
@@ -79,4 +79,4 @@ CookSavvy is not directed to children under 13 (or the equivalent minimum age in
 We may update this policy; material changes will be reflected by the "Last updated" date.
 
 ## Contact
-`[COMPANY_LEGAL_NAME]` — `[CONTACT_EMAIL]`. Governing law: `[GOVERNING_JURISDICTION]`.
+Igor Pivnyk — consul87@gmail.com.

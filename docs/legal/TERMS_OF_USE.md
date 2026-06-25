@@ -1,7 +1,7 @@
 # CookSavvy Terms of Use (EULA)
 
-**Last updated:** 2026-06-07
-**Placeholder fields to complete before publishing:** `[COMPANY_LEGAL_NAME]`, `[CONTACT_EMAIL]`, `[GOVERNING_JURISDICTION]`, hosted URL (`https://cooksavvy.app/terms`).
+**Last updated:** 2026-06-24
+**Published at:** https://dsx87.github.io/CookSavvySite/terms.html (referenced by `LegalLinks.termsOfUse`).
 
 > Apple's **Standard EULA** is acceptable for App Store subscription apps and, if you do not supply a
 > custom EULA, applies automatically:
@@ -13,7 +13,7 @@
 > Have it reviewed by counsel before publishing.
 
 ## 1. Acceptance
-By downloading or using CookSavvy ("the app"), operated by `[COMPANY_LEGAL_NAME]`, you agree to these
+By downloading or using CookSavvy ("the app"), operated by Igor Pivnyk, you agree to these
 Terms and to Apple's Standard EULA, which is incorporated by reference.
 
 ## 2. The service
@@ -46,7 +46,7 @@ Recipes and ingredient detection are provided "as is" without warranty. Verify i
 allergens yourself; we are not liable for reliance on AI-generated suggestions.
 
 ## 7. Limitation of liability
-To the maximum extent permitted by law, `[COMPANY_LEGAL_NAME]` is not liable for indirect or
+To the maximum extent permitted by law, Igor Pivnyk is not liable for indirect or
 consequential damages arising from use of the app.
 
 ## 8. Termination
@@ -56,5 +56,5 @@ suspend access for violations of these Terms.
 ## 9. Changes
 We may update these Terms; continued use after changes constitutes acceptance.
 
-## 10. Contact & governing law
-`[COMPANY_LEGAL_NAME]` — `[CONTACT_EMAIL]`. Governed by the laws of `[GOVERNING_JURISDICTION]`.
+## 10. Contact
+Igor Pivnyk — consul87@gmail.com.
