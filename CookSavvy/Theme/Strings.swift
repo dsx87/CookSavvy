@@ -179,8 +179,6 @@ nonisolated enum Strings {
         static let seeAll = String(localized: "discover.seeAll", defaultValue: "See All")
         static let bestMatch = String(localized: "discover.bestMatch", defaultValue: "TOP PICK")
         static let moreRecipes = String(localized: "discover.moreRecipes", defaultValue: "MORE OPTIONS")
-        static let recentSection = String(localized: "discover.recentSection", defaultValue: "RECENT")
-        static let savedSection = String(localized: "discover.savedSection", defaultValue: "SAVED")
         static let addYourOwn = String(localized: "discover.addYourOwn", defaultValue: "Add Your Own")
         static let allIngredients = String(localized: "discover.allIngredients", defaultValue: "ALL INGREDIENTS")
         static let searchPlaceholder = String(localized: "discover.searchPlaceholder", defaultValue: "Search ingredients...")
@@ -195,7 +193,6 @@ nonisolated enum Strings {
         static let haveAll = String(localized: "discover.haveAll", defaultValue: "You have everything!")
         static let alsoNeeds = String(localized: "discover.alsoNeeds", defaultValue: "Also needs: %@")
         static let useItAll = String(localized: "discover.useItAll", defaultValue: "Use It All")
-        static let suggestedForYou = String(localized: "discover.suggestedForYou", defaultValue: "SUGGESTED FOR YOU")
         static let suggestedBecause = String(localized: "discover.suggestedBecause", defaultValue: "Based on your %@ recipes")
         static let resultsFound = String(localized: "discover.resultsFound", defaultValue: "%lld found")
         static let searchErrorMessage = String(localized: "discover.searchErrorMessage", defaultValue: "Some recipe sources couldn't be reached — showing available results")
@@ -203,7 +200,6 @@ nonisolated enum Strings {
         static let searchBypassingCategory = String(localized: "discover.searchBypassingCategory", defaultValue: "Searching all ingredients — tap to clear the %@ filter")
         static let quickMealSuffix = String(localized: "discover.quickMealSuffix", defaultValue: " · Quick %lld-min meal")
         static let retry = String(localized: "discover.retry", defaultValue: "Retry")
-        static let collectionsSection = String(localized: "discover.collectionsSection", defaultValue: "THIS WEEK'S COLLECTIONS")
         static let collection5Ingredient = String(localized: "discover.collection5Ingredient", defaultValue: "5-Ingredient Dinners")
         static let collection5IngredientSubtitle = String(localized: "discover.collection5IngredientSubtitle", defaultValue: "Simple meals, big flavour")
         static let collection30Min = String(localized: "discover.collection30Min", defaultValue: "30-Minute Meals")
@@ -324,7 +320,6 @@ nonisolated enum Strings {
 
     /// Strings for the Recipe List "See All" destination screen.
     enum RecipeList {
-        static let recentRecipes = String(localized: "recipeList.recentRecipes", defaultValue: "Recent Recipes")
         static let savedRecipes = String(localized: "recipeList.savedRecipes", defaultValue: "Saved Recipes")
         static let myRecipes = String(localized: "recipeList.myRecipes", defaultValue: "My Recipes")
     }

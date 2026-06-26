@@ -95,11 +95,9 @@ final class DiscoverViewModelSmartSearchTests: XCTestCase {
             databaseInitService: mockDBInit,
             cameraScanTracker: MockCameraScanTracker(),
             pantryService: MockPantryService(),
-            recommendationService: MockRecommendationService(),
             analyticsService: MockAnalyticsService(),
             logger: MockLogger(),
             dietaryPreferences: DietaryPreferences(defaults: UserDefaults()),
-            curatedCollectionService: MockCuratedCollectionService(),
             smartSearchService: service
         )
     }

@@ -369,34 +369,3 @@ struct SearchBypassingCategoryHintRow: View {
         .accessibilityLabel(String(format: Strings.Discover.searchBypassingCategory, categoryName))
     }
 }
-
-/// A dashed-border card prompting the user to create a custom ingredient or recipe.
-/// Appears in ingredient/recipe grid as a call-to-action cell.
-struct AddYourOwnCard: View {
-    @Environment(\.appTheme) private var theme
-
-    var body: some View {
-        VStack(spacing: UI.Components.addCardSpacing) {
-            ZStack {
-                theme.surface
-                    .frame(height: UI.V2.miniCardImageHeight)
-
-                VStack(spacing: UI.Components.addCardIconSpacing) {
-                    Image(systemName: Icons.Discover.plus)
-                        .font(UI.Fonts.profileName)
-                        .foregroundStyle(theme.accent)
-                    Text(Strings.Discover.addYourOwn)
-                        .font(UI.Fonts.tinyCaptionMedium)
-                        .foregroundStyle(theme.text3)
-                }
-            }
-        }
-        .frame(width: UI.V2.miniCardWidth, height: UI.Components.addCardHeight)
-        .clipShape(RoundedRectangle(cornerRadius: UI.Common.cardCornerRadius, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: UI.Common.cardCornerRadius, style: .continuous)
-                .strokeBorder(style: StrokeStyle(lineWidth: UI.Components.addCardDashWidth, dash: UI.Components.addCardDashPattern))
-                .foregroundStyle(theme.divider)
-        )
-    }
-}

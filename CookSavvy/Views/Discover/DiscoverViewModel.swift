@@ -82,7 +82,6 @@ struct DiscoverMatchBadgeState {
 /// - Maintaining the set of user-selected ingredients
 /// - Executing multi-source recipe searches (offline, online, AI) gated by subscription tier
 /// - Applying mood, dietary restriction, and "use it all" post-fetch filters on `filteredRecipes`
-/// - Loading homepage content: recent/saved/suggested recipes and curated collections
 /// - Delegating all navigation to `DiscoverCoordinator` via a weak reference
 @Observable final class DiscoverViewModel {
     // MARK: - Observable State
@@ -125,10 +124,6 @@ struct DiscoverMatchBadgeState {
 
     /// High-frequency ingredients shown at the top of the grid, populated from user history or DB.
     var popularIngredients: [Ingredient] = []
-    /// Recipes the user has recently cooked, shown in the homepage carousel.
-    var recentRecipes: [Recipe] = []
-    /// Recipes the user has bookmarked/saved, shown in the homepage carousel.
-    var savedRecipes: [Recipe] = []
     /// Raw search results from `RecipeService`; filtered by `filteredRecipes` before display.
     var searchResultRecipes: [Recipe] = []
     /// `true` while a multi-source recipe search is in flight.
@@ -143,16 +138,8 @@ struct DiscoverMatchBadgeState {
     var showResults = false
     /// When `true`, results are narrowed to recipes where no ingredients are missing.
     var useItAllFilter = false
-    /// AI-powered personalised recipe suggestions derived from the user's cooking history.
-    var suggestedRecipes: [Recipe] = []
-    /// Human-readable explanation of why `suggestedRecipes` was chosen.
-    var suggestionReason: String? = nil
     /// The set of dietary restrictions currently toggled on; used to post-filter recipe results.
     var activeDietaryRestrictions: Set<DietaryRestriction> = []
-    /// Curated weekly recipe collections shown on the homepage.
-    var collections: [CuratedCollection] = []
-    /// ID of the collection currently being loaded; non-`nil` while a collection fetch is in progress.
-    var loadingCollectionID: String? = nil
     /// Controls visibility of the ingredient match info popover.
     var isMatchInfoPopoverPresented = false
     /// `true` while the search bar text field has keyboard focus; drives the suggestions popup.
@@ -174,11 +161,9 @@ struct DiscoverMatchBadgeState {
     private let databaseInitService: DatabaseInitializationServiceProtocol
     private let cameraScanTracker: CameraScanTrackerProtocol
     private let pantryService: PantryServiceProtocol
-    private let recommendationService: RecipeRecommendationServiceProtocol
     private let analyticsService: AnalyticsServiceProtocol
     private let logger: any LoggerProtocol
     private let dietaryPreferences: DietaryPreferencesProtocol
-    private let curatedCollectionService: CuratedCollectionServiceProtocol
     private let smartSearchService: SmartSearchServiceProtocol?
     private var initialIngredients: [Ingredient]?
     private weak var coordinator: DiscoverCoordinator?
@@ -194,11 +179,9 @@ struct DiscoverMatchBadgeState {
         databaseInitService: DatabaseInitializationServiceProtocol,
         cameraScanTracker: CameraScanTrackerProtocol,
         pantryService: PantryServiceProtocol,
-        recommendationService: RecipeRecommendationServiceProtocol,
         analyticsService: AnalyticsServiceProtocol,
         logger: any LoggerProtocol,
         dietaryPreferences: DietaryPreferencesProtocol,
-        curatedCollectionService: CuratedCollectionServiceProtocol,
         smartSearchService: SmartSearchServiceProtocol? = nil,
         initialIngredients: [Ingredient]? = nil,
         coordinator: DiscoverCoordinator? = nil
@@ -210,11 +193,9 @@ struct DiscoverMatchBadgeState {
         self.databaseInitService = databaseInitService
         self.cameraScanTracker = cameraScanTracker
         self.pantryService = pantryService
-        self.recommendationService = recommendationService
         self.analyticsService = analyticsService
         self.logger = logger
         self.dietaryPreferences = dietaryPreferences
-        self.curatedCollectionService = curatedCollectionService
         self.smartSearchService = smartSearchService
         self.initialIngredients = initialIngredients
         self.coordinator = coordinator
@@ -239,14 +220,6 @@ struct DiscoverMatchBadgeState {
     /// staples are included once a search is running so match scoring treats them as available.
     var effectiveSearchIngredients: [Ingredient] {
         Self.deduplicatedIngredients(selectedIngredients + pantryIngredients)
-    }
-
-    /// `true` when the homepage has no content to display (no recent, saved, or suggested recipes).
-    var isDiscoverEmpty: Bool {
-        !hasIngredients &&
-        recentRecipes.isEmpty &&
-        savedRecipes.isEmpty &&
-        suggestedRecipes.isEmpty
     }
 
     /// `true` when a search has completed but returned no results for the current filters.
@@ -479,23 +452,19 @@ struct DiscoverMatchBadgeState {
 
     // MARK: - Actions
 
-    /// Loads all homepage data concurrently: popular ingredients, recent/saved recipes, suggestions, and collections.
+    /// Loads the ingredient grid and pantry staples concurrently.
     /// Waits for database readiness when required, then pre-loads any `initialIngredients`.
     func loadInitialData() async {
         isLoadingIngredients = true
         homeLoadError = nil
-        loadCollections()
         async let ingredientsTask: () = loadIngredients()
         async let pantryTask: () = loadPantryItems()
-        async let recentTask: () = loadRecentRecipes()
-        async let savedTask: () = loadSavedRecipes()
-        _ = await (ingredientsTask, pantryTask, recentTask, savedTask)
+        _ = await (ingredientsTask, pantryTask)
         isLoadingIngredients = false
         if let initialIngredients, !initialIngredients.isEmpty {
             self.initialIngredients = nil
             preloadIngredients(initialIngredients)
         }
-        Task { await loadSuggestions() }
         Task { await reloadOnDatabaseReady() }
     }
 
@@ -730,19 +699,6 @@ struct DiscoverMatchBadgeState {
         coordinator?.showRecipeList(title: title, recipes: recipes)
     }
 
-    /// Navigates to a curated collection's recipe list.
-    /// Waits for the database to finish seeding before fetching recipes, and debounces concurrent taps.
-    func showCollection(_ collection: CuratedCollection) {
-        guard loadingCollectionID == nil else { return }
-        loadingCollectionID = collection.id
-        Task {
-            defer { loadingCollectionID = nil }
-            await databaseInitService.waitForRecipes()
-            let recipes = (try? await curatedCollectionService.getRecipes(for: collection)) ?? []
-            coordinator?.showRecipeList(title: collection.title, recipes: recipes)
-        }
-    }
-
     /// Navigates to the create recipe wizard.
     func showCreateRecipe() {
         coordinator?.showCreateRecipe()
@@ -793,7 +749,7 @@ struct DiscoverMatchBadgeState {
 
     // MARK: - Private
 
-    /// Waits for the database to finish seeding, then refreshes all homepage content.
+    /// Waits for the database to finish seeding, then refreshes the ingredient grid and pantry staples.
     /// No-op if the database is already ready at call time.
     private func reloadOnDatabaseReady() async {
         guard !databaseInitService.state.isRecipesReady else { return }
@@ -801,16 +757,7 @@ struct DiscoverMatchBadgeState {
         homeLoadError = nil
         async let ingredientsTask: () = loadIngredients()
         async let pantryTask: () = loadPantryItems()
-        async let recentTask: () = loadRecentRecipes()
-        async let savedTask: () = loadSavedRecipes()
-        async let suggestionsTask: () = loadSuggestions()
-        _ = await (ingredientsTask, pantryTask, recentTask, savedTask, suggestionsTask)
-    }
-
-    /// Loads the curated collections appropriate for this week, filtered by subscription tier.
-    private func loadCollections() {
-        let isPremium = subscriptionService.canAccessFeature(.onlineRecipes)
-        collections = curatedCollectionService.getCollectionsForThisWeek(isPremium: isPremium)
+        _ = await (ingredientsTask, pantryTask)
     }
 
     /// Fetches popular ingredients from `UserDataService` and fills in missing emoji via `IngredientEmojiProvider`.
@@ -851,37 +798,6 @@ struct DiscoverMatchBadgeState {
             pantryIngredients = Self.deduplicatedIngredients(pantryIngredients + [ingredient])
         } else {
             removePantryIngredientLocally(ingredient)
-        }
-    }
-
-    /// Fetches the most recently viewed/cooked recipes for the homepage carousel (capped at 6).
-    private func loadRecentRecipes() async {
-        do {
-            recentRecipes = try await userDataService.getRecentRecipes(limit: 6)
-        } catch {
-            logger.error("Failed to load discover recent recipes: \(String(describing: error))")
-            homeLoadError = Strings.Errors.loadFailed
-        }
-    }
-
-    /// Fetches saved/bookmarked recipes for the homepage carousel.
-    private func loadSavedRecipes() async {
-        do {
-            savedRecipes = try await userDataService.getSavedRecipes()
-        } catch {
-            logger.error("Failed to load discover saved recipes: \(String(describing: error))")
-            homeLoadError = Strings.Errors.loadFailed
-        }
-    }
-
-    /// Fetches personalised recipe suggestions from `RecipeRecommendationService`.
-    private func loadSuggestions() async {
-        do {
-            let result = try await recommendationService.getSuggestions()
-            suggestedRecipes = result.recipes
-            suggestionReason = result.reason
-        } catch {
-            logger.error("Failed to load discover suggestions: \(String(describing: error))")
         }
     }
 

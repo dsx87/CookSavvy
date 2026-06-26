@@ -41,9 +41,6 @@ enum AccessibilityID {
         static let bestMatch = "discover.bestMatch"
         static let moreRecipes = "discover.moreRecipes"
         static let useItAllToggle = "discover.useItAllToggle"
-        static let recentSection = "discover.recentSection"
-        static let savedSection = "discover.savedSection"
-        static let suggestedSection = "discover.suggestedSection"
         static let emptyState = "discover.emptyState"
         static let noResultsState = "discover.noResultsState"
 

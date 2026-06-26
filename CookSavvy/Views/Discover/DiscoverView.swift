@@ -3,13 +3,12 @@ import SwiftUI
 /// The Discover tab's root view, managing a two-state layout via animated transitions.
 ///
 /// **State 1 — Ingredient Selection** (`ingredientSelectionState`): header, search bar, camera button,
-/// selected-ingredient strip, homepage carousels (recent, saved, suggested, collections),
-/// category filter chips, and the ingredient grid. A sticky "Find Recipes" CTA appears once any
-/// ingredient is selected.
+/// selected-ingredient strip, pantry-staples row, category filter chips, and the ingredient grid.
+/// A sticky "Find Recipes" CTA appears once any ingredient is selected.
 ///
-/// **State 2 — Recipe Results** (`resultsState`): selected-ingredient strip, mood filter, "use it all"
-/// toggle, dietary-restriction pills, optional error banner, a hero best-match card, and a list of
-/// additional recipe rows.
+/// **State 2 — Recipe Results** (`resultsState`): results header, selected-ingredient strip, the hero
+/// best-match card leading the screen, then secondary filter controls (mood, time, complexity, "use it
+/// all", dietary pills), and a list of additional recipe rows.
 struct DiscoverView: View {
     @Environment(\.appTheme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -39,7 +38,8 @@ struct DiscoverView: View {
 
     // MARK: - State 1: Ingredient Selection
 
-    /// The full ingredient-selection screen: search bar, carousels, category chips, and ingredient grid.
+    /// The full ingredient-selection screen: search bar, selected ingredients, pantry staples,
+    /// category chips, and ingredient grid.
     private var ingredientSelectionState: some View {
         ZStack(alignment: .bottom) {
             VStack(spacing: 0) {
@@ -54,13 +54,6 @@ struct DiscoverView: View {
                         }
                         selectedIngredientsStrip
                         alwaysHaveRow
-                        recentSection
-                        savedSection
-                        suggestedSection
-                        collectionsSection
-                        if viewModel.isDiscoverEmpty {
-                            discoverEmptyState
-                        }
                         categoryFilter
                         ingredientGrid
                         Spacer(minLength: UI.Discover.bottomSpacerMinLength + UI.Discover.findButtonHeight)
@@ -255,149 +248,6 @@ struct DiscoverView: View {
         }
     }
 
-    @ViewBuilder
-    private var recentSection: some View {
-        if !viewModel.recentRecipes.isEmpty {
-            VStack(alignment: .leading, spacing: UI.Discover.sectionContentSpacing) {
-                HStack {
-                    Text(Strings.Discover.recentSection)
-                        .sectionLabel()
-                        .accessibilityAddTraits(.isHeader)
-                    Spacer()
-                    Button {
-                        viewModel.showRecipeList(
-                            title: Strings.RecipeList.recentRecipes,
-                            recipes: viewModel.recentRecipes
-                        )
-                    } label: {
-                        Text(Strings.Discover.seeAll)
-                            .font(UI.Fonts.captionSemibold)
-                            .foregroundStyle(theme.accent)
-                    }
-                }
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: UI.Discover.sectionContentSpacing) {
-                        ForEach(viewModel.recentRecipes) { recipe in
-                            MiniRecipeCard(recipe: recipe)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    viewModel.showRecipeDetails(recipe)
-                                }
-                                .accessibilityAddTraits(.isButton)
-                                .accessibilityIdentifier(AccessibilityID.Discover.recipe(recipe.title))
-                        }
-                    }
-                }
-            }
-            .accessibilityIdentifier(AccessibilityID.Discover.recentSection)
-        }
-    }
-
-    @ViewBuilder
-    private var savedSection: some View {
-        if !viewModel.savedRecipes.isEmpty {
-            VStack(alignment: .leading, spacing: UI.Discover.sectionContentSpacing) {
-                HStack {
-                    Text(Strings.Discover.savedSection)
-                        .sectionLabel()
-                        .accessibilityAddTraits(.isHeader)
-                    Spacer()
-                    Button {
-                        viewModel.showRecipeList(
-                            title: Strings.RecipeList.savedRecipes,
-                            recipes: viewModel.savedRecipes
-                        )
-                    } label: {
-                        Text(Strings.Discover.seeAll)
-                            .font(UI.Fonts.captionSemibold)
-                            .foregroundStyle(theme.accent)
-                    }
-                }
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: UI.Discover.sectionContentSpacing) {
-                        ForEach(viewModel.savedRecipes) { recipe in
-                            MiniRecipeCard(recipe: recipe)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    viewModel.showRecipeDetails(recipe)
-                                }
-                                .accessibilityAddTraits(.isButton)
-                                .accessibilityIdentifier(AccessibilityID.Discover.recipe(recipe.title))
-                        }
-
-                        Button {
-                            viewModel.showCreateRecipe()
-                        } label: {
-                            AddYourOwnCard()
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-            .accessibilityIdentifier(AccessibilityID.Discover.savedSection)
-        }
-    }
-
-    @ViewBuilder
-    private var suggestedSection: some View {
-        if !viewModel.suggestedRecipes.isEmpty {
-            VStack(alignment: .leading, spacing: UI.Discover.sectionContentSpacing) {
-                VStack(alignment: .leading, spacing: UI.Common.smallSpacing) {
-                    Text(Strings.Discover.suggestedForYou)
-                        .sectionLabel()
-                        .accessibilityAddTraits(.isHeader)
-                    if let reason = viewModel.suggestionReason {
-                        Text(reason)
-                            .font(UI.Fonts.caption)
-                            .foregroundStyle(theme.text2)
-                    }
-                }
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: UI.Discover.sectionContentSpacing) {
-                        ForEach(viewModel.suggestedRecipes) { recipe in
-                            MiniRecipeCard(recipe: recipe)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    viewModel.showRecipeDetails(recipe)
-                                }
-                                .accessibilityAddTraits(.isButton)
-                                .accessibilityIdentifier(AccessibilityID.Discover.recipe(recipe.title))
-                        }
-                    }
-                }
-            }
-            .accessibilityIdentifier(AccessibilityID.Discover.suggestedSection)
-        }
-    }
-
-    @ViewBuilder
-    private var collectionsSection: some View {
-        if !viewModel.collections.isEmpty {
-            VStack(alignment: .leading, spacing: UI.Discover.sectionContentSpacing) {
-                Text(Strings.Discover.collectionsSection)
-                    .sectionLabel()
-                    .accessibilityAddTraits(.isHeader)
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: UI.Discover.sectionContentSpacing) {
-                        ForEach(viewModel.collections) { collection in
-                            CollectionCard(
-                                collection: collection,
-                                isLoading: viewModel.loadingCollectionID == collection.id
-                            )
-                            .onTapGesture {
-                                viewModel.showCollection(collection)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     private var categoryFilter: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: UI.Discover.categoryChipSpacing) {
@@ -457,24 +307,6 @@ struct DiscoverView: View {
         )
     }
 
-    private var discoverEmptyState: some View {
-        VStack(spacing: UI.ShoppingList.emptyStateSpacing) {
-            Image(systemName: Icons.Discover.emptyState)
-                .font(.system(size: UI.ShoppingList.emptyIconSize))
-                .foregroundStyle(theme.text3)
-            Text(Strings.Discover.emptyStateTitle)
-                .font(UI.Fonts.title)
-                .foregroundStyle(theme.text1)
-            Text(Strings.Discover.emptyStateSubtitle)
-                .font(UI.Fonts.body)
-                .foregroundStyle(theme.text2)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, UI.Discover.loadingPadding)
-        .accessibilityIdentifier(AccessibilityID.Discover.emptyState)
-    }
-
     private var noResultsState: some View {
         VStack(spacing: UI.ShoppingList.emptyStateSpacing) {
             Image(systemName: Icons.Discover.noResults)
@@ -518,18 +350,14 @@ struct DiscoverView: View {
         .accessibilityLabel(viewModel.useItAllFilter ? Strings.Accessibility.useItAllActive : Strings.Accessibility.useItAllInactive)
     }
 
-    /// Full recipe-results screen: selected-ingredient strip, mood/dietary filters, and recipe list.
+    /// Full recipe-results screen: the hero best-match leads, with the secondary filter controls and
+    /// the additional-recipes list below it.
     private var resultsState: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: UI.Discover.sectionSpacing) {
                 resultsHeader
                 selectedIngredientsStrip
                 alwaysHaveRow
-                moodFilter
-                timeFilter
-                complexityFilter
-                useItAllToggle
-                dietaryFilterPills
                 if viewModel.searchError != nil {
                     errorBanner
                 }
@@ -537,12 +365,27 @@ struct DiscoverView: View {
                     noResultsState
                 } else {
                     bestMatchSection
+                }
+                resultsFilters
+                if !viewModel.hasNoResults {
                     moreRecipesSection
                 }
             }
             .padding(.horizontal, UI.Discover.horizontalPadding)
             .padding(.bottom, UI.Discover.findButtonBottomPadding)
         }
+    }
+
+    /// Secondary result-refinement controls, grouped below the leading best-match card so the
+    /// recommendation stays front-and-centre. Kept visible in the no-results branch so the user can
+    /// relax the filters that produced no matches.
+    @ViewBuilder
+    private var resultsFilters: some View {
+        moodFilter
+        timeFilter
+        complexityFilter
+        useItAllToggle
+        dietaryFilterPills
     }
 
     /// Horizontal strip of removable dietary-restriction filter pills (only shown when restrictions are active).
@@ -909,50 +752,6 @@ struct DiscoverView: View {
         .padding(.horizontal, UI.Discover.matchBadgePaddingH)
         .padding(.vertical, UI.Discover.matchBadgePaddingV)
         .background(theme.mint.opacity(UI.RecipeDetails.matchBadgeOpacity), in: Capsule())
-    }
-}
-
-/// Compact card showing a curated collection's gradient, emoji, title, and subtitle.
-private struct CollectionCard: View {
-    @Environment(\.appTheme) private var theme
-    let collection: CuratedCollection
-    let isLoading: Bool
-
-    var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            LinearGradient(
-                colors: [collection.gradientColors.0, collection.gradientColors.1],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            VStack(alignment: .leading, spacing: UI.Common.smallSpacing) {
-                Text(collection.emoji)
-                    .font(.system(size: UI.Discover.Collection.emojiFontSize))
-                Spacer()
-                Text(collection.title)
-                    .font(UI.Fonts.captionBold)
-                    .foregroundStyle(.white.opacity(UI.Discover.Collection.titleOpacity))
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text(collection.subtitle)
-                    .font(UI.Fonts.tinyCaption)
-                    .foregroundStyle(.white.opacity(UI.Discover.Collection.subtitleOpacity))
-                    .lineLimit(1)
-            }
-            .padding(UI.Common.largeSpacing)
-
-            if isLoading {
-                Color.black.opacity(0.3)
-                ProgressView()
-                    .tint(.white)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-        }
-        .frame(width: UI.Discover.Collection.cardWidth, height: UI.Discover.Collection.cardHeight)
-        .clipShape(RoundedRectangle(cornerRadius: UI.Discover.Collection.cornerRadius, style: .continuous))
-        .contentShape(RoundedRectangle(cornerRadius: UI.Discover.Collection.cornerRadius, style: .continuous))
-        .accessibilityAddTraits(.isButton)
-        .accessibilityLabel(collection.title)
     }
 }
 

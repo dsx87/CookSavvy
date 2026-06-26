@@ -1556,17 +1556,6 @@
         }
       }
     },
-    "discover.collectionsSection" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "THIS WEEK'S COLLECTIONS"
-          }
-        }
-      }
-    },
     "discover.edit" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -1787,17 +1776,6 @@
         }
       }
     },
-    "discover.recentSection" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "RECENT"
-          }
-        }
-      }
-    },
     "discover.recipesForYou" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -1827,17 +1805,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Retry"
-          }
-        }
-      }
-    },
-    "discover.savedSection" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "SAVED"
           }
         }
       }
@@ -1970,17 +1937,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Based on your %@ recipes"
-          }
-        }
-      }
-    },
-    "discover.suggestedForYou" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "SUGGESTED FOR YOU"
           }
         }
       }
@@ -3025,17 +2981,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "My Recipes"
-          }
-        }
-      }
-    },
-    "recipeList.recentRecipes" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Recent Recipes"
           }
         }
       }

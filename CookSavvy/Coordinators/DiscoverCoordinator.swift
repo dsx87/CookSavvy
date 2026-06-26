@@ -109,11 +109,9 @@ import SwiftUI
             databaseInitService: container.databaseInitService,
             cameraScanTracker: container.cameraScanTracker,
             pantryService: container.pantryService,
-            recommendationService: container.recommendationService,
             analyticsService: container.analyticsService,
             logger: container.loggingService.makeLogger(category: .discoverViewModel),
             dietaryPreferences: container.dietaryPreferences,
-            curatedCollectionService: container.curatedCollectionService,
             smartSearchService: container.smartSearchService,
             initialIngredients: initialIngredients,
             coordinator: self

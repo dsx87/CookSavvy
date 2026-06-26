@@ -13,8 +13,6 @@ final class DiscoverViewModelTests: XCTestCase {
     var mockDBInitService: MockDatabaseInitService!
     var mockCameraScanTracker: MockCameraScanTracker!
     var mockPantryService: MockPantryService!
-    var mockRecommendationService: MockRecommendationService!
-    var mockCuratedCollectionService: MockCuratedCollectionService!
 
     override func setUp() {
         super.setUp()
@@ -25,8 +23,6 @@ final class DiscoverViewModelTests: XCTestCase {
         mockDBInitService = MockDatabaseInitService()
         mockCameraScanTracker = MockCameraScanTracker()
         mockPantryService = MockPantryService()
-        mockRecommendationService = MockRecommendationService()
-        mockCuratedCollectionService = MockCuratedCollectionService()
     }
 
     override func tearDown() {
@@ -37,8 +33,6 @@ final class DiscoverViewModelTests: XCTestCase {
         mockDBInitService = nil
         mockCameraScanTracker = nil
         mockPantryService = nil
-        mockRecommendationService = nil
-        mockCuratedCollectionService = nil
         super.tearDown()
     }
 
@@ -51,11 +45,9 @@ final class DiscoverViewModelTests: XCTestCase {
             databaseInitService: mockDBInitService,
             cameraScanTracker: mockCameraScanTracker,
             pantryService: mockPantryService,
-            recommendationService: mockRecommendationService,
             analyticsService: MockAnalyticsService(),
             logger: MockLogger(),
             dietaryPreferences: DietaryPreferences(defaults: UserDefaults()),
-            curatedCollectionService: mockCuratedCollectionService,
             coordinator: nil
         )
     }
