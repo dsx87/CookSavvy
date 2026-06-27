@@ -343,6 +343,33 @@ final class IngredientsServiceTests: XCTestCase {
         XCTAssertEqual(categories, [.proteins, .veggies, .grains])
     }
 
+    @MainActor
+    func testPantryStaplesAreExcludedFromBrowseSearchAndCategories() async throws {
+        // Salt + Cumin are pantry staples (hidden from the picker); Basil/Soy Sauce stay selectable.
+        mockDB.storedIngredients = [
+            Ingredient(name: "Chicken"),
+            Ingredient(name: "Salt"),
+            Ingredient(name: "Cumin"),
+            Ingredient(name: "Basil"),
+            Ingredient(name: "Tomato")
+        ]
+        ingredientsService = IngredientsService(dbInterface: mockDB)
+
+        let all = try await ingredientsService.getAllIngredients()
+        XCTAssertFalse(Set(all.map(\.name)).contains("Salt"))
+        XCTAssertFalse(Set(all.map(\.name)).contains("Cumin"))
+
+        // Search must not surface staples either.
+        let saltSearch = try await ingredientsService.searchFullIngredients(matching: "salt")
+        XCTAssertTrue(saltSearch.isEmpty)
+
+        // The Spices category retains the kept herbs/sauces but not the staples.
+        let spices = Set(try await ingredientsService.getAllIngredients(category: .spices).map(\.name))
+        XCTAssertTrue(spices.contains("Basil"))
+        XCTAssertFalse(spices.contains("Salt"))
+        XCTAssertFalse(spices.contains("Cumin"))
+    }
+
     // MARK: - Error Description Tests
 
     @MainActor

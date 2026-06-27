@@ -159,19 +159,6 @@ nonisolated enum RecipeMatchExplainer {
 
     // MARK: - Private
 
-    /// Built-in, non-persisted staples that are commonly available in home kitchens.
-    private static let assumedPantryStapleNames: Set<String> = [
-        "salt",
-        "pepper",
-        "black pepper",
-        "water",
-        "oil",
-        "olive oil",
-        "vegetable oil",
-        "canola oil",
-        "cooking oil"
-    ]
-
     /// Internal overload that computes availability from a set of already-matched names.
     private static func ingredientAvailability(
         recipe: Recipe,
@@ -189,9 +176,12 @@ nonisolated enum RecipeMatchExplainer {
         recipe.cleanedIngredients
     }
 
-    /// Returns true only for conservative pantry-staple names, after normalisation.
+    /// Returns true for shared pantry-staple names (see `PantryStaples`), after normalisation.
+    ///
+    /// `PantryStaples` is the single source of truth shared with the ingredient picker, so anything
+    /// hidden from selection is also assumed available here and never counted as missing.
     private static func isAssumedPantryStaple(_ normalizedName: String) -> Bool {
-        assumedPantryStapleNames.contains(normalizedName)
+        PantryStaples.isStaple(normalizedName)
     }
 
     /// Parses a numeric cook-time in minutes from the recipe's time `AdditionalInfo`.

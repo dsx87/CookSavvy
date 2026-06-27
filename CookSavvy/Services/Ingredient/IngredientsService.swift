@@ -83,7 +83,8 @@ final class IngredientsService: IngredientsServiceProtocol {
 
         do {
             let ingredients = try await dbInterface.searchIngredients(matching: query, limit: limit)
-            return ingredients.map { $0.name }
+            // Pantry staples (salt, pepper, dried spices, …) are never offered for selection.
+            return PantryStaples.excludingStaples(ingredients).map { $0.name }
         } catch {
             throw IngredientsServiceError.searchFailed(error)
         }
@@ -103,7 +104,9 @@ final class IngredientsService: IngredientsServiceProtocol {
         guard !query.isEmpty else { return [] }
 
         do {
-            return try await dbInterface.searchIngredients(matching: query, limit: limit)
+            let ingredients = try await dbInterface.searchIngredients(matching: query, limit: limit)
+            // Pantry staples (salt, pepper, dried spices, …) are never offered for selection.
+            return PantryStaples.excludingStaples(ingredients)
         } catch {
             throw IngredientsServiceError.searchFailed(error)
         }
@@ -145,7 +148,8 @@ final class IngredientsService: IngredientsServiceProtocol {
 
         do {
             guard let category else {
-                return try await dbInterface.getAllIngredients(inGroup: nil, limit: limit)
+                let all = try await dbInterface.getAllIngredients(inGroup: nil, limit: limit)
+                return PantryStaples.excludingStaples(all)
             }
             let grouped = try await categorizedIngredients()
             return Array((grouped[category] ?? []).prefix(limit))
@@ -186,8 +190,11 @@ final class IngredientsService: IngredientsServiceProtocol {
             return cachedCategorizedIngredients
         }
         let all = try await dbInterface.getAllIngredients(inGroup: nil, limit: IngredientsServiceConstants.allIngredientsLimit)
+        // Drop pantry staples before grouping so they never surface under any category chip (e.g.
+        // salt/dried spices are removed from `.spices`, leaving only herbs and condiments/sauces).
+        let selectable = PantryStaples.excludingStaples(all)
         let grouped = await Task { @concurrent in
-            Dictionary(grouping: all, by: { $0.category })
+            Dictionary(grouping: selectable, by: { $0.category })
         }.value
         cachedCategorizedIngredients = grouped
         return grouped

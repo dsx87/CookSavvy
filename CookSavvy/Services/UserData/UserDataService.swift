@@ -63,12 +63,14 @@ final class UserDataService: UserDataServiceProtocol {
     /// - Returns: Array of popular ingredients ordered by usage count
     func getPopularIngredients(limit: Int = 10) async throws -> [Ingredient] {
         do {
-            let popular = try await dbInterface.getPopularIngredients(limit: limit)
+            // Pantry staples are never offered for selection (see `PantryStaples`), so keep them out
+            // of the popular grid too — including any left over in usage history from before this rule.
+            let popular = PantryStaples.excludingStaples(try await dbInterface.getPopularIngredients(limit: limit))
             if !popular.isEmpty {
                 return popular
             }
 
-            let fallback = try await dbInterface.getAllIngredients(inGroup: nil, limit: max(limit, 20))
+            let fallback = PantryStaples.excludingStaples(try await dbInterface.getAllIngredients(inGroup: nil, limit: max(limit, 20)))
             if !fallback.isEmpty {
                 return fallback
             }
