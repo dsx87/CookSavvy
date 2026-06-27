@@ -7,14 +7,16 @@ import Foundation
 import Supabase
 @testable import CookSavvy
 
+// Mocks a `nonisolated`, `Sendable` provider. Tracking state is mutated only from the serial test
+// that owns the instance, so `nonisolated(unsafe)` is safe here.
 final class MockSupabaseClientProvider: SupabaseClientProviderProtocol {
     let client: SupabaseClient
 
-    private(set) var invokedFunctionNames: [String] = []
-    private(set) var invokedFunctionBodies: [String: Data] = [:]
+    nonisolated(unsafe) private(set) var invokedFunctionNames: [String] = []
+    nonisolated(unsafe) private(set) var invokedFunctionBodies: [String: Data] = [:]
 
-    var stubbedResponses: [String: Data] = [:]
-    var invokedError: Error?
+    nonisolated(unsafe) var stubbedResponses: [String: Data] = [:]
+    nonisolated(unsafe) var invokedError: Error?
 
     init() {
         self.client = SupabaseClient(

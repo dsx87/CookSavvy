@@ -3,7 +3,6 @@ import XCTest
 
 // MARK: - DiscoverViewModelTests
 
-@MainActor
 final class DiscoverViewModelTests: XCTestCase {
 
     var mockIngredientsService: MockIngredientsService!
@@ -14,8 +13,8 @@ final class DiscoverViewModelTests: XCTestCase {
     var mockCameraScanTracker: MockCameraScanTracker!
     var mockPantryService: MockPantryService!
 
-    override func setUp() {
-        super.setUp()
+    @MainActor
+    override func setUp() async throws {
         mockIngredientsService = MockIngredientsService()
         mockRecipeService = MockRecipeService()
         mockUserDataService = MockUserDataService()
@@ -25,7 +24,8 @@ final class DiscoverViewModelTests: XCTestCase {
         mockPantryService = MockPantryService()
     }
 
-    override func tearDown() {
+    @MainActor
+    override func tearDown() async throws {
         mockIngredientsService = nil
         mockRecipeService = nil
         mockUserDataService = nil
@@ -33,9 +33,9 @@ final class DiscoverViewModelTests: XCTestCase {
         mockDBInitService = nil
         mockCameraScanTracker = nil
         mockPantryService = nil
-        super.tearDown()
     }
 
+    @MainActor
     private func makeViewModel() -> DiscoverViewModel {
         DiscoverViewModel(
             ingredientsService: mockIngredientsService,
@@ -52,6 +52,7 @@ final class DiscoverViewModelTests: XCTestCase {
         )
     }
 
+    @MainActor
     private func makeRankedRecipe(
         title: String,
         ingredientNames: [String],
@@ -70,6 +71,7 @@ final class DiscoverViewModelTests: XCTestCase {
         )
     }
 
+    @MainActor
     private func makeFilterRecipe(
         title: String,
         time: String?,
@@ -87,7 +89,8 @@ final class DiscoverViewModelTests: XCTestCase {
         )
     }
 
-    func testToggleIngredient() {
+    @MainActor
+    func testToggleIngredient() async {
         let vm = makeViewModel()
         let ingredient = Ingredient(name: "Tomato")
 
@@ -98,6 +101,7 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertFalse(vm.selectedIngredients.contains { $0.id == ingredient.id })
     }
 
+    @MainActor
     func testFindRecipesPopulatesResults() async {
         let recipe = Recipe.mockRandom()
         mockRecipeService.stubbedRecipes = [recipe]
@@ -116,6 +120,7 @@ final class DiscoverViewModelTests: XCTestCase {
 
     /// A slower earlier search must not overwrite the results of a newer search that finished first.
     /// Drives two overlapping searches via the gated mock and resumes the newer one before the older.
+    @MainActor
     func testStaleSearchDoesNotOverwriteNewerResults() async {
         let older = Recipe(title: "OlderSearchResult", ingredients: [Ingredient(name: "Chicken")],
                            instructions: ["Cook"], image: "", additionalInfo: .empty)
@@ -149,6 +154,7 @@ final class DiscoverViewModelTests: XCTestCase {
     }
 
     /// Yields the main actor until `condition` holds or a bounded iteration cap is hit (prevents hangs).
+    @MainActor
     private func yield(until condition: () -> Bool, max iterations: Int = 200) async {
         var count = 0
         while !condition() && count < iterations {
@@ -157,7 +163,8 @@ final class DiscoverViewModelTests: XCTestCase {
         }
     }
 
-    func testMoodFilterRanking() {
+    @MainActor
+    func testMoodFilterRanking() async {
         let vm = makeViewModel()
         let soupRecipe = Recipe(
             title: "Warm Chicken Soup",
@@ -180,7 +187,8 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.filteredRecipes.first?.title, "Warm Chicken Soup")
     }
 
-    func testDefaultSortingPrefersCoverageOverMissingCountAlone() {
+    @MainActor
+    func testDefaultSortingPrefersCoverageOverMissingCountAlone() async {
         let vm = makeViewModel()
         let betterCoverage = makeRankedRecipe(
             title: "Better Coverage",
@@ -198,14 +206,16 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.filteredRecipes.first?.title, betterCoverage.title)
     }
 
-    func testHasNoResultsWhenSearchCompletesEmpty() {
+    @MainActor
+    func testHasNoResultsWhenSearchCompletesEmpty() async {
         let vm = makeViewModel()
         vm.searchResultRecipes = []
         vm.showResults = true
         XCTAssertTrue(vm.hasNoResults)
     }
 
-    func testHasNoResultsIsFalseWhileSearching() {
+    @MainActor
+    func testHasNoResultsIsFalseWhileSearching() async {
         let vm = makeViewModel()
         vm.searchResultRecipes = []
         vm.showResults = true
@@ -213,14 +223,16 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertFalse(vm.hasNoResults)
     }
 
-    func testHasNoResultsIsFalseWhenResultsExist() {
+    @MainActor
+    func testHasNoResultsIsFalseWhenResultsExist() async {
         let vm = makeViewModel()
         vm.searchResultRecipes = [Recipe.mockRandom()]
         vm.showResults = true
         XCTAssertFalse(vm.hasNoResults)
     }
 
-    func testDefaultSortingPutsNilMissingIngredientsLast() {
+    @MainActor
+    func testDefaultSortingPutsNilMissingIngredientsLast() async {
         let vm = makeViewModel()
         var knownMissing = Recipe.mockRandom()
         knownMissing.missingIngredients = ["Salt"]
@@ -233,7 +245,8 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertNil(vm.filteredRecipes.last?.missingIngredients)
     }
 
-    func testMoodScoreRefinesEqualQualityMatchesWithoutOverridingCoverage() {
+    @MainActor
+    func testMoodScoreRefinesEqualQualityMatchesWithoutOverridingCoverage() async {
         let vm = makeViewModel()
         let betterCoverage = makeRankedRecipe(
             title: "Better Coverage",
@@ -258,7 +271,8 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.filteredRecipes.map(\.title), [betterCoverage.title, cozyTieBreaker.title, neutralTie.title])
     }
 
-    func testCookTimeQuickFilterIncludesUnderThirtyOnly() {
+    @MainActor
+    func testCookTimeQuickFilterIncludesUnderThirtyOnly() async {
         let vm = makeViewModel()
         let quick = makeFilterRecipe(title: "Fast Pasta", time: "29 min", complexity: nil)
         let boundary = makeFilterRecipe(title: "Thirty Minute Stew", time: "30 min", complexity: nil)
@@ -270,7 +284,8 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.filteredRecipes.map(\.title), [quick.title])
     }
 
-    func testCookTimeMediumFilterIncludesThirtyThroughSixty() {
+    @MainActor
+    func testCookTimeMediumFilterIncludesThirtyThroughSixty() async {
         let vm = makeViewModel()
         let short = makeFilterRecipe(title: "Short Salad", time: "29 min", complexity: nil)
         let lowerBoundary = makeFilterRecipe(title: "Thirty Minute Soup", time: "30 min", complexity: nil)
@@ -283,7 +298,8 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.filteredRecipes.map(\.title), [lowerBoundary.title, upperBoundary.title])
     }
 
-    func testCookTimeLongFilterIncludesOverSixtyOnly() {
+    @MainActor
+    func testCookTimeLongFilterIncludesOverSixtyOnly() async {
         let vm = makeViewModel()
         let boundary = makeFilterRecipe(title: "One Hour Roast", time: "60 min", complexity: nil)
         let long = makeFilterRecipe(title: "Slow Braise", time: "1 hr 15 min", complexity: nil)
@@ -294,7 +310,8 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.filteredRecipes.map(\.title), [long.title])
     }
 
-    func testCookTimeFilterExcludesUnknownTimesOnlyWhenActive() {
+    @MainActor
+    func testCookTimeFilterExcludesUnknownTimesOnlyWhenActive() async {
         let vm = makeViewModel()
         let unknown = makeFilterRecipe(title: "Mystery Dinner", time: nil, complexity: nil)
         let unparseable = makeFilterRecipe(title: "Eventually Pasta", time: "eventually", complexity: nil)
@@ -308,7 +325,8 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.filteredRecipes.map(\.title), [quick.title])
     }
 
-    func testComplexityFiltersMatchCaseInsensitively() {
+    @MainActor
+    func testComplexityFiltersMatchCaseInsensitively() async {
         let vm = makeViewModel()
         let easy = makeFilterRecipe(title: "Simple Bowl", time: nil, complexity: "EASY")
         let medium = makeFilterRecipe(title: "Balanced Curry", time: nil, complexity: "medium")
@@ -326,7 +344,8 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.filteredRecipes.map(\.title), [hard.title])
     }
 
-    func testCookTimeAndComplexityCombineWithMoodFiltering() {
+    @MainActor
+    func testCookTimeAndComplexityCombineWithMoodFiltering() async {
         let vm = makeViewModel()
         let neutralQuickEasy = makeFilterRecipe(title: "Tomato Toast", time: "20 min", complexity: "Easy")
         let cozyMediumEasy = makeFilterRecipe(title: "Cozy Tomato Soup", time: "45 min", complexity: "Easy", tagline: "warm comfort bowl")
@@ -340,7 +359,8 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.filteredRecipes.map(\.title), [cozyQuickEasy.title, neutralQuickEasy.title])
     }
 
-    func testClearIngredientsResets() {
+    @MainActor
+    func testClearIngredientsResets() async {
         let vm = makeViewModel()
         vm.selectedIngredients = [Ingredient(name: "Onion")]
         vm.searchResultRecipes = [Recipe.mockRandom()]
@@ -359,6 +379,7 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertNil(vm.selectedComplexityFilter)
     }
 
+    @MainActor
     func testLoadInitialDataLoadsPantryItems() async {
         mockPantryService.stubbedItems = [Ingredient(name: "Salt"), Ingredient(name: "Olive Oil")]
 
@@ -368,6 +389,7 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.pantryIngredients.map(\.name), ["Salt", "Olive Oil"])
     }
 
+    @MainActor
     func testTogglePantryItemDoesNotChangeSelectedIngredients() async {
         let tomato = Ingredient(name: "Tomato")
         let vm = makeViewModel()
@@ -388,6 +410,7 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(mockPantryService.removeCalls.map(\.name), ["salt"])
     }
 
+    @MainActor
     func testRapidPantryToggleReplaysMutationsInTapOrder() async {
         mockPantryService.delayNanoseconds = 20_000_000
         let vm = makeViewModel()
@@ -407,6 +430,7 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertTrue(vm.pantryIngredients.isEmpty)
     }
 
+    @MainActor
     func testPantryIngredientNotFoundRollsBackOptimisticStateBeforeReloadCompletes() async {
         mockPantryService.addError = DatabaseError.ingredientNotFound("Dragonfruit")
         mockPantryService.getItemsDelayNanoseconds = 200_000_000
@@ -421,6 +445,7 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.homeLoadError, Strings.Errors.actionFailed)
     }
 
+    @MainActor
     func testSearchUsesSelectedAndPantryIngredients() async {
         mockRecipeService.stubbedRecipes = [Recipe.mockRandom()]
         let vm = makeViewModel()
@@ -433,6 +458,7 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(mockRecipeService.requestedIngredients.map(\.name), ["Chicken", "Salt"])
     }
 
+    @MainActor
     func testMissingIngredientsExcludePantryStaples() async {
         let ingredients = ["Chicken", "Salt", "Pepper"].map(Ingredient.init(name:))
         mockRecipeService.stubbedRecipes = [
@@ -455,7 +481,8 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.searchResultRecipes.first?.assumedPantryIngredients, ["Pepper"])
     }
 
-    func testIngredientBreakdownSeparatesAssumedStaplesFromTrueMissingIngredients() {
+    @MainActor
+    func testIngredientBreakdownSeparatesAssumedStaplesFromTrueMissingIngredients() async {
         let ingredients = ["Chicken", "Salt", "Oil", "Pepper", "Water", "Rice", "Bell Pepper"]
             .map(Ingredient.init(name:))
         let recipe = Recipe(
@@ -476,6 +503,7 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(breakdown.missingIngredientNames, ["Rice", "Bell Pepper"])
     }
 
+    @MainActor
     func testAssumedStaplesImproveRankingOverTrueMissingIngredients() async {
         let assumedOnlyIngredients = ["Chicken", "Salt", "Oil"].map(Ingredient.init(name:))
         let trueMissingIngredients = ["Chicken", "Rice"].map(Ingredient.init(name:))
@@ -509,6 +537,7 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.filteredRecipes.first?.title, "Seasoned Chicken")
     }
 
+    @MainActor
     func testSearchKeepsSavedPantryItemsAvailableAndAssumesBuiltInStaples() async {
         let ingredients = ["Chicken", "Salt", "Oil", "Rice"].map(Ingredient.init(name:))
         mockRecipeService.stubbedRecipes = [
@@ -531,6 +560,7 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(vm.searchResultRecipes.first?.assumedPantryIngredients, ["Oil"])
     }
 
+    @MainActor
     func testClearIngredientsPreservesPantry() async {
         let vm = makeViewModel()
         vm.pantryIngredients = [Ingredient(name: "Salt")]
@@ -545,7 +575,8 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertFalse(vm.hasIngredients)
     }
 
-    func testRemovingLastIngredientResetsResultFiltersAndExitsResults() {
+    @MainActor
+    func testRemovingLastIngredientResetsResultFiltersAndExitsResults() async {
         let vm = makeViewModel()
         let ingredient = Ingredient(name: "Onion")
         vm.selectedIngredients = [ingredient]
@@ -565,7 +596,8 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertNil(vm.selectedComplexityFilter)
     }
 
-    func testShowCameraFreeUserWithScans() {
+    @MainActor
+    func testShowCameraFreeUserWithScans() async {
         mockCameraScanTracker.stubbedCanScan = true
         mockSubscriptionService.setPlan(.free)
 
@@ -576,7 +608,8 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(mockCameraScanTracker.recordScanCallCount, 1)
     }
 
-    func testShowCameraFreeUserNoScans() {
+    @MainActor
+    func testShowCameraFreeUserNoScans() async {
         mockCameraScanTracker.stubbedCanScan = false
         mockSubscriptionService.setPlan(.free)
 
@@ -587,6 +620,7 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(mockCameraScanTracker.recordScanCallCount, 0)
     }
 
+    @MainActor
     func testPreloadIngredientsShowsResultsAndSearches() async {
         let recipe = Recipe.mockRandom()
         mockRecipeService.stubbedRecipes = [recipe]
@@ -601,6 +635,7 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertEqual(mockRecipeService.getRecipesCallCount, 1)
     }
 
+    @MainActor
     func testLoadInitialDataSetsHomeLoadErrorWhenHomeDataFails() async {
         mockUserDataService.shouldThrow = TestError.stub
 
@@ -613,6 +648,7 @@ final class DiscoverViewModelTests: XCTestCase {
     /// Typing a query while a category chip is selected must search the FULL catalogue, not just the
     /// category subset — otherwise an ingredient outside the category (e.g. garlic while "Grains" is
     /// selected) would never surface in the suggestions popup.
+    @MainActor
     func testSearchWithCategorySelectedQueriesFullCatalogue() async {
         mockIngredientsService.stubbedAllIngredients = [Ingredient(name: "Rice"), Ingredient(name: "Oats")]
         mockIngredientsService.stubbedFullSearchResults = [Ingredient(name: "Garlic")]
@@ -628,7 +664,8 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertTrue(vm.isSearchBypassingCategory)
     }
 
-    func testIsSearchBypassingCategory() {
+    @MainActor
+    func testIsSearchBypassingCategory() async {
         let vm = makeViewModel()
         XCTAssertFalse(vm.isSearchBypassingCategory)
 
@@ -642,7 +679,8 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertFalse(vm.isSearchBypassingCategory)
     }
 
-    func testClearSelectedCategoryNilsCategory() {
+    @MainActor
+    func testClearSelectedCategoryNilsCategory() async {
         let vm = makeViewModel()
         vm.selectedCategory = .grains
 
@@ -656,7 +694,8 @@ final class DiscoverViewModelTests: XCTestCase {
 
 final class RecipeSourceTypeTests: XCTestCase {
 
-    func testAccessibleRemovesPremiumSourcesWithoutAccess() {
+    @MainActor
+    func testAccessibleRemovesPremiumSourcesWithoutAccess() async {
         let result = RecipeSourceType.accessible(
             from: [.offline, .online, .ai],
             canAccessOnline: false,
@@ -666,7 +705,8 @@ final class RecipeSourceTypeTests: XCTestCase {
         XCTAssertEqual(result, [.offline])
     }
 
-    func testAccessibleKeepsGrantedPremiumSources() {
+    @MainActor
+    func testAccessibleKeepsGrantedPremiumSources() async {
         let result = RecipeSourceType.accessible(
             from: [.offline, .online, .ai],
             canAccessOnline: true,
@@ -676,7 +716,8 @@ final class RecipeSourceTypeTests: XCTestCase {
         XCTAssertEqual(result, [.offline, .online])
     }
 
-    func testRequiresDatabaseReadyOnlyForOfflineOnly() {
+    @MainActor
+    func testRequiresDatabaseReadyOnlyForOfflineOnly() async {
         XCTAssertTrue(RecipeSourceType.requiresDatabaseReady([.offline]))
         XCTAssertFalse(RecipeSourceType.requiresDatabaseReady([.offline, .online]))
         XCTAssertFalse(RecipeSourceType.requiresDatabaseReady([.online]))

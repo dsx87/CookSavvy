@@ -12,15 +12,18 @@ final class DBInterfaceTests: XCTestCase {
 
     var dbInterface: DBInterface!
 //    var mockRecipes: [Recipe] = []
-    override func setUpWithError() throws {
+    @MainActor
+    override func setUp() async throws {
         dbInterface = try DBInterface(inMemory: true)
     }
 
-    override func tearDownWithError() throws {
+    @MainActor
+    override func tearDown() async throws {
         dbInterface = nil
 //        mockRecipes.removeAll()
     }
 
+    @MainActor
     func testInsertionRecipes() async throws {
         let mockRecipes = Recipe.mocks(count: 10)
         try await dbInterface.insertRecipes(mockRecipes)
@@ -30,6 +33,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertEqual(mockRecipes, result, "Not all recipes were extracted")
     }
 
+    @MainActor
     func testInsertionIngredients() async throws {
         let mockIngredients = Ingredient.mocks(count: 5)
         let names = mockIngredients.map(\.name)
@@ -43,6 +47,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertEqual(mockIngredients, result, "Not all ingredients were extracted")
     }
     
+    @MainActor
     func testGettingRecipes() async throws {
         let mockRecipes = Recipe.mocks(count: 5)
         try await dbInterface.insertRecipes(mockRecipes)
@@ -64,6 +69,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertTrue(allInMocks, "Some returned recipes were not among the inserted mocks")
     }
     
+    @MainActor
     func testPerformanceIngredientsInsertion() throws {
         let ingredients = Ingredient.mocks(count: 5000)
         let db = dbInterface!
@@ -79,6 +85,7 @@ final class DBInterfaceTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testPerformanceRecipesInsertion() throws {
         let recipes = Recipe.mocks(count: 5000)
         let db = dbInterface!
@@ -94,7 +101,8 @@ final class DBInterfaceTests: XCTestCase {
 
     // MARK: - Additional robustness tests
 
-    func testInitializationThrowsForInvalidDatabasePath() throws {
+    @MainActor
+    func testInitializationThrowsForInvalidDatabasePath() async throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("CookSavvyInvalidDBPath_\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -102,6 +110,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertThrowsError(try DBInterface(databaseURL: directory))
     }
 
+    @MainActor
     func testConcurrentRecipeCacheAccessDoesNotCrash() async throws {
         let recipes = Recipe.mocks(count: 25)
         try await dbInterface.insertRecipes(recipes)
@@ -138,11 +147,13 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertTrue(errors.isEmpty)
     }
 
+    @MainActor
     func testGetRecipesWithEmptyIngredientsReturnsEmpty() async throws {
         let result = try await dbInterface.getRecipes(byIngredients: [], offset: 0, limit: 20)
         XCTAssertTrue(result.isEmpty, "Expected empty result for empty ingredient query")
     }
 
+    @MainActor
     func testDuplicateIngredientVariantsReturnInOrderAndClamp() async throws {
         // Same name, different metadata to ensure Equatable distinguishes them
         let v1 = Ingredient(name: "Garlic", description: "fresh garlic", pictureFileName: nil, foodGroup: "Vegetables", foodSubgroup: "Alliums")
@@ -160,11 +171,13 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertEqual(f3, [v2])
     }
 
+    @MainActor
     func testGetIngredientsUnknownNameReturnsEmpty() async throws {
         let res = try await dbInterface.getIngredients(byName: "__unknown__")
         XCTAssertTrue(res.isEmpty)
     }
 
+    @MainActor
     func testGetRecipesFiltersByProvidedIngredients() async throws {
         // Build two distinct recipes
         let garlic: Ingredient = "Garlic"
@@ -198,6 +211,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertEqual(resOnion.first?.title, r2.title)
     }
 
+    @MainActor
     func testGetRecipesWithKnownAndUnknownIngredientsStillReturnsMatches() async throws {
         let known: Ingredient = "Basil"
         let r = Recipe(
@@ -215,6 +229,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertTrue(res.contains { $0.title == r.title })
     }
 
+    @MainActor
     func testInsertRecipeWithDuplicateIngredientNames() async throws {
         // Duplicate "Lemon" appears twice; linking should deduplicate per recipe
         let lemon: Ingredient = "Lemon"
@@ -235,6 +250,7 @@ final class DBInterfaceTests: XCTestCase {
 
     // MARK: - Pantry tests
 
+    @MainActor
     func testAddAndFetchPantryItems() async throws {
         let salt = Ingredient(name: "Salt", description: nil, pictureFileName: nil, foodGroup: "Spices", foodSubgroup: nil)
         let oliveOil = Ingredient(name: "Olive Oil", description: nil, pictureFileName: nil, foodGroup: "Pantry", foodSubgroup: nil)
@@ -249,6 +265,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertTrue(isSaltPantryItem)
     }
 
+    @MainActor
     func testAddPantryItemDedupesCaseInsensitively() async throws {
         let salt = Ingredient(name: "Salt", description: nil, pictureFileName: nil, foodGroup: "Spices", foodSubgroup: nil)
         try await dbInterface.insertIngredients([salt])
@@ -260,6 +277,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertEqual(pantryItems.map(\.name), ["Salt"])
     }
 
+    @MainActor
     func testRemovePantryItem() async throws {
         let salt = Ingredient(name: "Salt")
         try await dbInterface.insertIngredients([salt])
@@ -273,6 +291,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertTrue(pantryItems.isEmpty)
     }
 
+    @MainActor
     func testPantryItemsPersistWithinDatabaseInstance() async throws {
         let flour = Ingredient(name: "Flour", description: nil, pictureFileName: nil, foodGroup: "Grains", foodSubgroup: nil)
         try await dbInterface.insertIngredients([flour])
@@ -283,6 +302,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertEqual(fetched, [flour])
     }
 
+    @MainActor
     func testClearDatabaseRemovesPantryItems() async throws {
         let sugar = Ingredient(name: "Sugar")
         try await dbInterface.insertIngredients([sugar])
@@ -294,6 +314,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertTrue(pantryItems.isEmpty)
     }
 
+    @MainActor
     func testPantryServicePersistsThroughDatabase() async throws {
         let pepper = Ingredient(name: "Pepper")
         try await dbInterface.insertIngredients([pepper])
@@ -310,6 +331,7 @@ final class DBInterfaceTests: XCTestCase {
 
     // MARK: - Removal tests (pending implementation)
 
+    @MainActor
     func testRemoveSpecificIngredientByName() async throws {
         let garlic: Ingredient = "Garlic"
         let onion: Ingredient = "Onion"
@@ -324,6 +346,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertEqual(resOnion, [onion])
     }
 
+    @MainActor
     func testRemoveAllIngredients() async throws {
         let ingredients = ["Basil", "Parsley", "Tomato"].map(Ingredient.init(stringLiteral:))
         try await dbInterface.insertIngredients(ingredients)
@@ -336,6 +359,7 @@ final class DBInterfaceTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testRemoveNonexistentIngredientIsNoop() async throws {
         let ingredients = ["Rice", "Quinoa"].map(Ingredient.init(stringLiteral:))
         try await dbInterface.insertIngredients(ingredients)
@@ -348,6 +372,7 @@ final class DBInterfaceTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testRemoveRecipeByTitleOrId() async throws {
         let garlic: Ingredient = "Garlic"
         let basil: Ingredient = "Basil"
@@ -376,6 +401,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertTrue(resBasil.contains { $0.title == r2.title })
     }
 
+    @MainActor
     func testRemoveAllRecipes() async throws {
         let r = Recipe.mocks(count: 5)
         try await dbInterface.insertRecipes(r)
@@ -387,6 +413,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertTrue(res.isEmpty)
     }
 
+    @MainActor
     func testRemoveRecipesByIngredientsCascade() async throws {
         let garlic: Ingredient = "Garlic"
         let tomato: Ingredient = "Tomato"
@@ -417,6 +444,7 @@ final class DBInterfaceTests: XCTestCase {
 
     // MARK: - New searchIngredients API tests
 
+    @MainActor
     func testSearchIngredientsReturnsSubstringMatchesCaseInsensitive() async throws {
         // Fresh DB from setUp
         let items: [Ingredient] = [
@@ -438,6 +466,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertFalse(names.contains("Rice"))
     }
 
+    @MainActor
     func testSearchIngredientsRespectsLimit() async throws {
         let many = (1...10).map { Ingredient(name: "Chicken \($0)") }
         try await dbInterface.insertIngredients(many)
@@ -448,17 +477,20 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertTrue(res.allSatisfy { $0.name.lowercased().contains("chicken") })
     }
 
+    @MainActor
     func testSearchIngredientsEmptyQueryReturnsEmpty() async throws {
         let res = try await dbInterface.searchIngredients(matching: "", limit: 5)
         XCTAssertTrue(res.isEmpty)
     }
 
+    @MainActor
     func testSearchIngredientsNoMatchesReturnsEmpty() async throws {
         try await dbInterface.insertIngredients(["Pasta", "Rice"])
         let res = try await dbInterface.searchIngredients(matching: "chicken", limit: 10)
         XCTAssertTrue(res.isEmpty)
     }
 
+    @MainActor
     func testGetIngredientsExactMatchIsCaseInsensitive() async throws {
         try await dbInterface.insertIngredients(["Chicken"]) // capitalized insert
         let resLower = try await dbInterface.getIngredients(byName: "chicken")
@@ -468,6 +500,7 @@ final class DBInterfaceTests: XCTestCase {
 
     // MARK: - basicComponent-based recipe matching tests
 
+    @MainActor
     func testGetRecipesMatchesByBasicComponent() async throws {
         // "Chicken Breast" has basicComponent "chicken" — querying "chicken" should find it
         let chickenBreast = Ingredient(name: "Chicken Breast", description: nil, pictureFileName: nil,
@@ -486,6 +519,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertEqual(results.first?.title, "Grilled Chicken")
     }
 
+    @MainActor
     func testGetRecipesExactBasicComponentMatch() async throws {
         // Querying a component not present in the recipe should return nothing
         let chickenBreast = Ingredient(name: "Chicken Breast", description: nil, pictureFileName: nil,
@@ -509,6 +543,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertEqual(hits.first?.title, "Stuffed Breast")
     }
 
+    @MainActor
     func testGetRecipesBasicComponentMatchIsCaseSensitiveToStoredValue() async throws {
         // basicComponent stored as-is; querying with the same value must match
         let ingredient = Ingredient(name: "CHICKEN BREAST", description: nil, pictureFileName: nil,
@@ -526,6 +561,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertEqual(results.count, 1)
     }
 
+    @MainActor
     func testGetRecipesMatchesMultipleBasicComponents() async throws {
         let chicken = Ingredient(name: "Chicken Breast", description: nil, pictureFileName: nil,
                                  foodGroup: nil, foodSubgroup: nil, basicComponent: "chicken")
@@ -549,6 +585,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertEqual(results.first?.title, "Chicken Tomato Pasta")
     }
 
+    @MainActor
     func testGetRecipesNoBasicComponentMatchReturnsEmpty() async throws {
         let chicken = Ingredient(name: "Chicken Breast", description: nil, pictureFileName: nil,
                                  foodGroup: nil, foodSubgroup: nil, basicComponent: "chicken")
@@ -566,6 +603,7 @@ final class DBInterfaceTests: XCTestCase {
         XCTAssertTrue(results.isEmpty)
     }
 
+    @MainActor
     func testGetRecipesDistinctResultsNoDuplicates() async throws {
         let chicken = Ingredient(name: "Chicken Breast", description: nil, pictureFileName: nil,
                                  foodGroup: nil, foodSubgroup: nil, basicComponent: "chicken")

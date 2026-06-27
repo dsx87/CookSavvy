@@ -12,7 +12,8 @@ final class ObservabilityConfigurationTests: XCTestCase {
 
     // MARK: - APIKeysReader
 
-    func testAPIKeysReaderReturnsNilWhenPlistAbsentFromBundle() {
+    @MainActor
+    func testAPIKeysReaderReturnsNilWhenPlistAbsentFromBundle() async {
         // The unit-test bundle does not contain APIKeys.plist, so any lookup resolves to nil.
         let testBundle = Bundle(for: Self.self)
         XCTAssertNil(APIKeysReader.string("TELEMETRYDECK_APP_ID", bundle: testBundle))
@@ -21,21 +22,25 @@ final class ObservabilityConfigurationTests: XCTestCase {
 
     // MARK: - TelemetryDeckConfiguration
 
-    func testTelemetryDeckConfiguredWithNonEmptyAppID() {
+    @MainActor
+    func testTelemetryDeckConfiguredWithNonEmptyAppID() async {
         let config = TelemetryDeckConfiguration(appID: "ABC-123")
         XCTAssertTrue(config.isConfigured)
         XCTAssertEqual(config.appID, "ABC-123")
     }
 
-    func testTelemetryDeckNotConfiguredWhenAppIDNil() {
+    @MainActor
+    func testTelemetryDeckNotConfiguredWhenAppIDNil() async {
         XCTAssertFalse(TelemetryDeckConfiguration(appID: nil).isConfigured)
     }
 
-    func testTelemetryDeckNotConfiguredWhenAppIDEmpty() {
+    @MainActor
+    func testTelemetryDeckNotConfiguredWhenAppIDEmpty() async {
         XCTAssertFalse(TelemetryDeckConfiguration(appID: "").isConfigured)
     }
 
-    func testTelemetryDeckReadsFromBundleWithoutPlist() {
+    @MainActor
+    func testTelemetryDeckReadsFromBundleWithoutPlist() async {
         // No APIKeys.plist in the test bundle → unconfigured, app falls back to os.Logger analytics.
         let config = TelemetryDeckConfiguration(bundle: Bundle(for: Self.self))
         XCTAssertFalse(config.isConfigured)
@@ -43,17 +48,20 @@ final class ObservabilityConfigurationTests: XCTestCase {
 
     // MARK: - CrashReportingConfiguration
 
-    func testCrashReportingConfiguredWithNonEmptyDSN() {
+    @MainActor
+    func testCrashReportingConfiguredWithNonEmptyDSN() async {
         let config = CrashReportingConfiguration(dsn: "https://key@example.ingest.sentry.io/1")
         XCTAssertTrue(config.isConfigured)
         XCTAssertEqual(config.dsn, "https://key@example.ingest.sentry.io/1")
     }
 
-    func testCrashReportingNotConfiguredWhenDSNNil() {
+    @MainActor
+    func testCrashReportingNotConfiguredWhenDSNNil() async {
         XCTAssertFalse(CrashReportingConfiguration(dsn: nil).isConfigured)
     }
 
-    func testCrashReportingNotConfiguredWhenDSNEmpty() {
+    @MainActor
+    func testCrashReportingNotConfiguredWhenDSNEmpty() async {
         XCTAssertFalse(CrashReportingConfiguration(dsn: "").isConfigured)
     }
 }

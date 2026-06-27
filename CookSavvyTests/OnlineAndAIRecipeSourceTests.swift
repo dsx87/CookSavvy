@@ -9,32 +9,38 @@ import XCTest
 @testable import CookSavvy
 
 final class OnlineRecipeSourceTests: XCTestCase {
-    
+
     var onlineSource: OnlineRecipeSource!
-    
-    override func setUpWithError() throws {
+
+    @MainActor
+    override func setUp() async throws {
         onlineSource = OnlineRecipeSource()
     }
-    
-    override func tearDownWithError() throws {
+
+    @MainActor
+    override func tearDown() async throws {
         onlineSource = nil
     }
-    
-    func testSourceType() {
+
+    @MainActor
+    func testSourceType() async {
         XCTAssertEqual(onlineSource.sourceType, .online)
     }
-    
+
+    @MainActor
     func testIsAvailableReturnsFalseWithoutProvider() async {
         let available = await onlineSource.isAvailable()
         XCTAssertFalse(available, "Online source should be unavailable without a provider")
     }
     
+    @MainActor
     func testIsAvailableReturnsTrueWithProvider() async {
         let source = OnlineRecipeSource(provider: MockRecipeAPIProvider())
         let available = await source.isAvailable()
         XCTAssertTrue(available, "Online source should be available with a provider")
     }
     
+    @MainActor
     func testFetchRecipesThrowsUnavailableError() async {
         let ingredients: [Ingredient] = ["Chicken", "Tomato"]
         
@@ -52,7 +58,8 @@ final class OnlineRecipeSourceTests: XCTestCase {
         }
     }
     
-    func testInitWithProvider() {
+    @MainActor
+    func testInitWithProvider() async {
         let source = OnlineRecipeSource(provider: MockRecipeAPIProvider(), resultCount: 10)
         XCTAssertEqual(source.sourceType, .online)
     }
@@ -68,11 +75,13 @@ private final class MockRecipeAPIProvider: RecipeAPIProviderProtocol {
 
 final class AIRecipeSourceTests: XCTestCase {
 
-    func testSourceType() {
+    @MainActor
+    func testSourceType() async {
         let source = AIRecipeSource(aiService: MockAIService())
         XCTAssertEqual(source.sourceType, .ai)
     }
 
+    @MainActor
     func testAIRecipeSourceIsAvailableWhenServiceIsAvailable() async {
         let mockService = MockAIService()
         mockService.isAvailable = true
@@ -81,6 +90,7 @@ final class AIRecipeSourceTests: XCTestCase {
         XCTAssertTrue(available)
     }
 
+    @MainActor
     func testAIRecipeSourceIsUnavailableWhenServiceIsUnavailable() async {
         let mockService = MockAIService()
         mockService.isAvailable = false
@@ -89,6 +99,7 @@ final class AIRecipeSourceTests: XCTestCase {
         XCTAssertFalse(available, "AI source should be unavailable when no real LLM provider is configured")
     }
 
+    @MainActor
     func testAIRecipeSourceFetchesFromAIService() async throws {
         let mockService = MockAIService()
         let source = AIRecipeSource(aiService: mockService)
@@ -99,6 +110,7 @@ final class AIRecipeSourceTests: XCTestCase {
         XCTAssertTrue(mockService.generateRecipesCalled)
     }
 
+    @MainActor
     func testAIRecipeSourcePropagatesErrors() async {
         let mockService = MockAIService()
         mockService.shouldThrow = true

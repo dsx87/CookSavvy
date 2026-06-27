@@ -9,22 +9,25 @@ import XCTest
 @testable import CookSavvy
 
 final class RecipeSourceTests: XCTestCase {
-    
+
     // MARK: - RecipeSourceType Tests
     
-    func testRecipeSourceTypeRawValues() {
+    @MainActor
+    func testRecipeSourceTypeRawValues() async {
         XCTAssertEqual(RecipeSourceType.offline.rawValue, "Offline")
         XCTAssertEqual(RecipeSourceType.online.rawValue, "Online")
         XCTAssertEqual(RecipeSourceType.ai.rawValue, "AI")
     }
     
-    func testRecipeSourceTypeDisplayNames() {
+    @MainActor
+    func testRecipeSourceTypeDisplayNames() async {
         XCTAssertEqual(RecipeSourceType.offline.displayName, "Offline")
         XCTAssertEqual(RecipeSourceType.online.displayName, "Online")
         XCTAssertEqual(RecipeSourceType.ai.displayName, "AI")
     }
     
-    func testRecipeSourceTypeAllCases() {
+    @MainActor
+    func testRecipeSourceTypeAllCases() async {
         let allCases = RecipeSourceType.allCases
         XCTAssertEqual(allCases.count, 3)
         XCTAssertTrue(allCases.contains(.offline))
@@ -32,7 +35,8 @@ final class RecipeSourceTests: XCTestCase {
         XCTAssertTrue(allCases.contains(.ai))
     }
     
-    func testRecipeSourceTypeCodable() throws {
+    @MainActor
+    func testRecipeSourceTypeCodable() async throws {
         let encoder = JSONEncoder()
         let decoder = JSONDecoder()
         
@@ -45,7 +49,8 @@ final class RecipeSourceTests: XCTestCase {
     
     // MARK: - RecipeSourceError Tests
     
-    func testRecipeSourceErrorDescriptions() {
+    @MainActor
+    func testRecipeSourceErrorDescriptions() async {
         let sourceUnavailableError = RecipeSourceError.sourceUnavailable(.online)
         XCTAssertEqual(sourceUnavailableError.errorDescription, "Recipe source 'Online' is currently unavailable")
         
@@ -56,7 +61,8 @@ final class RecipeSourceTests: XCTestCase {
         XCTAssertEqual(invalidDataError.errorDescription, "Invalid data received from source")
     }
     
-    func testRecipeSourceErrorNetworkError() {
+    @MainActor
+    func testRecipeSourceErrorNetworkError() async {
         let underlyingError = NSError(domain: "TestDomain", code: 404, userInfo: [NSLocalizedDescriptionKey: "Not Found"])
         let networkError = RecipeSourceError.networkError(underlyingError)
         
@@ -64,7 +70,8 @@ final class RecipeSourceTests: XCTestCase {
         XCTAssertTrue(networkError.errorDescription?.contains("Network error") ?? false)
     }
     
-    func testRecipeSourceErrorDatabaseError() {
+    @MainActor
+    func testRecipeSourceErrorDatabaseError() async {
         let underlyingError = NSError(domain: "DBDomain", code: 500, userInfo: [NSLocalizedDescriptionKey: "DB Error"])
         let dbError = RecipeSourceError.databaseError(underlyingError)
         

@@ -7,17 +7,19 @@ import XCTest
 @testable import CookSavvy
 
 final class SubstitutionServiceTests: XCTestCase {
+
     private var temporaryDirectories: [URL] = []
 
-    override func tearDownWithError() throws {
+    @MainActor
+    override func tearDown() async throws {
         for directory in temporaryDirectories {
             try? FileManager.default.removeItem(at: directory)
         }
         temporaryDirectories.removeAll()
-        try super.tearDownWithError()
     }
 
-    func testLocalCatalogLoaderDecodesCatalogFromFileURL() throws {
+    @MainActor
+    func testLocalCatalogLoaderDecodesCatalogFromFileURL() async throws {
         let fileURL = try makeCatalogFile(
             json: """
             [
@@ -48,7 +50,8 @@ final class SubstitutionServiceTests: XCTestCase {
         XCTAssertEqual(catalog.first?.substitutes.first?.ingredient, "olive oil")
     }
 
-    func testLocalCatalogLoaderThrowsWhenFileIsMissing() {
+    @MainActor
+    func testLocalCatalogLoaderThrowsWhenFileIsMissing() async {
         let missingURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("Substitutions.json")
@@ -66,6 +69,7 @@ final class SubstitutionServiceTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testSuggestionsPreferSubstituteUserAlreadyHas() async throws {
         let service = try makeService(
             json: """
@@ -104,6 +108,7 @@ final class SubstitutionServiceTests: XCTestCase {
         XCTAssertEqual(suggestions.first?.options.map(\.isAvailableFromUserIngredients), [true, false])
     }
 
+    @MainActor
     func testSuggestionsResolveAliasesAgainstMissingIngredient() async throws {
         let service = try makeService(
             json: """
@@ -135,6 +140,7 @@ final class SubstitutionServiceTests: XCTestCase {
         XCTAssertEqual(suggestions.first?.options.first?.ingredientName, "chives")
     }
 
+    @MainActor
     func testSuggestionsReturnEmptyForUncoveredIngredients() async throws {
         let service = try makeService(
             json: """
@@ -164,6 +170,7 @@ final class SubstitutionServiceTests: XCTestCase {
         XCTAssertTrue(suggestions.isEmpty)
     }
 
+    @MainActor
     private func makeService(json: String) throws -> SubstitutionService {
         let fileURL = try makeCatalogFile(json: json)
         return SubstitutionService(
@@ -175,6 +182,7 @@ final class SubstitutionServiceTests: XCTestCase {
         )
     }
 
+    @MainActor
     private func makeCatalogFile(json: String) throws -> URL {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

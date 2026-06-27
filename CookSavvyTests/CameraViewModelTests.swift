@@ -7,9 +7,9 @@ import SwiftUI
 import XCTest
 @testable import CookSavvy
 
-@MainActor
 final class CameraViewModelTests: XCTestCase {
 
+    @MainActor
     private func makeViewModel() -> CameraViewModel {
         CameraViewModel(
             detectionService: MockIngredientDetectionService(),
@@ -20,7 +20,8 @@ final class CameraViewModelTests: XCTestCase {
 
     // MARK: - setupCamera failure recovery
 
-    func testCameraSetupFailedTransitionsToCameraUnavailable() {
+    @MainActor
+    func testCameraSetupFailedTransitionsToCameraUnavailable() async {
         let viewModel = makeViewModel()
 
         viewModel.cameraSetupFailed()
@@ -28,7 +29,8 @@ final class CameraViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.state, .cameraUnavailable)
     }
 
-    func testRetryFromCameraUnavailableReturnsToCapturing() {
+    @MainActor
+    func testRetryFromCameraUnavailableReturnsToCapturing() async {
         let viewModel = makeViewModel()
         viewModel.cameraSetupFailed()
 
@@ -39,27 +41,31 @@ final class CameraViewModelTests: XCTestCase {
 
     // MARK: - Foreground permission re-check gating
 
-    func testShouldRefreshPermissionOnForegroundWhenAwaitingPermission() {
+    @MainActor
+    func testShouldRefreshPermissionOnForegroundWhenAwaitingPermission() async {
         let viewModel = makeViewModel()
         // Initial state is `.requestingPermission`.
         XCTAssertTrue(viewModel.shouldRefreshPermissionOnForeground)
     }
 
-    func testShouldNotRefreshPermissionOnForegroundWhenCameraUnavailable() {
+    @MainActor
+    func testShouldNotRefreshPermissionOnForegroundWhenCameraUnavailable() async {
         let viewModel = makeViewModel()
         viewModel.cameraSetupFailed()
 
         XCTAssertFalse(viewModel.shouldRefreshPermissionOnForeground)
     }
 
-    func testShouldNotRefreshPermissionOnForegroundWhileCapturing() {
+    @MainActor
+    func testShouldNotRefreshPermissionOnForegroundWhileCapturing() async {
         let viewModel = makeViewModel()
         viewModel.retryCapture() // moves to `.capturing`
 
         XCTAssertFalse(viewModel.shouldRefreshPermissionOnForeground)
     }
 
-    func testHandleScenePhaseChangeIgnoresNonActivePhases() {
+    @MainActor
+    func testHandleScenePhaseChangeIgnoresNonActivePhases() async {
         let viewModel = makeViewModel()
         viewModel.retryCapture() // `.capturing`
 

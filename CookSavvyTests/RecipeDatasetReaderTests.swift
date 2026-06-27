@@ -11,22 +11,26 @@ import ZIPFoundation
 @testable import CookSavvy
 
 final class RecipeDatasetReaderTests: XCTestCase {
+
     private var temporaryDirectories: [URL] = []
 
-    override func tearDownWithError() throws {
+    @MainActor
+    override func tearDown() async throws {
         for directory in temporaryDirectories {
             try? FileManager.default.removeItem(at: directory)
         }
         temporaryDirectories.removeAll()
     }
 
-    func testReaderCanDetectSupportedJSONArchive() throws {
+    @MainActor
+    func testReaderCanDetectSupportedJSONArchive() async throws {
         let zipURL = try makeDatasetZip(recipeJSON: makeRecipeJSONArray())
         let reader = JSONRecipeDatasetReader()
 
         XCTAssertTrue(reader.canReadDataset(at: zipURL))
     }
 
+    @MainActor
     func testReaderRejectsNonZipArchive() async throws {
         let directory = try makeTemporaryDirectory()
         let url = directory.appendingPathComponent("dataset.txt")
@@ -42,6 +46,7 @@ final class RecipeDatasetReaderTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testReaderRejectsZipWithoutRecipesJSON() async throws {
         let zipURL = try makeDatasetZip(recipeJSON: nil)
         let reader = JSONRecipeDatasetReader()
@@ -55,6 +60,7 @@ final class RecipeDatasetReaderTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testReaderDecodesStructuredRecipeJSONAndPreservesImagePath() async throws {
         let zipURL = try makeDatasetZip(recipeJSON: makeRecipeJSONArray())
         let recipes = try await JSONRecipeDatasetReader().readRecipes(from: zipURL)
@@ -68,6 +74,7 @@ final class RecipeDatasetReaderTests: XCTestCase {
         XCTAssertEqual(recipe.source, .offline)
     }
 
+    @MainActor
     func testReaderReportsDecodeErrorForInvalidJSON() async throws {
         let json = """
         [
@@ -93,6 +100,7 @@ final class RecipeDatasetReaderTests: XCTestCase {
         }
     }
 
+    @MainActor
     private func makeRecipeJSONArray() -> String {
         """
         [
@@ -112,6 +120,7 @@ final class RecipeDatasetReaderTests: XCTestCase {
         """
     }
 
+    @MainActor
     private func makeDatasetZip(recipeJSON: String?) throws -> URL {
         let fileManager = FileManager.default
         let directory = try makeTemporaryDirectory()
@@ -132,6 +141,7 @@ final class RecipeDatasetReaderTests: XCTestCase {
         return zipURL
     }
 
+    @MainActor
     private func makeTemporaryDirectory() throws -> URL {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("RecipeDatasetReaderTests_\(UUID().uuidString)", isDirectory: true)

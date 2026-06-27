@@ -6,20 +6,21 @@
 import XCTest
 @testable import CookSavvy
 
-@MainActor
 final class SupabaseIntegrationTests: XCTestCase {
+
     private var harness: SupabaseTestHarness?
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
-        harness = try SupabaseTestHarness.makeOrSkip()
+    @MainActor
+    override func setUp() async throws {
+        harness = try await SupabaseTestHarness.makeOrSkip()
     }
 
-    override func tearDownWithError() throws {
+    @MainActor
+    override func tearDown() async throws {
         harness = nil
-        try super.tearDownWithError()
     }
 
+    @MainActor
     func testAnonymousAuthFlowProvidesAccessToken() async throws {
         let harness = try requireHarness()
         let authService = SupabaseAuthService(
@@ -49,6 +50,7 @@ final class SupabaseIntegrationTests: XCTestCase {
         XCTAssertNil(authService.currentUserId)
     }
 
+    @MainActor
     func testRecipeSearchProviderEndToEndReturnsRecipes() async throws {
         let harness = try requireHarness()
         try await harness.ensureAnonymousSession()
@@ -73,6 +75,7 @@ final class SupabaseIntegrationTests: XCTestCase {
         XCTAssertFalse(recipes[0].instructions.isEmpty)
     }
 
+    @MainActor
     func testAIRecipeGenerationEndToEndReturnsRecipes() async throws {
         let harness = try requireHarness()
         try await harness.ensureAnonymousSession()
@@ -94,6 +97,7 @@ final class SupabaseIntegrationTests: XCTestCase {
         XCTAssertFalse(recipes[0].instructions.isEmpty)
     }
 
+    @MainActor
     func testIngredientDetectionEndToEndWithConfiguredFixtureImage() async throws {
         let harness = try requireHarness()
         let imageData = try XCTUnwrap(harness.fixtureImageData, "Set SUPABASE_TEST_IMAGE_BASE64 to enable the vision integration test")
@@ -110,6 +114,7 @@ final class SupabaseIntegrationTests: XCTestCase {
         XCTAssertFalse(ingredients[0].name.isEmpty)
     }
 
+    @MainActor
     private func requireHarness() throws -> SupabaseTestHarness {
         try XCTUnwrap(harness)
     }

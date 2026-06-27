@@ -20,7 +20,7 @@ import os
 ///
 /// Continuations are tracked under an `OSAllocatedUnfairLock` and removed on stream termination,
 /// so a finished/cancelled consumer does not leak.
-final class AsyncValueBroadcaster<Value: Sendable>: Sendable {
+nonisolated final class AsyncValueBroadcaster<Value: Sendable>: Sendable {
     /// The lock-protected state: the latest value and the set of live stream continuations.
     private struct State {
         var value: Value

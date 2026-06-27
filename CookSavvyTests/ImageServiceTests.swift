@@ -46,15 +46,15 @@ actor MockImageExtractor {
 
 // MARK: - ImageService Tests
 
-@MainActor
 final class ImageServiceTests: XCTestCase {
-    
+
     var imageService: ImageService!
     var mockExtractor: MockImageExtractor!
     var testDirectory: URL!
     var fileManager: FileManager!
     
-    override func setUpWithError() throws {
+    @MainActor
+    override func setUp() async throws {
         fileManager = FileManager.default
         testDirectory = fileManager.temporaryDirectory
             .appendingPathComponent("ImageServiceTests_\(UUID().uuidString)")
@@ -63,7 +63,8 @@ final class ImageServiceTests: XCTestCase {
         mockExtractor = MockImageExtractor()
     }
     
-    override func tearDownWithError() throws {
+    @MainActor
+    override func tearDown() async throws {
         imageService = nil
         mockExtractor = nil
         
@@ -75,6 +76,7 @@ final class ImageServiceTests: XCTestCase {
     
     // MARK: - Helper Methods
     
+    @MainActor
     private func createTestImage(color: UIColor = .red, size: CGSize = CGSize(width: 10, height: 10)) -> UIImage {
         UIGraphicsBeginImageContext(size)
         color.setFill()
@@ -84,6 +86,7 @@ final class ImageServiceTests: XCTestCase {
         return image
     }
     
+    @MainActor
     private func saveTestImageToDisk(fileName: String) throws -> URL {
         let image = createTestImage()
         let imageData = image.pngData()!
@@ -92,14 +95,17 @@ final class ImageServiceTests: XCTestCase {
         return fileURL
     }
 
+    @MainActor
     private func documentsDirectory() throws -> URL {
         try XCTUnwrap(fileManager.urls(for: .documentDirectory, in: .userDomainMask).first)
     }
 
+    @MainActor
     private func makeImageZip(fileName: String) throws -> URL {
         try makeImageZip(fileNames: [fileName])
     }
 
+    @MainActor
     private func makeImageZip(fileNames: [String]) throws -> URL {
         let workDirectory = testDirectory.appendingPathComponent("zip-work-\(UUID().uuidString)", isDirectory: true)
         let zipURL = testDirectory.appendingPathComponent("images-\(UUID().uuidString).zip")
@@ -119,6 +125,7 @@ final class ImageServiceTests: XCTestCase {
     
     // MARK: - Initialization Tests
     
+    @MainActor
     func testDefaultInitialization() async throws {
         imageService = try ImageService()
         XCTAssertNotNil(imageService)
@@ -126,7 +133,8 @@ final class ImageServiceTests: XCTestCase {
         XCTAssertEqual(count, 0)
     }
     
-    func testCustomInitialization() throws {
+    @MainActor
+    func testCustomInitialization() async throws {
         let zipURL = URL(fileURLWithPath: "/tmp/test.zip")
         imageService = try ImageService(
             imageExtractor: ImageExtractor(),
@@ -138,6 +146,7 @@ final class ImageServiceTests: XCTestCase {
     
     // MARK: - Load Image by Name Tests
     
+    @MainActor
     func testLoadImageFromMemoryCache() async throws {
         imageService = try ImageService(maxCacheSize: 10)
         
@@ -153,6 +162,7 @@ final class ImageServiceTests: XCTestCase {
         XCTAssertEqual(count, 0)
     }
     
+    @MainActor
     func testLoadImageWithEmptyFileName() async throws {
         imageService = try ImageService()
         
@@ -160,6 +170,7 @@ final class ImageServiceTests: XCTestCase {
         XCTAssertNil(image)
     }
     
+    @MainActor
     func testLoadImageNotFound() async throws {
         imageService = try ImageService()
         
@@ -169,6 +180,7 @@ final class ImageServiceTests: XCTestCase {
     
     // MARK: - Load Image for Recipe Tests
     
+    @MainActor
     func testLoadImageForRecipe() async throws {
         let recipe = Recipe(
             title: "Test Recipe",
@@ -185,6 +197,7 @@ final class ImageServiceTests: XCTestCase {
         XCTAssertNil(image)
     }
     
+    @MainActor
     func testLoadImageForRecipeWithEmptyImageName() async throws {
         let recipe = Recipe(
             title: "Test Recipe",
@@ -202,6 +215,7 @@ final class ImageServiceTests: XCTestCase {
     
     // MARK: - Load Image for Ingredient Tests
     
+    @MainActor
     func testLoadImageForIngredient() async throws {
         let ingredient = Ingredient(
             name: "Chicken",
@@ -218,6 +232,7 @@ final class ImageServiceTests: XCTestCase {
         XCTAssertNil(image)
     }
     
+    @MainActor
     func testLoadImageForIngredientWithNoPicture() async throws {
         let ingredient = Ingredient(name: "Salt")
         
@@ -229,6 +244,7 @@ final class ImageServiceTests: XCTestCase {
     
     // MARK: - Batch Loading Tests
     
+    @MainActor
     func testLoadImagesForMultipleRecipes() async throws {
         let recipes = [
             Recipe(
@@ -256,6 +272,7 @@ final class ImageServiceTests: XCTestCase {
         XCTAssertTrue(images.isEmpty || images.count <= 2)
     }
     
+    @MainActor
     func testLoadImagesForEmptyRecipeArray() async throws {
         imageService = try ImageService()
         
@@ -266,6 +283,7 @@ final class ImageServiceTests: XCTestCase {
     
     // MARK: - Prefetch Tests
     
+    @MainActor
     func testPrefetchImagesForRecipes() async throws {
         let recipes = [
             Recipe(
@@ -288,6 +306,7 @@ final class ImageServiceTests: XCTestCase {
     
     // MARK: - Cache Management Tests
     
+    @MainActor
     func testClearMemoryCache() async throws {
         imageService = try ImageService()
 
@@ -297,6 +316,7 @@ final class ImageServiceTests: XCTestCase {
         XCTAssertEqual(count, 0)
     }
 
+    @MainActor
     func testImageExists() async throws {
         imageService = try ImageService()
 
@@ -305,6 +325,7 @@ final class ImageServiceTests: XCTestCase {
         XCTAssertFalse(exists)
     }
 
+    @MainActor
     func testMemoryCacheCount() async throws {
         imageService = try ImageService()
 
@@ -314,6 +335,7 @@ final class ImageServiceTests: XCTestCase {
 
     // MARK: - Disk Cache Tests
 
+    @MainActor
     func testClearDiskCacheSpecificFile() async throws {
         imageService = try ImageService()
 
@@ -321,6 +343,7 @@ final class ImageServiceTests: XCTestCase {
         try await imageService.clearDiskCache(fileName: "test.png")
     }
 
+    @MainActor
     func testClearAllDiskCache() async throws {
         imageService = try ImageService()
 
@@ -328,6 +351,7 @@ final class ImageServiceTests: XCTestCase {
         try await imageService.clearDiskCache()
     }
 
+    @MainActor
     func testClearAllDiskCacheHandlesMultipleImagesInSameNestedDirectory() async throws {
         imageService = try ImageService()
         let cacheDirectoryName = "image-service-\(UUID().uuidString)"
@@ -345,6 +369,7 @@ final class ImageServiceTests: XCTestCase {
         XCTAssertFalse(fileManager.fileExists(atPath: nestedCacheDirectory.path))
     }
 
+    @MainActor
     func testLoadImageCachesNestedDatasetImagePath() async throws {
         let cacheDirectoryName = "image-service-\(UUID().uuidString)"
         let fileName = "images/\(cacheDirectoryName)/photo.png"
@@ -368,6 +393,7 @@ final class ImageServiceTests: XCTestCase {
         XCTAssertFalse(fileManager.fileExists(atPath: nestedCacheDirectory.path))
     }
 
+    @MainActor
     func testImageExtractorReturnsImageWhenCacheWriteFails() async throws {
         let blockerName = "image-cache-blocker-\(UUID().uuidString)"
         let fileName = "\(blockerName)/photo.png"
@@ -385,6 +411,7 @@ final class ImageServiceTests: XCTestCase {
         XCTAssertFalse(imageData.isEmpty)
     }
 
+    @MainActor
     func testImageExtractorOmitsMissingBatchEntriesWithoutDroppingValidImages() async throws {
         let validFileName = "images/batch-valid-\(UUID().uuidString).png"
         let missingFileName = "images/batch-missing-\(UUID().uuidString).png"
@@ -400,6 +427,7 @@ final class ImageServiceTests: XCTestCase {
         XCTAssertFalse(try XCTUnwrap(images[validFileName]).isEmpty)
     }
 
+    @MainActor
     func testImageExtractorFallsBackToZipWhenDiskCacheReadFails() async throws {
         let blockerName = "image-cache-read-blocker-\(UUID().uuidString)"
         let fileName = "\(blockerName)/photo.png"
@@ -419,6 +447,7 @@ final class ImageServiceTests: XCTestCase {
     
     // MARK: - Integration Tests
     
+    @MainActor
     func testImageExistsAfterLoad() async throws {
         // This test would require actual image data
         // For now, we test that the method works
@@ -428,6 +457,7 @@ final class ImageServiceTests: XCTestCase {
         XCTAssertFalse(exists) // Should be false since we haven't loaded anything
     }
     
+    @MainActor
     func testMultipleConcurrentLoads() async throws {
         let recipes = (1...10).map { i in
             Recipe(
@@ -440,12 +470,14 @@ final class ImageServiceTests: XCTestCase {
         }
         
         imageService = try ImageService()
-        
-        // Load multiple images concurrently
+        let service = imageService!
+
+        // Load multiple images concurrently. Capture the Sendable `ImageService` actor locally so the
+        // task closures don't capture the non-Sendable `XCTestCase`.
         await withTaskGroup(of: UIImage?.self) { group in
             for recipe in recipes {
                 group.addTask {
-                    try? await self.imageService.loadImage(for: recipe)
+                    try? await service.loadImage(for: recipe)
                 }
             }
             
@@ -460,7 +492,8 @@ final class ImageServiceTests: XCTestCase {
     
     // MARK: - Error Handling Tests
     
-    func testImageServiceErrorDescriptions() {
+    @MainActor
+    func testImageServiceErrorDescriptions() async {
         let notFoundError = ImageServiceError.imageNotFound("test.png")
         XCTAssertEqual(notFoundError.errorDescription, "Image 'test.png' not found")
         
@@ -475,6 +508,7 @@ final class ImageServiceTests: XCTestCase {
     
     // MARK: - Cache Size Limit Tests
     
+    @MainActor
     func testCacheSizeLimit() async throws {
         // Test that cache respects max size
         imageService = try ImageService(maxCacheSize: 5)
@@ -489,6 +523,7 @@ final class ImageServiceTests: XCTestCase {
     
     // MARK: - Recipe and Ingredient Integration
     
+    @MainActor
     func testLoadImagesForRecipesAndIngredients() async throws {
         let ingredient = Ingredient(
             name: "Chicken",

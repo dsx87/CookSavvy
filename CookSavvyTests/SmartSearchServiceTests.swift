@@ -5,6 +5,7 @@ import XCTest
 
 final class SmartSearchServiceTests: XCTestCase {
 
+    @MainActor
     func testParse_delegatesToProvider() async throws {
         let expected = SmartSearchIntent(
             ingredientNames: ["tomato", "chicken"],
@@ -25,6 +26,7 @@ final class SmartSearchServiceTests: XCTestCase {
         XCTAssertEqual(result.dietary, [.glutenFree])
     }
 
+    @MainActor
     func testParse_propagatesProviderError() async {
         let mock = MockSmartSearchProvider(result: .failure(SmartSearchError.parsingFailed(nil)))
         let service = SmartSearchService(provider: mock)
@@ -37,6 +39,7 @@ final class SmartSearchServiceTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testParse_emptyIntentWhenProviderReturnsNoData() async throws {
         let empty = SmartSearchIntent(ingredientNames: [], mood: nil, cookTime: nil, complexity: nil, dietary: [])
         let mock = MockSmartSearchProvider(result: .success(empty))
@@ -54,7 +57,6 @@ final class SmartSearchServiceTests: XCTestCase {
 
 // MARK: - DiscoverViewModel + runSmartSearch Tests
 
-@MainActor
 final class DiscoverViewModelSmartSearchTests: XCTestCase {
 
     var mockIngredients: MockIngredientsService!
@@ -63,8 +65,8 @@ final class DiscoverViewModelSmartSearchTests: XCTestCase {
     var mockDBInit: MockDatabaseInitService!
     var mockSmartSearch: MockSmartSearchProvider!
 
-    override func setUp() {
-        super.setUp()
+    @MainActor
+    override func setUp() async throws {
         mockIngredients = MockIngredientsService()
         mockRecipeService = MockRecipeService()
         mockUserDataService = MockUserDataService()
@@ -74,15 +76,16 @@ final class DiscoverViewModelSmartSearchTests: XCTestCase {
         ))
     }
 
-    override func tearDown() {
+    @MainActor
+    override func tearDown() async throws {
         mockIngredients = nil
         mockRecipeService = nil
         mockUserDataService = nil
         mockDBInit = nil
         mockSmartSearch = nil
-        super.tearDown()
     }
 
+    @MainActor
     private func makeViewModel(includeSmartSearch: Bool = true) -> DiscoverViewModel {
         let service: SmartSearchServiceProtocol? = includeSmartSearch
             ? SmartSearchService(provider: mockSmartSearch)
@@ -102,16 +105,19 @@ final class DiscoverViewModelSmartSearchTests: XCTestCase {
         )
     }
 
-    func testHasSmartSearch_trueWhenServiceProvided() {
+    @MainActor
+    func testHasSmartSearch_trueWhenServiceProvided() async {
         let vm = makeViewModel(includeSmartSearch: true)
         XCTAssertTrue(vm.hasSmartSearch)
     }
 
-    func testHasSmartSearch_falseWhenServiceIsNil() {
+    @MainActor
+    func testHasSmartSearch_falseWhenServiceIsNil() async {
         let vm = makeViewModel(includeSmartSearch: false)
         XCTAssertFalse(vm.hasSmartSearch)
     }
 
+    @MainActor
     func testRunSmartSearch_setsIngredientsFromResolvedNames() async {
         let tomato = Ingredient(name: "Tomato", description: nil, pictureFileName: nil, foodGroup: nil, foodSubgroup: nil, emoji: "🍅")
         mockIngredients.stubbedFullSearchResults = [tomato]
@@ -125,6 +131,7 @@ final class DiscoverViewModelSmartSearchTests: XCTestCase {
         XCTAssertTrue(vm.showResults)
     }
 
+    @MainActor
     func testRunSmartSearch_appliesFiltersFromIntent() async {
         let tomato = Ingredient(name: "Tomato", description: nil, pictureFileName: nil, foodGroup: nil, foodSubgroup: nil, emoji: "🍅")
         mockIngredients.stubbedFullSearchResults = [tomato]
@@ -140,6 +147,7 @@ final class DiscoverViewModelSmartSearchTests: XCTestCase {
         XCTAssertTrue(vm.activeDietaryRestrictions.contains(.vegetarian))
     }
 
+    @MainActor
     func testRunSmartSearch_browsesFallbackWhenNoIngredientsResolved() async {
         mockIngredients.stubbedFullSearchResults = []
         mockRecipeService.stubbedAllRecipes = [Recipe()]
@@ -155,6 +163,7 @@ final class DiscoverViewModelSmartSearchTests: XCTestCase {
         XCTAssertEqual(mockRecipeService.getAllRecipesCallCount, 1)
     }
 
+    @MainActor
     func testRunSmartSearch_appliesFiltersWithoutIngredientsAndRerunsSearch() async {
         // User has ingredients already selected; query adds only filters.
         let chicken = Ingredient(name: "Chicken", description: nil, pictureFileName: nil, foodGroup: nil, foodSubgroup: nil, emoji: "🍗")
@@ -177,6 +186,7 @@ final class DiscoverViewModelSmartSearchTests: XCTestCase {
         XCTAssertGreaterThan(mockRecipeService.getRecipesCallCount, initialCount)
     }
 
+    @MainActor
     func testRunSmartSearch_setsErrorOnParseFailure() async {
         mockSmartSearch = MockSmartSearchProvider(result: .failure(SmartSearchError.parsingFailed(nil)))
         let vm = makeViewModel(includeSmartSearch: true)
@@ -193,22 +203,24 @@ final class SupabaseSmartSearchProviderTests: XCTestCase {
     private var mockClient: MockSupabaseClientProvider!
     private var provider: SupabaseSmartSearchProvider!
 
-    override func setUp() {
-        super.setUp()
+    @MainActor
+    override func setUp() async throws {
         mockClient = MockSupabaseClientProvider()
         provider = SupabaseSmartSearchProvider(clientProvider: mockClient)
     }
 
-    override func tearDown() {
+    @MainActor
+    override func tearDown() async throws {
         mockClient = nil
         provider = nil
-        super.tearDown()
     }
 
+    @MainActor
     private func stub(_ json: String) {
         mockClient.stubbedResponses["parse-search-query"] = Data(json.utf8)
     }
 
+    @MainActor
     func testParse_decodesSnakeCaseAndMapsEnums() async throws {
         stub("""
         {"ingredients":["tomato","pasta"],"mood":"quick","cook_time":"quick","complexity":"easy","dietary":["vegetarian"]}
@@ -224,6 +236,7 @@ final class SupabaseSmartSearchProviderTests: XCTestCase {
         XCTAssertEqual(intent.dietary, [.vegetarian])
     }
 
+    @MainActor
     func testParse_mapsMixedCasingAndDietaryCaseInsensitively() async throws {
         // Model may capitalise enum values and dietary spellings; mapping must tolerate it.
         stub("""
@@ -238,6 +251,7 @@ final class SupabaseSmartSearchProviderTests: XCTestCase {
         XCTAssertEqual(intent.dietary, [.glutenFree, .kosher])
     }
 
+    @MainActor
     func testParse_dropsUnknownEnumAndDietaryValues() async throws {
         stub("""
         {"ingredients":[],"mood":"sparkly","cook_time":null,"complexity":"impossible","dietary":["vegetarian","made_up"]}
@@ -252,6 +266,7 @@ final class SupabaseSmartSearchProviderTests: XCTestCase {
         XCTAssertEqual(intent.dietary, [.vegetarian]) // unknown dietary dropped
     }
 
+    @MainActor
     func testParse_wrapsInvokeErrorAsNetworkError() async {
         mockClient.invokedError = URLError(.notConnectedToInternet)
 
@@ -265,6 +280,7 @@ final class SupabaseSmartSearchProviderTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testParse_malformedJSONThrowsParsingFailed() async {
         stub("not json at all")
 

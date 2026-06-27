@@ -9,26 +9,30 @@ import XCTest
 @testable import CookSavvy
 
 final class OfflineRecipeSourceTests: XCTestCase {
-    
+
     var dbInterface: DBInterface!
     var offlineSource: OfflineRecipeSource!
-    
-    override func setUpWithError() throws {
+
+    @MainActor
+    override func setUp() async throws {
         dbInterface = try DBInterface(inMemory: true)
         offlineSource = OfflineRecipeSource(dbInterface: dbInterface)
     }
 
-    override func tearDownWithError() throws {
+    @MainActor
+    override func tearDown() async throws {
         dbInterface = nil
         offlineSource = nil
     }
-    
+
     // MARK: - Basic Properties Tests
-    
-    func testSourceType() {
+
+    @MainActor
+    func testSourceType() async {
         XCTAssertEqual(offlineSource.sourceType, .offline)
     }
-    
+
+    @MainActor
     func testIsAvailable() async {
         let available = await offlineSource.isAvailable()
         XCTAssertTrue(available, "Offline source should always be available")
@@ -36,6 +40,7 @@ final class OfflineRecipeSourceTests: XCTestCase {
     
     // MARK: - Fetch Recipes Tests
     
+    @MainActor
     func testFetchRecipesWithValidIngredients() async throws {
         // Setup: Insert test recipes
         let garlic: Ingredient = "Garlic"
@@ -47,7 +52,7 @@ final class OfflineRecipeSourceTests: XCTestCase {
             image: "garlic_pasta.jpg",
             additionalInfo: .mock
         )
-        try dbInterface.insertRecipes([recipe])
+        try await dbInterface.insertRecipes([recipe])
         
         // Test: Fetch recipes
         let results = try await offlineSource.fetchRecipes(for: [garlic])
@@ -57,6 +62,7 @@ final class OfflineRecipeSourceTests: XCTestCase {
         XCTAssertEqual(results.first?.title, "Garlic Pasta")
     }
     
+    @MainActor
     func testFetchRecipesWithMultipleIngredients() async throws {
         // Setup: Insert multiple recipes
         let chicken: Ingredient = "Chicken"
@@ -77,7 +83,7 @@ final class OfflineRecipeSourceTests: XCTestCase {
             image: "img2",
             additionalInfo: .mock
         )
-        try dbInterface.insertRecipes([recipe1, recipe2])
+        try await dbInterface.insertRecipes([recipe1, recipe2])
         
         // Test: Fetch with tomato (should get both)
         let results = try await offlineSource.fetchRecipes(for: [tomato])
@@ -89,6 +95,7 @@ final class OfflineRecipeSourceTests: XCTestCase {
         XCTAssertTrue(titles.contains("Tomato Basil"))
     }
     
+    @MainActor
     func testFetchRecipesWithEmptyIngredientsThrowsError() async {
         do {
             _ = try await offlineSource.fetchRecipes(for: [])
@@ -104,6 +111,7 @@ final class OfflineRecipeSourceTests: XCTestCase {
         }
     }
     
+    @MainActor
     func testFetchRecipesWithNoMatchesThrowsError() async throws {
         // Setup: Insert a recipe
         let garlic: Ingredient = "Garlic"
@@ -114,7 +122,7 @@ final class OfflineRecipeSourceTests: XCTestCase {
             image: "img",
             additionalInfo: .mock
         )
-        try dbInterface.insertRecipes([recipe])
+        try await dbInterface.insertRecipes([recipe])
         
         // Test: Search for non-existent ingredient
         let nonExistent: Ingredient = "NonExistentIngredient"
@@ -133,6 +141,7 @@ final class OfflineRecipeSourceTests: XCTestCase {
         }
     }
     
+    @MainActor
     func testFetchRecipesWithMixedValidAndInvalidIngredients() async throws {
         // Setup: Insert recipe
         let chicken: Ingredient = "Chicken"
@@ -143,7 +152,7 @@ final class OfflineRecipeSourceTests: XCTestCase {
             image: "img",
             additionalInfo: .mock
         )
-        try dbInterface.insertRecipes([recipe])
+        try await dbInterface.insertRecipes([recipe])
         
         // Test: Mix valid and invalid ingredients
         let invalid: Ingredient = "InvalidIngredient"
@@ -154,10 +163,11 @@ final class OfflineRecipeSourceTests: XCTestCase {
         XCTAssertTrue(results.contains { $0.title == "Chicken Dish" })
     }
     
+    @MainActor
     func testFetchRecipesWithMultipleRecipes() async throws {
         // Setup: Insert many recipes
         let recipes = Recipe.mocks(count: 10)
-        try dbInterface.insertRecipes(recipes)
+        try await dbInterface.insertRecipes(recipes)
         
         // Test: Fetch with ingredients from first recipe
         let ingredients = Array(recipes.first!.ingredients.prefix(2))
@@ -170,6 +180,7 @@ final class OfflineRecipeSourceTests: XCTestCase {
     
     // MARK: - Convenience Initializer Test
     
+    @MainActor
     func testConvenienceInitializer() async throws {
         let source = try OfflineRecipeSource()
         XCTAssertEqual(source.sourceType, .offline)
@@ -180,6 +191,7 @@ final class OfflineRecipeSourceTests: XCTestCase {
     
     // MARK: - Performance Tests
     
+    @MainActor
     func testFetchRecipesPerformance() throws {
         // This stays a *synchronous* test method on purpose: `measure`'s closure is synchronous
         // and `wait(for:)` must pump the run loop so the main-actor fetch `Task` can run. In an

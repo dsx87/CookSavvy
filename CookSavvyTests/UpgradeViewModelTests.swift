@@ -6,7 +6,6 @@
 import XCTest
 @testable import CookSavvy
 
-@MainActor
 final class UpgradeViewModelTests: XCTestCase {
 
     private var sut: UpgradeViewModel!
@@ -14,8 +13,8 @@ final class UpgradeViewModelTests: XCTestCase {
     private var analyticsService: MockAnalyticsService!
     private var didDismiss = false
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    @MainActor
+    override func setUp() async throws {
         subscriptionService = MockSubscriptionService()
         analyticsService = MockAnalyticsService()
         didDismiss = false
@@ -28,17 +27,19 @@ final class UpgradeViewModelTests: XCTestCase {
         )
     }
 
-    override func tearDownWithError() throws {
+    @MainActor
+    override func tearDown() async throws {
         sut = nil
         subscriptionService = nil
         analyticsService = nil
-        try super.tearDownWithError()
     }
 
-    func testAvailableOptionsPromoteAnnualBeforeMonthly() {
+    @MainActor
+    func testAvailableOptionsPromoteAnnualBeforeMonthly() async {
         XCTAssertEqual(sut.availableOptions, [.yearly, .monthly])
     }
 
+    @MainActor
     func testLoadPricesLoadsMonthlyAndYearlyPrices() async {
         await sut.loadPrices()
 
@@ -46,6 +47,7 @@ final class UpgradeViewModelTests: XCTestCase {
         XCTAssertEqual(sut.priceByOption[.yearly], "$39.99")
     }
 
+    @MainActor
     func testPriceTextFormatsMonthlyAndYearlyBillingPeriods() async {
         await sut.loadPrices()
 
@@ -53,6 +55,7 @@ final class UpgradeViewModelTests: XCTestCase {
         XCTAssertEqual(sut.priceText(for: .yearly), "$39.99/year")
     }
 
+    @MainActor
     func testAnnualSavingsUsesTwelveMonthlyPayments() async throws {
         await sut.loadPrices()
 
@@ -61,6 +64,7 @@ final class UpgradeViewModelTests: XCTestCase {
         XCTAssertEqual(sut.savingsText(for: .yearly), "Save $19.89 per year")
     }
 
+    @MainActor
     func testAnnualSavingsPreservesLocalizedDecimalSeparator() async {
         subscriptionService.priceByOption[.monthly] = "4,99 €"
         subscriptionService.priceByOption[.yearly] = "39,99 €"
@@ -72,6 +76,7 @@ final class UpgradeViewModelTests: XCTestCase {
         XCTAssertEqual(sut.savingsText(for: .yearly), "Save 19,89 € per year")
     }
 
+    @MainActor
     func testPurchasingMonthlyGrantsPremium() async {
         await sut.purchase(.monthly)
 
@@ -80,6 +85,7 @@ final class UpgradeViewModelTests: XCTestCase {
         XCTAssertTrue(didDismiss)
     }
 
+    @MainActor
     func testPurchasingYearlyGrantsPremium() async {
         await sut.purchase(.yearly)
 
@@ -87,6 +93,7 @@ final class UpgradeViewModelTests: XCTestCase {
         XCTAssertTrue(didDismiss)
     }
 
+    @MainActor
     func testPurchasingMonthlyTracksUpgradePurchasedWithProductId() async {
         await sut.purchase(.monthly)
 
@@ -95,6 +102,7 @@ final class UpgradeViewModelTests: XCTestCase {
         XCTAssertEqual(purchaseEvents.first?.1, ["product_id": PremiumSubscriptionOption.monthly.productIdentifier])
     }
 
+    @MainActor
     func testPurchasingYearlyTracksUpgradePurchasedWithProductId() async {
         await sut.purchase(.yearly)
 
@@ -103,7 +111,8 @@ final class UpgradeViewModelTests: XCTestCase {
         XCTAssertEqual(purchaseEvents.first?.1, ["product_id": PremiumSubscriptionOption.yearly.productIdentifier])
     }
 
-    func testProductIdentifierMappingTreatsBothProductsAsPremium() {
+    @MainActor
+    func testProductIdentifierMappingTreatsBothProductsAsPremium() async {
         XCTAssertEqual(
             PremiumSubscriptionOption.option(for: "com.cooksavvy.subscription.premium")?.associatedPlan,
             .premium
@@ -114,6 +123,7 @@ final class UpgradeViewModelTests: XCTestCase {
         )
     }
 
+    @MainActor
     func testMockPricesMatchStoreKitConfiguration() async {
         let monthlyPrice = await subscriptionService.price(for: .monthly)
         let yearlyPrice = await subscriptionService.price(for: .yearly)
@@ -126,7 +136,8 @@ final class UpgradeViewModelTests: XCTestCase {
         XCTAssertEqual(yearlyAmount, Decimal(string: "39.99"))
     }
 
-    func testPremiumFeatureDescriptionsUseOutcomeCopy() {
+    @MainActor
+    func testPremiumFeatureDescriptionsUseOutcomeCopy() async {
         XCTAssertEqual(
             sut.featureDescription(for: .premium),
             [
@@ -138,7 +149,8 @@ final class UpgradeViewModelTests: XCTestCase {
         )
     }
 
-    func testVisibleUpgradeOutcomeCopyAvoidsTechnicalSellingTerms() {
+    @MainActor
+    func testVisibleUpgradeOutcomeCopyAvoidsTechnicalSellingTerms() async {
         let visibleCopy = ([Strings.Upgrade.trialEligibleSubtitle] + sut.featureDescription(for: .premium))
             .joined(separator: " ")
             .lowercased()
@@ -151,11 +163,13 @@ final class UpgradeViewModelTests: XCTestCase {
         }
     }
 
-    func testEligibleMonthlyCardUsesTrialCTA() {
+    @MainActor
+    func testEligibleMonthlyCardUsesTrialCTA() async {
         XCTAssertEqual(sut.purchaseButtonText(for: .monthly), Strings.Upgrade.tryFreeForSevenDays)
         XCTAssertEqual(sut.optionBadgeText(for: .monthly), Strings.Upgrade.freeTrialBadge)
     }
 
+    @MainActor
     func testActiveTrialUsesTrialHeaderAndBadge() async {
         let trialStatus = SubscriptionStatus.premium(
             option: .monthly,
@@ -182,6 +196,7 @@ final class UpgradeViewModelTests: XCTestCase {
 
     // MARK: - Restore Purchases (paywall — Guideline 3.1.1)
 
+    @MainActor
     func testRestorePurchasesSuccessCallsServiceAndClearsError() async {
         await sut.restorePurchases()
 
@@ -190,6 +205,7 @@ final class UpgradeViewModelTests: XCTestCase {
         XCTAssertFalse(sut.isRestoringPurchases)
     }
 
+    @MainActor
     func testRestorePurchasesFailureSetsRestoreError() async {
         subscriptionService.restorePurchasesError = SubscriptionError.noPurchasesToRestore
 

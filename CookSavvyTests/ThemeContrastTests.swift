@@ -22,6 +22,7 @@ final class ThemeContrastTests: XCTestCase {
     /// sRGB components (0...1) plus alpha, resolved from a SwiftUI `Color` via `UIColor`.
     /// The theme tokens are programmatic `Color(red:green:blue:)` / `.white.opacity()`
     /// values, so the resolved components are exact (no asset-catalog indirection).
+    @MainActor
     private func components(_ color: Color) -> (r: Double, g: Double, b: Double, a: Double) {
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
         UIColor(color).getRed(&r, green: &g, blue: &b, alpha: &a)
@@ -31,6 +32,7 @@ final class ThemeContrastTests: XCTestCase {
     /// Alpha-composites a (possibly translucent) foreground over an opaque background.
     /// WCAG contrast is defined on what the eye actually sees, so a translucent token
     /// such as Dark `text2` (white @ 0.65) must be flattened onto its surface first.
+    @MainActor
     private func composite(_ fg: Color, over bg: Color) -> (r: Double, g: Double, b: Double) {
         let f = components(fg)
         let b = components(bg)
@@ -42,6 +44,7 @@ final class ThemeContrastTests: XCTestCase {
     }
 
     /// WCAG relative luminance of a (opaque) sRGB color.
+    @MainActor
     private func relativeLuminance(_ c: (r: Double, g: Double, b: Double)) -> Double {
         func linearize(_ channel: Double) -> Double {
             channel <= 0.03928 ? channel / 12.92 : pow((channel + 0.055) / 1.055, 2.4)
@@ -51,6 +54,7 @@ final class ThemeContrastTests: XCTestCase {
 
     /// WCAG contrast ratio (>= 1.0) between a foreground token and an opaque surface,
     /// compositing the foreground over the surface to account for any alpha.
+    @MainActor
     private func contrastRatio(_ fg: Color, on surface: Color) -> Double {
         let s = components(surface)
         let fgLum = relativeLuminance(composite(fg, over: surface))
@@ -63,6 +67,7 @@ final class ThemeContrastTests: XCTestCase {
     // MARK: - Assertions
 
     /// Surfaces a body-text token can legitimately sit on.
+    @MainActor
     private func surfaces(_ theme: AppTheme) -> [(name: String, color: Color)] {
         [
             ("bg", theme.bg),
@@ -74,6 +79,7 @@ final class ThemeContrastTests: XCTestCase {
 
     /// Verifies every load-bearing text token clears AA on every surface, plus the
     /// CTA pairing of `onAccent` on `accent`.
+    @MainActor
     private func assertContrast(for theme: AppTheme, named themeName: String) {
         let textTokens: [(name: String, color: Color)] = [
             ("text1", theme.text1),
@@ -110,11 +116,13 @@ final class ThemeContrastTests: XCTestCase {
 
     // MARK: - Tests
 
-    func testLightThemeMeetsAAContrast() {
+    @MainActor
+    func testLightThemeMeetsAAContrast() async {
         assertContrast(for: LightTheme(), named: "LightTheme")
     }
 
-    func testDarkThemeMeetsAAContrast() {
+    @MainActor
+    func testDarkThemeMeetsAAContrast() async {
         assertContrast(for: DarkTheme(), named: "DarkTheme")
     }
 }

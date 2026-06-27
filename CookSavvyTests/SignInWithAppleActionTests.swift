@@ -1,7 +1,6 @@
 import XCTest
 @testable import CookSavvy
 
-@MainActor
 final class SignInWithAppleActionTests: XCTestCase {
 
     private var authService: MockAuthService!
@@ -9,22 +8,23 @@ final class SignInWithAppleActionTests: XCTestCase {
     private var appleSignInManager: MockAppleSignInManager!
     private var logger: MockLogger!
 
-    override func setUp() {
-        super.setUp()
+    @MainActor
+    override func setUp() async throws {
         authService = MockAuthService(initialState: .signedIn(userId: "anon"), isAnonymous: true)
         analyticsService = MockAnalyticsService()
         appleSignInManager = MockAppleSignInManager()
         logger = MockLogger()
     }
 
-    override func tearDown() {
+    @MainActor
+    override func tearDown() async throws {
         authService = nil
         analyticsService = nil
         appleSignInManager = nil
         logger = nil
-        super.tearDown()
     }
 
+    @MainActor
     private func makeAction(
         appleSignInManager: any AppleSignInManaging
     ) -> SignInWithAppleAction {
@@ -36,6 +36,7 @@ final class SignInWithAppleActionTests: XCTestCase {
         )
     }
 
+    @MainActor
     func testSignInCompletesThroughAuthAndAnalytics() async {
         let action = makeAction(appleSignInManager: appleSignInManager)
 
@@ -51,6 +52,7 @@ final class SignInWithAppleActionTests: XCTestCase {
         ])
     }
 
+    @MainActor
     func testSignInFailureTracksFailureAndReturnsErrorMessage() async {
         authService.signInWithAppleError = AuthError.signInFailed
         let action = makeAction(appleSignInManager: appleSignInManager)
@@ -66,6 +68,7 @@ final class SignInWithAppleActionTests: XCTestCase {
         ])
     }
 
+    @MainActor
     func testCancelledSignInDoesNotTrackFailure() async {
         appleSignInManager.error = AuthError.signInCancelled
         let action = makeAction(appleSignInManager: appleSignInManager)
@@ -77,6 +80,7 @@ final class SignInWithAppleActionTests: XCTestCase {
         XCTAssertEqual(analyticsService.trackedEvents.map(\.0), [.signInWithAppleStarted])
     }
 
+    @MainActor
     func testConcurrentSignInIsIgnoredWhileFirstRequestIsActive() async {
         let delayedManager = DelayedAppleSignInManager()
         let action = makeAction(appleSignInManager: delayedManager)
@@ -95,7 +99,6 @@ final class SignInWithAppleActionTests: XCTestCase {
     }
 }
 
-@MainActor
 private final class DelayedAppleSignInManager: AppleSignInManaging {
     private var continuation: CheckedContinuation<AppleSignInResult, Error>?
     private var startContinuation: CheckedContinuation<Void, Never>?

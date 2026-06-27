@@ -6,9 +6,9 @@
 import XCTest
 @testable import CookSavvy
 
-@MainActor
 final class AppContainerLifecycleTests: XCTestCase {
 
+    @MainActor
     func testHandleSceneBecameActiveRefreshesSubscription() async throws {
         let container = try AppContainer.makeInMemory()
         let subscription = try XCTUnwrap(container.subscriptionService as? MockSubscriptionService)
@@ -18,7 +18,8 @@ final class AppContainerLifecycleTests: XCTestCase {
         XCTAssertEqual(subscription.refreshCallCount, 1)
     }
 
-    func testMakeInMemoryProvidesMockSubstitutionService() throws {
+    @MainActor
+    func testMakeInMemoryProvidesMockSubstitutionService() async throws {
         let container = try AppContainer.makeInMemory()
         XCTAssertTrue(container.substitutionService is MockSubstitutionService)
     }

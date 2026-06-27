@@ -6,27 +6,27 @@
 import XCTest
 @testable import CookSavvy
 
-@MainActor
 final class SettingsViewModelAuthTests: XCTestCase {
 
     private var mockAuth: MockAuthService!
     private var mockAnalytics: MockAnalyticsService!
     private var sut: SettingsViewModel!
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    @MainActor
+    override func setUp() async throws {
         mockAuth = MockAuthService(initialState: .signedIn(userId: "anon-user"), isAnonymous: true)
         mockAnalytics = MockAnalyticsService()
         sut = try makeViewModel(authService: mockAuth)
     }
 
-    override func tearDownWithError() throws {
+    @MainActor
+    override func tearDown() async throws {
         sut = nil
         mockAuth = nil
         mockAnalytics = nil
-        try super.tearDownWithError()
     }
 
+    @MainActor
     private func makeViewModel(
         authService: MockAuthService,
         subscriptionService: SubscriptionServiceProtocol = MockSubscriptionService()
@@ -52,19 +52,22 @@ final class SettingsViewModelAuthTests: XCTestCase {
 
     // MARK: - Initial State
 
-    func testInitialAnonymousState() {
+    @MainActor
+    func testInitialAnonymousState() async {
         XCTAssertTrue(sut.isAnonymous)
         XCTAssertNotNil(sut.currentUserId)
     }
 
-    func testInitialSignedInState() throws {
+    @MainActor
+    func testInitialSignedInState() async throws {
         let auth = MockAuthService(initialState: .signedIn(userId: "apple-user"), isAnonymous: false)
         let vm = try makeViewModel(authService: auth)
         XCTAssertFalse(vm.isAnonymous)
         XCTAssertEqual(vm.currentUserId, "apple-user")
     }
 
-    func testTrialSubscriptionRowUsesTrialCopy() throws {
+    @MainActor
+    func testTrialSubscriptionRowUsesTrialCopy() async throws {
         let trialStatus = SubscriptionStatus.premium(
             option: .monthly,
             isEligibleForMonthlyTrial: false,
@@ -85,6 +88,7 @@ final class SettingsViewModelAuthTests: XCTestCase {
 
     // MARK: - Auth State Observation
 
+    @MainActor
     func testAuthStateUpdatesOnAuthServiceChange() async {
         mockAuth.setAuthState(.signedIn(userId: "new-user"))
 
@@ -102,24 +106,28 @@ final class SettingsViewModelAuthTests: XCTestCase {
 
     // MARK: - Sign Out
 
+    @MainActor
     func testSignOutCallsAuthService() async {
         await sut.signOut()
         XCTAssertEqual(mockAuth.signOutCallCount, 1)
         XCTAssertEqual(mockAuth.signInAnonymouslyCallCount, 1)
     }
 
+    @MainActor
     func testSignOutTracksAnalytics() async {
         await sut.signOut()
         let events = mockAnalytics.trackedEvents.map(\.0)
         XCTAssertTrue(events.contains(.signOutCompleted))
     }
 
+    @MainActor
     func testSignOutErrorShowsErrorMessage() async {
         mockAuth.signOutError = AuthError.signOutFailed
         await sut.signOut()
         XCTAssertNotNil(sut.errorMessage)
     }
 
+    @MainActor
     func testSignOutAnonymousFallbackFailureSurfaces() async {
         mockAuth.signInAnonymouslyError = AuthError.signInFailed
         await sut.signOut()
@@ -130,6 +138,7 @@ final class SettingsViewModelAuthTests: XCTestCase {
         XCTAssertNotNil(sut.errorMessage)
     }
 
+    @MainActor
     func testSignOutAnonymousFallbackSuccessNoError() async {
         await sut.signOut()
         XCTAssertNil(sut.errorMessage)
@@ -137,6 +146,7 @@ final class SettingsViewModelAuthTests: XCTestCase {
 
     // MARK: - MockAuthService State Transitions
 
+    @MainActor
     func testMockStartSessionIfNeededTransitionsFromSignedOut() async {
         let auth = MockAuthService(initialState: .signedOut)
         await auth.startSessionIfNeeded()
@@ -148,6 +158,7 @@ final class SettingsViewModelAuthTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testMockSignInAnonymouslyFromSignedOut() async throws {
         let analytics = MockAnalyticsService()
         let auth = MockAuthService(initialState: .signedOut, analyticsService: analytics)
@@ -162,6 +173,7 @@ final class SettingsViewModelAuthTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testMockSignInWithAppleTransitions() async throws {
         let auth = MockAuthService(initialState: .signedIn(userId: "anon"), isAnonymous: true)
         try await auth.signInWithApple(identityToken: Data("token".utf8), nonce: "nonce")
@@ -169,6 +181,7 @@ final class SettingsViewModelAuthTests: XCTestCase {
         XCTAssertEqual(auth.signInWithAppleCallCount, 1)
     }
 
+    @MainActor
     func testMockSignOutReturnsToSignedOut() async throws {
         let auth = MockAuthService(initialState: .signedIn(userId: "user"), isAnonymous: false)
         try await auth.signOut()
@@ -176,6 +189,7 @@ final class SettingsViewModelAuthTests: XCTestCase {
         XCTAssertTrue(auth.isAnonymous)
     }
 
+    @MainActor
     func testMockSignInAnonymouslyError() async {
         let auth = MockAuthService(initialState: .signedOut)
         auth.signInAnonymouslyError = AuthError.signInFailed
@@ -189,6 +203,7 @@ final class SettingsViewModelAuthTests: XCTestCase {
 
     // MARK: - Delete Account (Guideline 5.1.1(v))
 
+    @MainActor
     func testDeleteAccountSuccessTracksEventAndRevertsToAnonymous() async throws {
         let auth = MockAuthService(initialState: .signedIn(userId: "apple-user"), isAnonymous: false)
         let vm = try makeViewModel(authService: auth)
@@ -203,6 +218,7 @@ final class SettingsViewModelAuthTests: XCTestCase {
         XCTAssertTrue(mockAnalytics.trackedEvents.map(\.0).contains(.accountDeleted))
     }
 
+    @MainActor
     func testDeleteAccountFailureSetsErrorAndDoesNotRevert() async throws {
         let auth = MockAuthService(initialState: .signedIn(userId: "apple-user"), isAnonymous: false)
         auth.deleteAccountError = AuthError.accountDeletionFailed

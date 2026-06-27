@@ -194,8 +194,10 @@ final class AppContainer {
         )
         
         #if DEBUG
+        // DEBUG builds run as CookSavvy+ so every premium-gated feature is usable without
+        // purchasing through StoreKit. RELEASE uses the real StoreKit service below.
         self.subscriptionService = MockSubscriptionService(
-            initialPlan: .free,
+            initialPlan: .premium,
             analyticsService: analyticsService
         )
         #else

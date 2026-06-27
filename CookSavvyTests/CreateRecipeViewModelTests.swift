@@ -6,23 +6,23 @@
 import XCTest
 @testable import CookSavvy
 
-@MainActor
 final class CreateRecipeViewModelTests: XCTestCase {
 
     var mockUserDataService: MockUserDataService!
     var dismissCallCount = 0
 
-    override func setUp() {
-        super.setUp()
+    @MainActor
+    override func setUp() async throws {
         mockUserDataService = MockUserDataService()
         dismissCallCount = 0
     }
 
-    override func tearDown() {
+    @MainActor
+    override func tearDown() async throws {
         mockUserDataService = nil
-        super.tearDown()
     }
 
+    @MainActor
     private func makeViewModel() -> CreateRecipeViewModel {
         CreateRecipeViewModel(
             userDataService: mockUserDataService,
@@ -30,19 +30,22 @@ final class CreateRecipeViewModelTests: XCTestCase {
         )
     }
 
-    func testInitialStep() {
+    @MainActor
+    func testInitialStep() async {
         let vm = makeViewModel()
         XCTAssertEqual(vm.currentStep, .nameAndPhoto)
     }
 
-    func testGoNextAdvancesStep() {
+    @MainActor
+    func testGoNextAdvancesStep() async {
         let vm = makeViewModel()
         vm.recipeName = "Pasta Carbonara"
         vm.goNext()
         XCTAssertEqual(vm.currentStep, .ingredients)
     }
 
-    func testBlockedWhenInvalid() {
+    @MainActor
+    func testBlockedWhenInvalid() async {
         let vm = makeViewModel()
         // Name is empty so nameAndPhoto step is invalid
         vm.recipeName = ""
@@ -51,13 +54,15 @@ final class CreateRecipeViewModelTests: XCTestCase {
         XCTAssertEqual(vm.currentStep, .nameAndPhoto)
     }
 
-    func testGoBackFromFirstStays() {
+    @MainActor
+    func testGoBackFromFirstStays() async {
         let vm = makeViewModel()
         vm.goBack()
         XCTAssertEqual(vm.currentStep, .nameAndPhoto)
     }
 
-    func testValidationPerStep() {
+    @MainActor
+    func testValidationPerStep() async {
         let vm = makeViewModel()
 
         // nameAndPhoto: valid only if name is non-empty
@@ -76,6 +81,7 @@ final class CreateRecipeViewModelTests: XCTestCase {
         XCTAssertTrue(vm.isCurrentStepValid)
     }
 
+    @MainActor
     func testSaveCallsService() async {
         let vm = makeViewModel()
         vm.recipeName = "Egg Toast"
@@ -97,7 +103,8 @@ final class CreateRecipeViewModelTests: XCTestCase {
         XCTAssertEqual(mockUserDataService.savedUserRecipes.first?.title, "Egg Toast")
     }
 
-    func testDataPersistsAcrossSteps() {
+    @MainActor
+    func testDataPersistsAcrossSteps() async {
         let vm = makeViewModel()
         vm.recipeName = "Chicken Wrap"
         vm.ingredientRows = ["Chicken", "Lettuce"]
@@ -113,6 +120,7 @@ final class CreateRecipeViewModelTests: XCTestCase {
         XCTAssertEqual(vm.recipeName, "Chicken Wrap")
     }
 
+    @MainActor
     func testBlankIngredientRowsAreTrimmed() async {
         let vm = makeViewModel()
         vm.recipeName = "Soup"
@@ -127,6 +135,7 @@ final class CreateRecipeViewModelTests: XCTestCase {
         XCTAssertEqual(saved?.ingredients.map(\.name), ["Potato", "Salt"])
     }
 
+    @MainActor
     func testBlankStepRowsAreTrimmed() async {
         let vm = makeViewModel()
         vm.recipeName = "Salad"
@@ -145,6 +154,7 @@ final class CreateRecipeViewModelTests: XCTestCase {
         XCTAssertEqual(saved?.instructions.map(\.text), ["Chop", "Dress"])
     }
 
+    @MainActor
     func testEmojiTaglineCuisineAreSaved() async {
         let vm = makeViewModel()
         vm.recipeName = "Tacos"
@@ -164,6 +174,7 @@ final class CreateRecipeViewModelTests: XCTestCase {
         XCTAssertEqual(saved?.cuisine, "Mexican")
     }
 
+    @MainActor
     func testSaveFailureSetsError() async {
         struct SaveError: Error, LocalizedError {
             var errorDescription: String? { "DB write failed" }

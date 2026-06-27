@@ -2,28 +2,28 @@ import XCTest
 import UIKit
 @testable import CookSavvy
 
-@MainActor
 final class OnboardingViewModelTests: XCTestCase {
 
     private var analyticsService: MockAnalyticsService!
     private var detectionService: MockIngredientDetectionService!
     private var cameraScanTracker: MockCameraScanTracker!
 
-    override func setUp() {
-        super.setUp()
+    @MainActor
+    override func setUp() async throws {
         analyticsService = MockAnalyticsService()
         detectionService = MockIngredientDetectionService()
         cameraScanTracker = MockCameraScanTracker()
     }
 
-    override func tearDown() {
+    @MainActor
+    override func tearDown() async throws {
         analyticsService = nil
         detectionService = nil
         cameraScanTracker = nil
-        super.tearDown()
     }
 
-    func testNextPageFromSecondStaticPageAdvancesToCameraPage() {
+    @MainActor
+    func testNextPageFromSecondStaticPageAdvancesToCameraPage() async {
         let viewModel = makeViewModel()
 
         viewModel.currentPage = 1
@@ -33,7 +33,8 @@ final class OnboardingViewModelTests: XCTestCase {
         XCTAssertTrue(viewModel.isCameraPage)
     }
 
-    func testPrimaryButtonTitleUsesNextForStaticPages() {
+    @MainActor
+    func testPrimaryButtonTitleUsesNextForStaticPages() async {
         let viewModel = makeViewModel()
 
         viewModel.currentPage = 0
@@ -43,7 +44,8 @@ final class OnboardingViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.primaryButtonTitle, Strings.Onboarding.next)
     }
 
-    func testPrimaryButtonTitleUsesGetStartedForCameraPage() {
+    @MainActor
+    func testPrimaryButtonTitleUsesGetStartedForCameraPage() async {
         let viewModel = makeViewModel()
 
         viewModel.currentPage = viewModel.pages.count
@@ -51,7 +53,8 @@ final class OnboardingViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.primaryButtonTitle, Strings.Onboarding.getStarted)
     }
 
-    func testTypeInsteadCompletesWithNoIngredients() {
+    @MainActor
+    func testTypeInsteadCompletesWithNoIngredients() async {
         var completedIngredients: [Ingredient]?
         let viewModel = makeViewModel { ingredients in
             completedIngredients = ingredients
@@ -66,6 +69,7 @@ final class OnboardingViewModelTests: XCTestCase {
         )
     }
 
+    @MainActor
     func testPhotoCapturedCompletesWithDetectedIngredients() async {
         let expectedIngredients = [Ingredient(name: "Tomato"), Ingredient(name: "Basil")]
         detectionService.stubbedIngredients = expectedIngredients
@@ -88,7 +92,8 @@ final class OnboardingViewModelTests: XCTestCase {
         )
     }
 
-    func testSkipTracksSkipAndCompletesWithNoIngredients() {
+    @MainActor
+    func testSkipTracksSkipAndCompletesWithNoIngredients() async {
         var completedIngredients: [Ingredient]?
         let viewModel = makeViewModel { ingredients in
             completedIngredients = ingredients
@@ -100,6 +105,7 @@ final class OnboardingViewModelTests: XCTestCase {
         XCTAssertEqual(analyticsService.trackedEvents.map(\.0), [.onboardingSkipped])
     }
 
+    @MainActor
     func testPhotoCapturedDoesNotConsumeQuotaBasedScan() async {
         detectionService.stubbedIngredients = [Ingredient(name: "Eggs")]
         let viewModel = makeViewModel()
@@ -114,6 +120,7 @@ final class OnboardingViewModelTests: XCTestCase {
         XCTAssertEqual(cameraScanTracker.recordScanWithoutQuotaCallCount, 1)
     }
 
+    @MainActor
     func testTypeInsteadDuringProcessingIgnoresLateDetectionResult() async {
         detectionService.stubbedIngredients = [Ingredient(name: "Eggs")]
         detectionService.delayNanoseconds = 50_000_000
@@ -135,6 +142,7 @@ final class OnboardingViewModelTests: XCTestCase {
         )
     }
 
+    @MainActor
     func testPhotoCapturedNoIngredientsStillRecordsScanAttempt() async {
         detectionService.stubbedIngredients = []
         let viewModel = makeViewModel()
@@ -148,6 +156,7 @@ final class OnboardingViewModelTests: XCTestCase {
         XCTAssertEqual(cameraScanTracker.recordScanWithoutQuotaCallCount, 1)
     }
 
+    @MainActor
     private func makeViewModel(
         onComplete: @escaping ([Ingredient]) -> Void = { _ in }
     ) -> OnboardingViewModel {

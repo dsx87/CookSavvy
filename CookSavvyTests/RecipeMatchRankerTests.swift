@@ -3,6 +3,7 @@ import XCTest
 
 final class RecipeMatchRankerTests: XCTestCase {
 
+    @MainActor
     private func makeRecipe(
         title: String,
         ingredientNames: [String],
@@ -25,7 +26,8 @@ final class RecipeMatchRankerTests: XCTestCase {
         )
     }
 
-    func testCoverageRatioBeatsMissingCountRatingCookTimeAndComplexity() {
+    @MainActor
+    func testCoverageRatioBeatsMissingCountRatingCookTimeAndComplexity() async {
         let betterCoverage = makeRecipe(
             title: "Better Coverage",
             ingredientNames: ["chicken", "rice", "lemon"],
@@ -49,7 +51,8 @@ final class RecipeMatchRankerTests: XCTestCase {
         XCTAssertEqual(ranked.first?.title, betterCoverage.title)
     }
 
-    func testMissingCountBreaksTiesWhenCoverageMatches() {
+    @MainActor
+    func testMissingCountBreaksTiesWhenCoverageMatches() async {
         let fewerMissing = makeRecipe(
             title: "Fewer Missing",
             ingredientNames: ["chicken", "rice"],
@@ -65,7 +68,8 @@ final class RecipeMatchRankerTests: XCTestCase {
         XCTAssertEqual(ranked.first?.title, fewerMissing.title)
     }
 
-    func testUserRatingCountsDoubleComparedToAPIRating() {
+    @MainActor
+    func testUserRatingCountsDoubleComparedToAPIRating() async {
         let userRated = makeRecipe(
             title: "User Rated",
             ingredientNames: ["chicken", "rice"],
@@ -83,7 +87,8 @@ final class RecipeMatchRankerTests: XCTestCase {
         XCTAssertEqual(ranked.first?.title, userRated.title)
     }
 
-    func testCookTimeAndComplexityBreakRemainingTiesDeterministically() {
+    @MainActor
+    func testCookTimeAndComplexityBreakRemainingTiesDeterministically() async {
         let shorterAndEasier = makeRecipe(
             title: "Alpha",
             ingredientNames: ["chicken", "rice"],
@@ -110,7 +115,8 @@ final class RecipeMatchRankerTests: XCTestCase {
 
     // MARK: - Mood Ranking
 
-    func testMoodReordersRecipesWithinSameCoverageTier() {
+    @MainActor
+    func testMoodReordersRecipesWithinSameCoverageTier() async {
         // Both recipes: 4 ingredients, 1 missing → coverage 0.75, identical coverage tier + missing count.
         let warmStew = makeRecipe(
             title: "Warm Stew",
@@ -132,7 +138,8 @@ final class RecipeMatchRankerTests: XCTestCase {
         XCTAssertEqual(rankedNoMood.first?.title, "Apple Bowl")
     }
 
-    func testCoverageTierStaysPrimaryEvenWhenMoodIsActive() {
+    @MainActor
+    func testCoverageTierStaysPrimaryEvenWhenMoodIsActive() async {
         // Perfect coverage (1.0 → top tier), no cozy signal.
         let perfectMatch = makeRecipe(
             title: "Apple Bowl",

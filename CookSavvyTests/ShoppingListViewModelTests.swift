@@ -6,21 +6,21 @@
 import XCTest
 @testable import CookSavvy
 
-@MainActor
 final class ShoppingListViewModelTests: XCTestCase {
 
     var mockService: MockShoppingListService!
 
-    override func setUp() {
-        super.setUp()
+    @MainActor
+    override func setUp() async throws {
         mockService = MockShoppingListService()
     }
 
-    override func tearDown() {
+    @MainActor
+    override func tearDown() async throws {
         mockService = nil
-        super.tearDown()
     }
 
+    @MainActor
     private func makeViewModel() -> ShoppingListViewModel {
         ShoppingListViewModel(
             shoppingListService: mockService,
@@ -29,6 +29,7 @@ final class ShoppingListViewModelTests: XCTestCase {
         )
     }
 
+    @MainActor
     func testLoadPopulatesItems() async {
         mockService.seed(names: ["Butter", "Milk"], recipeTitle: "Cake")
         let vm = makeViewModel()
@@ -38,6 +39,7 @@ final class ShoppingListViewModelTests: XCTestCase {
         XCTAssertEqual(vm.items[0].name, "Butter")
     }
 
+    @MainActor
     func testToggleUpdatesState() async {
         mockService.seed(names: ["Egg"])
         let vm = makeViewModel()
@@ -50,6 +52,7 @@ final class ShoppingListViewModelTests: XCTestCase {
         XCTAssertTrue(vm.items[0].isChecked)
     }
 
+    @MainActor
     func testRemoveRemovesFromArray() async {
         mockService.seed(names: ["Flour", "Sugar"])
         let vm = makeViewModel()
@@ -61,6 +64,7 @@ final class ShoppingListViewModelTests: XCTestCase {
         XCTAssertFalse(vm.items.contains { $0.id == item.id })
     }
 
+    @MainActor
     func testClearCompleted() async {
         mockService.seed(names: ["Apple", "Banana"])
         let vm = makeViewModel()
@@ -75,6 +79,7 @@ final class ShoppingListViewModelTests: XCTestCase {
         XCTAssertEqual(vm.items.count, 1)
     }
 
+    @MainActor
     func testLoadSetsErrorMessageWhenFetchingItemsFails() async {
         mockService.shouldThrow = TestError.stub
 
@@ -84,6 +89,7 @@ final class ShoppingListViewModelTests: XCTestCase {
         XCTAssertEqual(vm.errorMessage, Strings.Errors.shoppingListLoadFailed)
     }
 
+    @MainActor
     func testToggleSetsErrorMessageWhenUpdateFails() async {
         mockService.seed(names: ["Egg"])
         let vm = makeViewModel()

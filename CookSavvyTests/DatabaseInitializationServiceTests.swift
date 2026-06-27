@@ -3,7 +3,8 @@ import XCTest
 
 final class DatabaseInitializationServiceTests: XCTestCase {
 
-    func testMarkReadyForTestingSetsReadyState() throws {
+    @MainActor
+    func testMarkReadyForTestingSetsReadyState() async throws {
         let service = DatabaseInitializationService(
             dbInterface: try DBInterface(inMemory: true),
             ingredientsService: MockIngredientsService(),

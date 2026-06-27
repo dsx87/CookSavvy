@@ -3,7 +3,8 @@ import XCTest
 
 final class IngredientCategoryClassifierTests: XCTestCase {
 
-    func testRepresentativeNamesMapToExpectedCategories() {
+    @MainActor
+    func testRepresentativeNamesMapToExpectedCategories() async {
         let cases: [(name: String, expected: IngredientCategory)] = [
             ("chicken", .proteins),
             ("salmon", .proteins),
@@ -36,26 +37,30 @@ final class IngredientCategoryClassifierTests: XCTestCase {
         }
     }
 
-    func testPluralAndAdjectiveFormsResolve() {
+    @MainActor
+    func testPluralAndAdjectiveFormsResolve() async {
         XCTAssertEqual(IngredientCategoryClassifier.category(forName: "tomatoes"), .veggies)
         XCTAssertEqual(IngredientCategoryClassifier.category(forName: "potatoes"), .veggies)
         XCTAssertEqual(IngredientCategoryClassifier.category(forName: "fresh strawberries"), .fruits)
     }
 
-    func testPriorityResolvesOverlaps() {
+    @MainActor
+    func testPriorityResolvesOverlaps() async {
         // Nuts (proteins) are checked before dairy's "butter".
         XCTAssertEqual(IngredientCategoryClassifier.category(forName: "peanut butter"), .proteins)
         // "bell pepper" is produce, not the "pepper" seasoning.
         XCTAssertEqual(IngredientCategoryClassifier.category(forName: "bell pepper"), .veggies)
     }
 
-    func testUnrecognizedAndEmptyNamesFallBackToOther() {
+    @MainActor
+    func testUnrecognizedAndEmptyNamesFallBackToOther() async {
         XCTAssertEqual(IngredientCategoryClassifier.category(forName: "zzzqqq"), .other)
         XCTAssertEqual(IngredientCategoryClassifier.category(forName: ""), .other)
         XCTAssertEqual(IngredientCategoryClassifier.category(forName: "   "), .other)
     }
 
-    func testShortKeywordDoesNotFalseMatchLongerWord() {
+    @MainActor
+    func testShortKeywordDoesNotFalseMatchLongerWord() async {
         // "egg" (3 letters) must not match "eggplant", which is a vegetable.
         XCTAssertEqual(IngredientCategoryClassifier.category(forName: "eggplant"), .veggies)
     }

@@ -11,35 +11,39 @@ final class CameraScanTrackerTests: XCTestCase {
     private var defaults: UserDefaults!
     private let suiteName = "com.cooksavvy.tests.camerascantracker"
 
-    override func setUp() {
-        super.setUp()
+    @MainActor
+    override func setUp() async throws {
         defaults = UserDefaults(suiteName: suiteName)!
         defaults.removePersistentDomain(forName: suiteName)
     }
 
-    override func tearDown() {
+    @MainActor
+    override func tearDown() async throws {
         defaults.removePersistentDomain(forName: suiteName)
         defaults = nil
-        super.tearDown()
     }
 
+    @MainActor
     private func makeTracker(date: Date = Date()) -> CameraScanTracker {
         CameraScanTracker(defaults: defaults, dateProvider: { date })
     }
 
-    func testFreshStateAllowsScans() {
+    @MainActor
+    func testFreshStateAllowsScans() async {
         let tracker = makeTracker()
         XCTAssertTrue(tracker.canScan())
         XCTAssertEqual(tracker.remainingScans(), CameraScanTracker.freeWeeklyLimit)
     }
 
-    func testRecordingDecrementsRemaining() {
+    @MainActor
+    func testRecordingDecrementsRemaining() async {
         let tracker = makeTracker()
         tracker.recordScan()
         XCTAssertEqual(tracker.remainingScans(), CameraScanTracker.freeWeeklyLimit - 1)
     }
 
-    func testLimitReachedBlocksScans() {
+    @MainActor
+    func testLimitReachedBlocksScans() async {
         let tracker = makeTracker()
         for _ in 0..<CameraScanTracker.freeWeeklyLimit {
             tracker.recordScan()
@@ -48,7 +52,8 @@ final class CameraScanTrackerTests: XCTestCase {
         XCTAssertEqual(tracker.remainingScans(), 0)
     }
 
-    func testCustomLimit() {
+    @MainActor
+    func testCustomLimit() async {
         let customLimit = 2
         let tracker = makeTracker()
         for _ in 0..<customLimit {
@@ -58,7 +63,8 @@ final class CameraScanTrackerTests: XCTestCase {
         XCTAssertEqual(tracker.remainingScans(limit: customLimit), 0)
     }
 
-    func testRollingWindowClearsAfterSevenDays() {
+    @MainActor
+    func testRollingWindowClearsAfterSevenDays() async {
         let baseDate = Date(timeIntervalSince1970: 1_700_000_000)
         let tracker = CameraScanTracker(defaults: defaults, dateProvider: { baseDate })
         for _ in 0..<CameraScanTracker.freeWeeklyLimit {
@@ -73,7 +79,8 @@ final class CameraScanTrackerTests: XCTestCase {
         XCTAssertEqual(laterTracker.remainingScans(), CameraScanTracker.freeWeeklyLimit)
     }
 
-    func testRollingWindowDoesNotClearBeforeSevenDays() {
+    @MainActor
+    func testRollingWindowDoesNotClearBeforeSevenDays() async {
         let baseDate = Date(timeIntervalSince1970: 1_700_000_000)
         let tracker = CameraScanTracker(defaults: defaults, dateProvider: { baseDate })
         for _ in 0..<CameraScanTracker.freeWeeklyLimit {
@@ -88,7 +95,8 @@ final class CameraScanTrackerTests: XCTestCase {
         XCTAssertEqual(laterTracker.remainingScans(), 0)
     }
 
-    func testRollingWindowExpiresOldestScanFirst() {
+    @MainActor
+    func testRollingWindowExpiresOldestScanFirst() async {
         let baseDate = Date(timeIntervalSince1970: 1_700_000_000)
         let day0 = CameraScanTracker(defaults: defaults, dateProvider: { baseDate })
         day0.recordScan()
@@ -107,7 +115,8 @@ final class CameraScanTrackerTests: XCTestCase {
         XCTAssertEqual(day8.remainingScans(), 1)
     }
 
-    func testOverLimitDoesNotGoNegative() {
+    @MainActor
+    func testOverLimitDoesNotGoNegative() async {
         let tracker = makeTracker()
         for _ in 0..<10 {
             tracker.recordScan()

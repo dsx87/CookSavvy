@@ -8,7 +8,6 @@ import XCTest
 
 // MARK: - Spy coordinator
 
-@MainActor
 private final class SpyRecipeDetailsCoordinator: RecipeDetailsCoordinating {
     var showCookModeCallCount = 0
     var showShoppingListCallCount = 0
@@ -19,7 +18,6 @@ private final class SpyRecipeDetailsCoordinator: RecipeDetailsCoordinating {
     func showUpgrade() { showUpgradeCallCount += 1 }
 }
 
-@MainActor
 private final class SpyRecipeShareCardGenerator: RecipeShareCardGenerating {
     var makeShareCardCallCount = 0
     var requestedRecipes: [Recipe] = []
@@ -32,7 +30,6 @@ private final class SpyRecipeShareCardGenerator: RecipeShareCardGenerating {
     }
 }
 
-@MainActor
 final class RecipeDetailsViewModelTests: XCTestCase {
 
     var mockUserDataService: MockUserDataService!
@@ -41,8 +38,8 @@ final class RecipeDetailsViewModelTests: XCTestCase {
     var premiumSubscription: MockSubscriptionService!
     private var shareCardGenerator: SpyRecipeShareCardGenerator!
 
-    override func setUp() {
-        super.setUp()
+    @MainActor
+    override func setUp() async throws {
         mockUserDataService = MockUserDataService()
         mockShoppingListService = MockShoppingListService()
         freeSubscription = MockSubscriptionService(initialPlan: .free)
@@ -50,15 +47,16 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         shareCardGenerator = SpyRecipeShareCardGenerator()
     }
 
-    override func tearDown() {
+    @MainActor
+    override func tearDown() async throws {
         mockUserDataService = nil
         mockShoppingListService = nil
         freeSubscription = nil
         premiumSubscription = nil
         shareCardGenerator = nil
-        super.tearDown()
     }
 
+    @MainActor
     private func makeRecipe(
         title: String = "Test Recipe",
         ingredients: [Ingredient] = [Ingredient(name: "Garlic"), Ingredient(name: "Tomato")]
@@ -72,6 +70,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         )
     }
 
+    @MainActor
     private func makeViewModel(
         recipe: Recipe? = nil,
         selectedIngredients: [Ingredient] = [],
@@ -90,6 +89,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         )
     }
 
+    @MainActor
     func testFavoriteToggle() async {
         mockUserDataService.stubbedToggleFavorite = true
         mockUserDataService.stubbedIsFavorite = false
@@ -104,7 +104,8 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         XCTAssertTrue(vm.isFavorite)
     }
 
-    func testMissingIngredientsCalculation() {
+    @MainActor
+    func testMissingIngredientsCalculation() async {
         let recipeIngredients = [Ingredient(name: "Garlic"), Ingredient(name: "Onion"), Ingredient(name: "Tomato")]
         let recipe = makeRecipe(ingredients: recipeIngredients)
         let selectedIngredients = [Ingredient(name: "Garlic")]
@@ -116,7 +117,8 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         XCTAssertTrue(vm.missingIngredientNames.contains("Tomato"))
     }
 
-    func testMissingIngredientsExcludeAssumedStaplesInDetails() {
+    @MainActor
+    func testMissingIngredientsExcludeAssumedStaplesInDetails() async {
         let recipeIngredients = ["Garlic", "Salt", "Oil", "Onion"].map(Ingredient.init(name:))
         let recipe = makeRecipe(ingredients: recipeIngredients)
 
@@ -128,13 +130,15 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         XCTAssertEqual(vm.ingredientStatus(Ingredient(name: "Onion")), .missing)
     }
 
-    func testMissingEmptyWhenNoSelection() {
+    @MainActor
+    func testMissingEmptyWhenNoSelection() async {
         let recipe = makeRecipe(ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion")])
         let vm = makeViewModel(recipe: recipe, selectedIngredients: [])
         // No selected ingredients, no pre-computed missing — falls back to []
         XCTAssertTrue(vm.missingIngredientNames.isEmpty)
     }
 
+    @MainActor
     func testAddToListPremiumGate() async {
         let recipeIngredients = [Ingredient(name: "Garlic"), Ingredient(name: "Onion")]
         let recipe = makeRecipe(ingredients: recipeIngredients)
@@ -151,6 +155,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         XCTAssertTrue(mockShoppingListService.addItemsCalls.isEmpty)
     }
 
+    @MainActor
     func testAddToListForPremiumUser() async {
         let recipeIngredients = [Ingredient(name: "Garlic"), Ingredient(name: "Onion")]
         let recipe = makeRecipe(ingredients: recipeIngredients)
@@ -168,6 +173,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         XCTAssertEqual(call.recipeTitle, "Test Recipe")
     }
 
+    @MainActor
     func testAddToListForPremiumUserSkipsAssumedStaples() async {
         let recipeIngredients = ["Garlic", "Salt", "Oil", "Onion"].map(Ingredient.init(name:))
         let recipe = makeRecipe(ingredients: recipeIngredients)
@@ -183,6 +189,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         XCTAssertEqual(mockShoppingListService.addItemsCalls.first?.recipeTitle, "Test Recipe")
     }
 
+    @MainActor
     func testRecordRecipeViewOnInit() async {
         _ = makeViewModel()
         // Yield to let the init Task (loadData → recordView) complete
@@ -191,7 +198,8 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         XCTAssertEqual(mockUserDataService.recordedRecipeViews.count, 1)
     }
 
-    func testMissingFallsBackToPreComputedMissing() {
+    @MainActor
+    func testMissingFallsBackToPreComputedMissing() async {
         let recipe = Recipe(
             title: "Pasta",
             ingredients: [Ingredient(name: "Pasta"), Ingredient(name: "Sauce")],
@@ -205,6 +213,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         XCTAssertEqual(vm.missingIngredientNames, ["Sauce"])
     }
 
+    @MainActor
     func testCoordinatorRoutingAddToListShowsShoppingList() async {
         let spy = SpyRecipeDetailsCoordinator()
         let recipe = makeRecipe(ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion")])
@@ -226,6 +235,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         XCTAssertEqual(spy.showUpgradeCallCount, 0)
     }
 
+    @MainActor
     func testCoordinatorRoutingAddToListShowsUpgradeForFreeUser() async {
         let spy = SpyRecipeDetailsCoordinator()
         let recipe = makeRecipe(ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion")])
@@ -247,6 +257,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         XCTAssertEqual(spy.showShoppingListCallCount, 0)
     }
 
+    @MainActor
     func testToggleFavoriteSetsErrorMessageWhenServiceThrows() async {
         mockUserDataService.shouldThrow = TestError.stub
 
@@ -258,6 +269,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         XCTAssertEqual(vm.errorMessage, Strings.Errors.favoriteFailed)
     }
 
+    @MainActor
     func testAddToShoppingListSetsErrorMessageWhenServiceThrows() async {
         mockShoppingListService.shouldThrow = TestError.stub
         let recipe = makeRecipe(ingredients: [Ingredient(name: "Garlic"), Ingredient(name: "Onion")])
@@ -272,6 +284,7 @@ final class RecipeDetailsViewModelTests: XCTestCase {
         XCTAssertEqual(vm.errorMessage, Strings.Errors.shoppingListAddFailed)
     }
 
+    @MainActor
     func testShareCardPreparationCallsGenerator() async {
         let recipe = makeRecipe(title: "Shareable Pasta")
         let vm = makeViewModel(recipe: recipe)

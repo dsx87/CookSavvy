@@ -3,6 +3,7 @@ import XCTest
 
 final class AchievementEvaluatorTests: XCTestCase {
 
+    @MainActor
     private func metrics(
         recipesCooked: Int = 0,
         dayStreak: Int = 0,
@@ -25,21 +26,24 @@ final class AchievementEvaluatorTests: XCTestCase {
         )
     }
 
-    func testZeroMetricsAllLocked() {
+    @MainActor
+    func testZeroMetricsAllLocked() async {
         let results = AchievementEvaluator.evaluate(metrics: metrics())
         XCTAssertEqual(results.count, 10)
         XCTAssertTrue(results.allSatisfy { !$0.isUnlocked })
         XCTAssertTrue(results.allSatisfy { $0.currentProgress == 0 })
     }
 
-    func testFirstCookUnlockedAtOne() {
+    @MainActor
+    func testFirstCookUnlockedAtOne() async {
         let results = AchievementEvaluator.evaluate(metrics: metrics(recipesCooked: 1))
         let firstCook = results.first { $0.id == "first_cook" }
         XCTAssertNotNil(firstCook)
         XCTAssertTrue(firstCook!.isUnlocked)
     }
 
-    func testWeekStreakThresholdExact() {
+    @MainActor
+    func testWeekStreakThresholdExact() async {
         let locked = AchievementEvaluator.evaluate(metrics: metrics(dayStreak: 6))
         XCTAssertFalse(locked.first { $0.id == "week_streak" }!.isUnlocked)
 
@@ -47,20 +51,23 @@ final class AchievementEvaluatorTests: XCTestCase {
         XCTAssertTrue(unlocked.first { $0.id == "week_streak" }!.isUnlocked)
     }
 
-    func testRecipeCreatorAndFiveCreated() {
+    @MainActor
+    func testRecipeCreatorAndFiveCreated() async {
         let results = AchievementEvaluator.evaluate(metrics: metrics(userRecipeCount: 5))
         XCTAssertTrue(results.first { $0.id == "recipe_creator" }!.isUnlocked)
         XCTAssertTrue(results.first { $0.id == "five_created" }!.isUnlocked)
     }
 
-    func testProgressCappedAtMaxProgress() {
+    @MainActor
+    func testProgressCappedAtMaxProgress() async {
         let results = AchievementEvaluator.evaluate(metrics: metrics(recipesCooked: 999))
         let firstCook = results.first { $0.id == "first_cook" }!
         XCTAssertEqual(firstCook.currentProgress, firstCook.maxProgress)
         XCTAssertEqual(firstCook.currentProgress, 1)
     }
 
-    func testUnlockedAtDateSetForUnlockedOnly() {
+    @MainActor
+    func testUnlockedAtDateSetForUnlockedOnly() async {
         let fixedDate = Date(timeIntervalSince1970: 1_700_000_000)
         let results = AchievementEvaluator.evaluate(
             metrics: metrics(recipesCooked: 1),
@@ -73,7 +80,8 @@ final class AchievementEvaluatorTests: XCTestCase {
         XCTAssertNil(weekStreak.unlockedAt)
     }
 
-    func testAntiWasteAchievementsAreExplicitlyCategorized() {
+    @MainActor
+    func testAntiWasteAchievementsAreExplicitlyCategorized() async {
         let antiWasteAchievements = Achievement.allAchievements.filter { $0.category == .antiWaste }
 
         XCTAssertEqual(antiWasteAchievements.map(\.id), [
@@ -83,7 +91,8 @@ final class AchievementEvaluatorTests: XCTestCase {
         ])
     }
 
-    func testGenericAchievementsRemainCategorizedSeparately() {
+    @MainActor
+    func testGenericAchievementsRemainCategorizedSeparately() async {
         let generalAchievements = Achievement.allAchievements.filter { $0.category == .general }
 
         XCTAssertEqual(generalAchievements.count, 7)

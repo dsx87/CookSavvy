@@ -8,7 +8,8 @@ import XCTest
 
 final class RecipeModelTests: XCTestCase {
 
-    func testStepTimerMinutes() {
+    @MainActor
+    func testStepTimerMinutes() async {
         let stepWithTimer = Recipe.Step(text: "Simmer the sauce", timerMinutes: 15)
         let stepWithoutTimer = Recipe.Step(text: "Season to taste")
 
@@ -17,7 +18,8 @@ final class RecipeModelTests: XCTestCase {
         XCTAssertEqual(stepWithTimer.text, "Simmer the sauce")
     }
 
-    func testAdditionalInfoConstruction() {
+    @MainActor
+    func testAdditionalInfoConstruction() async {
         let info = Recipe.AdditionalInfo(time: "30 min", servings: 4, complexity: "Medium", calories: 500)
 
         let timeInfo = info.infos.first { if case .time = $0 { return true }; return false }
@@ -36,14 +38,16 @@ final class RecipeModelTests: XCTestCase {
         if case .calories(let cal) = caloriesInfo { XCTAssertEqual(cal, 500) }
     }
 
-    func testIngredientStringLiteralInit() {
+    @MainActor
+    func testIngredientStringLiteralInit() async {
         let ingredient: Ingredient = "Basil"
         XCTAssertEqual(ingredient.name, "Basil")
         XCTAssertNil(ingredient.foodGroup)
         XCTAssertNil(ingredient.description)
     }
 
-    func testIngredientEqualityByName() {
+    @MainActor
+    func testIngredientEqualityByName() async {
         let a = Ingredient(name: "Garlic")
         let b = Ingredient(name: "Garlic")
         let c = Ingredient(name: "Onion")
@@ -52,7 +56,8 @@ final class RecipeModelTests: XCTestCase {
         XCTAssertNotEqual(a, c, "Ingredients with different names should not be equal")
     }
 
-    func testCookTimeMinutesParsesHourFormat() {
+    @MainActor
+    func testCookTimeMinutesParsesHourFormat() async {
         let recipe = Recipe(
             title: "Slow Braise",
             ingredients: [],
@@ -64,7 +69,8 @@ final class RecipeModelTests: XCTestCase {
         XCTAssertEqual(recipe.cookTimeMinutes, 90)
     }
 
-    func testCookTimeMinutesParsesBareMinsAfterHour() {
+    @MainActor
+    func testCookTimeMinutesParsesBareMinsAfterHour() async {
         let recipe = Recipe(
             title: "Slow Braise",
             ingredients: [],
@@ -76,7 +82,8 @@ final class RecipeModelTests: XCTestCase {
         XCTAssertEqual(recipe.cookTimeMinutes, 90)
     }
 
-    func testCookTimeMinutesUsesUpperBoundForRanges() {
+    @MainActor
+    func testCookTimeMinutesUsesUpperBoundForRanges() async {
         let recipe = Recipe(
             title: "Roasted Veg",
             ingredients: [],
