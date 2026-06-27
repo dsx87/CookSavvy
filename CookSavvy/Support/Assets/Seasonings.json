@@ -1,56 +1,36 @@
 {
-  "basics": [
-    "salt",
-    "pepper",
-    "black pepper",
-    "white pepper",
-    "peppercorn",
+  "_comment": "Pantry staples / seasonings hidden from the ingredient picker and auto-assumed in matching. Matching order: notStaple (full name) and notStapleWords (any token = a prepared dish, e.g. 'sugar cookie', 'saffron mayonnaise') win first; then stapleExact (full name, carries the ambiguous 'pepper' family + multiword blends/seeds/oils/vinegars); then stapleWords (whole-word tokens that never appear in a real ingredient, so 'sea salt'/'cumin seeds'/'black peppercorns' resolve). Keep prepared-food nouns OUT of this list if they also appear in seasoning names (e.g. 'pie' is excluded because of 'pumpkin pie spice').",
+
+  "stapleWords": [
+    "salt", "sugar",
+    "cumin", "cinnamon", "nutmeg", "cardamom", "paprika", "turmeric", "cayenne",
+    "peppercorn", "peppercorns", "allspice", "fenugreek", "sumac", "saffron",
+    "clove", "cloves", "seasoning", "spice"
+  ],
+
+  "stapleExact": [
     "water",
-    "sugar",
-    "brown sugar",
-    "granulated sugar",
-    "vinegar",
-    "white vinegar",
-    "apple cider vinegar",
-    "rice vinegar"
+    "pepper", "black pepper", "white pepper", "red pepper flakes", "lemon pepper", "aleppo pepper",
+    "sichuan pepper", "szechuan pepper", "pink pepper",
+    "chili powder", "chile powder", "chili flakes", "chilli flakes", "curry powder", "garam masala", "old bay",
+    "za'atar", "zaatar", "star anise", "anise", "bay leaf", "bay leaves",
+    "coriander", "ground coriander", "coriander seed", "coriander seeds",
+    "mustard seed", "mustard seeds", "fennel seed", "fennel seeds",
+    "celery seed", "celery seeds", "dill seed", "dill seeds",
+    "oil", "olive oil", "vegetable oil", "canola oil", "cooking oil", "sunflower oil", "grapeseed oil", "avocado oil",
+    "vinegar", "white vinegar", "distilled vinegar", "apple cider vinegar", "cider vinegar", "rice vinegar", "rice wine vinegar"
   ],
-  "oils": [
-    "oil",
-    "olive oil",
-    "vegetable oil",
-    "canola oil",
-    "cooking oil",
-    "sunflower oil"
+
+  "notStaple": [
+    "salt cod",
+    "sugar snap peas",
+    "sugar snap pea"
   ],
-  "driedSpices": [
-    "cumin",
-    "coriander",
-    "cinnamon",
-    "nutmeg",
-    "clove",
-    "cloves",
-    "cardamom",
-    "paprika",
-    "turmeric",
-    "cayenne",
-    "chili powder",
-    "chili flakes",
-    "red pepper flakes",
-    "curry powder",
-    "garam masala",
-    "allspice",
-    "fennel seed",
-    "mustard seed",
-    "saffron",
-    "star anise",
-    "anise",
-    "bay leaf",
-    "fenugreek",
-    "sumac",
-    "za'atar",
-    "zaatar",
-    "old bay",
-    "seasoning",
-    "spice"
+
+  "notStapleWords": [
+    "cookie", "cookies", "dough", "cone", "cones", "candy", "cake", "muffin", "biscuit",
+    "glaze", "frosting", "icing", "syrup", "elixir", "schnapps", "latte", "soda",
+    "sauce", "relish", "dressing", "mayonnaise", "mayo", "aioli", "dip", "jelly", "jam",
+    "roll", "rolls", "bun", "buns", "pickle", "pickles"
   ]
 }
