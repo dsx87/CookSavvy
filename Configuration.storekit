@@ -51,8 +51,8 @@
           "internalID" : "BC35C4B9",
           "introductoryOffer" : {
             "displayPrice" : "0",
-            "internalID" : "TRIAL7DAY01",
-            "paymentMode" : "freeTrial",
+            "internalID" : "BA42E1DB",
+            "paymentMode" : "free",
             "subscriptionPeriod" : "P1W"
           },
           "localizations" : [
