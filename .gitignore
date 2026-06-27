@@ -160,3 +160,11 @@ APIKeys.plist
 
 # Local MCP server config (contains personal Sentry org slug)
 .mcp.json
+
+# Recipe-processing pipeline artifacts (scripts/process_recipes.py).
+# The app reads recipes.json from inside the bundled dataset ZIP, NOT these
+# loose files. Keeping them out of git also keeps them out of the app bundle
+# (CookSavvy/ is an Xcode synchronized folder that ships everything inside it).
+# Recover the input locally via: unzip food-ingredients-*.zip recipes.json
+/CookSavvy/Support/Assets/recipes.json
+/CookSavvy/Support/Assets/recipes_processed.json
