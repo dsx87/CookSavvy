@@ -6,9 +6,9 @@ import UIKit
 
 /// Verifies the adapter still maps AI errors correctly and forwards a non-empty encoded payload now
 /// that the downscale + JPEG encode runs off the main actor via `Task { @concurrent in … }`.
-@MainActor
 final class AIIngredientDetectionAdapterTests: XCTestCase {
 
+    @MainActor
     private func makeImage() -> UIImage {
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: 24, height: 24))
         return renderer.image { ctx in
@@ -17,6 +17,7 @@ final class AIIngredientDetectionAdapterTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testDetectForwardsEncodedDataAndReturnsIngredients() async throws {
         let ai = StubAIService()
         ai.stubbedIngredients = [Ingredient(name: "Tomato")]
@@ -28,6 +29,7 @@ final class AIIngredientDetectionAdapterTests: XCTestCase {
         XCTAssertFalse(ai.receivedImageData?.isEmpty ?? true, "Adapter should pass non-empty JPEG data")
     }
 
+    @MainActor
     func testNoIngredientsDetectedMapsThrough() async {
         let ai = StubAIService()
         ai.errorToThrow = .noIngredientsDetected
@@ -36,6 +38,7 @@ final class AIIngredientDetectionAdapterTests: XCTestCase {
         await assertThrows(adapter, expected: .noIngredientsDetected)
     }
 
+    @MainActor
     func testInvalidImageDataMapsToInvalidImage() async {
         let ai = StubAIService()
         ai.errorToThrow = .invalidImageData
@@ -44,6 +47,7 @@ final class AIIngredientDetectionAdapterTests: XCTestCase {
         await assertThrows(adapter, expected: .invalidImage)
     }
 
+    @MainActor
     func testOtherAIErrorMapsToProcessingFailed() async {
         let ai = StubAIService()
         ai.errorToThrow = .noProviderConfigured
@@ -61,6 +65,7 @@ final class AIIngredientDetectionAdapterTests: XCTestCase {
         }
     }
 
+    @MainActor
     private func assertThrows(
         _ adapter: AIIngredientDetectionAdapter,
         expected: IngredientDetectionError,
@@ -104,6 +109,7 @@ private final class StubAIService: AIServiceProtocol {
 /// a second call returns immediately without re-probing the database.
 final class DataImportServiceGuardTests: XCTestCase {
 
+    @MainActor
     func testSecondCallShortCircuitsViaInMemoryFlag() async throws {
         let db = StubImportStore()
         // Make the first call take the "already imported in DB" early-return path, which sets the flag.

@@ -8,7 +8,8 @@ import XCTest
 
 final class SupabaseServiceAssemblyTests: XCTestCase {
 
-    func testAssemblyCreatesSupabaseProvidersWhenConfigurationValid() {
+    @MainActor
+    func testAssemblyCreatesSupabaseProvidersWhenConfigurationValid() async {
         let configuration = SupabaseConfiguration(
             projectURLString: "https://example.supabase.co",
             anonKey: "anon-key"
@@ -31,7 +32,8 @@ final class SupabaseServiceAssemblyTests: XCTestCase {
         XCTAssertTrue(assembly.recipeAPIProvider is SupabaseRecipeAPIProvider)
     }
 
-    func testAssemblyDoesNotCreateProvidersWhenConfigurationInvalid() {
+    @MainActor
+    func testAssemblyDoesNotCreateProvidersWhenConfigurationInvalid() async {
         let assembly = SupabaseServiceAssembly(
             configuration: SupabaseConfiguration(
                 projectURLString: nil,

@@ -8,20 +8,23 @@ import XCTest
 
 final class URLBuilderTests: XCTestCase {
 
-    func testBaseURLWithPath() throws {
+    @MainActor
+    func testBaseURLWithPath() async throws {
         let url = try URLBuilder(baseURL: "https://api.example.com", path: "recipes")
             .build()
         XCTAssertEqual(url.absoluteString, "https://api.example.com/recipes")
     }
 
-    func testAppendingPath() throws {
+    @MainActor
+    func testAppendingPath() async throws {
         let url = try URLBuilder(baseURL: "https://api.example.com", path: "v1")
             .appendingPath("search")
             .build()
         XCTAssertEqual(url.absoluteString, "https://api.example.com/v1/search")
     }
 
-    func testQueryParameterEncoding() throws {
+    @MainActor
+    func testQueryParameterEncoding() async throws {
         let url = try URLBuilder(baseURL: "https://api.example.com")
             .addingQueryParameter(key: "query", value: "chicken pasta")
             .build()
@@ -29,7 +32,8 @@ final class URLBuilderTests: XCTestCase {
         XCTAssertEqual(url.absoluteString, "https://api.example.com?query=chicken%20pasta")
     }
 
-    func testMultipleParams() throws {
+    @MainActor
+    func testMultipleParams() async throws {
         let url = try URLBuilder(baseURL: "https://api.example.com")
             .withQueryParameters(["key": "abc123", "limit": "10"])
             .build()
@@ -38,7 +42,8 @@ final class URLBuilderTests: XCTestCase {
         XCTAssertTrue(query.contains("limit=10"))
     }
 
-    func testEmptyParamsNoQuestionMark() throws {
+    @MainActor
+    func testEmptyParamsNoQuestionMark() async throws {
         let url = try URLBuilder(baseURL: "https://api.example.com", path: "health")
             .build()
         XCTAssertFalse(url.absoluteString.contains("?"))

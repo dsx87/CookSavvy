@@ -6,6 +6,7 @@
 import Foundation
 @testable import CookSavvy
 
+@MainActor
 final class MockUserDataService: UserDataServiceProtocol {
 
     // MARK: - Configurable return values

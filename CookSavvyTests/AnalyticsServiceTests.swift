@@ -5,17 +5,18 @@ final class AnalyticsServiceTests: XCTestCase {
 
     var mockService: MockAnalyticsService!
 
-    override func setUp() {
-        super.setUp()
+    @MainActor
+    override func setUp() async throws {
         mockService = MockAnalyticsService()
     }
 
-    override func tearDown() {
+    @MainActor
+    override func tearDown() async throws {
         mockService = nil
-        super.tearDown()
     }
 
-    func testTrackEventWithNoProperties() {
+    @MainActor
+    func testTrackEventWithNoProperties() async {
         mockService.track(.recipeSearchPerformed)
 
         XCTAssertEqual(mockService.trackedEvents.count, 1)
@@ -23,7 +24,8 @@ final class AnalyticsServiceTests: XCTestCase {
         XCTAssertTrue(mockService.trackedEvents[0].1.isEmpty)
     }
 
-    func testTrackEventWithProperties() {
+    @MainActor
+    func testTrackEventWithProperties() async {
         mockService.track(.recipeSearchPerformed, properties: ["sources": "offline", "ingredientCount": "3"])
 
         XCTAssertEqual(mockService.trackedEvents.count, 1)
@@ -32,7 +34,8 @@ final class AnalyticsServiceTests: XCTestCase {
         XCTAssertEqual(mockService.trackedEvents[0].1["ingredientCount"], "3")
     }
 
-    func testTrackMultipleEvents() {
+    @MainActor
+    func testTrackMultipleEvents() async {
         mockService.track(.onboardingCompleted)
         mockService.track(.recipeViewed)
         mockService.track(.recipeCooked)
@@ -43,7 +46,8 @@ final class AnalyticsServiceTests: XCTestCase {
         XCTAssertEqual(mockService.trackedEvents[2].0, .recipeCooked)
     }
 
-    func testAllEventsHaveRawValues() {
+    @MainActor
+    func testAllEventsHaveRawValues() async {
         let events: [AnalyticsEvent] = [
             .appOpened, .onboardingCompleted, .onboardingSkipped,
             .onboardingCameraScanCompleted, .onboardingTypeInsteadTapped,

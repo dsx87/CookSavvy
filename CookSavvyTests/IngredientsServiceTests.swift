@@ -61,24 +61,28 @@ final class IngredientsServiceTests: XCTestCase {
     var mockDB: MockDBInterfaceForIngredients!
     var ingredientsService: IngredientsService!
 
-    override func setUpWithError() throws {
+    @MainActor
+    override func setUp() async throws {
         mockDB = MockDBInterfaceForIngredients()
     }
 
-    override func tearDownWithError() throws {
+    @MainActor
+    override func tearDown() async throws {
         mockDB = nil
         ingredientsService = nil
     }
 
     // MARK: - Initialization Tests
 
-    func testDefaultInitialization() throws {
+    @MainActor
+    func testDefaultInitialization() async throws {
         ingredientsService = try IngredientsService()
         XCTAssertNotNil(ingredientsService)
     }
 
     // MARK: - Ensure Ingredients Loaded Tests
 
+    @MainActor
     func testEnsureIngredientsLoadedWhenDatabaseHasData() async throws {
         // Pre-populate database
         mockDB.storedIngredients = [
@@ -98,6 +102,7 @@ final class IngredientsServiceTests: XCTestCase {
 
     // MARK: - Search Ingredients Tests
 
+    @MainActor
     func testSearchIngredientsWithValidQuery() async throws {
         // Pre-populate with test data
         mockDB.storedIngredients = [
@@ -118,6 +123,7 @@ final class IngredientsServiceTests: XCTestCase {
         XCTAssertFalse(results.contains("Tomato"))
     }
 
+    @MainActor
     func testSearchIngredientsWithEmptyQuery() async throws {
         mockDB.storedIngredients = [Ingredient(name: "Chicken")]
         ingredientsService = IngredientsService(dbInterface: mockDB)
@@ -132,6 +138,7 @@ final class IngredientsServiceTests: XCTestCase {
         XCTAssertEqual(mockDB.searchCallCount, initialSearchCount) // Should not call DB for empty query
     }
 
+    @MainActor
     func testSearchIngredientsWithNoMatches() async throws {
         mockDB.storedIngredients = [
             Ingredient(name: "Chicken"),
@@ -145,6 +152,7 @@ final class IngredientsServiceTests: XCTestCase {
         XCTAssertTrue(results.isEmpty)
     }
 
+    @MainActor
     func testSearchIngredientsRespectsLimit() async throws {
         mockDB.storedIngredients = (1...20).map { Ingredient(name: "Chicken \($0)") }
         ingredientsService = IngredientsService(dbInterface: mockDB)
@@ -154,6 +162,7 @@ final class IngredientsServiceTests: XCTestCase {
         XCTAssertEqual(results.count, 5)
     }
 
+    @MainActor
     func testSearchIngredientsIsCaseInsensitive() async throws {
         mockDB.storedIngredients = [
             Ingredient(name: "Chicken"),
@@ -171,6 +180,7 @@ final class IngredientsServiceTests: XCTestCase {
 
     // MARK: - Search Full Ingredients Tests
 
+    @MainActor
     func testSearchFullIngredientsReturnsCompleteObjects() async throws {
         mockDB.storedIngredients = [
             Ingredient(
@@ -193,6 +203,7 @@ final class IngredientsServiceTests: XCTestCase {
         XCTAssertEqual(results.first?.foodGroup, "Protein")
     }
 
+    @MainActor
     func testSearchFullIngredientsWithEmptyQuery() async throws {
         mockDB.storedIngredients = [Ingredient(name: "Chicken")]
         ingredientsService = IngredientsService(dbInterface: mockDB)
@@ -204,6 +215,7 @@ final class IngredientsServiceTests: XCTestCase {
 
     // MARK: - Get Ingredient By Name Tests
 
+    @MainActor
     func testGetIngredientByNameWithExactMatch() async throws {
         mockDB.storedIngredients = [
             Ingredient(name: "Chicken"),
@@ -218,6 +230,7 @@ final class IngredientsServiceTests: XCTestCase {
         XCTAssertEqual(result?.name, "Chicken")
     }
 
+    @MainActor
     func testGetIngredientByNameWithNoMatch() async throws {
         mockDB.storedIngredients = [Ingredient(name: "Chicken")]
         ingredientsService = IngredientsService(dbInterface: mockDB)
@@ -227,6 +240,7 @@ final class IngredientsServiceTests: XCTestCase {
         XCTAssertNil(result)
     }
 
+    @MainActor
     func testGetIngredientByNameIsCaseInsensitive() async throws {
         mockDB.storedIngredients = [Ingredient(name: "Chicken")]
         ingredientsService = IngredientsService(dbInterface: mockDB)
@@ -239,6 +253,7 @@ final class IngredientsServiceTests: XCTestCase {
 
     // MARK: - Error Handling Tests
 
+    @MainActor
     func testSearchIngredientsThrowsErrorOnDatabaseFailure() async {
         // Pre-populate so ensureIngredientsLoaded doesn't fail
         mockDB.storedIngredients = [Ingredient(name: "Test")]
@@ -264,6 +279,7 @@ final class IngredientsServiceTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testGetIngredientThrowsErrorOnDatabaseFailure() async {
         // Pre-populate so ensureIngredientsLoaded doesn't fail
         mockDB.storedIngredients = [Ingredient(name: "Test")]
@@ -291,6 +307,7 @@ final class IngredientsServiceTests: XCTestCase {
 
     // MARK: - Category Filtering Tests
 
+    @MainActor
     func testGetAllIngredientsByCategoryFiltersByName() async throws {
         // The dataset has no food_group data, so categories are derived from ingredient names.
         mockDB.storedIngredients = [
@@ -311,6 +328,7 @@ final class IngredientsServiceTests: XCTestCase {
         XCTAssertFalse(proteinNames.contains("Rice"))
     }
 
+    @MainActor
     func testGetCategoriesReturnsOnlyPresentCategoriesInCanonicalOrder() async throws {
         mockDB.storedIngredients = [
             Ingredient(name: "Chicken"),  // proteins
@@ -327,7 +345,8 @@ final class IngredientsServiceTests: XCTestCase {
 
     // MARK: - Error Description Tests
 
-    func testErrorDescriptions() {
+    @MainActor
+    func testErrorDescriptions() async {
         let underlyingError = NSError(domain: "Test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
 
         let searchError = IngredientsServiceError.searchFailed(underlyingError)

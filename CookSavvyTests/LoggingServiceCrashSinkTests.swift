@@ -13,19 +13,20 @@ final class LoggingServiceCrashSinkTests: XCTestCase {
     private var crashSink: MockCrashReportingService!
     private var logger: LoggerProtocol!
 
-    override func setUp() {
-        super.setUp()
+    @MainActor
+    override func setUp() async throws {
         crashSink = MockCrashReportingService()
         logger = LoggingService(crashSink: crashSink).makeLogger(category: .recipeService)
     }
 
-    override func tearDown() {
+    @MainActor
+    override func tearDown() async throws {
         logger = nil
         crashSink = nil
-        super.tearDown()
     }
 
-    func testLowSeverityLogsDoNotForward() {
+    @MainActor
+    func testLowSeverityLogsDoNotForward() async {
         logger.debug("d")
         logger.info("i")
         logger.notice("n")
@@ -34,7 +35,8 @@ final class LoggingServiceCrashSinkTests: XCTestCase {
         XCTAssertTrue(crashSink.recordedErrors.isEmpty)
     }
 
-    func testWarningForwardsWarningBreadcrumbOnly() {
+    @MainActor
+    func testWarningForwardsWarningBreadcrumbOnly() async {
         logger.warning("disk almost full")
 
         XCTAssertEqual(crashSink.breadcrumbs.count, 1)
@@ -43,7 +45,8 @@ final class LoggingServiceCrashSinkTests: XCTestCase {
         XCTAssertTrue(crashSink.recordedErrors.isEmpty)
     }
 
-    func testErrorCapturesNonFatalEvent() {
+    @MainActor
+    func testErrorCapturesNonFatalEvent() async {
         logger.error("query failed")
 
         XCTAssertEqual(crashSink.recordedErrors.count, 1)
@@ -54,7 +57,8 @@ final class LoggingServiceCrashSinkTests: XCTestCase {
         XCTAssertTrue(crashSink.breadcrumbs.isEmpty)
     }
 
-    func testFaultCapturesNonFatalEvent() {
+    @MainActor
+    func testFaultCapturesNonFatalEvent() async {
         logger.fault("invariant broken")
 
         XCTAssertEqual(crashSink.recordedErrors.count, 1)
@@ -65,7 +69,8 @@ final class LoggingServiceCrashSinkTests: XCTestCase {
         XCTAssertTrue(crashSink.breadcrumbs.isEmpty)
     }
 
-    func testNilCrashSinkIsHarmless() {
+    @MainActor
+    func testNilCrashSinkIsHarmless() async {
         // A logger built without a sink must still log without crashing or forwarding.
         let sinkless = LoggingService().makeLogger(category: .recipeService)
         sinkless.error("no sink")

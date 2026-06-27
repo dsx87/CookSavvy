@@ -3,8 +3,7 @@ import XCTest
 
 // MARK: - JourneyViewModelTests (ViewModel behavior)
 
-@MainActor
-private final class SpyJourneyCoordinator: JourneyCoordinating {
+private final class SpyJourneyCoordinator: @MainActor JourneyCoordinating {
     var showCookModeCallCount = 0
     var showRecipeDetailCallCount = 0
     var lastRecipeDetailRecipe: Recipe?
@@ -28,7 +27,6 @@ private final class SpyJourneyCoordinator: JourneyCoordinating {
     func showUpgrade() { showUpgradeCallCount += 1 }
 }
 
-@MainActor
 final class JourneyViewModelTests: XCTestCase {
 
     var mockUserDataService: MockUserDataService!
@@ -36,22 +34,23 @@ final class JourneyViewModelTests: XCTestCase {
     var mockAuthService: MockAuthService!
     var mockAnalytics: MockAnalyticsService!
 
-    override func setUp() {
-        super.setUp()
+    @MainActor
+    override func setUp() async throws {
         mockUserDataService = MockUserDataService()
         subscriptionService = MockSubscriptionService(initialPlan: .free)
         mockAuthService = MockAuthService(initialState: .signedIn(userId: "mock-anonymous-user"), isAnonymous: true)
         mockAnalytics = MockAnalyticsService()
     }
 
-    override func tearDown() {
+    @MainActor
+    override func tearDown() async throws {
         mockUserDataService = nil
         subscriptionService = nil
         mockAuthService = nil
         mockAnalytics = nil
-        super.tearDown()
     }
 
+    @MainActor
     private func makeViewModel(
         coordinator: (any JourneyCoordinating)? = nil,
         authService: MockAuthService? = nil
@@ -72,6 +71,7 @@ final class JourneyViewModelTests: XCTestCase {
         )
     }
 
+    @MainActor
     func testStatsLoadedFromService() async {
         mockUserDataService.stubbedRecipesCooked = 7
         mockUserDataService.stubbedCurrentStreak = 3
@@ -85,6 +85,7 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertEqual(vm.hoursCooking, 2.0, accuracy: 0.01)
     }
 
+    @MainActor
     func testPremiumUsersExposeMonthlyInsights() async {
         subscriptionService.setPlan(.premium)
 
@@ -94,6 +95,7 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertTrue(vm.showsMonthlyInsights)
     }
 
+    @MainActor
     func testFreeUsersDoNotExposeMonthlyInsights() async {
         subscriptionService.setPlan(.free)
 
@@ -103,6 +105,7 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertFalse(vm.showsMonthlyInsights)
     }
 
+    @MainActor
     func testMonthlyInsightsLoadedFromService() async {
         mockUserDataService.stubbedMonthlyCookingInsights = MonthlyCookingInsights(
             mealsCooked: 14,
@@ -122,6 +125,7 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertEqual(vm.monthlySavingsCaveat, "Approximate estimate based on $4 per cooked meal.")
     }
 
+    @MainActor
     func testUserRecipesLoaded() async {
         let recipes = Recipe.mocks(count: 3)
         mockUserDataService.stubbedUserRecipes = recipes
@@ -132,6 +136,7 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertEqual(vm.userRecipes.count, 3)
     }
 
+    @MainActor
     func testSavedRecipesLoaded() async {
         let recipes = Recipe.mocks(count: 2)
         mockUserDataService.stubbedFavorites = recipes
@@ -142,6 +147,7 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertEqual(vm.savedRecipes.count, 2)
     }
 
+    @MainActor
     func testAchievementsEvaluated() async {
         mockUserDataService.stubbedRecipesCooked = 1
         mockUserDataService.stubbedCurrentStreak = 1
@@ -153,6 +159,7 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertTrue(firstCook?.isUnlocked ?? false)
     }
 
+    @MainActor
     func testAchievementsUseHighMatchRecipesCookedCountFromUserDataService() async {
         mockUserDataService.stubbedHighMatchRecipesCookedCount = 5
 
@@ -164,6 +171,7 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertTrue(fridgeCleaner?.isUnlocked ?? false)
     }
 
+    @MainActor
     func testWeekCookingDates() async {
         let today = Date()
         let weekday = Calendar.current.component(.weekday, from: today)
@@ -177,6 +185,7 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertTrue(vm.weekCookingDates.contains(expectedDayIndex))
     }
 
+    @MainActor
     func testEmptyStateNoCrash() async {
         // All stubs return empty/zero values (defaults)
         let vm = makeViewModel()
@@ -188,7 +197,8 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertTrue(vm.userRecipes.isEmpty)
     }
 
-    func testShowShoppingListRoutesPremiumUsersToShoppingList() {
+    @MainActor
+    func testShowShoppingListRoutesPremiumUsersToShoppingList() async {
         let coordinator = SpyJourneyCoordinator()
         subscriptionService.setPlan(.premium)
         let vm = makeViewModel(coordinator: coordinator)
@@ -199,7 +209,8 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertEqual(coordinator.showUpgradeCallCount, 0)
     }
 
-    func testShowShoppingListRoutesFreeUsersToUpgrade() {
+    @MainActor
+    func testShowShoppingListRoutesFreeUsersToUpgrade() async {
         let coordinator = SpyJourneyCoordinator()
         subscriptionService.setPlan(.free)
         let vm = makeViewModel(coordinator: coordinator)
@@ -210,6 +221,7 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertEqual(coordinator.showUpgradeCallCount, 1)
     }
 
+    @MainActor
     func testCookAgainLoadsRecipeAndNavigatesWithoutHistoricalIngredientState() async {
         let coordinator = SpyJourneyCoordinator()
         let recipe = Recipe(
@@ -242,6 +254,7 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertNil(vm.cookAgainErrorMessage)
     }
 
+    @MainActor
     func testCookAgainNavigatesWithEmptySelectedIngredientsWhenSessionHasNone() async {
         let coordinator = SpyJourneyCoordinator()
         let recipe = Recipe.mocks(count: 1).first!
@@ -263,6 +276,7 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertTrue(coordinator.lastRecipeDetailSelectedIngredients.isEmpty)
     }
 
+    @MainActor
     func testCookAgainDoesNotNavigateWhenRecipeCannotBeLoaded() async {
         let coordinator = SpyJourneyCoordinator()
         let vm = makeViewModel(coordinator: coordinator)
@@ -283,6 +297,7 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertEqual(vm.cookAgainErrorMessage, Strings.Journey.cookAgainErrorMessage)
     }
 
+    @MainActor
     func testCookAgainShowsErrorWhenLoadingRecipeThrows() async {
         let coordinator = SpyJourneyCoordinator()
         mockUserDataService.shouldThrow = TestError.stub
@@ -303,6 +318,7 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertEqual(vm.cookAgainErrorMessage, Strings.Journey.cookAgainErrorMessage)
     }
 
+    @MainActor
     func testLoadDataSetsErrorMessageWhenPrimaryJourneyLoadFails() async {
         mockUserDataService.shouldThrow = TestError.stub
 
@@ -314,24 +330,28 @@ final class JourneyViewModelTests: XCTestCase {
 
     // MARK: - Auth
 
-    func testIsAnonymousTrueForGuestUser() {
+    @MainActor
+    func testIsAnonymousTrueForGuestUser() async {
         let vm = makeViewModel()
         XCTAssertTrue(vm.isAnonymous)
         XCTAssertFalse(vm.isSignedInWithApple)
     }
 
-    func testIsSignedInWithAppleWhenNotAnonymous() {
+    @MainActor
+    func testIsSignedInWithAppleWhenNotAnonymous() async {
         let auth = MockAuthService(initialState: .signedIn(userId: "apple-user"), isAnonymous: false)
         let vm = makeViewModel(authService: auth)
         XCTAssertFalse(vm.isAnonymous)
         XCTAssertTrue(vm.isSignedInWithApple)
     }
 
-    func testIsAuthAvailableReflectsAuthService() {
+    @MainActor
+    func testIsAuthAvailableReflectsAuthService() async {
         let vm = makeViewModel()
         XCTAssertTrue(vm.isAuthAvailable)
     }
 
+    @MainActor
     func testSignInWithAppleUpdatesAnonymousState() async {
         let vm = makeViewModel()
         XCTAssertTrue(vm.isAnonymous)
@@ -350,6 +370,7 @@ final class JourneyViewModelTests: XCTestCase {
         XCTAssertEqual(mockAuthService.signInWithAppleCallCount, 1)
     }
 
+    @MainActor
     func testSignInWithAppleSetsErrorOnFailure() async {
         mockAuthService.signInWithAppleError = AuthError.signInFailed
         let vm = makeViewModel()
@@ -363,10 +384,10 @@ final class JourneyViewModelTests: XCTestCase {
 
 // MARK: - JourneyAchievementIntegrationTests (formerly inline achievement tests)
 
-@MainActor
 final class JourneyAchievementIntegrationTests: XCTestCase {
 
-    func testBuildAchievementsUsesLoadedJourneyMetrics() {
+    @MainActor
+    func testBuildAchievementsUsesLoadedJourneyMetrics() async {
         let achievements = AchievementEvaluator.evaluate(
             metrics: AchievementMetrics(
                 recipesCooked: 12,
@@ -393,7 +414,8 @@ final class JourneyAchievementIntegrationTests: XCTestCase {
         XCTAssertTrue(achievement(withID: "hour_cooking", in: achievements)?.isUnlocked ?? false)
     }
 
-    func testBuildAchievementsLeavesIncompleteMilestonesLocked() {
+    @MainActor
+    func testBuildAchievementsLeavesIncompleteMilestonesLocked() async {
         let achievements = AchievementEvaluator.evaluate(
             metrics: AchievementMetrics(
                 recipesCooked: 0,
@@ -417,6 +439,7 @@ final class JourneyAchievementIntegrationTests: XCTestCase {
         XCTAssertFalse(achievement(withID: "hour_cooking", in: achievements)?.isUnlocked ?? true)
     }
 
+    @MainActor
     private func achievement(withID id: String, in achievements: [Achievement]) -> Achievement? {
         achievements.first { $0.id == id }
     }

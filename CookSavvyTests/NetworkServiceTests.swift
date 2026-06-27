@@ -9,7 +9,9 @@ import XCTest
 // MARK: - MockURLProtocol
 
 final class MockURLProtocol: URLProtocol {
-    static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data))?
+    // Test-only shared state set on the main actor before each request and read by the URL loading
+    // system on a background thread. Tests run serially, so unsynchronized access is safe here.
+    nonisolated(unsafe) static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data))?
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
@@ -40,8 +42,8 @@ final class NetworkServiceTests: XCTestCase {
     var session: URLSession!
     let testURL = URL(string: "https://api.example.com/test")!
 
-    override func setUp() {
-        super.setUp()
+    @MainActor
+    override func setUp() async throws {
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [MockURLProtocol.self]
         session = URLSession(configuration: config)
@@ -49,13 +51,14 @@ final class NetworkServiceTests: XCTestCase {
         MockURLProtocol.requestHandler = nil
     }
 
-    override func tearDown() {
+    @MainActor
+    override func tearDown() async throws {
         MockURLProtocol.requestHandler = nil
         service = nil
         session = nil
-        super.tearDown()
     }
 
+    @MainActor
     func testSuccessfulResponse() async throws {
         let expectedData = #"{"status":"ok"}"#.data(using: .utf8)!
         MockURLProtocol.requestHandler = { _ in
@@ -70,6 +73,7 @@ final class NetworkServiceTests: XCTestCase {
         XCTAssertEqual(response.data, expectedData)
     }
 
+    @MainActor
     func testHTTPErrorThrows() async {
         MockURLProtocol.requestHandler = { _ in
             let response = HTTPURLResponse(url: self.testURL, statusCode: 404, httpVersion: nil, headerFields: nil)!
@@ -91,6 +95,7 @@ final class NetworkServiceTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testTimeoutThrows() async {
         MockURLProtocol.requestHandler = { _ in
             throw URLError(.timedOut)

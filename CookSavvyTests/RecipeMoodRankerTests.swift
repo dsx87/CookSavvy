@@ -3,6 +3,7 @@ import XCTest
 
 final class RecipeMoodRankerTests: XCTestCase {
 
+    @MainActor
     private func makeRecipe(
         title: String,
         tagline: String? = nil,
@@ -29,35 +30,40 @@ final class RecipeMoodRankerTests: XCTestCase {
         )
     }
 
-    func testCozyMoodRanksWarmKeywordsFirst() {
+    @MainActor
+    func testCozyMoodRanksWarmKeywordsFirst() async {
         let soup = makeRecipe(title: "Warm Chicken Soup")
         let salad = makeRecipe(title: "Fresh Avocado Salad")
         let ranked = RecipeMoodRanker.rank([salad, soup], for: .cozy)
         XCTAssertEqual(ranked.first?.title, soup.title)
     }
 
-    func testQuickMoodPrefersShortCookTime() {
+    @MainActor
+    func testQuickMoodPrefersShortCookTime() async {
         let fast = makeRecipe(title: "Quick Stir Fry", time: "10 min")
         let slow = makeRecipe(title: "Slow Roast", time: "45 min")
         let ranked = RecipeMoodRanker.rank([slow, fast], for: .quick)
         XCTAssertEqual(ranked.first?.title, fast.title)
     }
 
-    func testQuickMoodPrefersEasyComplexity() {
+    @MainActor
+    func testQuickMoodPrefersEasyComplexity() async {
         let easy = makeRecipe(title: "Simple Bowl", complexity: "Easy")
         let medium = makeRecipe(title: "Medium Bowl", complexity: "Medium")
         let ranked = RecipeMoodRanker.rank([medium, easy], for: .quick)
         XCTAssertEqual(ranked.first?.title, easy.title)
     }
 
-    func testBoldMoodGivesCuisineBonusForThai() {
+    @MainActor
+    func testBoldMoodGivesCuisineBonusForThai() async {
         let thai = makeRecipe(title: "Noodle Dish", cuisine: "Thai")
         let plain = makeRecipe(title: "Noodle Dish 2")
         let ranked = RecipeMoodRanker.rank([plain, thai], for: .bold)
         XCTAssertEqual(ranked.first?.title, thai.title)
     }
 
-    func testStableSortPreservesOrderOnTie() {
+    @MainActor
+    func testStableSortPreservesOrderOnTie() async {
         let r1 = makeRecipe(title: "Recipe A")
         let r2 = makeRecipe(title: "Recipe B")
         let r3 = makeRecipe(title: "Recipe C")
@@ -65,7 +71,8 @@ final class RecipeMoodRankerTests: XCTestCase {
         XCTAssertEqual(ranked.map(\.title), ["Recipe A", "Recipe B", "Recipe C"])
     }
 
-    func testNoMatchBaselineAllScoreZero() {
+    @MainActor
+    func testNoMatchBaselineAllScoreZero() async {
         let r1 = makeRecipe(title: "Alpha")
         let r2 = makeRecipe(title: "Beta")
         let r3 = makeRecipe(title: "Gamma")
@@ -73,7 +80,8 @@ final class RecipeMoodRankerTests: XCTestCase {
         XCTAssertEqual(ranked.map(\.title), ["Alpha", "Beta", "Gamma"])
     }
 
-    func testSearchableTextIncludesAllFields() {
+    @MainActor
+    func testSearchableTextIncludesAllFields() async {
         let titleMatch = makeRecipe(title: "Warm Ramen Bowl")
         let taglineMatch = makeRecipe(title: "Neutral", tagline: "A cozy home dish")
         let cuisineMatch = makeRecipe(title: "Neutral 2", cuisine: "Indian")

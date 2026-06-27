@@ -44,7 +44,6 @@ final class MockLogger: LoggerProtocol {
 
 /// Records every idle-timer state change so tests can assert the keep-awake pairing
 /// without depending on the real `UIApplication` flag.
-@MainActor
 final class MockIdleTimerService: IdleTimerServiceProtocol {
     private(set) var disabledStates: [Bool] = []
     var isIdleTimerDisabled: Bool { disabledStates.last ?? false }
@@ -254,6 +253,7 @@ final class MockRecommendationService: RecipeRecommendationServiceProtocol {
 
 // MARK: - MockCameraScanTracker
 
+@MainActor
 final class MockCameraScanTracker: CameraScanTrackerProtocol {
 
     var stubbedCanScan: Bool = true
@@ -320,14 +320,16 @@ final class MockCuratedCollectionService: CuratedCollectionServiceProtocol {
 
 // MARK: - MockImageService
 
+// Mocks a `nonisolated`, `Sendable` actor-backed service. Tracking state is mutated only from the
+// serial test that owns the instance, so `nonisolated(unsafe)` is safe here.
 final class MockImageService: ImageServiceProtocol {
 
-    var memoryCacheCount: Int = 0
-    var stubbedRecipeImage: UIImage?
-    var stubbedNamedImages: [String: UIImage] = [:]
-    var shouldThrowRecipeImage = false
-    var loadRecipeImageCallCount = 0
-    var loadNamedImageCalls: [String] = []
+    nonisolated(unsafe) var memoryCacheCount: Int = 0
+    nonisolated(unsafe) var stubbedRecipeImage: UIImage?
+    nonisolated(unsafe) var stubbedNamedImages: [String: UIImage] = [:]
+    nonisolated(unsafe) var shouldThrowRecipeImage = false
+    nonisolated(unsafe) var loadRecipeImageCallCount = 0
+    nonisolated(unsafe) var loadNamedImageCalls: [String] = []
 
     func loadImage(for recipe: Recipe) async throws -> UIImage? {
         loadRecipeImageCallCount += 1

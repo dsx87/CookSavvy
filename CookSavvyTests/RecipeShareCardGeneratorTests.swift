@@ -7,9 +7,9 @@ import UIKit
 import XCTest
 @testable import CookSavvy
 
-@MainActor
 final class RecipeShareCardGeneratorTests: XCTestCase {
 
+    @MainActor
     private func makeRecipe(
         title: String = "Tomato Pasta",
         image: String = "tomato-pasta",
@@ -30,6 +30,7 @@ final class RecipeShareCardGeneratorTests: XCTestCase {
         )
     }
 
+    @MainActor
     func testGeneratesPNGWhenRecipeImageIsAvailable() async {
         let imageService = MockImageService()
         imageService.stubbedRecipeImage = solidImage(color: .systemRed)
@@ -43,6 +44,7 @@ final class RecipeShareCardGeneratorTests: XCTestCase {
         XCTAssertGreaterThan(card.pngData.count, 0)
     }
 
+    @MainActor
     func testGeneratesPNGWhenImageLoadingReturnsNil() async {
         let imageService = MockImageService()
         let generator = RecipeShareCardGenerator(imageService: imageService)
@@ -54,6 +56,7 @@ final class RecipeShareCardGeneratorTests: XCTestCase {
         XCTAssertGreaterThan(card.pngData.count, 0)
     }
 
+    @MainActor
     func testLoadsLocalDatasetImageUsingExactJSONImagePath() async {
         let imageService = MockImageService()
         let expectedName = "images/tomato-pasta.jpg"
@@ -68,6 +71,7 @@ final class RecipeShareCardGeneratorTests: XCTestCase {
         XCTAssertGreaterThan(card.pngData.count, 0)
     }
 
+    @MainActor
     func testGeneratesPNGWithTitleAndEmptyMetadata() async {
         let imageService = MockImageService()
         imageService.shouldThrowRecipeImage = true
@@ -81,6 +85,7 @@ final class RecipeShareCardGeneratorTests: XCTestCase {
         XCTAssertGreaterThan(card.pngData.count, 0)
     }
 
+    @MainActor
     private func solidImage(color: UIColor) -> UIImage {
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: 400, height: 500))
         return renderer.image { context in

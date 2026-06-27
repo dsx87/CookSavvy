@@ -1,24 +1,24 @@
 import XCTest
 @testable import CookSavvy
 
-@MainActor
 final class MockSubscriptionServiceTests: XCTestCase {
 
     private var analyticsService: MockAnalyticsService!
     private var sut: MockSubscriptionService!
 
-    override func setUp() {
-        super.setUp()
+    @MainActor
+    override func setUp() async throws {
         analyticsService = MockAnalyticsService()
         sut = MockSubscriptionService(analyticsService: analyticsService)
     }
 
-    override func tearDown() {
+    @MainActor
+    override func tearDown() async throws {
         sut = nil
         analyticsService = nil
-        super.tearDown()
     }
 
+    @MainActor
     func testMonthlyTrialPurchaseTracksTrialStarted() async throws {
         try await sut.purchase(.monthly)
 
@@ -26,7 +26,8 @@ final class MockSubscriptionServiceTests: XCTestCase {
         XCTAssertEqual(analyticsService.trackedEvents.first?.1["product_id"], PremiumSubscriptionOption.monthly.productIdentifier)
     }
 
-    func testTransitionFromTrialToPaidTracksTrialConverted() {
+    @MainActor
+    func testTransitionFromTrialToPaidTracksTrialConverted() async {
         sut.setSubscriptionStatus(
             .premium(
                 option: .monthly,
@@ -43,7 +44,8 @@ final class MockSubscriptionServiceTests: XCTestCase {
         XCTAssertEqual(analyticsService.trackedEvents.first?.1["product_id"], PremiumSubscriptionOption.monthly.productIdentifier)
     }
 
-    func testTransitionFromTrialToFreeTracksTrialExpired() {
+    @MainActor
+    func testTransitionFromTrialToFreeTracksTrialExpired() async {
         sut.setSubscriptionStatus(
             .premium(
                 option: .monthly,

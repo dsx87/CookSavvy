@@ -9,6 +9,7 @@ import Supabase
 
 final class SupabaseLLMProviderTests: XCTestCase {
 
+    @MainActor
     func testSendVisionRequestDecodesSuccessfulResponse() async throws {
         let clientProvider = MockSupabaseClientProvider()
         clientProvider.stubbedResponses["detect-ingredients"] = """
@@ -34,6 +35,7 @@ final class SupabaseLLMProviderTests: XCTestCase {
         XCTAssertNil(response.tokensUsed)
     }
 
+    @MainActor
     func testSendVisionRequestMapsHTTP400ToInvalidRequest() async {
         let clientProvider = MockSupabaseClientProvider()
         clientProvider.invokedError = FunctionsError.httpError(
@@ -61,6 +63,7 @@ final class SupabaseLLMProviderTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testSendChatRequestMapsHTTP401ToUnknownAuthError() async {
         let clientProvider = MockSupabaseClientProvider()
         clientProvider.invokedError = FunctionsError.httpError(code: 401, data: Data())
@@ -83,6 +86,7 @@ final class SupabaseLLMProviderTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testSendChatRequestMapsHTTP429ToRateLimitExceeded() async {
         let clientProvider = MockSupabaseClientProvider()
         clientProvider.invokedError = FunctionsError.httpError(code: 429, data: Data())
@@ -107,6 +111,7 @@ final class SupabaseLLMProviderTests: XCTestCase {
 
 final class SupabaseRecipeAPIProviderTests: XCTestCase {
 
+    @MainActor
     func testFetchRecipesDecodesSuccessfulResponse() async throws {
         let clientProvider = MockSupabaseClientProvider()
         clientProvider.stubbedResponses["search-recipes"] = """
@@ -149,6 +154,7 @@ final class SupabaseRecipeAPIProviderTests: XCTestCase {
         XCTAssertEqual(recipes.first?.missingIngredients, ["soy sauce"])
     }
 
+    @MainActor
     func testFetchRecipesThrowsNoResultsForEmptyResponse() async {
         let clientProvider = MockSupabaseClientProvider()
         clientProvider.stubbedResponses["search-recipes"] = #"{"recipes":[]}"#.data(using: .utf8)!
@@ -173,6 +179,7 @@ final class SupabaseRecipeAPIProviderTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testFetchRecipesMapsHTTP401ToNotAuthenticated() async {
         let clientProvider = MockSupabaseClientProvider()
         clientProvider.invokedError = FunctionsError.httpError(code: 401, data: Data())
@@ -197,6 +204,7 @@ final class SupabaseRecipeAPIProviderTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testFetchRecipesMapsHTTP429ToRateLimitExceeded() async {
         let clientProvider = MockSupabaseClientProvider()
         clientProvider.invokedError = FunctionsError.httpError(code: 429, data: Data())

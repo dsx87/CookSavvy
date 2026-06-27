@@ -14,7 +14,8 @@ final class AsyncValueBroadcasterTests: XCTestCase {
 
     // MARK: - Synchronous value
 
-    func testValueReflectsLatestSend() {
+    @MainActor
+    func testValueReflectsLatestSend() async {
         let broadcaster = AsyncValueBroadcaster<Int>(1)
         XCTAssertEqual(broadcaster.value, 1)
 
@@ -27,12 +28,14 @@ final class AsyncValueBroadcasterTests: XCTestCase {
 
     // MARK: - Replay
 
+    @MainActor
     func testUpdatesReplaysCurrentValueToNewConsumer() async {
         let broadcaster = AsyncValueBroadcaster<Int>(42)
         let values = await collectValues(1, from: broadcaster.updates)
         XCTAssertEqual(values, [42])
     }
 
+    @MainActor
     func testLateSubscriberReplaysLatestValueNotInitial() async {
         let broadcaster = AsyncValueBroadcaster<Int>(1)
         broadcaster.send(2)
@@ -45,6 +48,7 @@ final class AsyncValueBroadcasterTests: XCTestCase {
 
     // MARK: - Replay → update boundary
 
+    @MainActor
     func testUpdatesReplaysCurrentThenYieldsSubsequentChangeWithoutDuplication() async {
         let broadcaster = AsyncValueBroadcaster<Int>(1)
         let stream = broadcaster.updates  // registers + replays 1 synchronously
@@ -56,6 +60,7 @@ final class AsyncValueBroadcasterTests: XCTestCase {
         XCTAssertEqual(values, [1, 2])
     }
 
+    @MainActor
     func testBroadcasterDoesNotDeduplicateConsecutiveEqualValues() async {
         // De-duplication is each service's responsibility (its publish path), not the broadcaster's:
         // every send is delivered, including repeats.
@@ -70,6 +75,7 @@ final class AsyncValueBroadcasterTests: XCTestCase {
 
     // MARK: - Fan-out
 
+    @MainActor
     func testSendFansOutIndependentlyToEveryLiveConsumer() async {
         let broadcaster = AsyncValueBroadcaster<Int>(0)
         let streamA = broadcaster.updates  // each replays 0 synchronously on access
@@ -87,6 +93,7 @@ final class AsyncValueBroadcasterTests: XCTestCase {
 
     // MARK: - Termination cleanup
 
+    @MainActor
     func testTerminatedConsumerDoesNotBreakOtherConsumers() async {
         let broadcaster = AsyncValueBroadcaster<Int>(0)
 
@@ -107,6 +114,7 @@ final class AsyncValueBroadcasterTests: XCTestCase {
 
     // MARK: - Send vs. cancellation races
 
+    @MainActor
     func testConcurrentSendsAndConsumerTerminationsStayConsistent() async {
         let broadcaster = AsyncValueBroadcaster<Int>(0)
 

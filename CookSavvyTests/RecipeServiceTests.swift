@@ -47,14 +47,16 @@ final class MockRecipeSource: RecipeSourceProtocol {
 // MARK: - RecipeService Tests
 
 final class RecipeServiceTests: XCTestCase {
-    
+
     var dbInterface: DBInterface!
     var recipeService: RecipeService!
     
-    override func setUpWithError() throws {
+    @MainActor
+    override func setUp() async throws {
         dbInterface = try DBInterface(inMemory: true)
     }
     
+    @MainActor
     override func tearDown() async throws {
         try await dbInterface.clearDatabase()
         dbInterface = nil
@@ -63,12 +65,14 @@ final class RecipeServiceTests: XCTestCase {
     
     // MARK: - Initialization Tests
     
-    func testDefaultInitialization() throws {
+    @MainActor
+    func testDefaultInitialization() async throws {
         recipeService = try RecipeService()
         XCTAssertNotNil(recipeService)
     }
     
-    func testCustomInitialization() {
+    @MainActor
+    func testCustomInitialization() async {
         let mockOffline = MockRecipeSource(sourceType: .offline)
         let sources: [RecipeSourceType: RecipeSourceProtocol] = [.offline: mockOffline]
         
@@ -83,6 +87,7 @@ final class RecipeServiceTests: XCTestCase {
     
     // MARK: - Get Recipes Tests
     
+    @MainActor
     func testGetRecipesFromSpecificSource() async throws {
         let mockRecipes = Recipe.mocks(count: 3)
         let mockOnline = MockRecipeSource(
@@ -109,6 +114,7 @@ final class RecipeServiceTests: XCTestCase {
         XCTAssertEqual(mockOnline.fetchCallCount, 1)
     }
     
+    @MainActor
     func testGetRecipesFromUnavailableSpecificSourceThrowsError() async {
         let mockOnline = MockRecipeSource(sourceType: .online, isAvailable: false)
         let sources: [RecipeSourceType: RecipeSourceProtocol] = [
@@ -135,6 +141,7 @@ final class RecipeServiceTests: XCTestCase {
         }
     }
     
+    @MainActor
     func testGetRecipesStoresInDatabaseWhenEnabled() async throws {
         let mockRecipes = Recipe.mocks(count: 2)
         let mockOnline = MockRecipeSource(
@@ -162,6 +169,7 @@ final class RecipeServiceTests: XCTestCase {
         XCTAssertEqual(storedRecipes.count, 2)
     }
     
+    @MainActor
     func testGetRecipesDoesNotStoreWhenDisabled() async throws {
         let mockRecipes = Recipe.mocks(count: 2)
         let mockOnline = MockRecipeSource(
@@ -191,6 +199,7 @@ final class RecipeServiceTests: XCTestCase {
     
     // MARK: - Source Availability Tests
     
+    @MainActor
     func testIsSourceAvailableForAvailableSource() async throws {
         recipeService = try RecipeService(dbInterface: dbInterface)
         
@@ -198,6 +207,7 @@ final class RecipeServiceTests: XCTestCase {
         XCTAssertTrue(available)
     }
     
+    @MainActor
     func testIsSourceAvailableForUnavailableSource() async {
         let mockOnline = MockRecipeSource(sourceType: .online, isAvailable: false)
         let sources: [RecipeSourceType: RecipeSourceProtocol] = [
@@ -214,6 +224,7 @@ final class RecipeServiceTests: XCTestCase {
         XCTAssertFalse(available)
     }
     
+    @MainActor
     func testIsSourceAvailableForNonExistentSource() async {
         let sources: [RecipeSourceType: RecipeSourceProtocol] = [
             .offline: OfflineRecipeSource(dbInterface: dbInterface)
@@ -228,6 +239,7 @@ final class RecipeServiceTests: XCTestCase {
         XCTAssertFalse(available)
     }
     
+    @MainActor
     func testGetAvailableSources() async {
         let mockOnline = MockRecipeSource(sourceType: .online, isAvailable: true)
         let mockAI = MockRecipeSource(sourceType: .ai, isAvailable: false)
@@ -253,6 +265,7 @@ final class RecipeServiceTests: XCTestCase {
     
     // MARK: - Store Recipes Tests
     
+    @MainActor
     func testStoreRecipesManually() async throws {
         recipeService = try RecipeService(dbInterface: dbInterface)
 
@@ -263,6 +276,7 @@ final class RecipeServiceTests: XCTestCase {
         XCTAssertEqual(stored.count, 3)
     }
 
+    @MainActor
     func testStoreEmptyRecipesIsNoop() async throws {
         recipeService = try RecipeService(dbInterface: dbInterface)
 
@@ -270,6 +284,7 @@ final class RecipeServiceTests: XCTestCase {
         try await recipeService.storeRecipes([])
     }
 
+    @MainActor
     func testGetStoredRecipes() async throws {
         recipeService = try RecipeService(dbInterface: dbInterface)
 
@@ -289,6 +304,7 @@ final class RecipeServiceTests: XCTestCase {
         XCTAssertEqual(stored.first?.title, "Chicken Dish")
     }
 
+    @MainActor
     func testGetStoredRecipesWithNoMatches() async throws {
         recipeService = try RecipeService(dbInterface: dbInterface)
 
@@ -298,6 +314,7 @@ final class RecipeServiceTests: XCTestCase {
     
     // MARK: - Integration Tests
     
+    @MainActor
     func testFullWorkflowOfflineSource() async throws {
         recipeService = try RecipeService(dbInterface: dbInterface)
         
@@ -320,6 +337,7 @@ final class RecipeServiceTests: XCTestCase {
         XCTAssertEqual(results.first?.title, "Chicken Pasta")
     }
     
+    @MainActor
     func testFetchFromMultipleSources() async throws {
         let mockOnlineRecipes = [
             Recipe(
@@ -355,6 +373,7 @@ final class RecipeServiceTests: XCTestCase {
     
     // MARK: - Error Handling Tests
     
+    @MainActor
     func testGetRecipesHandlesSourceError() async {
         let mockSource = MockRecipeSource(
             sourceType: .online,

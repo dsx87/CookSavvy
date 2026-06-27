@@ -6,11 +6,18 @@ A hobby iOS recipe app that suggests recipes based on user-provided ingredients.
 
 - **Minimum deployment target:** **iOS 18.0**, set uniformly via `IPHONEOS_DEPLOYMENT_TARGET`
   across the app, test, and project-level build settings (single floor — keep them in sync).
-- **Language:** Swift 6 — the app target builds in **Swift 6 language mode** with complete
-  data-race safety. The `CookSavvyTests` test target remains Swift 5 mode (strict-concurrency settings
-  still apply as warnings) because every `XCTestCase` subclass hits the
-  `@MainActor`-init-vs-nonisolated-override mismatch under Swift 6; the shipping app is fully Swift 6.
-  There is **no UI test target** — UI flows are covered by manual QA (see `docs/MANUAL_QA_CHECKLIST.md`).
+- **Language:** Swift 6 — both the app target **and** the `CookSavvyTests` test target build in
+  **Swift 6 language mode** with complete data-race safety. The test target overrides the project-wide
+  default isolation to **`SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated`** (the app/project default is
+  `MainActor`): an `XCTestCase` subclass must keep XCTest's *inherited* `nonisolated` initializers, so a
+  `@MainActor` test class — or an explicit `nonisolated override init()` to dodge the compile error —
+  crashes at runtime with `init(selector:)` unimplemented. The XCTest pattern is therefore **nonisolated
+  test class + `@MainActor` on each `setUp`/`tearDown`/test method/helper** that touches MainActor app
+  types. Synchronous test methods that construct then release a MainActor-isolated app object are written
+  **`async`** (same body, no `await` needed) to avoid a pre-existing toolchain malloc double-free on the
+  ObjC sync-invocation path (see memory `project_viewmodel_test_malloc_crash`); only the 3
+  `measure`/`wait(for:)` performance tests stay synchronous. There is **no UI test target** — UI flows
+  are covered by manual QA (see `docs/MANUAL_QA_CHECKLIST.md`).
 - **Concurrency:** Approachable Concurrency is on (`SWIFT_APPROACHABLE_CONCURRENCY = YES`,
   `SWIFT_STRICT_CONCURRENCY = complete`) with **default actor isolation = `MainActor`**
   (`SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`), set at the project level. See "Concurrency Model" below.

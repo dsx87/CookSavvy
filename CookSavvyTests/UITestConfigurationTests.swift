@@ -3,7 +3,8 @@ import XCTest
 
 final class UITestConfigurationTests: XCTestCase {
 
-    func testFromArgumentsAllowsFreshInstallAndSkipOnboardingTogether() {
+    @MainActor
+    func testFromArgumentsAllowsFreshInstallAndSkipOnboardingTogether() async {
         let config = UITestConfiguration.fromArguments([
             "CookSavvy",
             "--uitesting",
@@ -16,7 +17,8 @@ final class UITestConfigurationTests: XCTestCase {
         XCTAssertTrue(config.skipOnboarding)
     }
 
-    func testPrepareDefaultsKeepsFreshInstallWhenNotSkippingOnboarding() {
+    @MainActor
+    func testPrepareDefaultsKeepsFreshInstallWhenNotSkippingOnboarding() async {
         let defaults = makeDefaults()
         defaults.set(true, forKey: "hasCompletedOnboarding")
 
@@ -35,7 +37,8 @@ final class UITestConfigurationTests: XCTestCase {
         XCTAssertEqual(defaults.object(forKey: "hasCompletedOnboarding") as? Bool, false)
     }
 
-    func testPrepareDefaultsSetsOnboardingCompleteWhenSkipping() {
+    @MainActor
+    func testPrepareDefaultsSetsOnboardingCompleteWhenSkipping() async {
         let defaults = makeDefaults()
 
         let config = UITestConfiguration(
@@ -53,6 +56,7 @@ final class UITestConfigurationTests: XCTestCase {
         XCTAssertEqual(defaults.object(forKey: "hasCompletedOnboarding") as? Bool, true)
     }
 
+    @MainActor
     private func makeDefaults() -> UserDefaults {
         let suiteName = "UITestConfigurationTests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!

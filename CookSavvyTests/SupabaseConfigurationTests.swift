@@ -8,7 +8,8 @@ import XCTest
 
 final class SupabaseConfigurationTests: XCTestCase {
 
-    func testIsConfiguredIsTrueForValidURLAndAnonKey() {
+    @MainActor
+    func testIsConfiguredIsTrueForValidURLAndAnonKey() async {
         let configuration = SupabaseConfiguration(
             projectURLString: "https://example.supabase.co",
             anonKey: "anon-key"
@@ -19,7 +20,8 @@ final class SupabaseConfigurationTests: XCTestCase {
         XCTAssertEqual(configuration.anonKey, "anon-key")
     }
 
-    func testIsConfiguredIsFalseForInvalidURL() {
+    @MainActor
+    func testIsConfiguredIsFalseForInvalidURL() async {
         let configuration = SupabaseConfiguration(
             projectURLString: "not a valid url",
             anonKey: "anon-key"
@@ -29,7 +31,8 @@ final class SupabaseConfigurationTests: XCTestCase {
         XCTAssertNil(configuration.projectURL)
     }
 
-    func testIsConfiguredIsFalseWhenAnonKeyMissing() {
+    @MainActor
+    func testIsConfiguredIsFalseWhenAnonKeyMissing() async {
         let configuration = SupabaseConfiguration(
             projectURLString: "https://example.supabase.co",
             anonKey: nil

@@ -13,6 +13,7 @@ final class RecipeRecommendationServiceTests: XCTestCase {
     var mockDBInitService: MockDatabaseInitService!
     var service: RecipeRecommendationService!
 
+    @MainActor
     override func setUp() async throws {
         try await super.setUp()
         mockUserDataService = MockUserDataService()
@@ -25,6 +26,7 @@ final class RecipeRecommendationServiceTests: XCTestCase {
         )
     }
 
+    @MainActor
     override func tearDown() async throws {
         service = nil
         db = nil
@@ -35,6 +37,7 @@ final class RecipeRecommendationServiceTests: XCTestCase {
 
     // MARK: - Helpers
 
+    @MainActor
     private func makeRecipe(title: String, ingredients: [String]) -> Recipe {
         let ingList = ingredients.map { Ingredient(name: $0) }
         return Recipe(
@@ -46,6 +49,7 @@ final class RecipeRecommendationServiceTests: XCTestCase {
         )
     }
 
+    @MainActor
     private func insertRecipes(_ recipes: [Recipe]) async throws -> [Int] {
         try await db.insertRecipes(recipes)
         var ids: [Int] = []
@@ -59,6 +63,7 @@ final class RecipeRecommendationServiceTests: XCTestCase {
 
     private var sessionIdCounter = 1
 
+    @MainActor
     private func makeCookingSession(recipeTitle: String, recipeId: Int = 1, rating: Int? = nil) -> CookingSession {
         defer { sessionIdCounter += 1 }
         return CookingSession(
@@ -73,6 +78,7 @@ final class RecipeRecommendationServiceTests: XCTestCase {
 
     // MARK: - Tests
 
+    @MainActor
     func testMultipleAffinityIngredientsAreUsed() async throws {
         mockUserDataService.stubbedFavorites = [
             makeRecipe(title: "Chicken Rice Bowl", ingredients: ["chicken", "rice"])
@@ -89,6 +95,7 @@ final class RecipeRecommendationServiceTests: XCTestCase {
         XCTAssertTrue(result.recipes.contains { $0.title == "Rice Pilaf" })
     }
 
+    @MainActor
     func testHighlyRatedSessionsBoostWeight() async throws {
         let recipeIDs = try await insertRecipes([
             makeRecipe(title: "Salmon Plate", ingredients: ["salmon", "rice"]),
@@ -108,6 +115,7 @@ final class RecipeRecommendationServiceTests: XCTestCase {
         XCTAssertEqual(result.recipes.first?.title, "Pan-Seared Salmon")
     }
 
+    @MainActor
     func testRecentlyCookedFiltered() async throws {
         let ids = try await insertRecipes([
             makeRecipe(title: "Chicken Soup", ingredients: ["chicken"]),
@@ -122,6 +130,7 @@ final class RecipeRecommendationServiceTests: XCTestCase {
         XCTAssertTrue(result.recipes.contains { $0.title == "Chicken Salad" })
     }
 
+    @MainActor
     func testEmptyHistoryReturnsEmpty() async throws {
         mockUserDataService.stubbedFavorites = []
         mockUserDataService.stubbedCookingSessions = []
@@ -131,6 +140,7 @@ final class RecipeRecommendationServiceTests: XCTestCase {
         XCTAssertNil(result.reason)
     }
 
+    @MainActor
     func testLimitParameterRespected() async throws {
         let recipes = (1...10).map { i in
             makeRecipe(title: "Chicken Dish \(i)", ingredients: ["chicken"])
@@ -146,6 +156,7 @@ final class RecipeRecommendationServiceTests: XCTestCase {
         XCTAssertLessThanOrEqual(result.recipes.count, limit)
     }
 
+    @MainActor
     func testFallsBackToSessionTitleWhenRecipeLookupFails() async throws {
         mockUserDataService.stubbedFavorites = []
         mockUserDataService.stubbedCookingSessions = [

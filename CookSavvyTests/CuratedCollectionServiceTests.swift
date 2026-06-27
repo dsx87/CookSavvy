@@ -6,31 +6,35 @@ final class CuratedCollectionServiceTests: XCTestCase {
     private var service: CuratedCollectionService!
     private var db: DBInterface!
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    @MainActor
+    override func setUp() async throws {
         db = try DBInterface(inMemory: true)
         service = CuratedCollectionService(dbInterface: db)
     }
 
     // MARK: - getCollectionsForThisWeek
 
-    func testFreeUserGetsOneCollection() {
+    @MainActor
+    func testFreeUserGetsOneCollection() async {
         let collections = service.getCollectionsForThisWeek(isPremium: false)
         XCTAssertEqual(collections.count, 1)
     }
 
-    func testPremiumUserGetsThreeCollections() {
+    @MainActor
+    func testPremiumUserGetsThreeCollections() async {
         let collections = service.getCollectionsForThisWeek(isPremium: true)
         XCTAssertEqual(collections.count, 3)
     }
 
-    func testCollectionsHaveUniqueIDs() {
+    @MainActor
+    func testCollectionsHaveUniqueIDs() async {
         let collections = service.getCollectionsForThisWeek(isPremium: true)
         let ids = Set(collections.map(\.id))
         XCTAssertEqual(ids.count, collections.count)
     }
 
-    func testCollectionsHaveNonEmptyTitles() {
+    @MainActor
+    func testCollectionsHaveNonEmptyTitles() async {
         let collections = service.getCollectionsForThisWeek(isPremium: true)
         for collection in collections {
             XCTAssertFalse(collection.title.isEmpty, "Collection \(collection.id) has empty title")
@@ -39,7 +43,8 @@ final class CuratedCollectionServiceTests: XCTestCase {
         }
     }
 
-    func testFreeCollectionIsSubsetOfPremiumCollections() {
+    @MainActor
+    func testFreeCollectionIsSubsetOfPremiumCollections() async {
         let free = service.getCollectionsForThisWeek(isPremium: false)
         let premium = service.getCollectionsForThisWeek(isPremium: true)
         XCTAssertTrue(free.allSatisfy { fc in premium.contains(where: { $0.id == fc.id }) })
@@ -47,6 +52,7 @@ final class CuratedCollectionServiceTests: XCTestCase {
 
     // MARK: - getRecipes
 
+    @MainActor
     func testGetRecipesWithIngredientKeywordsReturnsArray() async throws {
         let collection = CuratedCollection(
             id: "test",
@@ -61,6 +67,7 @@ final class CuratedCollectionServiceTests: XCTestCase {
         XCTAssertNotNil(recipes)
     }
 
+    @MainActor
     func testGetRecipesWithMaxIngredientCountFiltersClientSide() async throws {
         let collection = CuratedCollection(
             id: "five_ingredient",

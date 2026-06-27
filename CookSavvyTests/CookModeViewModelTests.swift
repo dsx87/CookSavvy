@@ -6,26 +6,26 @@
 import XCTest
 @testable import CookSavvy
 
-@MainActor
 final class CookModeViewModelTests: XCTestCase {
 
     var mockUserDataService: MockUserDataService!
     var mockIdleTimerService: MockIdleTimerService!
     var dismissCallCount = 0
 
-    override func setUp() {
-        super.setUp()
+    @MainActor
+    override func setUp() async throws {
         mockUserDataService = MockUserDataService()
         mockIdleTimerService = MockIdleTimerService()
         dismissCallCount = 0
     }
 
-    override func tearDown() {
+    @MainActor
+    override func tearDown() async throws {
         mockUserDataService = nil
         mockIdleTimerService = nil
-        super.tearDown()
     }
 
+    @MainActor
     private func makeRecipe(stepCount: Int) -> Recipe {
         let steps = (1...max(1, stepCount)).map { i in
             Recipe.Step(text: "Step \(i)", timerMinutes: i == 2 ? 5 : nil)
@@ -39,6 +39,7 @@ final class CookModeViewModelTests: XCTestCase {
         )
     }
 
+    @MainActor
     private func makeViewModel(stepCount: Int = 3) -> CookModeViewModel {
         CookModeViewModel(
             recipe: makeRecipe(stepCount: stepCount),
@@ -50,7 +51,8 @@ final class CookModeViewModelTests: XCTestCase {
         )
     }
 
-    func testInitialState() {
+    @MainActor
+    func testInitialState() async {
         let vm = makeViewModel()
         XCTAssertEqual(vm.currentStep, 0)
         XCTAssertFalse(vm.timerRunning)
@@ -58,7 +60,8 @@ final class CookModeViewModelTests: XCTestCase {
         XCTAssertFalse(vm.showFeedback)
     }
 
-    func testBeginAndEndKeepingScreenAwakeTogglesIdleTimer() {
+    @MainActor
+    func testBeginAndEndKeepingScreenAwakeTogglesIdleTimer() async {
         let vm = makeViewModel()
 
         vm.beginKeepingScreenAwake()
@@ -69,26 +72,30 @@ final class CookModeViewModelTests: XCTestCase {
         XCTAssertEqual(mockIdleTimerService.disabledStates, [true, false])
     }
 
-    func testGoNextAdvancesStep() {
+    @MainActor
+    func testGoNextAdvancesStep() async {
         let vm = makeViewModel()
         vm.goNext()
         XCTAssertEqual(vm.currentStep, 1)
     }
 
-    func testGoPreviousFromZeroStays() {
+    @MainActor
+    func testGoPreviousFromZeroStays() async {
         let vm = makeViewModel()
         vm.goPrevious()
         XCTAssertEqual(vm.currentStep, 0)
     }
 
-    func testGoNextAtLastStepStays() {
+    @MainActor
+    func testGoNextAtLastStepStays() async {
         let vm = makeViewModel(stepCount: 2)
         vm.goNext() // to step 1 (last)
         vm.goNext() // should stay at 1
         XCTAssertEqual(vm.currentStep, 1)
     }
 
-    func testProgressCalculation() {
+    @MainActor
+    func testProgressCalculation() async {
         let vm = makeViewModel(stepCount: 4)
         XCTAssertEqual(vm.progress, 0.0)
 
@@ -99,13 +106,15 @@ final class CookModeViewModelTests: XCTestCase {
         XCTAssertEqual(vm.progress, 0.5, accuracy: 0.001)
     }
 
-    func testFinishShowsFeedback() {
+    @MainActor
+    func testFinishShowsFeedback() async {
         let vm = makeViewModel()
         XCTAssertFalse(vm.showFeedback)
         vm.finish()
         XCTAssertTrue(vm.showFeedback)
     }
 
+    @MainActor
     func testSubmitFeedbackCallsServiceAndDismisses() async {
         let vm = makeViewModel()
         vm.finish()
@@ -119,6 +128,7 @@ final class CookModeViewModelTests: XCTestCase {
         XCTAssertEqual(mockUserDataService.markAsCookedCalls.first?.rating, 4)
     }
 
+    @MainActor
     func testSkipFeedbackCallsServiceAndDismisses() async {
         let vm = makeViewModel()
         vm.finish()
@@ -131,7 +141,8 @@ final class CookModeViewModelTests: XCTestCase {
         XCTAssertNil(mockUserDataService.markAsCookedCalls.first?.rating)
     }
 
-    func testTimerResetOnStepChange() {
+    @MainActor
+    func testTimerResetOnStepChange() async {
         // makeRecipe gives step index 1 a 5-min timer
         let vm = makeViewModel(stepCount: 3)
         vm.goNext() // to step 1
@@ -143,7 +154,8 @@ final class CookModeViewModelTests: XCTestCase {
         XCTAssertEqual(vm.timerSeconds, 0)
     }
 
-    func testDismissStopsTimerAndCallsOnDismiss() {
+    @MainActor
+    func testDismissStopsTimerAndCallsOnDismiss() async {
         let vm = makeViewModel()
         vm.toggleTimer() // start timer regardless of step
         XCTAssertTrue(vm.timerRunning)
@@ -154,6 +166,7 @@ final class CookModeViewModelTests: XCTestCase {
         XCTAssertEqual(dismissCallCount, 1)
     }
 
+    @MainActor
     func testSubmitFeedbackStillDismissesWhenSaveFails() async {
         mockUserDataService.shouldThrow = TestError.stub
         let vm = makeViewModel()
@@ -166,6 +179,7 @@ final class CookModeViewModelTests: XCTestCase {
         XCTAssertTrue(mockUserDataService.markAsCookedCalls.isEmpty)
     }
 
+    @MainActor
     func testSkipFeedbackStillDismissesWhenSaveFails() async {
         mockUserDataService.shouldThrow = TestError.stub
         let vm = makeViewModel()
