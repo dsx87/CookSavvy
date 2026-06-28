@@ -60,6 +60,33 @@ final class UserDataServiceTests: XCTestCase {
     }
 
     @MainActor
+    func testGetPopularIngredientsReturnsCuratedSeedWhenNoUsageHistory() async throws {
+        // With an empty recent_ingredients table, the curated seed is returned (not the alphabetical
+        // catalogue, which the old fallback used).
+        let popular = try await service.getPopularIngredients(limit: UI.Discover.popularIngredientCount)
+        let expected = PantryStaples.excludingStaples(PopularIngredients.seed())
+
+        XCTAssertEqual(popular.map(\.name), expected.map(\.name))
+        XCTAssertEqual(popular.first?.name, "Chicken", "Seed is curated/ordered, not alphabetical")
+        XCTAssertFalse(popular.isEmpty)
+    }
+
+    @MainActor
+    func testGetPopularIngredientsPrefersUsageHistoryOverCuratedSeed() async throws {
+        // A recorded pick must rank ahead of — and replace — the curated seed.
+        try await db.insertIngredients([Ingredient(name: "Kale")])
+        try await db.recordIngredientUsage(Ingredient(name: "Kale"))
+
+        let popular = try await service.getPopularIngredients(limit: UI.Discover.popularIngredientCount)
+
+        XCTAssertEqual(popular.first?.name, "Kale")
+        XCTAssertFalse(
+            popular.contains { $0.name == "Chicken" },
+            "Usage history replaces the curated seed rather than appending to it"
+        )
+    }
+
+    @MainActor
     func testRecentRecipes() async throws {
         let recipe = makeRecipe(title: "Chicken Soup")
         try await insertRecipe(recipe)

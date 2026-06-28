@@ -422,6 +422,9 @@ struct UI {
         static let suggestionPopupItemLimit: Int = 6
         /// Maximum number of recipes fetched for ingredient-free browse searches.
         static let browseRecipeLimit: Int = 100
+        /// Size of the "popular" quick-pick ingredient grid — also the move-to-front (MRU) cap applied
+        /// when a freshly picked ingredient is promoted to the front. 20 = 5 full rows of the 4-column grid.
+        static let popularIngredientCount: Int = 20
 
         /// Dimensions and gradient colors for the "This Week's Collections" card strip on the Discover screen.
         struct Collection {

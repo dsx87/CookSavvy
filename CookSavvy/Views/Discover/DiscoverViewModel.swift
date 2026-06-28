@@ -367,12 +367,17 @@ struct DiscoverMatchBadgeState {
         return matches
     }
 
-    /// The section header label for the ingredient grid — the selected category name or a generic label.
+    /// The section header label for the ingredient grid: the selected category name, else "ALL
+    /// INGREDIENTS" while a search query is filtering the full catalogue, else "POPULAR" for the
+    /// default quick-pick grid.
     var ingredientGridLabel: String {
         if let selectedCategory {
             return selectedCategory.rawValue.uppercased()
         }
-        return Strings.Discover.allIngredients
+        if !searchText.isEmpty {
+            return Strings.Discover.allIngredients
+        }
+        return Strings.Discover.popularIngredients
     }
 
     /// Categories exposed in the Discover chip row, excluding the catch-all bucket.
@@ -495,8 +500,14 @@ struct DiscoverMatchBadgeState {
             selectedIngredients.remove(at: idx)
         } else {
             selectedIngredients.append(ingredient)
+            // On selection only: surface the pick at the front of the popular grid for this session and
+            // record it so popularity persists and personalises across launches. Recording is
+            // fire-and-forget — a failure (e.g. an off-catalogue name) is silently skipped by the DB
+            // layer and must not block selection. Deselecting does neither.
+            promoteToPopularGrid(ingredient)
+            Task { [userDataService] in try? await userDataService.recordIngredientUsage([ingredient]) }
         }
-        
+
         if !hasIngredients {
             showResults = false
             searchResultRecipes = []
@@ -766,13 +777,44 @@ struct DiscoverMatchBadgeState {
     /// Fetches popular ingredients from `UserDataService` and fills in missing emoji via `IngredientEmojiProvider`.
     private func loadIngredients() async {
         do {
-            var ingredients = try await userDataService.getPopularIngredients()
+            // Fetch a full grid's worth so the popular section fills its rows; this is also the cap the
+            // move-to-front promotion (`promoteToPopularGrid`) trims back to as the user makes picks.
+            var ingredients = try await userDataService.getPopularIngredients(limit: UI.Discover.popularIngredientCount)
             IngredientEmojiProvider.fillIngredientsWithEmoji(&ingredients)
             popularIngredients = ingredients
             shownIngredients = ingredients
         } catch {
             logger.error("Failed to load discover ingredients: \(String(describing: error))")
             homeLoadError = Strings.Errors.loadFailed
+        }
+    }
+
+    /// Moves a freshly selected ingredient to the front of the popular grid (move-to-front / MRU), so
+    /// a pick the user just made leads the quick-pick list.
+    ///
+    /// Any existing occurrence (matched case-insensitively via `normalizedIngredientName`) is removed
+    /// before inserting at index 0, so a re-pick promotes rather than duplicates, and the list is
+    /// trimmed back to `UI.Discover.popularIngredientCount` — dropping the least-recent tail. Search-
+    /// sourced picks arrive without an emoji (`refreshIngredients` doesn't fill emoji for search
+    /// results), so any missing emoji is filled (existing entries are skipped).
+    ///
+    /// When the grid is in its default popular state (no search text, no category) the visible
+    /// `shownIngredients` is reassigned so the reorder animates live under the caller's
+    /// `withAnimation`; while a category/search filter is active the underlying MRU still updates but
+    /// the visible grid stays put until the user returns to the popular state (the empty-array
+    /// `shownIngredients` didSet re-surfaces `popularIngredients` then).
+    private func promoteToPopularGrid(_ ingredient: Ingredient) {
+        let key = Self.normalizedIngredientName(ingredient.name)
+        var updated = popularIngredients.filter { Self.normalizedIngredientName($0.name) != key }
+        updated.insert(ingredient, at: 0)
+        if updated.count > UI.Discover.popularIngredientCount {
+            updated.removeLast(updated.count - UI.Discover.popularIngredientCount)
+        }
+        IngredientEmojiProvider.fillIngredientsWithEmoji(&updated)
+        popularIngredients = updated
+
+        if searchText.isEmpty && selectedCategory == nil {
+            shownIngredients = popularIngredients
         }
     }
 

@@ -181,6 +181,7 @@ nonisolated enum Strings {
         static let moreRecipes = String(localized: "discover.moreRecipes", defaultValue: "MORE OPTIONS")
         static let addYourOwn = String(localized: "discover.addYourOwn", defaultValue: "Add Your Own")
         static let allIngredients = String(localized: "discover.allIngredients", defaultValue: "ALL INGREDIENTS")
+        static let popularIngredients = String(localized: "discover.popularIngredients", defaultValue: "POPULAR")
         static let searchPlaceholder = String(localized: "discover.searchPlaceholder", defaultValue: "Search ingredients...")
         static let findRecipes = String(localized: "discover.findRecipes", defaultValue: "Find Dinner")
         static let scansRemaining = String(localized: "discover.scansRemaining", defaultValue: "%lld scans left")

@@ -52,6 +52,16 @@ final class DiscoverViewModelTests: XCTestCase {
         )
     }
 
+    /// Spins the main-actor run loop until `condition` holds or the timeout elapses, so fire-and-forget
+    /// work scheduled in an unstructured `Task` (e.g. usage recording) can be asserted deterministically.
+    @MainActor
+    private func waitUntil(timeout: TimeInterval = 1.0, _ condition: () -> Bool) async {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !condition() && Date() < deadline {
+            await Task.yield()
+        }
+    }
+
     @MainActor
     private func makeRankedRecipe(
         title: String,
@@ -99,6 +109,63 @@ final class DiscoverViewModelTests: XCTestCase {
 
         vm.toggleIngredient(ingredient)
         XCTAssertFalse(vm.selectedIngredients.contains { $0.id == ingredient.id })
+    }
+
+    @MainActor
+    func testToggleIngredientPromotesSelectionToFrontOfPopularGridAndCaps() async {
+        let vm = makeViewModel()
+        let count = UI.Discover.popularIngredientCount
+        // Seed a full grid so a new pick must drop the least-recent tail item.
+        vm.popularIngredients = (0..<count).map { Ingredient(name: "Seed\($0)") }
+        vm.shownIngredients = vm.popularIngredients
+
+        vm.toggleIngredient(Ingredient(name: "Tomato"))
+
+        XCTAssertEqual(vm.popularIngredients.first?.name, "Tomato", "Pick leads the popular grid")
+        XCTAssertEqual(vm.popularIngredients.count, count, "List stays capped at the grid size")
+        XCTAssertFalse(
+            vm.popularIngredients.contains { $0.name == "Seed\(count - 1)" },
+            "Least-recent tail item is dropped when a new pick is inserted"
+        )
+        // Default popular state (no search, no category) → the visible grid reorders live.
+        XCTAssertEqual(vm.shownIngredients.first?.name, "Tomato")
+    }
+
+    @MainActor
+    func testTogglingAnExistingPopularIngredientPromotesWithoutDuplicating() async {
+        let vm = makeViewModel()
+        vm.popularIngredients = [Ingredient(name: "Rice"), Ingredient(name: "Egg"), Ingredient(name: "Onion")]
+        vm.shownIngredients = vm.popularIngredients
+
+        // Case-insensitive re-pick of an item already in the grid.
+        vm.toggleIngredient(Ingredient(name: "onion"))
+
+        XCTAssertEqual(vm.popularIngredients.first?.name, "onion", "Re-pick is promoted to the front")
+        XCTAssertEqual(vm.popularIngredients.count, 3, "Promotion reorders in place — no duplicate")
+        XCTAssertEqual(
+            vm.popularIngredients.filter { $0.name.lowercased() == "onion" }.count, 1,
+            "Only one onion entry remains after promotion"
+        )
+    }
+
+    @MainActor
+    func testSelectingRecordsIngredientUsageAndDeselectingDoesNot() async {
+        let vm = makeViewModel()
+        let ingredient = Ingredient(name: "Tomato")
+
+        vm.toggleIngredient(ingredient) // select
+        // Recording is fire-and-forget in a detached Task; wait until it lands.
+        await waitUntil { self.mockUserDataService.recordedIngredientUsages.count == 1 }
+        XCTAssertEqual(mockUserDataService.recordedIngredientUsages.count, 1)
+        XCTAssertEqual(mockUserDataService.recordedIngredientUsages.first?.first?.name, "Tomato")
+
+        vm.toggleIngredient(ingredient) // deselect
+        // Let any erroneous record task run, then confirm no additional usage was recorded.
+        await Task.yield()
+        XCTAssertEqual(
+            mockUserDataService.recordedIngredientUsages.count, 1,
+            "Deselecting an ingredient must not record usage"
+        )
     }
 
     @MainActor

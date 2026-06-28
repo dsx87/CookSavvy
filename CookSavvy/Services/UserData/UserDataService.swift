@@ -57,39 +57,28 @@ final class UserDataService: UserDataServiceProtocol {
         return try await dbInterface.getRecentIngredients(limit: limit)
     }
 
-    // TODO: do some cleanup for this flow
-    /// Gets the most popular ingredients based on usage count
-    /// - Parameter limit: Maximum number of ingredients to return (default: 10)
-    /// - Returns: Array of popular ingredients ordered by usage count
+    /// Gets the most popular ingredients to seed the Discover quick-pick grid.
+    ///
+    /// Prefers the user's own usage-ranked history (`recent_ingredients`); until that accumulates,
+    /// falls back to the curated `PopularIngredients.seed()` rather than the alphabetical catalogue,
+    /// so a fresh install surfaces genuinely popular ingredients instead of "Almond, Apple, …".
+    /// Pantry staples are excluded from both paths since they are never offered for selection
+    /// (see `PantryStaples`) — including any left in usage history from before that rule.
+    /// - Parameter limit: Maximum number of usage-ranked ingredients to return (default: 10).
+    /// - Returns: Popular ingredients ordered by usage count, or the curated seed when none exist.
     func getPopularIngredients(limit: Int = 10) async throws -> [Ingredient] {
         do {
-            // Pantry staples are never offered for selection (see `PantryStaples`), so keep them out
-            // of the popular grid too — including any left over in usage history from before this rule.
             let popular = PantryStaples.excludingStaples(try await dbInterface.getPopularIngredients(limit: limit))
             if !popular.isEmpty {
                 return popular
             }
-
-            let fallback = PantryStaples.excludingStaples(try await dbInterface.getAllIngredients(inGroup: nil, limit: max(limit, 20)))
-            if !fallback.isEmpty {
-                return fallback
-            }
         } catch {
-            // Fall back to defaults below.
+            // Fall back to the curated seed below.
         }
 
-        let defaultFastIngredients: [Ingredient] = [
-            ("Chicken", "🍗"),
-            ("Rice", "🍚"),
-            ("Pasta", "🍝"),
-            ("Tomato", "🍅"),
-            ("Onion", "🧅"),
-            ("Garlic", "🧄"),
-            ("Egg", "🥚"),
-            ("Milk", "🥛"),
-            ("Cheese", "🧀")
-        ].map { .init(name: $0.0) }
-        return defaultFastIngredients
+        // Honour `limit` here too so every branch returns at most `limit` items, even though the only
+        // production caller requests a full grid's worth (`UI.Discover.popularIngredientCount`).
+        return Array(PantryStaples.excludingStaples(PopularIngredients.seed()).prefix(limit))
     }
 
     /// Records usage of multiple ingredients
