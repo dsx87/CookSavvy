@@ -111,46 +111,119 @@ final class DiscoverViewModelTests: XCTestCase {
         XCTAssertFalse(vm.selectedIngredients.contains { $0.id == ingredient.id })
     }
 
+    /// Seeds a full popular grid of distinctly-named items: `Seed0`, `Seed1`, … so a test can pick a
+    /// known index and assert position-dependent behaviour.
     @MainActor
-    func testToggleIngredientPromotesSelectionToFrontOfPopularGridAndCaps() async {
-        let vm = makeViewModel()
-        let count = UI.Discover.popularIngredientCount
-        // Seed a full grid so a new pick must drop the least-recent tail item.
-        vm.popularIngredients = (0..<count).map { Ingredient(name: "Seed\($0)") }
+    private func seedFullGrid(_ vm: DiscoverViewModel) {
+        vm.popularIngredients = (0..<UI.Discover.popularIngredientCount).map { Ingredient(name: "Seed\($0)") }
         vm.shownIngredients = vm.popularIngredients
-
-        vm.toggleIngredient(Ingredient(name: "Tomato"))
-
-        XCTAssertEqual(vm.popularIngredients.first?.name, "Tomato", "Pick leads the popular grid")
-        XCTAssertEqual(vm.popularIngredients.count, count, "List stays capped at the grid size")
-        XCTAssertFalse(
-            vm.popularIngredients.contains { $0.name == "Seed\(count - 1)" },
-            "Least-recent tail item is dropped when a new pick is inserted"
-        )
-        // Default popular state (no search, no category) → the visible grid reorders live.
-        XCTAssertEqual(vm.shownIngredients.first?.name, "Tomato")
     }
 
     @MainActor
-    func testTogglingAnExistingPopularIngredientPromotesWithoutDuplicating() async {
+    func testPickWithinStableTopRowsDoesNotReorderOrRecord() async {
         let vm = makeViewModel()
-        vm.popularIngredients = [Ingredient(name: "Rice"), Ingredient(name: "Egg"), Ingredient(name: "Onion")]
-        vm.shownIngredients = vm.popularIngredients
+        seedFullGrid(vm)
+        // An index inside the stable top rows: picking here must leave the grid (and history) untouched.
+        let stablePick = vm.popularIngredients[UI.Discover.popularGridStablePrefixCount - 1]
 
-        // Case-insensitive re-pick of an item already in the grid.
-        vm.toggleIngredient(Ingredient(name: "onion"))
+        vm.toggleIngredient(stablePick)
+        vm.returnToIngredientSelection() // the "next view appear" that would apply any promotion
 
-        XCTAssertEqual(vm.popularIngredients.first?.name, "onion", "Re-pick is promoted to the front")
-        XCTAssertEqual(vm.popularIngredients.count, 3, "Promotion reorders in place — no duplicate")
-        XCTAssertEqual(
-            vm.popularIngredients.filter { $0.name.lowercased() == "onion" }.count, 1,
-            "Only one onion entry remains after promotion"
+        XCTAssertEqual(vm.popularIngredients.first?.name, "Seed0", "Stable-zone pick does not reorder the grid")
+        // A stable-zone pick creates no record task at all; yield generously so a regression that *did*
+        // enqueue one would have ample opportunity to run before this "must stay empty" assertion.
+        for _ in 0..<10 { await Task.yield() }
+        XCTAssertTrue(
+            mockUserDataService.recordedIngredientUsages.isEmpty,
+            "A pick within the stable top rows is not recorded"
         )
+    }
+
+    @MainActor
+    func testStableRowPickIsRecordedAndPromotedWhenMadeWhileSearching() async {
+        let vm = makeViewModel()
+        seedFullGrid(vm)
+        // A search is active: the user is picking from search results, not the popular grid — so even a
+        // pick that happens to sit in the popular grid's stable top rows is off-grid and must qualify.
+        vm.searchText = "ch"
+        let topRowItem = vm.popularIngredients[1] // index 1 — inside the stable top rows of the popular grid
+
+        vm.toggleIngredient(topRowItem)
+
+        await waitUntil { self.mockUserDataService.recordedIngredientUsages.count == 1 }
+        XCTAssertEqual(
+            mockUserDataService.recordedIngredientUsages.first?.first?.name, topRowItem.name,
+            "A pick made via the search bar is recorded even if it sits in the popular grid's top rows"
+        )
+
+        vm.searchText = "" // clear the search; the popular grid re-surfaces
+        vm.returnToIngredientSelection()
+        XCTAssertEqual(
+            vm.popularIngredients.first?.name, topRowItem.name,
+            "A search-bar pick leads the popular grid on its next appearance"
+        )
+    }
+
+    @MainActor
+    func testPickBelowStableRowsIsDeferredThenPromotedOnReturn() async {
+        let vm = makeViewModel()
+        seedFullGrid(vm)
+        let buriedPick = vm.popularIngredients[UI.Discover.popularGridStablePrefixCount + 2]
+
+        vm.toggleIngredient(buriedPick)
+        // Deferred: the grid does not reorder live, so nothing jumps under the user's finger.
+        XCTAssertEqual(vm.popularIngredients.first?.name, "Seed0", "Promotion is deferred, not live")
+
+        vm.returnToIngredientSelection()
+        XCTAssertEqual(vm.popularIngredients.first?.name, buriedPick.name, "Pick leads the grid on next appear")
+        XCTAssertEqual(vm.shownIngredients.first?.name, buriedPick.name)
+        XCTAssertEqual(vm.popularIngredients.count, UI.Discover.popularIngredientCount, "Grid stays capped")
+        XCTAssertEqual(
+            vm.popularIngredients.filter { $0.name == buriedPick.name }.count, 1,
+            "Promotion reorders in place — no duplicate"
+        )
+        await waitUntil { self.mockUserDataService.recordedIngredientUsages.count == 1 }
+        XCTAssertEqual(mockUserDataService.recordedIngredientUsages.first?.first?.name, buriedPick.name)
+    }
+
+    @MainActor
+    func testOffGridSearchPickIsPromotedOnReturnAndDropsTail() async {
+        let vm = makeViewModel()
+        seedFullGrid(vm)
+        let tailName = "Seed\(UI.Discover.popularIngredientCount - 1)"
+
+        // A pick that isn't in the grid (e.g. typed into the search bar) always qualifies for promotion.
+        vm.toggleIngredient(Ingredient(name: "Tomato"))
+        XCTAssertEqual(vm.popularIngredients.first?.name, "Seed0", "Off-grid pick is deferred, not live")
+
+        vm.returnToIngredientSelection()
+        XCTAssertEqual(vm.popularIngredients.first?.name, "Tomato", "Off-grid pick leads the grid on next appear")
+        XCTAssertEqual(vm.popularIngredients.count, UI.Discover.popularIngredientCount, "Grid stays capped")
+        XCTAssertFalse(
+            vm.popularIngredients.contains { $0.name == tailName },
+            "Least-recent tail item is dropped when an off-grid pick is inserted"
+        )
+    }
+
+    @MainActor
+    func testMultipleBuriedPicksPromoteMostRecentFirst() async {
+        let vm = makeViewModel()
+        seedFullGrid(vm)
+        let firstPick = vm.popularIngredients[UI.Discover.popularGridStablePrefixCount + 1]
+        let secondPick = vm.popularIngredients[UI.Discover.popularGridStablePrefixCount + 4]
+
+        vm.toggleIngredient(firstPick)
+        vm.toggleIngredient(secondPick)
+        vm.returnToIngredientSelection()
+
+        XCTAssertEqual(vm.popularIngredients[0].name, secondPick.name, "Most-recent pick leads")
+        XCTAssertEqual(vm.popularIngredients[1].name, firstPick.name, "Earlier pick follows")
     }
 
     @MainActor
     func testSelectingRecordsIngredientUsageAndDeselectingDoesNot() async {
         let vm = makeViewModel()
+        // Empty grid → any pick is off-grid and therefore qualifies for recording.
         let ingredient = Ingredient(name: "Tomato")
 
         vm.toggleIngredient(ingredient) // select
@@ -166,6 +239,16 @@ final class DiscoverViewModelTests: XCTestCase {
             mockUserDataService.recordedIngredientUsages.count, 1,
             "Deselecting an ingredient must not record usage"
         )
+    }
+
+    @MainActor
+    func testReturnToIngredientSelectionExitsResultsState() async {
+        let vm = makeViewModel()
+        vm.showResults = true
+
+        vm.returnToIngredientSelection()
+
+        XCTAssertFalse(vm.showResults, "Returning to ingredient selection leaves the results state")
     }
 
     @MainActor

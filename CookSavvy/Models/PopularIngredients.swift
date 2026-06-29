@@ -3,10 +3,11 @@ import Foundation
 /// Curated set of popular cooking ingredients seeded into the Discover quick-pick grid before any
 /// personal usage history exists.
 ///
-/// Single source of truth for the "popular" seed. `UserDataService.getPopularIngredients` returns
-/// this list (pantry staples excluded) whenever the `recent_ingredients` usage table is empty — i.e.
-/// on a fresh install, until the user's own picks accumulate. Once usage history exists the
-/// DB-ranked list wins and this seed is no longer shown, so the grid personalises over time.
+/// Single source of truth for the "popular" seed. `UserDataService.getPopularIngredients` *blends*
+/// this list (pantry staples excluded) with the user's recently-selected ingredients: recents lead
+/// (most-recent-first) and this curated seed fills the remaining slots. On a fresh install (empty
+/// `recent_ingredients`) the grid is entirely this seed; as the user's picks accumulate they push to
+/// the front while the seed keeps the grid full underneath, so the grid personalises over time.
 ///
 /// Ordering is intentional: the most universally useful ingredients lead so the first rows are the
 /// ones most users reach for. The list length matches `UI.Discover.popularIngredientCount`

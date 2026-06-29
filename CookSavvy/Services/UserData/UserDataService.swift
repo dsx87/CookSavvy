@@ -57,28 +57,44 @@ final class UserDataService: UserDataServiceProtocol {
         return try await dbInterface.getRecentIngredients(limit: limit)
     }
 
-    /// Gets the most popular ingredients to seed the Discover quick-pick grid.
+    /// Builds the personalized Discover quick-pick grid: the user's own recently-selected ingredients
+    /// lead (most-recent-first), then the curated `PopularIngredients.seed()` fills any remaining slots.
     ///
-    /// Prefers the user's own usage-ranked history (`recent_ingredients`); until that accumulates,
-    /// falls back to the curated `PopularIngredients.seed()` rather than the alphabetical catalogue,
-    /// so a fresh install surfaces genuinely popular ingredients instead of "Almond, Apple, …".
-    /// Pantry staples are excluded from both paths since they are never offered for selection
-    /// (see `PantryStaples`) — including any left in usage history from before that rule.
-    /// - Parameter limit: Maximum number of usage-ranked ingredients to return (default: 10).
-    /// - Returns: Popular ingredients ordered by usage count, or the curated seed when none exist.
+    /// This is a *blend*, not an either/or: a fresh install (empty `recent_ingredients`) shows the full
+    /// curated seed, and as the user's picks accumulate they push to the front while the curated set
+    /// keeps the grid full underneath — so previously-selected ingredients and the remaining popular
+    /// ones are shown together. Recency (`getRecentIngredients`, ordered by `last_used_at`) drives the
+    /// lead so a freshly promoted pick lands first, matching the grid's move-to-front behaviour. Pantry
+    /// staples are excluded from both halves since they are never offered for selection (see
+    /// `PantryStaples`) — including any left in usage history from before that rule.
+    /// - Parameter limit: Maximum number of ingredients to return (default: 10).
+    /// - Returns: Recently-used ingredients (most-recent-first) followed by curated popular fill,
+    ///   deduplicated case-insensitively and capped at `limit`.
     func getPopularIngredients(limit: Int = 10) async throws -> [Ingredient] {
+        var recent: [Ingredient] = []
         do {
-            let popular = PantryStaples.excludingStaples(try await dbInterface.getPopularIngredients(limit: limit))
-            if !popular.isEmpty {
-                return popular
-            }
+            recent = PantryStaples.excludingStaples(try await dbInterface.getRecentIngredients(limit: limit))
         } catch {
-            // Fall back to the curated seed below.
+            // Ignore history-fetch failures and fall back to the curated seed alone below.
         }
 
-        // Honour `limit` here too so every branch returns at most `limit` items, even though the only
-        // production caller requests a full grid's worth (`UI.Discover.popularIngredientCount`).
-        return Array(PantryStaples.excludingStaples(PopularIngredients.seed()).prefix(limit))
+        let curated = PantryStaples.excludingStaples(PopularIngredients.seed())
+        return Array(Self.mergedPersonalizedGrid(recent: recent, curated: curated).prefix(limit))
+    }
+
+    /// Merges recently-used ingredients (kept first, most-recent-first) with the curated popular seed,
+    /// dropping any curated entry that duplicates a recent one (case-insensitive). Preserves the
+    /// recent-first ordering the Discover grid relies on for move-to-front personalization.
+    private static func mergedPersonalizedGrid(recent: [Ingredient], curated: [Ingredient]) -> [Ingredient] {
+        var seen = Set<String>()
+        var result: [Ingredient] = []
+        result.reserveCapacity(recent.count + curated.count)
+        for ingredient in recent + curated {
+            let key = ingredient.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            guard !key.isEmpty, seen.insert(key).inserted else { continue }
+            result.append(ingredient)
+        }
+        return result
     }
 
     /// Records usage of multiple ingredients

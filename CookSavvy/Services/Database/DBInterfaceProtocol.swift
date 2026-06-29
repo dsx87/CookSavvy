@@ -117,15 +117,11 @@ nonisolated protocol RecipeStoreProtocol {
     func removeRecipes(_ recipes: [Recipe]) async throws
 }
 
-/// Tracking of recent/popular ingredients, recent recipe views, and saved searches.
+/// Tracking of recent ingredients, recent recipe views, and saved searches.
 nonisolated protocol RecentActivityStoreProtocol {
     /// Returns the most recently used ingredients, sorted by `last_used_at` descending.
     /// - Parameter limit: Maximum number of results.
     func getRecentIngredients(limit: Int) async throws -> [Ingredient]
-
-    /// Returns ingredients ordered by frequency of use, with recency as a tiebreaker.
-    /// - Parameter limit: Maximum number of results.
-    func getPopularIngredients(limit: Int) async throws -> [Ingredient]
 
     /// Upserts the ingredient into `recent_ingredients`, incrementing its `use_count`.
     /// Silently skips if the ingredient does not exist in the `ingredients` table.

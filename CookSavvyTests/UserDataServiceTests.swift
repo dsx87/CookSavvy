@@ -72,18 +72,41 @@ final class UserDataServiceTests: XCTestCase {
     }
 
     @MainActor
-    func testGetPopularIngredientsPrefersUsageHistoryOverCuratedSeed() async throws {
-        // A recorded pick must rank ahead of — and replace — the curated seed.
+    func testGetPopularIngredientsLeadsWithUsageHistoryThenFillsWithCuratedSeed() async throws {
+        // A recorded pick leads the grid, and the curated seed fills the remaining slots beneath it
+        // (a blend, not a replacement) — so previously-selected and remaining-popular show together.
         try await db.insertIngredients([Ingredient(name: "Kale")])
         try await db.recordIngredientUsage(Ingredient(name: "Kale"))
 
         let popular = try await service.getPopularIngredients(limit: UI.Discover.popularIngredientCount)
 
-        XCTAssertEqual(popular.first?.name, "Kale")
-        XCTAssertFalse(
+        XCTAssertEqual(popular.first?.name, "Kale", "Recently-used ingredient leads the grid")
+        XCTAssertTrue(
             popular.contains { $0.name == "Chicken" },
-            "Usage history replaces the curated seed rather than appending to it"
+            "Curated seed fills the remaining slots beneath the recent pick"
         )
+        XCTAssertEqual(popular.count, UI.Discover.popularIngredientCount, "Grid stays capped at its size")
+        XCTAssertEqual(
+            popular.filter { $0.name.lowercased() == "kale" }.count, 1,
+            "Recent pick appears once — not duplicated by the fill"
+        )
+    }
+
+    @MainActor
+    func testGetPopularIngredientsDeduplicatesRecentPickAlreadyInCuratedSeed() async throws {
+        // "Chicken" is both a recorded pick and the first curated seed: it must appear once, at the
+        // front, with the curated duplicate dropped.
+        try await db.insertIngredients([Ingredient(name: "Chicken")])
+        try await db.recordIngredientUsage(Ingredient(name: "Chicken"))
+
+        let popular = try await service.getPopularIngredients(limit: UI.Discover.popularIngredientCount)
+
+        XCTAssertEqual(popular.first?.name, "Chicken")
+        XCTAssertEqual(
+            popular.filter { $0.name.lowercased() == "chicken" }.count, 1,
+            "The curated duplicate of a recent pick is dropped"
+        )
+        XCTAssertEqual(popular.count, UI.Discover.popularIngredientCount)
     }
 
     @MainActor
