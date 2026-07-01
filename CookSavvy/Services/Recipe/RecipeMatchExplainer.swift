@@ -106,7 +106,7 @@ nonisolated enum RecipeMatchExplainer {
 
             if isMatch {
                 available.append(displayName)
-            } else if isAssumedPantryStaple(recipeName) {
+            } else if isAssumedPantryStaple(ingredient) {
                 assumed.append(displayName)
             } else {
                 missing.append(displayName)
@@ -176,12 +176,22 @@ nonisolated enum RecipeMatchExplainer {
         recipe.cleanedIngredients
     }
 
-    /// Returns true for shared pantry-staple names (see `PantryStaples`), after normalisation.
+    /// Returns true when a recipe ingredient is a shared pantry staple (see `PantryStaples`).
     ///
-    /// `PantryStaples` is the single source of truth shared with the ingredient picker, so anything
-    /// hidden from selection is also assumed available here and never counted as missing.
-    private static func isAssumedPantryStaple(_ normalizedName: String) -> Bool {
-        PantryStaples.isStaple(normalizedName)
+    /// Staple status is judged against the ingredient's canonical `basicComponent` when present
+    /// (e.g. "extra-virgin olive oil" → "olive oil", "garlic cloves" → "garlic"), falling back to
+    /// the display name. `basicComponent` strips descriptors and cooking-form words, so matching on
+    /// it both catches descriptor-wrapped staples the raw name misses ("freshly ground black
+    /// pepper") and avoids mis-assuming real ingredients whose name merely contains a staple token
+    /// ("garlic cloves" → the "cloves" token). This mirrors the ingredient picker, which filters
+    /// staples against the same `basicComponent`-seeded ingredient catalogue — keeping the two
+    /// behaviours (hidden from selection, assumed in matching) in lockstep.
+    private static func isAssumedPantryStaple(_ ingredient: Ingredient) -> Bool {
+        if let component = ingredient.basicComponent?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !component.isEmpty {
+            return PantryStaples.isStaple(component)
+        }
+        return PantryStaples.isStaple(ingredient.name)
     }
 
     /// Parses a numeric cook-time in minutes from the recipe's time `AdditionalInfo`.
