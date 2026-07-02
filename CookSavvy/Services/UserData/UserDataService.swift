@@ -57,52 +57,46 @@ final class UserDataService: UserDataServiceProtocol {
         return try await dbInterface.getRecentIngredients(limit: limit)
     }
 
-    /// Gets the most popular ingredients based on usage count, filling to `limit` with selectable items.
+    /// Builds the personalized Discover quick-pick grid: the user's own recently-selected ingredients
+    /// lead (most-recent-first), then the curated `PopularIngredients.seed()` fills any remaining slots.
     ///
-    /// Pantry staples are never offered for selection (see `PantryStaples`), so they're filtered out —
-    /// including any left in usage history from before that rule. Because staples can dominate the top
-    /// of usage history, the popular query is over-fetched *before* filtering; if that still leaves
-    /// fewer than `limit` items, the remainder is backfilled from the ingredient catalogue (and finally
-    /// from a built-in default set) so the Discover popular grid never collapses to a couple of chips.
-    /// - Parameter limit: Maximum number of ingredients to return (default: 10)
-    /// - Returns: Up to `limit` selectable ingredients, ordered by usage, then catalogue, then defaults.
+    /// This is a *blend*, not an either/or: a fresh install (empty `recent_ingredients`) shows the full
+    /// curated seed, and as the user's picks accumulate they push to the front while the curated set
+    /// keeps the grid full underneath — so previously-selected ingredients and the remaining popular
+    /// ones are shown together. Recency (`getRecentIngredients`, ordered by `last_used_at`) drives the
+    /// lead so a freshly promoted pick lands first, matching the grid's move-to-front behaviour. Pantry
+    /// staples are excluded from both halves since they are never offered for selection (see
+    /// `PantryStaples`) — including any left in usage history from before that rule. Because the curated
+    /// seed alone already fills `UI.Discover.popularIngredientCount` slots, the grid can never collapse
+    /// even when the user's recent history is dominated by staples.
+    /// - Parameter limit: Maximum number of ingredients to return (default: 10).
+    /// - Returns: Recently-used ingredients (most-recent-first) followed by curated popular fill,
+    ///   deduplicated case-insensitively and capped at `limit`.
     func getPopularIngredients(limit: Int = 10) async throws -> [Ingredient] {
-        // Over-fetch so removing staples (and any stale staple usage) can't shrink the pool below `limit`.
-        let poolSize = max(limit * 3, 30)
+        var recent: [Ingredient] = []
         do {
-            var result = PantryStaples.excludingStaples(try await dbInterface.getPopularIngredients(limit: poolSize))
-
-            // Backfill from the catalogue when usage history is too thin to fill `limit`, de-duplicating
-            // against the popular items already collected (case-insensitively) to avoid repeats.
-            if result.count < limit {
-                var seen = Set(result.map { $0.name.lowercased() })
-                let catalogue = PantryStaples.excludingStaples(
-                    try await dbInterface.getAllIngredients(inGroup: nil, limit: poolSize)
-                )
-                for ingredient in catalogue where seen.insert(ingredient.name.lowercased()).inserted {
-                    result.append(ingredient)
-                }
-            }
-
-            if !result.isEmpty {
-                return Array(result.prefix(limit))
-            }
+            recent = PantryStaples.excludingStaples(try await dbInterface.getRecentIngredients(limit: limit))
         } catch {
-            // Fall back to defaults below.
+            // Ignore history-fetch failures and fall back to the curated seed alone below.
         }
 
-        let defaultFastIngredients: [Ingredient] = [
-            ("Chicken", "🍗"),
-            ("Rice", "🍚"),
-            ("Pasta", "🍝"),
-            ("Tomato", "🍅"),
-            ("Onion", "🧅"),
-            ("Garlic", "🧄"),
-            ("Egg", "🥚"),
-            ("Milk", "🥛"),
-            ("Cheese", "🧀")
-        ].map { .init(name: $0.0) }
-        return defaultFastIngredients
+        let curated = PantryStaples.excludingStaples(PopularIngredients.seed())
+        return Array(Self.mergedPersonalizedGrid(recent: recent, curated: curated).prefix(limit))
+    }
+
+    /// Merges recently-used ingredients (kept first, most-recent-first) with the curated popular seed,
+    /// dropping any curated entry that duplicates a recent one (case-insensitive). Preserves the
+    /// recent-first ordering the Discover grid relies on for move-to-front personalization.
+    private static func mergedPersonalizedGrid(recent: [Ingredient], curated: [Ingredient]) -> [Ingredient] {
+        var seen = Set<String>()
+        var result: [Ingredient] = []
+        result.reserveCapacity(recent.count + curated.count)
+        for ingredient in recent + curated {
+            let key = ingredient.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            guard !key.isEmpty, seen.insert(key).inserted else { continue }
+            result.append(ingredient)
+        }
+        return result
     }
 
     /// Records usage of multiple ingredients

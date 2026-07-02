@@ -676,29 +676,6 @@ actor DBInterface: DBInterfaceProtocol {
         }
     }
 
-    /// Returns the most frequently used ingredients, with recency as a tiebreaker.
-    /// Sorted by `use_count` descending, then `last_used_at` descending.
-    func getPopularIngredients(limit: Int) throws -> [Ingredient] {
-        return try dbWriter.read { db in
-            let sql = """
-                SELECT i.name, i.description, i.picture_file_name, i.food_group, i.food_subgroup
-                FROM recent_ingredients ri
-                INNER JOIN ingredients i ON i.name = ri.ingredient_name
-                ORDER BY ri.use_count DESC, ri.last_used_at DESC
-                LIMIT ?;
-            """
-            return try Row.fetchAll(db, sql: sql, arguments: [limit]).map { row in
-                Ingredient(
-                    name: row["name"],
-                    description: row["description"],
-                    pictureFileName: row["picture_file_name"],
-                    foodGroup: row["food_group"],
-                    foodSubgroup: row["food_subgroup"]
-                )
-            }
-        }
-    }
-
     /// Upserts the ingredient into `recent_ingredients`, incrementing its `use_count`.
     ///
     /// A case-insensitive lookup resolves the canonical stored name before upserting, ensuring

@@ -498,7 +498,7 @@ struct DiscoverView: View {
                     if viewModel.showResults {
                         Button {
                             withAnimation(UI.Anim.springClear) {
-                                viewModel.showResults = false
+                                viewModel.returnToIngredientSelection()
                             }
                         } label: {
                             Image(systemName: Icons.Discover.plus)

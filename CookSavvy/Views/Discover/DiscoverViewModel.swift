@@ -122,8 +122,16 @@ struct DiscoverMatchBadgeState {
     /// Memoised `filteredRecipes` result keyed on its six inputs; recomputed only when the key changes.
     @ObservationIgnored private var filteredRecipesCache: (key: FilteredRecipesKey, value: [Recipe])?
 
-    /// High-frequency ingredients shown at the top of the grid, populated from user history or DB.
+    /// The "popular" quick-pick grid: the user's recently-selected ingredients lead (most-recent-first),
+    /// then curated popular ingredients fill the rest. Rebuilt from `UserDataService.getPopularIngredients`
+    /// on load and reordered by deferred move-to-front promotions (`applyDeferredGridPromotions`).
     var popularIngredients: [Ingredient] = []
+    /// Picks made since the popular grid was last shown that qualify for move-to-front (selected from
+    /// below the stable top rows, or off-grid via search), most-recent-first. Applied — not live — the
+    /// next time the grid appears (`applyDeferredGridPromotions`), so nothing jumps under the user's
+    /// finger mid-session. `@ObservationIgnored`: internal bookkeeping that drives `popularIngredients`,
+    /// not a directly-rendered value.
+    @ObservationIgnored private var deferredPromotions: [Ingredient] = []
     /// Raw search results from `RecipeService`; filtered by `filteredRecipes` before display.
     var searchResultRecipes: [Recipe] = []
     /// `true` while a multi-source recipe search is in flight.
@@ -367,12 +375,17 @@ struct DiscoverMatchBadgeState {
         return matches
     }
 
-    /// The section header label for the ingredient grid — the selected category name or a generic label.
+    /// The section header label for the ingredient grid: the selected category name, else "ALL
+    /// INGREDIENTS" while a search query is filtering the full catalogue, else "POPULAR" for the
+    /// default quick-pick grid.
     var ingredientGridLabel: String {
         if let selectedCategory {
             return selectedCategory.rawValue.uppercased()
         }
-        return Strings.Discover.allIngredients
+        if !searchText.isEmpty {
+            return Strings.Discover.allIngredients
+        }
+        return Strings.Discover.popularIngredients
     }
 
     /// Categories exposed in the Discover chip row, excluding the catch-all bucket.
@@ -495,8 +508,11 @@ struct DiscoverMatchBadgeState {
             selectedIngredients.remove(at: idx)
         } else {
             selectedIngredients.append(ingredient)
+            // On selection only: personalise the popular grid from this pick (see
+            // `recordSelectionForGrid` for the position rules). Deselecting does neither.
+            recordSelectionForGrid(ingredient)
         }
-        
+
         if !hasIngredients {
             showResults = false
             searchResultRecipes = []
@@ -763,17 +779,93 @@ struct DiscoverMatchBadgeState {
         _ = await (ingredientsTask, pantryTask)
     }
 
-    /// Fetches popular ingredients from `UserDataService` and fills in missing emoji via `IngredientEmojiProvider`.
+    /// Fetches the personalized popular grid from `UserDataService` and fills in missing emoji via
+    /// `IngredientEmojiProvider`.
     private func loadIngredients() async {
         do {
-            var ingredients = try await userDataService.getPopularIngredients()
+            // Fetch a full grid's worth so the popular section fills its rows; this is also the cap the
+            // deferred move-to-front promotion (`applyDeferredGridPromotions`) trims back to.
+            var ingredients = try await userDataService.getPopularIngredients(limit: UI.Discover.popularIngredientCount)
             IngredientEmojiProvider.fillIngredientsWithEmoji(&ingredients)
             popularIngredients = ingredients
             shownIngredients = ingredients
+            // The reloaded grid already reflects recorded history. Fold any still-queued promotions onto
+            // the fresh grid so a just-made pick whose fire-and-forget record hasn't yet committed still
+            // leads — idempotent (deduped) when the history already includes it. (A pick recorded but not
+            // committed *and* already drained from the queue could still revert until the next reload;
+            // that window is narrow and self-heals, since the record commits and later reloads pick it up.)
+            applyDeferredGridPromotions()
         } catch {
             logger.error("Failed to load discover ingredients: \(String(describing: error))")
             homeLoadError = Strings.Errors.loadFailed
         }
+    }
+
+    /// Personalises the popular grid from a fresh pick — but only when the pick warrants it, and never
+    /// live.
+    ///
+    /// A pick already sitting within the grid's stable top rows (index `< popularGridStablePrefixCount`)
+    /// is left exactly where it is: those rows are the easiest to reach, so reshuffling them would only
+    /// disorient. A pick from below those rows — or one that isn't in the grid at all, e.g. typed into
+    /// the search bar — is instead (a) queued via `deferredPromotions` to lead the grid the *next* time
+    /// it appears (not this instant, so nothing jumps under the user's finger), and (b) recorded so the
+    /// personalization persists and is rebuilt across launches by `getPopularIngredients`. Recording is
+    /// fire-and-forget — a failure (e.g. an off-catalogue name) is silently skipped by the DB layer and
+    /// must not block selection.
+    private func recordSelectionForGrid(_ ingredient: Ingredient) {
+        let key = Self.normalizedIngredientName(ingredient.name)
+        // The stable-top-rows exemption only applies when the popular grid is the grid on screen. While a
+        // search query or category filter is active the user is picking from those results, not the
+        // popular grid — so the pick is treated as off-grid and always qualifies (the spec's "via the
+        // search bar → front on next appearance"), even if it happens to also sit in the popular top rows.
+        let isPopularGridVisible = searchText.isEmpty && selectedCategory == nil
+        if isPopularGridVisible,
+           let index = popularIngredients.firstIndex(where: { Self.normalizedIngredientName($0.name) == key }),
+           index < UI.Discover.popularGridStablePrefixCount {
+            return
+        }
+
+        // Queue most-recent-first, de-duplicating so a re-pick re-promotes rather than stacking up.
+        deferredPromotions.removeAll { Self.normalizedIngredientName($0.name) == key }
+        deferredPromotions.insert(ingredient, at: 0)
+        Task { [userDataService] in try? await userDataService.recordIngredientUsage([ingredient]) }
+    }
+
+    /// Applies any queued move-to-front promotions to the popular grid, then clears the queue.
+    ///
+    /// Called when the popular grid (re)appears — returning from results, or clearing a search/category
+    /// filter — so picks made since it was last shown surface at the front "on next appear" rather than
+    /// live. Promotions lead (most-recent-first), the remaining grid follows with duplicates removed
+    /// (case-insensitive), and the list is trimmed back to `UI.Discover.popularIngredientCount`, dropping
+    /// the least-recent tail. Search-sourced picks can arrive without an emoji, so any missing emoji is
+    /// filled (existing entries are skipped). No-op when nothing is queued.
+    private func applyDeferredGridPromotions() {
+        guard !deferredPromotions.isEmpty else { return }
+        let promoted = deferredPromotions
+        deferredPromotions.removeAll()
+
+        let promotedKeys = Set(promoted.map { Self.normalizedIngredientName($0.name) })
+        var updated = promoted
+        updated.append(contentsOf: popularIngredients.filter {
+            !promotedKeys.contains(Self.normalizedIngredientName($0.name))
+        })
+        if updated.count > UI.Discover.popularIngredientCount {
+            updated.removeLast(updated.count - UI.Discover.popularIngredientCount)
+        }
+        IngredientEmojiProvider.fillIngredientsWithEmoji(&updated)
+        popularIngredients = updated
+
+        if searchText.isEmpty && selectedCategory == nil {
+            shownIngredients = popularIngredients
+        }
+    }
+
+    /// Returns from the results screen to ingredient selection, surfacing any picks made since the grid
+    /// was last shown at the front of the popular grid (deferred move-to-front). Routes the "+" (add
+    /// more) action through the view model so the view stays presentation-only.
+    func returnToIngredientSelection() {
+        applyDeferredGridPromotions()
+        showResults = false
     }
 
     /// Loads pantry staples that should be merged into Discover searches.
@@ -966,6 +1058,10 @@ struct DiscoverMatchBadgeState {
                 guard isCurrentRefresh(token) else { return }
                 loadedCategory = nil
                 categoryIngredients = []
+                // Empty query + no category = the popular grid re-surfaces (the empty `fetchedIngredients`
+                // trips `shownIngredients`' didSet fallback). Apply deferred promotions first so a pick
+                // made via the search bar leads the grid the moment the search is cleared.
+                applyDeferredGridPromotions()
                 shownIngredients = fetchedIngredients
                 ingredientSuggestions = makeSuggestions(from: fetchedIngredients, query: query)
             }

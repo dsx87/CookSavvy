@@ -422,6 +422,17 @@ struct UI {
         static let suggestionPopupItemLimit: Int = 6
         /// Maximum number of recipes fetched for ingredient-free browse searches.
         static let browseRecipeLimit: Int = 100
+        /// Size of the "popular" quick-pick ingredient grid — also the move-to-front (MRU) cap applied
+        /// when a freshly picked ingredient is promoted to the front. 20 = 5 full rows of the 4-column grid.
+        static let popularIngredientCount: Int = 20
+        /// Number of fully-stable leading rows in the popular grid. Picking an ingredient already
+        /// within these top rows never reorders the grid — it's already easy to reach — whereas picks
+        /// from below them (or off-grid search picks) are promoted to the front on the grid's next
+        /// appearance.
+        static let popularGridStableRowCount: Int = 2
+        /// Item count of the stable zone: the leading `popularGridStableRowCount` whole rows of the grid
+        /// (`gridColumnCount` items each). A pick at an index below this is eligible for move-to-front.
+        static let popularGridStablePrefixCount: Int = gridColumnCount * popularGridStableRowCount
 
         /// Dimensions and gradient colors for the "This Week's Collections" card strip on the Discover screen.
         struct Collection {

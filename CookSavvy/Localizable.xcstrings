@@ -1765,6 +1765,17 @@
         }
       }
     },
+    "discover.popularIngredients" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "POPULAR"
+          }
+        }
+      }
+    },
     "discover.quickMealSuffix" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
