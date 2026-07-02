@@ -57,20 +57,35 @@ final class UserDataService: UserDataServiceProtocol {
         return try await dbInterface.getRecentIngredients(limit: limit)
     }
 
-    // TODO: do some cleanup for this flow
-    /// Gets the most popular ingredients based on usage count
+    /// Gets the most popular ingredients based on usage count, filling to `limit` with selectable items.
+    ///
+    /// Pantry staples are never offered for selection (see `PantryStaples`), so they're filtered out —
+    /// including any left in usage history from before that rule. Because staples can dominate the top
+    /// of usage history, the popular query is over-fetched *before* filtering; if that still leaves
+    /// fewer than `limit` items, the remainder is backfilled from the ingredient catalogue (and finally
+    /// from a built-in default set) so the Discover popular grid never collapses to a couple of chips.
     /// - Parameter limit: Maximum number of ingredients to return (default: 10)
-    /// - Returns: Array of popular ingredients ordered by usage count
+    /// - Returns: Up to `limit` selectable ingredients, ordered by usage, then catalogue, then defaults.
     func getPopularIngredients(limit: Int = 10) async throws -> [Ingredient] {
+        // Over-fetch so removing staples (and any stale staple usage) can't shrink the pool below `limit`.
+        let poolSize = max(limit * 3, 30)
         do {
-            let popular = try await dbInterface.getPopularIngredients(limit: limit)
-            if !popular.isEmpty {
-                return popular
+            var result = PantryStaples.excludingStaples(try await dbInterface.getPopularIngredients(limit: poolSize))
+
+            // Backfill from the catalogue when usage history is too thin to fill `limit`, de-duplicating
+            // against the popular items already collected (case-insensitively) to avoid repeats.
+            if result.count < limit {
+                var seen = Set(result.map { $0.name.lowercased() })
+                let catalogue = PantryStaples.excludingStaples(
+                    try await dbInterface.getAllIngredients(inGroup: nil, limit: poolSize)
+                )
+                for ingredient in catalogue where seen.insert(ingredient.name.lowercased()).inserted {
+                    result.append(ingredient)
+                }
             }
 
-            let fallback = try await dbInterface.getAllIngredients(inGroup: nil, limit: max(limit, 20))
-            if !fallback.isEmpty {
-                return fallback
+            if !result.isEmpty {
+                return Array(result.prefix(limit))
             }
         } catch {
             // Fall back to defaults below.

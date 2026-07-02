@@ -473,6 +473,9 @@ struct DiscoverMatchBadgeState {
     /// Used when the Camera or Onboarding screen hands off detected ingredients to Discover.
     /// - Parameter ingredients: The ingredients to pre-select and search with.
     func preloadIngredients(_ ingredients: [Ingredient]) {
+        // Drop pantry staples (salt, pepper, …) a scan may detect — they're auto-assumed in matching
+        // and never selectable, so they must not become selection chips. An all-staples scan is a no-op.
+        let ingredients = PantryStaples.excludingStaples(ingredients)
         guard !ingredients.isEmpty else { return }
 
         for ingredient in ingredients where !selectedIngredients.contains(ingredient) {

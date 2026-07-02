@@ -89,17 +89,24 @@ background work explicitly **off** the main actor, not to sprinkle annotations.
   `var`/`let` for observe-only. Internal task-handle properties are `@ObservationIgnored`.
 - **Stateful background services are `actor`s** so their work runs off main: `DBInterface` (GRDB SQL +
   recipe JSON decode + the `recipeCache`, no explicit lock/queue), `ImageService` (disk I/O + ZIP +
-  `UIImage` decode + `imageCache`), and `ImageExtractor` (serialised ZIP reads). Their protocol methods
-  are `async` and callers `await`.
-- **The *other* services are plain classes = `MainActor` by default** (`IngredientsService`,
-  `RecipeService`, `UserDataService`, the recipe sources, etc. — they are **not** `actor`s). They
-  `await` the actors above for I/O, but **their own code, including the continuation after each
-  `await`, resumes on the main actor.** So CPU work done *in* such a service (e.g. classifying the
-  whole ingredient catalogue, mapping/filtering large arrays) runs **on main** unless explicitly
-  wrapped in `@concurrent` — calling a `nonisolated` helper does **not** change this (see next bullet).
-  Worked example: `IngredientsService.categorizedIngredients()` fetches via the `DBInterface` actor
-  but groups the ~3.5k-row catalogue inside `await Task { @concurrent in … }.value` precisely because
-  the grouping would otherwise execute on the main thread.
+  `UIImage` decode + `imageCache`), `ImageExtractor` (serialised ZIP reads), and `IngredientsService`
+  (FTS-backed catalogue search + name-based classification of the ~3.5k-row catalogue + its
+  `cachedCategorizedIngredients` cache + pantry-staple filtering). Their protocol methods are `async`
+  and callers `await`. An `actor` service that takes an injected store (`IngredientsService` holds an
+  `IngredientStoreProtocol`) makes that dependency actor-isolated state, so a **test mock** passed into
+  it must be `Sendable` — see `MockDBInterfaceForIngredients`'s documented `@unchecked Sendable`.
+- **The *other* services are plain classes = `MainActor` by default** (`RecipeService`,
+  `UserDataService`, the recipe sources, etc. — they are **not** `actor`s). They `await` the actors
+  above for I/O, but **their own code, including the continuation after each `await`, resumes on the
+  main actor.** So CPU work done *in* such a service (e.g. mapping/filtering large arrays) runs **on
+  main** unless explicitly wrapped in `@concurrent` — calling a `nonisolated` helper does **not** change
+  this (see next bullet). This is exactly why `IngredientsService` was promoted to an `actor` (previous
+  bullet): as a MainActor class, the continuation after its `DBInterface` `await` ran the
+  catalogue-scale `PantryStaples` filtering/classification **on main**, and wrapping only the grouping
+  in `@concurrent` still left the ~3.5k-row staple filter on main — so the whole service was moved off
+  main. Its `categorizedIngredients()` still keeps the filter+grouping inside `await Task { @concurrent
+  in … }.value` so that CPU work runs on the cooperative pool rather than serialising the actor's own
+  executor against concurrent searches.
 - **Stateless CPU/IO leaves are `nonisolated`**: `Unarchiver`, the rankers (`RecipeMatchRanker`,
   `RecipeMoodRanker`, `RecipeMatchExplainer`). **`nonisolated` only removes actor isolation — it does
   not move work off main.** A `nonisolated` *sync* func runs on its caller's executor (the main thread

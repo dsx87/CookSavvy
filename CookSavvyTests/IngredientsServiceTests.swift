@@ -10,7 +10,12 @@ import XCTest
 
 // MARK: - Mock DB Interface for Testing
 
-final class MockDBInterfaceForIngredients: IngredientStoreProtocol {
+/// `@unchecked Sendable` because `IngredientsService` is an `actor` and stores its injected store as
+/// actor-isolated state, so this mock must cross into the actor's isolation domain. The mock has
+/// mutable stubs/counters, but every test drives it sequentially — it configures the stubs, `await`s a
+/// single `IngredientsService` call, then asserts on the counters — so there is never concurrent
+/// access. The unchecked conformance encodes that test-driven serialisation invariant.
+final class MockDBInterfaceForIngredients: IngredientStoreProtocol, @unchecked Sendable {
 
     var storedIngredients: [Ingredient] = []
     var insertCallCount = 0
@@ -341,6 +346,33 @@ final class IngredientsServiceTests: XCTestCase {
 
         // Canonical declaration order: proteins, veggies, dairy, grains, ...
         XCTAssertEqual(categories, [.proteins, .veggies, .grains])
+    }
+
+    @MainActor
+    func testPantryStaplesAreExcludedFromBrowseSearchAndCategories() async throws {
+        // Salt + Cumin are pantry staples (hidden from the picker); Basil/Soy Sauce stay selectable.
+        mockDB.storedIngredients = [
+            Ingredient(name: "Chicken"),
+            Ingredient(name: "Salt"),
+            Ingredient(name: "Cumin"),
+            Ingredient(name: "Basil"),
+            Ingredient(name: "Tomato")
+        ]
+        ingredientsService = IngredientsService(dbInterface: mockDB)
+
+        let all = try await ingredientsService.getAllIngredients()
+        XCTAssertFalse(Set(all.map(\.name)).contains("Salt"))
+        XCTAssertFalse(Set(all.map(\.name)).contains("Cumin"))
+
+        // Search must not surface staples either.
+        let saltSearch = try await ingredientsService.searchFullIngredients(matching: "salt")
+        XCTAssertTrue(saltSearch.isEmpty)
+
+        // The Spices category retains the kept herbs/sauces but not the staples.
+        let spices = Set(try await ingredientsService.getAllIngredients(category: .spices).map(\.name))
+        XCTAssertTrue(spices.contains("Basil"))
+        XCTAssertFalse(spices.contains("Salt"))
+        XCTAssertFalse(spices.contains("Cumin"))
     }
 
     // MARK: - Error Description Tests

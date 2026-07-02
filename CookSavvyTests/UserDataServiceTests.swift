@@ -60,6 +60,33 @@ final class UserDataServiceTests: XCTestCase {
     }
 
     @MainActor
+    func testPopularIngredientsBackfillsWhenTopUsageIsDominatedByStaples() async throws {
+        // Staples are hidden from the picker but can still dominate usage history (recorded before
+        // the rule, or via detection flows). If the top `limit` rows are mostly staples, filtering
+        // after the DB limit must not collapse the grid — it should backfill with lower-ranked
+        // popular items and the catalogue until the requested limit is filled.
+        let staples = ["Salt", "Black Pepper", "Olive Oil"]
+        let reals = ["Apple", "Banana", "Carrot", "Chicken", "Egg", "Garlic",
+                     "Onion", "Pasta", "Rice", "Tomato", "Yogurt", "Zucchini"]
+        try await db.insertIngredients((staples + reals).map(Ingredient.init(name:)))
+
+        // Staples rank at the very top; only two real ingredients have recorded usage.
+        for _ in 0..<5 { for name in staples { try await db.recordIngredientUsage(Ingredient(name: name)) } }
+        for _ in 0..<3 { try await db.recordIngredientUsage(Ingredient(name: "Garlic")) }
+        for _ in 0..<2 { try await db.recordIngredientUsage(Ingredient(name: "Onion")) }
+
+        let popular = try await service.getPopularIngredients(limit: 10)
+
+        for name in staples {
+            XCTAssertFalse(popular.contains { $0.name == name }, "\(name) should be filtered from the popular grid")
+        }
+        // Fills to the requested limit rather than shrinking to the two recorded non-staples.
+        XCTAssertEqual(popular.count, 10)
+        XCTAssertTrue(popular.contains { $0.name == "Garlic" })
+        XCTAssertTrue(popular.contains { $0.name == "Onion" })
+    }
+
+    @MainActor
     func testRecentRecipes() async throws {
         let recipe = makeRecipe(title: "Chicken Soup")
         try await insertRecipe(recipe)

@@ -106,7 +106,7 @@ nonisolated enum RecipeMatchExplainer {
 
             if isMatch {
                 available.append(displayName)
-            } else if isAssumedPantryStaple(recipeName) {
+            } else if isAssumedPantryStaple(ingredient) {
                 assumed.append(displayName)
             } else {
                 missing.append(displayName)
@@ -159,19 +159,6 @@ nonisolated enum RecipeMatchExplainer {
 
     // MARK: - Private
 
-    /// Built-in, non-persisted staples that are commonly available in home kitchens.
-    private static let assumedPantryStapleNames: Set<String> = [
-        "salt",
-        "pepper",
-        "black pepper",
-        "water",
-        "oil",
-        "olive oil",
-        "vegetable oil",
-        "canola oil",
-        "cooking oil"
-    ]
-
     /// Internal overload that computes availability from a set of already-matched names.
     private static func ingredientAvailability(
         recipe: Recipe,
@@ -189,9 +176,22 @@ nonisolated enum RecipeMatchExplainer {
         recipe.cleanedIngredients
     }
 
-    /// Returns true only for conservative pantry-staple names, after normalisation.
-    private static func isAssumedPantryStaple(_ normalizedName: String) -> Bool {
-        assumedPantryStapleNames.contains(normalizedName)
+    /// Returns true when a recipe ingredient is a shared pantry staple (see `PantryStaples`).
+    ///
+    /// Staple status is judged against the ingredient's canonical `basicComponent` when present
+    /// (e.g. "extra-virgin olive oil" → "olive oil", "garlic cloves" → "garlic"), falling back to
+    /// the display name. `basicComponent` strips descriptors and cooking-form words, so matching on
+    /// it both catches descriptor-wrapped staples the raw name misses ("freshly ground black
+    /// pepper") and avoids mis-assuming real ingredients whose name merely contains a staple token
+    /// ("garlic cloves" → the "cloves" token). This mirrors the ingredient picker, which filters
+    /// staples against the same `basicComponent`-seeded ingredient catalogue — keeping the two
+    /// behaviours (hidden from selection, assumed in matching) in lockstep.
+    private static func isAssumedPantryStaple(_ ingredient: Ingredient) -> Bool {
+        if let component = ingredient.basicComponent?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !component.isEmpty {
+            return PantryStaples.isStaple(component)
+        }
+        return PantryStaples.isStaple(ingredient.name)
     }
 
     /// Parses a numeric cook-time in minutes from the recipe's time `AdditionalInfo`.
