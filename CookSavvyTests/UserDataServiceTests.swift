@@ -110,6 +110,34 @@ final class UserDataServiceTests: XCTestCase {
     }
 
     @MainActor
+    func testGetPopularIngredientsExcludesStapleHeavyRecentHistoryAndFillsFromCuratedSeed() async throws {
+        // Staples are hidden from the picker but can still dominate recent history (recorded before the
+        // rule, or via detection flows). Even when the most-recent picks are mostly staples, filtering
+        // them out must not collapse the grid: non-staple recents lead and the curated seed always fills
+        // the remaining slots back up to `limit`.
+        let staples = ["Salt", "Black Pepper", "Olive Oil"]
+        let reals = ["Apple", "Banana", "Carrot", "Chicken", "Egg", "Garlic",
+                     "Onion", "Pasta", "Rice", "Tomato", "Yogurt", "Zucchini"]
+        try await db.insertIngredients((staples + reals).map(Ingredient.init(name:)))
+
+        // Staples are used most; only two real ingredients have recorded usage.
+        for _ in 0..<5 { for name in staples { try await db.recordIngredientUsage(Ingredient(name: name)) } }
+        for _ in 0..<3 { try await db.recordIngredientUsage(Ingredient(name: "Garlic")) }
+        for _ in 0..<2 { try await db.recordIngredientUsage(Ingredient(name: "Onion")) }
+
+        let popular = try await service.getPopularIngredients(limit: 10)
+
+        for name in staples {
+            XCTAssertFalse(popular.contains { $0.name == name }, "\(name) should be filtered from the popular grid")
+        }
+        // Non-staple recents lead and the curated seed fills to the requested limit — the grid never
+        // shrinks to just the two recorded non-staples.
+        XCTAssertEqual(popular.count, 10)
+        XCTAssertTrue(popular.contains { $0.name == "Garlic" })
+        XCTAssertTrue(popular.contains { $0.name == "Onion" })
+    }
+
+    @MainActor
     func testRecentRecipes() async throws {
         let recipe = makeRecipe(title: "Chicken Soup")
         try await insertRecipe(recipe)

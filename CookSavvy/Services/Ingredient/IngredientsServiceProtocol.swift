@@ -6,7 +6,11 @@ import Foundation
 /// import. Conforming types expose `ensureIngredientsLoaded()` as a readiness gate,
 /// FTS5-backed search, category browsing, and exact-name lookup. The protocol allows
 /// `IngredientsService` to be replaced with a mock in tests and DEBUG builds.
-protocol IngredientsServiceProtocol: AnyObject {
+///
+/// `nonisolated` (matching the `DBInterface` store protocols) so the concrete `IngredientsService`
+/// `actor` can satisfy these requirements on its own executor; MainActor callers `await` across the
+/// boundary and every result type is `Sendable`.
+nonisolated protocol IngredientsServiceProtocol: AnyObject {
     /// Marks the service as ready; the ingredient catalog is seeded by `DataImportService`.
     func ensureIngredientsLoaded() async throws
     /// Returns ingredient names matching `query` using FTS5 prefix search, up to `limit` results.
@@ -23,7 +27,7 @@ protocol IngredientsServiceProtocol: AnyObject {
 
 /// Default-parameter overloads so call sites can omit `limit` for the common case.
 /// Default values must stay in sync with `IngredientsServiceConstants`.
-extension IngredientsServiceProtocol {
+nonisolated extension IngredientsServiceProtocol {
     // Defaults must stay in sync with IngredientsService.Constants
     /// Searches ingredient names using FTS5, returning up to 50 results.
     func searchIngredients(matching query: String) async throws -> [String] {

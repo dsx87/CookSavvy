@@ -654,6 +654,61 @@ final class DiscoverViewModelTests: XCTestCase {
     }
 
     @MainActor
+    func testDescriptorWrappedStaplesAreAssumedViaBasicComponent() async {
+        // Recipe ingredient display names carry descriptors ("extra-virgin olive oil", "freshly
+        // ground black pepper") that the staple lists don't match verbatim, but their canonical
+        // `basicComponent` ("olive oil", "black pepper") does. Matching must resolve staple status
+        // via basicComponent so these common seasonings aren't wrongly counted as missing.
+        let oil = Ingredient(name: "Extra-Virgin Olive Oil", description: nil, pictureFileName: nil,
+                             foodGroup: nil, foodSubgroup: nil, basicComponent: "olive oil")
+        let pepper = Ingredient(name: "Freshly Ground Black Pepper", description: nil, pictureFileName: nil,
+                                foodGroup: nil, foodSubgroup: nil, basicComponent: "black pepper")
+        let recipe = Recipe(
+            title: "Descriptor Staples",
+            ingredients: [Ingredient(name: "Chicken"), oil, pepper],
+            instructions: ["Cook"],
+            image: "",
+            additionalInfo: .empty
+        )
+
+        let breakdown = RecipeMatchExplainer.ingredientBreakdown(
+            recipe: recipe,
+            selectedIngredients: [Ingredient(name: "Chicken")]
+        )
+
+        XCTAssertEqual(breakdown.availableIngredientNames, ["Chicken"])
+        XCTAssertEqual(
+            breakdown.assumedPantryIngredientNames,
+            ["Extra-Virgin Olive Oil", "Freshly Ground Black Pepper"]
+        )
+        XCTAssertEqual(breakdown.missingIngredientNames, [])
+    }
+
+    @MainActor
+    func testDescriptorIngredientWithRealBasicComponentIsNotAssumedStaple() async {
+        // "Garlic Cloves" contains the staple token "cloves", but its canonical basicComponent is
+        // "garlic" — a real ingredient the user cooks around. Matching must judge staple status by
+        // basicComponent so garlic is a genuine missing ingredient, not silently assumed on hand.
+        let garlic = Ingredient(name: "Garlic Cloves", description: nil, pictureFileName: nil,
+                                foodGroup: nil, foodSubgroup: nil, basicComponent: "garlic")
+        let recipe = Recipe(
+            title: "Garlicky",
+            ingredients: [Ingredient(name: "Chicken"), garlic],
+            instructions: ["Cook"],
+            image: "",
+            additionalInfo: .empty
+        )
+
+        let breakdown = RecipeMatchExplainer.ingredientBreakdown(
+            recipe: recipe,
+            selectedIngredients: [Ingredient(name: "Chicken")]
+        )
+
+        XCTAssertEqual(breakdown.assumedPantryIngredientNames, [])
+        XCTAssertEqual(breakdown.missingIngredientNames, ["Garlic Cloves"])
+    }
+
+    @MainActor
     func testAssumedStaplesImproveRankingOverTrueMissingIngredients() async {
         let assumedOnlyIngredients = ["Chicken", "Salt", "Oil"].map(Ingredient.init(name:))
         let trueMissingIngredients = ["Chicken", "Rice"].map(Ingredient.init(name:))

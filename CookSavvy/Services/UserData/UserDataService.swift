@@ -66,7 +66,9 @@ final class UserDataService: UserDataServiceProtocol {
     /// ones are shown together. Recency (`getRecentIngredients`, ordered by `last_used_at`) drives the
     /// lead so a freshly promoted pick lands first, matching the grid's move-to-front behaviour. Pantry
     /// staples are excluded from both halves since they are never offered for selection (see
-    /// `PantryStaples`) — including any left in usage history from before that rule.
+    /// `PantryStaples`) — including any left in usage history from before that rule. Because the curated
+    /// seed alone already fills `UI.Discover.popularIngredientCount` slots, the grid can never collapse
+    /// even when the user's recent history is dominated by staples.
     /// - Parameter limit: Maximum number of ingredients to return (default: 10).
     /// - Returns: Recently-used ingredients (most-recent-first) followed by curated popular fill,
     ///   deduplicated case-insensitively and capped at `limit`.

@@ -8,7 +8,9 @@
 import Foundation
 
 /// Internal constants used by `IngredientsService` to avoid magic values.
-private enum IngredientsServiceConstants {
+/// `nonisolated` so the values can serve as default-parameter values on the `actor`'s methods
+/// (a MainActor-isolated default value can't be read from an actor-isolated context).
+private nonisolated enum IngredientsServiceConstants {
     static let defaultSearchLimit = 50
     static let defaultCategoryLimit = 100
     /// Upper bound for fetching the entire ingredient catalogue in one read so it can be categorised
@@ -26,7 +28,14 @@ private enum IngredientsServiceConstants {
 /// `IngredientCategory` is a computed property derived from the raw `foodGroup` string stored
 /// in the database, so category-based queries require an intermediate mapping step through a
 /// proxy `Ingredient`.
-final class IngredientsService: IngredientsServiceProtocol {
+///
+/// **Isolation:** this is an `actor` (like `DBInterface` / `ImageService`), so *all* of its work runs
+/// off the main actor — both the `await`s into the `DBInterface` actor and the continuation after each
+/// `await` (pantry-staple filtering, catalogue classification) execute on this actor's executor rather
+/// than the main thread. Its mutable state (`isImported`, `cachedCategorizedIngredients`) is serialised
+/// by the actor. Callers (`DiscoverViewModel`, `DatabaseInitializationService`) `await` across the
+/// boundary; every method's result type is `Sendable`.
+actor IngredientsService: IngredientsServiceProtocol {
 
     // MARK: - Properties
 
@@ -38,7 +47,7 @@ final class IngredientsService: IngredientsServiceProtocol {
 
     /// Lazily-built, cached grouping of the full ingredient catalogue by ``IngredientCategory``.
     /// The dataset has no `food_group` data, so categories are classified from ingredient names; that
-    /// classification is computed once **off the main actor** (see `categorizedIngredients()`). The
+    /// classification is computed once on the cooperative pool (see `categorizedIngredients()`). The
     /// catalogue is static after import, so every subsequent category tap is a cheap dictionary lookup.
     private var cachedCategorizedIngredients: [IngredientCategory: [Ingredient]]?
 
@@ -51,9 +60,11 @@ final class IngredientsService: IngredientsServiceProtocol {
     }
 
     #if DEBUG
-    /// Convenience initializer for DEBUG builds that creates its own `DBInterface`.
+    /// Delegating initializer for DEBUG builds that creates its own `DBInterface`.
+    /// (Actors don't use the `convenience` keyword; an init that delegates via `self.init` is a
+    /// delegating initializer implicitly.)
     /// - Throws: Any error thrown by `DBInterface` initialization.
-    convenience init() throws {
+    init() throws {
         let dbInterface = try DBInterface()
         self.init(dbInterface: dbInterface)
     }
@@ -180,21 +191,22 @@ final class IngredientsService: IngredientsServiceProtocol {
 
     /// Fetches the full catalogue once and groups it by category, caching the result.
     ///
-    /// `IngredientCategoryClassifier` is `nonisolated`, which only removes actor isolation — on its
-    /// own it would run on the caller's executor (the main actor, since this service is main-actor
-    /// isolated by default). Classifying the whole catalogue (~3.5k rows) is therefore wrapped in a
-    /// `@concurrent` task so it runs on the cooperative pool, off the main thread. The catalogue is
-    /// static after import, so the grouped result is cached and reused for every category tap.
+    /// This service is an `actor`, so this method already runs off the main actor. The staple
+    /// filtering (~3.5k `PantryStaples.isStaple` checks) and the name-based classification via
+    /// `IngredientCategoryClassifier` are pure CPU, so they run inside a `@concurrent` task on the
+    /// cooperative pool — keeping the work off *both* the main actor and this actor's own executor, so
+    /// a concurrent search isn't serialised behind it. The catalogue is static after import, so the
+    /// grouped result is cached and reused for every category tap.
     private func categorizedIngredients() async throws -> [IngredientCategory: [Ingredient]] {
         if let cachedCategorizedIngredients {
             return cachedCategorizedIngredients
         }
         let all = try await dbInterface.getAllIngredients(inGroup: nil, limit: IngredientsServiceConstants.allIngredientsLimit)
-        // Drop pantry staples before grouping so they never surface under any category chip (e.g.
-        // salt/dried spices are removed from `.spices`, leaving only herbs and condiments/sauces).
-        let selectable = PantryStaples.excludingStaples(all)
         let grouped = await Task { @concurrent in
-            Dictionary(grouping: selectable, by: { $0.category })
+            // Drop pantry staples before grouping so they never surface under any category chip (e.g.
+            // salt/dried spices are removed from `.spices`, leaving only herbs and condiments/sauces).
+            let selectable = PantryStaples.excludingStaples(all)
+            return Dictionary(grouping: selectable, by: { $0.category })
         }.value
         cachedCategorizedIngredients = grouped
         return grouped
