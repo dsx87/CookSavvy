@@ -10,7 +10,12 @@ import XCTest
 
 // MARK: - Mock DB Interface for Testing
 
-final class MockDBInterfaceForIngredients: IngredientStoreProtocol {
+/// `@unchecked Sendable` because `IngredientsService` is an `actor` and stores its injected store as
+/// actor-isolated state, so this mock must cross into the actor's isolation domain. The mock has
+/// mutable stubs/counters, but every test drives it sequentially — it configures the stubs, `await`s a
+/// single `IngredientsService` call, then asserts on the counters — so there is never concurrent
+/// access. The unchecked conformance encodes that test-driven serialisation invariant.
+final class MockDBInterfaceForIngredients: IngredientStoreProtocol, @unchecked Sendable {
 
     var storedIngredients: [Ingredient] = []
     var insertCallCount = 0
